@@ -74,4 +74,6 @@ secrets.yaml
 
 # OS
 Thumbs.db
-FINAL_APPLICATION.md
+
+# Project documentation
+.project-docs/
