@@ -18,18 +18,18 @@ class Severity(str, Enum):
 
 
 class OWASPCategory(str, Enum):
-    """OWASP Top 10 for LLMs 2025 categories."""
+    """OWASP Top 10 for LLMs v1.1 categories."""
 
     LLM01 = "LLM01"  # Prompt Injection
-    LLM02 = "LLM02"  # Sensitive Information Disclosure
-    LLM03 = "LLM03"  # Supply Chain Vulnerabilities
-    LLM04 = "LLM04"  # Data & Model Poisoning
-    LLM05 = "LLM05"  # Improper Output Handling
-    LLM06 = "LLM06"  # Excessive Agency
-    LLM07 = "LLM07"  # System Prompt Leakage
-    LLM08 = "LLM08"  # Vector & Embedding Weaknesses
-    LLM09 = "LLM09"  # Misinformation
-    LLM10 = "LLM10"  # Unbounded Consumption
+    LLM02 = "LLM02"  # Insecure Output Handling
+    LLM03 = "LLM03"  # Training Data Poisoning
+    LLM04 = "LLM04"  # Model Denial of Service
+    LLM05 = "LLM05"  # Supply Chain Vulnerabilities
+    LLM06 = "LLM06"  # Sensitive Information Disclosure
+    LLM07 = "LLM07"  # Insecure Plugin Design
+    LLM08 = "LLM08"  # Excessive Agency
+    LLM09 = "LLM09"  # Overreliance
+    LLM10 = "LLM10"  # Model Theft
 
 
 @dataclass
