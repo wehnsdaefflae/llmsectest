@@ -1,0 +1,84 @@
+"""Unified LLM adapter interface.
+
+Every provider (OpenAI, Anthropic, HuggingFace, local runtimes) is wrapped in a
+single `LLMAdapter` contract so that security probes can target any model the
+same way. Probes depend only on this module, never on a vendor SDK.
+"""
+
+from __future__ import annotations
+
+import abc
+from dataclasses import dataclass, field
+from enum import Enum
+
+
+class Role(str, Enum):
+    SYSTEM = "system"
+    USER = "user"
+    ASSISTANT = "assistant"
+
+
+@dataclass(frozen=True)
+class Message:
+    role: Role
+    content: str
+
+    @staticmethod
+    def system(content: str) -> "Message":
+        return Message(Role.SYSTEM, content)
+
+    @staticmethod
+    def user(content: str) -> "Message":
+        return Message(Role.USER, content)
+
+    @staticmethod
+    def assistant(content: str) -> "Message":
+        return Message(Role.ASSISTANT, content)
+
+
+@dataclass
+class CompletionRequest:
+    messages: list[Message]
+    max_tokens: int = 512
+    temperature: float = 0.0
+    stop: list[str] | None = None
+    extra: dict = field(default_factory=dict)
+
+
+@dataclass
+class CompletionResponse:
+    text: str
+    model: str
+    provider: str
+    raw: object = None
+    usage: dict = field(default_factory=dict)
+
+
+class AdapterError(RuntimeError):
+    """Raised when an adapter cannot complete a request."""
+
+
+class LLMAdapter(abc.ABC):
+    """Provider-agnostic chat-completion interface.
+
+    Concrete adapters lazily import their vendor SDK inside ``__init__`` so that
+    importing this package never requires every provider's dependency to be
+    installed.
+    """
+
+    provider: str = "base"
+
+    def __init__(self, model: str):
+        self.model = model
+
+    @abc.abstractmethod
+    def complete(self, request: CompletionRequest) -> CompletionResponse:
+        """Run one chat completion and return the assistant text."""
+
+    def prompt(self, text: str, *, system: str | None = None, **kwargs) -> str:
+        """Convenience: send a single user turn, return the response text."""
+        messages: list[Message] = []
+        if system is not None:
+            messages.append(Message.system(system))
+        messages.append(Message.user(text))
+        return self.complete(CompletionRequest(messages=messages, **kwargs)).text

@@ -1,0 +1,43 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "llmsectest"
+version = "0.0.1"
+description = "A pytest-native security testing framework for LLM applications (OWASP LLM Top 10)."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mark Wernsdorfer" }]
+keywords = ["llm", "security", "pytest", "owasp", "sarif", "red-team"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Framework :: Pytest",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+]
+dependencies = ["pytest>=7.4.0"]
+
+[project.optional-dependencies]
+openai = ["openai>=1.0"]
+anthropic = ["anthropic>=0.39"]
+huggingface = ["huggingface_hub>=0.25"]
+all = ["openai>=1.0", "anthropic>=0.39", "huggingface_hub>=0.25"]
+dev = ["pytest>=7.4.0", "pytest-cov", "ruff", "mypy"]
+
+[project.urls]
+Homepage = "https://llmsec.dev"
+Repository = "https://github.com/wehnsdaefflae/llmsectest"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/llmsectest"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
