@@ -11,6 +11,14 @@ from .adapters import (
     Role,
     get_adapter,
 )
+from .probes import (
+    ProbeCase,
+    ProbeOutcome,
+    cases_for,
+    get_corpus,
+    resolve_target,
+    run_probe,
+)
 from .reporting import (
     RiskScore,
     RiskScoringEngine,
@@ -28,14 +36,20 @@ __all__ = [
     "CompletionResponse",
     "LLMAdapter",
     "Message",
+    "ProbeCase",
+    "ProbeOutcome",
     "Role",
     "RiskScore",
     "RiskScoringEngine",
     "TestResult",
     "__version__",
     "calculate_statistics",
+    "cases_for",
     "generate_console_summary",
     "get_adapter",
+    "get_corpus",
     "get_coverage_gaps",
+    "resolve_target",
+    "run_probe",
     "validate_sarif",
 ]

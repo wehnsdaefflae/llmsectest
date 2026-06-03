@@ -3,16 +3,18 @@
 A pytest-native security testing framework for LLM applications, mapped to the
 [OWASP LLM Top 10](https://owasp.org/www-project-top-10-for-large-language-model-applications/).
 Write security tests as ordinary pytest tests; get SARIF / HTML / JSON / Markdown
-reports and CVSS-scored findings.
+reports and severity- and risk-scored findings.
 
 Funded by the [Prototype Fund](https://prototypefund.de) (FKZ 16IS26S10). MIT-licensed.
 
-> **Status: pre-alpha (grant week 1).** Two pieces are in place: the unified LLM
-> adapter, and the pytest plugin + reporting layer (SARIF v2.1.0 / HTML / JSON /
-> Markdown, OWASP metadata, risk scoring, baselines, policy gates). The OWASP
-> probe modules that exercise a live model on top of the adapter land next; the
-> tests under [`examples/`](examples/) currently demonstrate the pipeline against
-> deterministic mock fixtures.
+> **Status: pre-alpha (grant week 1).** In place: the unified LLM adapter; the
+> pytest plugin + reporting layer (SARIF v2.1.0 / HTML / JSON / Markdown, OWASP
+> metadata, risk scoring, baselines, policy gates); and the first real,
+> adapter-driven probe suite covering **OWASP LLM01 (prompt injection), LLM02
+> (sensitive information disclosure) and LLM07 (system prompt leakage)**. The
+> remaining categories and CVSS v4 scoring follow on the roadmap. The modules
+> under [`examples/`](examples/) demonstrate the reporting pipeline across all
+> ten categories with deterministic mock fixtures.
 
 ## The unified adapter
 
@@ -35,7 +37,36 @@ from llmsectest.adapters import EchoAdapter, ScriptedAdapter
 llm = ScriptedAdapter(lambda req: "SECRET-LEAKED" if "key" in req.messages[-1].content else "no")
 ```
 
-## Run it as a security scanner
+## Run the OWASP probe suite
+
+The packaged probe suite drives a curated red-team corpus (LLM01/02/07) through
+the adapter against a target you choose, and writes a SARIF report. A failing
+probe is a *finding*, so a non-zero exit means the target is vulnerable.
+
+```bash
+llmsectest                                   # offline demo target (shows findings)
+llmsectest --target openai:gpt-4o-mini       # scan a live model
+llmsectest --target anthropic:claude-3-5-haiku --report-formats=sarif,html,json,markdown
+llmsectest --target demo-defended            # offline hardened target (passes)
+
+llmsectest --list-probes                     # list the corpus
+llmsectest --check                           # OWASP coverage map
+llmsectest --validate results/pytest-results.sarif
+```
+
+Live providers import their SDK lazily and read the relevant API key from the
+environment. The corpus and detectors are importable, too:
+
+```python
+from llmsectest import get_adapter, get_corpus, run_probe
+
+target = get_adapter("openai", model="gpt-4o-mini")
+for case in get_corpus():
+    outcome = run_probe(target, case)
+    print(case.id, "VULNERABLE" if outcome.vulnerable else "ok", "-", outcome.evidence)
+```
+
+## Author your own security tests
 
 Mark a test with its OWASP category and severity; the plugin captures the
 outcome and emits reports. Reporting is opt-in — pass `--sarif-output` (or set
