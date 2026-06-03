@@ -11,8 +11,17 @@ from .adapters import (
     Role,
     get_adapter,
 )
+from .reporting import (
+    RiskScore,
+    RiskScoringEngine,
+    TestResult,
+    calculate_statistics,
+    generate_console_summary,
+    get_coverage_gaps,
+    validate_sarif,
+)
 
-__version__ = "0.0.1"
+__version__ = "0.1.0"
 
 __all__ = [
     "CompletionRequest",
@@ -20,6 +29,13 @@ __all__ = [
     "LLMAdapter",
     "Message",
     "Role",
+    "RiskScore",
+    "RiskScoringEngine",
+    "TestResult",
     "__version__",
+    "calculate_statistics",
+    "generate_console_summary",
     "get_adapter",
+    "get_coverage_gaps",
+    "validate_sarif",
 ]

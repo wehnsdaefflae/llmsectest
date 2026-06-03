@@ -11,3 +11,7 @@ build/
 venv/
 .venv/
 *.env
+
+# generated security reports
+results/
+*.sarif
