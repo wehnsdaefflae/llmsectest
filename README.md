@@ -51,8 +51,12 @@ llmsectest --target demo-defended            # offline hardened target (passes)
 
 llmsectest --list-probes                     # list the corpus
 llmsectest --check                           # OWASP coverage map
-llmsectest --validate results/pytest-results.sarif
+llmsectest --target demo-defended --validate # validate that target's report
 ```
+
+Each run writes to a per-target path (`results/<target-slug>.sarif`), so scanning
+several targets in a row never overwrites an earlier report; pass `--sarif-output`
+to choose your own. `--validate` with no path checks the current target's report.
 
 Live providers import their SDK lazily and read the relevant API key from the
 environment. The corpus and detectors are importable, too:

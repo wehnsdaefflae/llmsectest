@@ -17,9 +17,14 @@ Examples:
 
 A failing probe is a *finding*: a non-zero exit means the target is vulnerable.
 With no --target, the suite runs against a built-in offline demo app.
+
+Reports default to a per-target path (``results/<target-slug>.sarif``) so that
+scanning several targets in a row doesn't silently overwrite earlier reports;
+pass ``--sarif-output`` to choose your own path.
 """
 
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -27,6 +32,21 @@ from pathlib import Path
 from .reporting.owasp_metadata import OWASP_LLM_CATEGORIES
 
 SUITE_DIR = Path(__file__).resolve().parent / "suite"
+
+# When no --target is given the suite runs against this offline demo app.
+DEFAULT_TARGET = "demo-vulnerable"
+
+
+def target_slug(target: str | None) -> str:
+    """Filesystem-safe slug for a target spec (e.g. ``openai:gpt-4o-mini`` ->
+    ``openai-gpt-4o-mini``); falls back to the offline demo target."""
+    slug = re.sub(r"[^a-z0-9]+", "-", (target or DEFAULT_TARGET).lower()).strip("-")
+    return slug or DEFAULT_TARGET
+
+
+def default_sarif_path(target: str | None) -> str:
+    """Per-target default SARIF path so consecutive runs don't overwrite."""
+    return f"results/{target_slug(target)}.sarif"
 
 
 def print_banner():
@@ -95,14 +115,18 @@ def run_suite(args: list, target: str | None) -> int:
     has_path = any(not a.startswith("-") for a in args)
     test_path = [] if has_path else [str(SUITE_DIR)]
 
+    # Inject a per-target SARIF path unless the user chose one explicitly.
+    user_sarif = any(a == "--sarif-output" or a.startswith("--sarif-output=") for a in args)
+    sarif_args = [] if user_sarif else [f"--sarif-output={default_sarif_path(target)}"]
+
     cmd = [
         sys.executable, "-m", "pytest",
-        "--sarif-output=results/pytest-results.sarif",
+        *sarif_args,
         *test_path,
         *args,
     ]
     print_banner()
-    print(f"\nTarget: {os.environ.get('LLMSECTEST_TARGET', 'demo-vulnerable (offline demo)')}")
+    print(f"\nTarget: {target or f'{DEFAULT_TARGET} (offline demo)'}")
     print(f"Running: {' '.join(cmd)}\n")
     return subprocess.call(cmd)
 
@@ -119,14 +143,18 @@ def main():
     if "--list-probes" in args:
         list_probes()
         return 0
+
+    args, target = _extract_target(args)
+
     if "--validate" in args:
         from .reporting import validate_sarif
 
         idx = args.index("--validate")
-        path = args[idx + 1] if idx + 1 < len(args) else "results/pytest-results.sarif"
+        nxt = args[idx + 1] if idx + 1 < len(args) else None
+        # An explicit path wins; otherwise validate this target's default report.
+        path = nxt if (nxt and not nxt.startswith("-")) else default_sarif_path(target)
         return 0 if validate_sarif(path) else 1
 
-    args, target = _extract_target(args)
     return run_suite(args, target)
 
 
