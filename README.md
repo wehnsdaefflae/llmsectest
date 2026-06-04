@@ -5,7 +5,9 @@ A pytest-native security testing framework for LLM applications, mapped to the
 Write security tests as ordinary pytest tests; get SARIF / HTML / JSON / Markdown
 reports and severity- and risk-scored findings.
 
-Funded by the [Prototype Fund](https://prototypefund.de) (FKZ 16IS26S10). MIT-licensed.
+Funded by the German Federal Ministry of Research, Technology and Space (BMFTR)
+via the [Prototype Fund](https://prototypefund.de) (FKZ 16IS26S10). MIT-licensed.
+See [Funding](#funding).
 
 > **Status: pre-alpha (grant week 1).** In place: the unified LLM adapter; the
 > pytest plugin + reporting layer (SARIF v2.1.0 / HTML / JSON / Markdown, OWASP
@@ -115,3 +117,15 @@ python -m venv venv && . venv/bin/activate
 pip install -e ".[dev]"
 pytest
 ```
+
+## Funding
+
+LLMSecTest is funded by the German **Federal Ministry of Research, Technology and
+Space (BMFTR)** through the **[Prototype Fund](https://prototypefund.de)** under
+funding code (Förderkennzeichen) **16IS26S10**.
+
+<p>
+  <img src="assets/bmftr-funded-by-en.png" alt="With funding from the Federal Ministry of Research, Technology and Space (BMFTR)" height="90">
+  &nbsp;&nbsp;&nbsp;
+  <img src="assets/prototype-fund-en.png" alt="Supported by the Prototype Fund" height="70">
+</p>
