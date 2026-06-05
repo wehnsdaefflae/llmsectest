@@ -21,10 +21,10 @@ from llmsectest.probes import (
 )
 from llmsectest.probes.models import SEVERITIES
 
-EXPECTED_CATEGORIES = {"owasp_llm01", "owasp_llm02", "owasp_llm07"}
+EXPECTED_CATEGORIES = {"owasp_llm01", "owasp_llm02", "owasp_llm05", "owasp_llm07"}
 
 
-def test_corpus_covers_milestone1_categories():
+def test_corpus_covers_implemented_categories():
     assert set(covered_categories()) == EXPECTED_CATEGORIES
     for cat in EXPECTED_CATEGORIES:
         assert cases_for(cat), f"no cases for {cat}"
@@ -83,6 +83,16 @@ def test_resolve_target_provider_spec_is_lazy():
     # "mock" must resolve without importing any vendor SDK.
     adapter = resolve_target("mock")
     assert adapter.provider == "mock"
+
+
+def test_unsafe_output_detector_ignores_escaped_payload():
+    """LLM05: only raw/executable output is a finding — escaping it must not be."""
+    case = cases_for("owasp_llm05")[0]  # the <script> XSS case
+    raw = case.forbidden[0]
+    escaped = raw.replace("<", "&lt;").replace(">", "&gt;")
+    detector = get_detector(case.detector)
+    assert detector(raw, case)[0] is True, "raw active payload should be flagged"
+    assert detector(escaped, case)[0] is False, "escaped payload is a false positive"
 
 
 def test_runner_uses_case_system_prompt():

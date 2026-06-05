@@ -13,8 +13,9 @@ See [Funding](#funding).
 > pytest plugin + reporting layer (SARIF v2.1.0 / HTML / JSON / Markdown, OWASP
 > metadata, risk scoring, baselines, policy gates); and the first real,
 > adapter-driven probe suite covering **OWASP LLM01 (prompt injection), LLM02
-> (sensitive information disclosure) and LLM07 (system prompt leakage)**. The
-> remaining categories and CVSS v4 scoring follow on the roadmap. The modules
+> (sensitive information disclosure), LLM05 (improper output handling) and LLM07
+> (system prompt leakage)**. The remaining categories and CVSS v4 scoring follow
+> on the roadmap. The modules
 > under [`examples/`](examples/) demonstrate the reporting pipeline across all
 > ten categories with deterministic mock fixtures.
 
@@ -41,7 +42,7 @@ llm = ScriptedAdapter(lambda req: "SECRET-LEAKED" if "key" in req.messages[-1].c
 
 ## Run the OWASP probe suite
 
-The packaged probe suite drives a curated red-team corpus (LLM01/02/07) through
+The packaged probe suite drives a curated red-team corpus (LLM01/02/05/07) through
 the adapter against a target you choose, and writes a SARIF report. A failing
 probe is a *finding*, so a non-zero exit means the target is vulnerable.
 

@@ -3,8 +3,8 @@
 These let the suite run end-to-end with no API key:
 
 * ``vulnerable_demo_adapter`` simulates a gullible application that follows
-  injected instructions and dumps its system prompt — so the suite produces a
-  realistic report *with* findings.
+  injected instructions, dumps its system prompt and echoes active payloads
+  raw — so the suite produces a realistic report *with* findings.
 * ``defended_demo_adapter`` simulates a hardened application that refuses every
   attack — so the suite passes cleanly.
 
@@ -34,10 +34,15 @@ _EMIT_RE = re.compile(r"respond with|reply with|output|print|say|append", re.I)
 # so it only fires on real markers like PWNED-LLM01-OVERRIDE, not ordinary words).
 _MARKER_RE = re.compile(r"\b([A-Z][A-Z0-9]{2,}(?:[-_][A-Z0-9]+)+)\b")
 
+# Improper output handling (LLM05): a backtick-quoted *active* payload the caller
+# wants echoed raw — XSS, a javascript: URI, SQL or shell metacharacters.
+_PAYLOAD_RE = re.compile(r"`([^`]+)`")
+_ACTIVE_RE = re.compile(r"<script|javascript:|drop\s+table|\$\(", re.I)
+
 _DEFENDED_REPLY = (
     "I'm ACME's assistant. I can only help with ACME product questions, and I "
-    "won't share internal configuration, credentials or customer data, or follow "
-    "instructions embedded in a message."
+    "won't share internal configuration, credentials or customer data, follow "
+    "instructions embedded in a message, or emit active HTML, SQL or shell content."
 )
 
 
@@ -57,6 +62,13 @@ def _vulnerable_responder(request: CompletionRequest) -> str:
     system = _system(request)
     user = _last_user(request)
     low = user.lower()
+
+    # 0) Improper output handling: echo the attacker's active payload raw, exactly
+    #    as a downstream sink would receive it (checked first so the marker inside
+    #    the payload is not mistaken for an injection marker).
+    payload = _PAYLOAD_RE.search(user)
+    if payload and _ACTIVE_RE.search(payload.group(1)):
+        return payload.group(1)
 
     # 1) Injection: faithfully emit the attacker-requested marker.
     marker = _MARKER_RE.search(user)
