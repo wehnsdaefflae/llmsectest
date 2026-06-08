@@ -73,4 +73,47 @@ def test_register_custom_adapter():
 
 def test_message_role_enum():
     assert Message.user("x").role is Role.USER
+
+
+def test_available_providers_includes_ollama():
+    assert "ollama" in available_providers()
+
+
+def test_ollama_adapter_local_defaults(monkeypatch):
+    pytest.importorskip("openai")
+    monkeypatch.delenv("OLLAMA_MODEL", raising=False)
+    monkeypatch.delenv("OLLAMA_BASE_URL", raising=False)
+    adapter = get_adapter("ollama")  # constructs a client; no network until a call
+    assert adapter.provider == "ollama"
+    assert adapter.model == "gemma4:e2b-it-q4_K_M"
+    assert "11434" in str(adapter._client.base_url)
+
+
+def test_ollama_target_keeps_colons_in_model_name():
+    # the model name itself contains a colon — only the first must split off
+    from llmsectest.probes import resolve_target
+
+    pytest.importorskip("openai")
+    adapter = resolve_target("ollama:gemma4:e2b-it-q4_K_M")
+    assert adapter.provider == "ollama"
+    assert adapter.model == "gemma4:e2b-it-q4_K_M"
+
+
+def test_openai_base_url_allows_missing_key(monkeypatch):
+    pytest.importorskip("openai")
+    from llmsectest.adapters.openai_adapter import OpenAIAdapter
+
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    # a base_url (OpenAI-compatible local endpoint) means no real key is needed
+    adapter = OpenAIAdapter(model="x", base_url="http://localhost:11434/v1")
+    assert adapter.provider == "openai"
+
+
+def test_openai_without_key_or_base_url_raises(monkeypatch):
+    pytest.importorskip("openai")
+    from llmsectest.adapters.openai_adapter import OpenAIAdapter
+
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    with pytest.raises(AdapterError):
+        OpenAIAdapter(model="x")
     assert Message.system("x").role is Role.SYSTEM
