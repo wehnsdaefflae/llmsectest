@@ -15,3 +15,4 @@ venv/
 # generated security reports
 results/
 *.sarif
+site/
