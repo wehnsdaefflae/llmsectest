@@ -93,7 +93,7 @@ OWASP_LLM_CATEGORIES: Dict[str, OWASPCategory] = {
     ),
     "owasp_llm03": OWASPCategory(
         id="LLM03",
-        name="Supply Chain Vulnerabilities",
+        name="Supply Chain",
         description="Vulnerabilities in third-party components, training data, or models can compromise system integrity.",
         full_description=(
             "LLM supply chain vulnerabilities focus on the risks associated with the lifecycle of LLM components, "
@@ -129,45 +129,48 @@ OWASP_LLM_CATEGORIES: Dict[str, OWASPCategory] = {
     ),
     "owasp_llm04": OWASPCategory(
         id="LLM04",
-        name="Model Denial of Service",
-        description="Attackers cause resource exhaustion leading to degraded service or high costs.",
+        name="Data and Model Poisoning",
+        description="Tampered training, fine-tuning or embedding data introduces backdoors, bias or degraded model behavior.",
         full_description=(
-            "Model Denial of Service (DoS) occurs when an attacker interacts with an LLM in a way that "
-            "consumes an exceptionally high amount of resources, leading to degraded service quality for "
-            "all users and increased resource costs. The vulnerability is particularly concerning for "
-            "LLMs due to their resource-intensive nature and the potential for variable input lengths "
-            "that can trigger complex processing."
+            "Data and model poisoning occurs when pre-training, fine-tuning or embedding data is "
+            "manipulated to introduce vulnerabilities, backdoors or biases. Poisoning can degrade model "
+            "performance, produce attacker-chosen outputs on a trigger phrase, emit toxic or biased "
+            "content, or exfiltrate data. It can be introduced through unvetted external data sources, "
+            "compromised fine-tuning pipelines, or malicious entries in a shared/federated dataset, and "
+            "it compromises the integrity of every downstream prediction the model makes."
         ),
         help_text=(
-            "To prevent Model DoS: (1) Implement input validation to limit input size and complexity, "
-            "(2) Set rate limiting on API requests per user/IP, (3) Implement resource monitoring and "
-            "(4) Set maximum processing time for queries, (5) Design systems to handle "
-            "expected load with graceful degradation, (6) Monitor for unusual resource consumption patterns."
+            "To mitigate data and model poisoning: (1) Track data provenance and vet all training, "
+            "fine-tuning and RAG data sources, (2) Sandbox and restrict the model's access to untrusted "
+            "data sources, (3) Validate and sanitize training data; filter outliers and suspected "
+            "poisoned samples, (4) Test models for backdoors/triggers and benchmark behavior against a "
+            "trusted baseline, (5) Verify signatures and integrity of third-party models and datasets, "
+            "(6) Maintain an ML-BOM and monitor deployed model behavior for drift or anomalies."
         ),
-        cwe_ids=["CWE-400", "CWE-770", "CWE-920"],
+        cwe_ids=["CWE-349", "CWE-20", "CWE-707"],
         references=[
             "https://owasp.org/www-project-top-10-for-large-language-model-applications/",
             "https://llmtop10.com/llm04",
         ],
-        tags=["denial-of-service", "resource-exhaustion", "availability"],
+        tags=["data-poisoning", "model-poisoning", "backdoor", "training-data", "integrity"],
         remediation_steps=[
-            "Enforce strict input size limits (tokens, characters) on all LLM queries",
-            "Implement rate limiting per user, API key, and IP address",
-            "Set maximum processing time timeouts for query execution",
-            "Deploy resource quotas and throttling for API consumers",
-            "Use load balancing and auto-scaling to handle traffic spikes gracefully",
-            "Monitor resource usage patterns and alert on anomalies",
-            "Implement CAPTCHA or proof-of-work for unauthenticated requests",
-            "Queue and prioritize requests to prevent resource starvation"
+            "Track data provenance and vet every training, fine-tuning and RAG data source",
+            "Validate, clean and filter training data to remove outliers and poisoned samples",
+            "Sandbox the model and restrict its access to untrusted or unverified data sources",
+            "Test models for backdoors and triggers; compare behavior against a trusted baseline",
+            "Verify signatures and checksums of third-party models and datasets before use",
+            "Maintain a machine-learning bill of materials (ML-BOM) for data and model lineage",
+            "Use red-team and adversarial robustness testing during model evaluation",
+            "Monitor deployed model outputs for drift, bias and anomalous behavior over time"
         ],
-        compliance_frameworks=["NIST AI RMF", "ISO/IEC 42001", "NIST CSF 2.0", "SOC 2", "ISO/IEC 27001"],
+        compliance_frameworks=["NIST AI RMF", "ISO/IEC 42001", "EU AI Act", "NIST CSF 2.0", "SOC 2", "ISO/IEC 27001"],
     ),
     "owasp_llm05": OWASPCategory(
         id="LLM05",
-        name="Insecure Output Handling",
+        name="Improper Output Handling",
         description="Inadequate validation of LLM outputs leads to injection attacks in downstream systems.",
         full_description=(
-            "Insecure output handling refers to insufficient validation, sanitization, and handling of "
+            "Improper output handling refers to insufficient validation, sanitization, and handling of "
             "outputs generated by large language models before they are passed to other components and "
             "systems. Since LLM-generated content can be controlled by prompt input, this behavior is "
             "similar to providing users indirect access to additional functionality. This can lead to "
@@ -200,39 +203,42 @@ OWASP_LLM_CATEGORIES: Dict[str, OWASPCategory] = {
     ),
     "owasp_llm06": OWASPCategory(
         id="LLM06",
-        name="Insecure Plugin/Tool Use",
-        description="LLM plugins/tools with inadequate access control enable unauthorized actions or data access.",
+        name="Excessive Agency",
+        description="LLM-based systems granted excessive permissions, functionality or autonomy take damaging unintended actions.",
         full_description=(
-            "LLM plugins and tools are extensions that enable LLMs to interact with external resources "
-            "and systems. Insecure plugin design can allow attackers to craft malicious inputs that "
-            "trigger unintended actions, bypass access controls, or exploit vulnerabilities in the "
-            "plugin interface. This can lead to unauthorized data access, remote code execution, "
-            "privilege escalation, and other security issues."
+            "Excessive agency is the vulnerability that lets an LLM-based system perform damaging actions "
+            "in response to unexpected, ambiguous or manipulated output. It stems from excessive "
+            "functionality (tools the agent does not need), excessive permissions (tools that can do more "
+            "than the task requires), or excessive autonomy (high-impact actions taken without human "
+            "confirmation). Because an agent's actions can be steered by prompt injection or hallucination, "
+            "an over-privileged tool turns a model mistake into account takeover, data destruction, "
+            "fund movement or remote code execution."
         ),
         help_text=(
-            "To secure LLM plugins and tools: (1) Enforce strict parameterized input where possible, "
-            "(2) Implement comprehensive input validation and sanitization, (3) Apply appropriate "
-            "authentication and authorization to plugin access, (4) Implement manual user approval "
-            "for high-risk actions, (5) Follow OWASP API Security Top 10 guidelines, (6) Minimize "
-            "plugin functionality to only what is necessary, (7) Monitor and log plugin usage."
+            "To prevent excessive agency: (1) Limit the tools/plugins an agent can call to the minimum "
+            "necessary, (2) Limit each tool's functions and permissions to the minimum necessary, "
+            "(3) Avoid open-ended tools (e.g. run a shell) in favour of narrowly-scoped ones, (4) Require "
+            "human-in-the-loop approval for high-impact or state-changing actions, (5) Enforce authorization "
+            "in downstream systems rather than trusting the LLM, (6) Track user authority separately and "
+            "validate it before acting, (7) Log and monitor every agent-initiated action."
         ),
-        cwe_ids=["CWE-285", "CWE-862", "CWE-863"],
+        cwe_ids=["CWE-250", "CWE-269", "CWE-732"],
         references=[
             "https://owasp.org/www-project-top-10-for-large-language-model-applications/",
             "https://llmtop10.com/llm06",
         ],
-        tags=["plugin", "tool-use", "access-control", "authorization"],
+        tags=["excessive-agency", "tool-use", "authorization", "autonomy", "privilege-escalation"],
         remediation_steps=[
-            "Enforce parameterized input and strict type validation for all plugin parameters",
-            "Implement comprehensive authentication and authorization for plugin access",
-            "Apply principle of least privilege to plugin permissions and capabilities",
-            "Require explicit user approval for high-risk plugin actions (file access, code execution)",
-            "Validate and sanitize all plugin inputs and outputs rigorously",
-            "Implement plugin sandboxing to isolate execution environments",
-            "Audit and review third-party plugins for security vulnerabilities",
-            "Monitor and log all plugin invocations for security analysis"
+            "Grant the agent the minimum set of tools needed and remove unused functionality",
+            "Scope each tool's permissions to least privilege (read-only where possible)",
+            "Avoid high-blast-radius tools (raw shell, generic DB write) in favour of narrow operations",
+            "Require explicit human approval before destructive or money-/account-changing actions",
+            "Enforce authorization checks in the downstream system, never in the prompt alone",
+            "Track the end user's authority independently and validate it before any action",
+            "Require multi-party or step-up confirmation for irreversible operations",
+            "Log and monitor all agent-initiated actions for anomaly detection and audit"
         ],
-        compliance_frameworks=["NIST AI RMF", "ISO/IEC 42001", "NIST CSF 2.0", "SOC 2", "ISO/IEC 27001"],
+        compliance_frameworks=["NIST AI RMF", "ISO/IEC 42001", "EU AI Act", "NIST CSF 2.0", "SOC 2", "ISO/IEC 27001"],
     ),
     "owasp_llm07": OWASPCategory(
         id="LLM07",
@@ -274,68 +280,69 @@ OWASP_LLM_CATEGORIES: Dict[str, OWASPCategory] = {
     ),
     "owasp_llm08": OWASPCategory(
         id="LLM08",
-        name="Excessive Agency",
-        description="LLM-based systems granted excessive permissions or autonomy enable unintended harmful actions.",
+        name="Vector and Embedding Weaknesses",
+        description="Weaknesses in how embeddings and vector stores are generated, stored or retrieved enable data leakage or RAG poisoning.",
         full_description=(
-            "Excessive agency in LLM-based systems occurs when they are granted too much autonomy, "
-            "permission, or functionality, enabling them to take actions beyond their intended scope. "
-            "This can happen when LLMs have access to high-privilege APIs, lack proper authorization "
-            "checks, or are not constrained in the types of actions they can perform. The risk is "
-            "amplified because LLMs can be manipulated through prompt injection or may hallucinate "
-            "and take incorrect actions autonomously."
+            "Vector and embedding weaknesses arise in systems that use Retrieval-Augmented Generation "
+            "(RAG) and other embedding-based methods. Flaws in how vectors and embeddings are generated, "
+            "stored, retrieved or access-controlled can be exploited — intentionally or accidentally — to "
+            "inject harmful content, retrieve another tenant's data, leak sensitive information embedded "
+            "in the index, or invert embeddings back into their source text. Multi-tenant vector stores "
+            "without strict partitioning, and federated knowledge bases, are especially exposed."
         ),
         help_text=(
-            "To prevent excessive agency: (1) Limit plugins/tools to minimum necessary functions, "
-            "(2) Implement human-in-the-loop approval for high-risk actions, (3) Apply least privilege "
-            "principles to LLM plugin access, (4) Track user authorization separately from LLM agency, "
-            "(5) Implement comprehensive logging and monitoring of LLM actions, (6) Set boundaries on "
-            "action chains and autonomous behavior, (7) Require explicit user consent for sensitive "
-            "operations."
+            "To mitigate vector and embedding weaknesses: (1) Enforce per-tenant and per-user access "
+            "controls and logical partitioning on the vector store, (2) Validate and sanitize documents "
+            "before they are embedded and indexed, (3) Treat retrieved context as untrusted and guard "
+            "against embedded instructions (indirect injection), (4) Classify and tag data so retrieval "
+            "respects permissions, (5) Monitor retrieval for anomalous or cross-tenant access, (6) Limit "
+            "what sensitive content is embedded, since embeddings can be inverted to recover source text."
         ),
-        cwe_ids=["CWE-250", "CWE-269", "CWE-732"],
+        cwe_ids=["CWE-200", "CWE-285", "CWE-863"],
         references=[
             "https://owasp.org/www-project-top-10-for-large-language-model-applications/",
             "https://llmtop10.com/llm08",
         ],
-        tags=["authorization", "privilege-escalation", "autonomy"],
+        tags=["rag", "embeddings", "vector-store", "access-control", "data-leakage"],
         remediation_steps=[
-            "Apply least privilege principle - grant LLM minimum necessary permissions only",
-            "Implement human-in-the-loop approval for destructive or sensitive operations",
-            "Limit the scope and capabilities of available plugins/tools to essential functions only",
-            "Track user authorization separately and validate before LLM-initiated actions",
-            "Set explicit boundaries on action chains and autonomous decision-making depth",
-            "Implement comprehensive audit logging for all LLM-initiated actions",
-            "Require explicit user consent before performing state-changing operations",
-            "Use role-based access control (RBAC) to restrict LLM capabilities per user context"
+            "Apply fine-grained, per-tenant access control and partitioning to the vector database",
+            "Validate, sanitize and classify documents before embedding and indexing them",
+            "Treat retrieved chunks as untrusted input and defend against indirect prompt injection",
+            "Tag data with permissions and enforce them at retrieval time, not just at ingest",
+            "Minimize embedding of secrets/PII, since embeddings can be inverted to recover text",
+            "Monitor and log retrieval queries for cross-tenant or anomalous access patterns",
+            "Detect and resolve conflicting or poisoned entries in federated knowledge bases",
+            "Encrypt vector stores at rest and restrict administrative access to the index"
         ],
         compliance_frameworks=["NIST AI RMF", "ISO/IEC 42001", "EU AI Act", "NIST CSF 2.0", "SOC 2", "ISO/IEC 27001"],
     ),
     "owasp_llm09": OWASPCategory(
         id="LLM09",
-        name="Overreliance",
-        description="Users or systems overly depend on LLM outputs without verification, leading to misinformation or errors.",
+        name="Misinformation",
+        description="LLMs produce false but plausible content (hallucination), which overreliance lets propagate into decisions.",
         full_description=(
-            "Overreliance on LLMs occurs when systems or users excessively depend on LLM-generated "
-            "content without adequate oversight, verification, or understanding of the model's "
-            "limitations. LLMs can hallucinate, generate plausible but incorrect information, produce "
-            "biased content, or provide inconsistent outputs. When critical decisions are based solely "
-            "on unverified LLM outputs, it can lead to misinformation, legal issues, security "
-            "vulnerabilities, and reputational damage."
+            "Misinformation occurs when an LLM produces false or misleading information that appears "
+            "credible. Its main cause is hallucination — the model fills gaps with statistically "
+            "plausible but incorrect content — compounded by bias, incomplete training data, and "
+            "fabricated facts, citations or code packages. Overreliance, where users or systems trust "
+            "unverified output without oversight, is the amplifier that lets misinformation reach "
+            "decisions, leading to security breaches, reputational harm, legal liability, and (via "
+            "hallucinated dependencies) supply-chain compromise."
         ),
         help_text=(
-            "To mitigate overreliance: (1) Regularly monitor and review LLM outputs with human "
-            "oversight, (2) Implement cross-checking mechanisms and verification processes, "
-            "(3) Use confidence scores and uncertainty indicators in LLM outputs, (4) Clearly "
-            "communicate LLM limitations to users through disclaimers, (5) Provide source attribution "
-            "and references for LLM-generated content, (6) Implement automated validation for "
-            "fact-checkable claims, (7) Train users on LLM capabilities and limitations."
+            "To mitigate misinformation: (1) Ground outputs with retrieval-augmented generation from "
+            "trusted sources, (2) Cross-check and verify fact-checkable claims automatically, (3) Keep "
+            "human oversight and review for high-stakes outputs, (4) Provide source attribution and "
+            "citations, (5) Surface confidence/uncertainty and clear disclaimers of model limitations, "
+            "(6) Validate generated code and package names against real registries before use, (7) Train "
+            "users to recognize hallucinations and not over-rely on the model."
         ),
-        cwe_ids=["CWE-1024", "CWE-693"],
+        cwe_ids=["CWE-345", "CWE-1025", "CWE-693"],
         references=[
             "https://owasp.org/www-project-top-10-for-large-language-model-applications/",
             "https://llmtop10.com/llm09",
         ],
-        tags=["hallucination", "misinformation", "verification"],
+        tags=["misinformation", "hallucination", "overreliance", "verification"],
         remediation_steps=[
             "Implement mandatory human review for critical decisions based on LLM outputs",
             "Display confidence scores and uncertainty indicators alongside LLM responses",
@@ -350,40 +357,39 @@ OWASP_LLM_CATEGORIES: Dict[str, OWASPCategory] = {
     ),
     "owasp_llm10": OWASPCategory(
         id="LLM10",
-        name="Model Theft",
-        description="Unauthorized access to proprietary LLM models through extraction or replication.",
+        name="Unbounded Consumption",
+        description="Unrestricted, expensive inference enables denial of service, denial of wallet and model extraction.",
         full_description=(
-            "Model theft involves the unauthorized access, copying, or exfiltration of proprietary "
-            "LLM models. Attackers may exploit vulnerabilities in access controls, use API queries "
-            "to recreate the model, or employ side-channel attacks to extract model architecture and "
-            "weights. This can lead to economic loss, competitive disadvantage, exposure of sensitive "
-            "training data, and unauthorized access to model capabilities. The impact is particularly "
-            "severe for organizations that invest heavily in developing custom models."
+            "Unbounded consumption occurs when an LLM application allows excessive and uncontrolled "
+            "inference, letting attackers degrade service, drive up costs (denial of wallet), or "
+            "extract the model. Because each query is resource-intensive and input length is variable, "
+            "unthrottled or oversized requests can exhaust compute, inflate API bills, and — through "
+            "high-volume querying — enable functional model replication or distillation. It subsumes the "
+            "older 'Model Denial of Service' and 'Model Theft' risks under one resource-control category."
         ),
         help_text=(
-            "To prevent model theft: (1) Implement strong access controls and authentication for "
-            "model repositories, (2) Use encryption for models at rest and in transit, (3) Apply "
-            "rate limiting and monitoring to detect extraction attempts via API, (4) Implement "
-            "watermarking techniques to track model provenance, (5) Use model obfuscation when "
-            "deploying to edge devices, (6) Monitor for unusual query patterns indicating model "
-            "extraction, (7) Implement DRM and usage restrictions, (8) Maintain audit logs of "
-            "model access."
+            "To prevent unbounded consumption: (1) Validate and cap input size and complexity, "
+            "(2) Enforce rate limiting and quotas per user, API key and IP, (3) Set timeouts and "
+            "ceilings on output length and on multi-step/agentic work, (4) Track and budget spend, "
+            "alerting on denial-of-wallet patterns, (5) Throttle and monitor for high-volume querying "
+            "that indicates model extraction, (6) Apply graceful degradation and queuing under load, "
+            "(7) Restrict and log access to protect proprietary model weights."
         ),
-        cwe_ids=["CWE-284", "CWE-306", "CWE-311"],
+        cwe_ids=["CWE-400", "CWE-770", "CWE-920"],
         references=[
             "https://owasp.org/www-project-top-10-for-large-language-model-applications/",
             "https://llmtop10.com/llm10",
         ],
-        tags=["theft", "extraction", "intellectual-property"],
+        tags=["denial-of-service", "denial-of-wallet", "resource-exhaustion", "model-extraction", "availability"],
         remediation_steps=[
-            "Enforce strong authentication and authorization for all model access points",
-            "Encrypt models at rest using industry-standard encryption (AES-256)",
-            "Encrypt model transmissions using TLS 1.3 or equivalent",
-            "Implement rate limiting and query throttling to prevent model extraction via API",
-            "Deploy model watermarking to track unauthorized model distribution",
-            "Monitor for suspicious query patterns that may indicate extraction attempts",
-            "Use model obfuscation techniques when deploying to edge or untrusted environments",
-            "Maintain comprehensive audit logs of all model access and usage"
+            "Enforce strict input size and complexity limits on all inference requests",
+            "Apply rate limiting and quotas per user, API key and IP address",
+            "Cap output length and bound multi-step or agentic execution to prevent runaway cost",
+            "Set per-query timeouts and resource ceilings with graceful degradation under load",
+            "Track spend and alert on denial-of-wallet (cost-spike) patterns",
+            "Throttle and monitor high-volume querying that may indicate model extraction/distillation",
+            "Restrict, encrypt and log access to model weights and deployment infrastructure",
+            "Queue and prioritize requests to prevent resource starvation"
         ],
         compliance_frameworks=["NIST AI RMF", "ISO/IEC 42001", "EU AI Act", "NIST CSF 2.0", "SOC 2", "ISO/IEC 27001"],
     ),

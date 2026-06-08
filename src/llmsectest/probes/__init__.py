@@ -2,8 +2,9 @@
 
 A probe sends an attacker prompt through the unified :class:`LLMAdapter` and a
 detector scores the reply. The corpus currently covers OWASP LLM01 (prompt
-injection), LLM02 (sensitive information disclosure) and LLM07 (system prompt
-leakage); the packaged pytest suite in :mod:`llmsectest.suite` runs them.
+injection), LLM02 (sensitive information disclosure), LLM05 (improper output
+handling), LLM06 (excessive agency) and LLM07 (system prompt leakage); the
+packaged pytest suite in :mod:`llmsectest.suite` runs them.
 """
 
 from __future__ import annotations

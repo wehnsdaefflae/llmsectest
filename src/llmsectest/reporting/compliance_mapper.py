@@ -46,7 +46,7 @@ COMPLIANCE_MAPPINGS: Dict[str, List[ComplianceMapping]] = {
         _m("SOC 2", "CC6.7", "Confidentiality", "Common Criteria", "Entity implements controls to prevent unauthorized disclosure of sensitive information"),
         _m("ISO/IEC 27001", "A.8.11", "Data Masking", "Annex A", "Data masking is used in accordance with access control policy"),
     ],
-    "owasp_llm03": [  # Supply Chain Vulnerabilities
+    "owasp_llm03": [  # Supply Chain
         _m("NIST AI RMF", "GOVERN-1.3", "Third-Party Risk", "Govern", "Processes to address AI risks associated with third parties"),
         _m("NIST AI RMF", "MAP-1.5", "Supply Chain Dependencies", "Map", "Dependencies and relationships with external parties are documented"),
         _m("ISO/IEC 42001", "8.4", "Supply Chain Management", "Operation", "Controls for managing AI system supply chain risks"),
@@ -56,15 +56,16 @@ COMPLIANCE_MAPPINGS: Dict[str, List[ComplianceMapping]] = {
         _m("SOC 2", "CC9.2", "Vendor Management", "Common Criteria", "Entity implements controls over vendor and business partner risks"),
         _m("ISO/IEC 27001", "A.5.19", "Supplier Relationships", "Annex A", "Security in supplier relationships and supply chain managed"),
     ],
-    "owasp_llm04": [  # Model Denial of Service
-        _m("NIST AI RMF", "MANAGE-4.1", "Resource Management", "Manage", "AI system resource usage is monitored and managed"),
-        _m("ISO/IEC 42001", "8.5", "AI System Performance Monitoring", "Operation", "Monitoring of AI system performance and resource utilization"),
-        _m("NIST CSF 2.0", "PR.DS-4", "Availability", "Protect", "Adequate capacity to ensure availability is maintained"),
-        _m("NIST CSF 2.0", "DE.CM-8", "Performance Monitoring", "Detect", "System performance is monitored to detect anomalies"),
-        _m("SOC 2", "A1.2", "System Availability", "Availability", "Entity implements controls to meet system availability commitments"),
-        _m("ISO/IEC 27001", "A.8.6", "Capacity Management", "Annex A", "Capacity management to ensure required system performance"),
+    "owasp_llm04": [  # Data and Model Poisoning
+        _m("NIST AI RMF", "MAP-2.3", "Training Data Integrity", "Map", "Integrity and provenance of training, fine-tuning and embedding data is established"),
+        _m("ISO/IEC 42001", "7.3", "Data Management for AI", "Support", "Controls for managing the quality and integrity of AI training data"),
+        _m("EU AI Act", "Article 10", "Data and Data Governance", "High-Risk AI Requirements", "Training, validation and testing data sets are subject to data governance"),
+        _m("NIST CSF 2.0", "PR.DS-6", "Integrity Checking", "Protect", "Integrity-checking mechanisms verify software, model and data integrity"),
+        _m("NIST CSF 2.0", "ID.SC-2", "Supplier Assessment", "Identify", "Data and model suppliers are assessed using a risk-based approach"),
+        _m("SOC 2", "CC7.1", "Integrity Monitoring", "Common Criteria", "Entity detects unauthorized or anomalous changes to data and models"),
+        _m("ISO/IEC 27001", "A.8.10", "Data Integrity", "Annex A", "Controls protect the integrity of data used to train and operate models"),
     ],
-    "owasp_llm05": [  # Insecure Output Handling
+    "owasp_llm05": [  # Improper Output Handling
         _m("NIST AI RMF", "MANAGE-2.4", "Output Validation", "Manage", "AI system outputs are validated before use in downstream systems"),
         _m("ISO/IEC 42001", "8.2", "AI System Input/Output Management", "Operation", "Controls for managing and validating AI system outputs"),
         _m("EU AI Act", "Article 15", "Accuracy, Robustness and Cybersecurity", "High-Risk AI Requirements", "AI systems shall implement appropriate cybersecurity measures"),
@@ -72,7 +73,7 @@ COMPLIANCE_MAPPINGS: Dict[str, List[ComplianceMapping]] = {
         _m("SOC 2", "CC6.1", "Output Validation", "Common Criteria", "Entity implements controls over system outputs to prevent injection"),
         _m("ISO/IEC 27001", "A.8.3", "Output Data Validation", "Annex A", "Output data validation controls to prevent injection attacks"),
     ],
-    "owasp_llm06": [  # Insecure Plugin/Tool Use
+    "owasp_llm06": [  # Excessive Agency
         _m("NIST AI RMF", "GOVERN-2.1", "Authorization & Access Control", "Govern", "Authorization and access control mechanisms for AI systems"),
         _m("NIST AI RMF", "MANAGE-3.1", "Integration Security", "Manage", "Security of AI system integrations and extensions managed"),
         _m("ISO/IEC 42001", "8.3", "AI System Integration Management", "Operation", "Controls for secure integration of AI system components"),
@@ -89,16 +90,16 @@ COMPLIANCE_MAPPINGS: Dict[str, List[ComplianceMapping]] = {
         _m("SOC 2", "CC6.7", "Confidentiality", "Common Criteria", "Entity protects confidential information from unauthorized disclosure"),
         _m("ISO/IEC 27001", "A.5.12", "Classification of Information", "Annex A", "Information classification and protection requirements"),
     ],
-    "owasp_llm08": [  # Excessive Agency
-        _m("NIST AI RMF", "GOVERN-2.1", "Authorization Framework", "Govern", "Authorization mechanisms limit AI system capabilities appropriately"),
-        _m("NIST AI RMF", "MANAGE-3.2", "Autonomy Boundaries", "Manage", "Boundaries on AI system autonomy and decision-making authority"),
-        _m("ISO/IEC 42001", "8.6", "AI System Autonomy Management", "Operation", "Controls over AI system autonomous capabilities and permissions"),
-        _m("EU AI Act", "Article 14", "Human Oversight", "High-Risk AI Requirements", "High-risk AI systems shall have appropriate human oversight measures"),
-        _m("NIST CSF 2.0", "PR.AC-4", "Least Privilege", "Protect", "Access permissions follow principle of least privilege"),
-        _m("SOC 2", "CC6.3", "Privilege Management", "Common Criteria", "Entity implements controls to manage privileged access appropriately"),
-        _m("ISO/IEC 27001", "A.5.18", "Access Rights", "Annex A", "Access rights are provisioned following least privilege"),
+    "owasp_llm08": [  # Vector and Embedding Weaknesses
+        _m("NIST AI RMF", "MAP-5.1", "Data Access Control", "Map", "Access to data stores including vector indexes is identified and controlled"),
+        _m("ISO/IEC 42001", "7.3", "Data Management for AI", "Support", "Controls for managing data used in retrieval and embedding pipelines"),
+        _m("EU AI Act", "Article 10", "Data and Data Governance", "High-Risk AI Requirements", "Data governance covers data used for retrieval augmentation"),
+        _m("NIST CSF 2.0", "PR.AC-4", "Least Privilege", "Protect", "Access to vector stores follows least privilege and tenant partitioning"),
+        _m("NIST CSF 2.0", "PR.DS-1", "Data-at-Rest Protection", "Protect", "Embeddings and vector stores are protected at rest"),
+        _m("SOC 2", "CC6.1", "Logical Access", "Common Criteria", "Entity restricts logical access to data stores to authorized tenants"),
+        _m("ISO/IEC 27001", "A.5.15", "Access Control", "Annex A", "Access control policy governs retrieval from shared knowledge bases"),
     ],
-    "owasp_llm09": [  # Overreliance
+    "owasp_llm09": [  # Misinformation
         _m("NIST AI RMF", "GOVERN-4.1", "Transparency & Explainability", "Govern", "AI system limitations and uncertainties are communicated to users"),
         _m("NIST AI RMF", "MEASURE-2.7", "Output Verification", "Measure", "AI system outputs are verified for accuracy and reliability"),
         _m("ISO/IEC 42001", "8.7", "AI System Output Verification", "Operation", "Verification and validation of AI system outputs"),
@@ -107,15 +108,14 @@ COMPLIANCE_MAPPINGS: Dict[str, List[ComplianceMapping]] = {
         _m("SOC 2", "CC2.2", "Communication with Users", "Common Criteria", "Entity communicates system limitations and responsibilities to users"),
         _m("ISO/IEC 27001", "A.5.1", "Information Security Policies", "Annex A", "Policies address appropriate use and limitations of systems"),
     ],
-    "owasp_llm10": [  # Model Theft
-        _m("NIST AI RMF", "GOVERN-1.4", "Intellectual Property Protection", "Govern", "AI system intellectual property is identified and protected"),
-        _m("NIST AI RMF", "MAP-1.6", "Asset Management", "Map", "AI system assets including models are inventoried and protected"),
-        _m("ISO/IEC 42001", "7.5", "AI Asset Protection", "Support", "AI system assets including models are protected from theft"),
-        _m("EU AI Act", "Article 11", "Technical Documentation", "High-Risk AI Requirements", "Technical documentation includes model protection measures"),
-        _m("NIST CSF 2.0", "PR.DS-1", "Data-at-Rest Protection", "Protect", "Sensitive assets including models are protected at rest"),
-        _m("NIST CSF 2.0", "PR.AC-1", "Access Control", "Protect", "Access to sensitive assets is controlled and monitored"),
-        _m("SOC 2", "CC6.6", "Logical Access - Monitoring", "Common Criteria", "Entity monitors access to sensitive assets for unauthorized activity"),
-        _m("ISO/IEC 27001", "A.5.9", "Inventory of Information Assets", "Annex A", "Assets including AI models are inventoried and protected"),
+    "owasp_llm10": [  # Unbounded Consumption
+        _m("NIST AI RMF", "MANAGE-4.1", "Resource Management", "Manage", "AI system resource usage and cost are monitored and managed"),
+        _m("ISO/IEC 42001", "8.5", "AI System Performance Monitoring", "Operation", "Monitoring of AI system performance and resource utilization"),
+        _m("NIST CSF 2.0", "PR.DS-4", "Availability", "Protect", "Adequate capacity to ensure availability is maintained"),
+        _m("NIST CSF 2.0", "DE.CM-8", "Performance Monitoring", "Detect", "Resource consumption is monitored to detect abuse and extraction attempts"),
+        _m("SOC 2", "A1.2", "System Availability", "Availability", "Entity implements controls to meet system availability commitments"),
+        _m("NIST CSF 2.0", "PR.AC-1", "Access Control", "Protect", "Access to model endpoints is controlled to limit extraction-via-API"),
+        _m("ISO/IEC 27001", "A.8.6", "Capacity Management", "Annex A", "Capacity management to ensure required system performance"),
     ],
 }
 

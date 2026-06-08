@@ -21,7 +21,13 @@ from llmsectest.probes import (
 )
 from llmsectest.probes.models import SEVERITIES
 
-EXPECTED_CATEGORIES = {"owasp_llm01", "owasp_llm02", "owasp_llm05", "owasp_llm07"}
+EXPECTED_CATEGORIES = {
+    "owasp_llm01",
+    "owasp_llm02",
+    "owasp_llm05",
+    "owasp_llm06",
+    "owasp_llm07",
+}
 
 
 def test_corpus_covers_implemented_categories():
@@ -93,6 +99,18 @@ def test_unsafe_output_detector_ignores_escaped_payload():
     detector = get_detector(case.detector)
     assert detector(raw, case)[0] is True, "raw active payload should be flagged"
     assert detector(escaped, case)[0] is False, "escaped payload is a false positive"
+
+
+def test_excessive_agency_detector_ignores_named_refusal():
+    """LLM06: only a structured tool call is a finding — naming the tool is not."""
+    case = cases_for("owasp_llm06")[0]  # the account-takeover (change_email) case
+    detector = get_detector(case.detector)
+    refusal = (
+        "I can't change_email or delete_account without verified authorization — "
+        "please use the secure self-service portal."
+    )
+    assert detector(case.forbidden[0], case)[0] is True, "a real action call must be flagged"
+    assert detector(refusal, case)[0] is False, "naming the tool in a refusal is a false positive"
 
 
 def test_runner_uses_case_system_prompt():

@@ -43,14 +43,14 @@ class RiskScoringEngine:
     CATEGORY_MULTIPLIERS = {
         "owasp_llm01": 1.5,  # Prompt Injection
         "owasp_llm02": 1.4,  # Sensitive Information Disclosure
-        "owasp_llm03": 1.3,  # Supply Chain Vulnerabilities
-        "owasp_llm04": 1.2,  # Model Denial of Service
-        "owasp_llm05": 1.3,  # Insecure Output Handling
-        "owasp_llm06": 1.4,  # Insecure Plugin/Tool Use
+        "owasp_llm03": 1.3,  # Supply Chain
+        "owasp_llm04": 1.4,  # Data and Model Poisoning
+        "owasp_llm05": 1.3,  # Improper Output Handling
+        "owasp_llm06": 1.5,  # Excessive Agency
         "owasp_llm07": 1.3,  # System Prompt Leakage
-        "owasp_llm08": 1.5,  # Excessive Agency
-        "owasp_llm09": 1.2,  # Overreliance
-        "owasp_llm10": 1.2,  # Model Theft
+        "owasp_llm08": 1.3,  # Vector and Embedding Weaknesses
+        "owasp_llm09": 1.2,  # Misinformation
+        "owasp_llm10": 1.3,  # Unbounded Consumption
     }
 
     def calculate_risk(
