@@ -56,19 +56,41 @@ def print_banner():
     print("=" * 60)
 
 
+# How each OWASP-2025 category is tested, and what a developer must provide for
+# the categories not yet covered — so the coverage map has no silent gaps.
+_TESTABILITY = {
+    "owasp_llm01": ("black-box", None),
+    "owasp_llm02": ("black-box", None),
+    "owasp_llm03": ("white-box", "requires the app's dependencies/SBOM"),
+    "owasp_llm04": ("white-box", "requires training-data/model provenance"),
+    "owasp_llm05": ("black-box", None),
+    "owasp_llm06": ("black-box", None),
+    "owasp_llm07": ("black-box", None),
+    "owasp_llm08": ("white-box", "requires the app's RAG / vector store"),
+    "owasp_llm09": ("black-box", "output-verification module planned"),
+    "owasp_llm10": ("white-box", "requires the app's rate/resource limits"),
+}
+
+
 def check_coverage():
-    """List the OWASP categories and which ones have probes."""
+    """List the OWASP categories, which have probes, and what the rest need."""
     from .probes import covered_categories
 
     covered = set(covered_categories())
     print_banner()
-    print("\nOWASP LLM Top 10 — probe coverage:")
-    print("-" * 60)
+    print("\nOWASP LLM Top 10 (2025) — coverage & how each is tested:")
+    print("-" * 68)
     for marker, category in sorted(OWASP_LLM_CATEGORIES.items()):
-        mark = "✓ probes" if marker in covered else "  planned"
-        print(f"  [{mark}] {category.id}: {category.name}")
-    print("-" * 60)
-    print(f"\nImplemented: {len(covered)}/{len(OWASP_LLM_CATEGORIES)} categories")
+        modality, requires = _TESTABILITY.get(marker, ("?", None))
+        if marker in covered:
+            status = f"✓ probes   ({modality})"
+        else:
+            status = f"  planned  ({modality} — {requires or 'planned'})"
+        print(f"  [{status}] {category.id}: {category.name}")
+    print("-" * 68)
+    print(f"\nImplemented: {len(covered)}/{len(OWASP_LLM_CATEGORIES)} categories.")
+    print("Black-box categories test your running app via  --target app:<url> .")
+    print("White-box categories need app internals (deps/RAG/limits) and land per milestone.")
 
 
 def list_probes():

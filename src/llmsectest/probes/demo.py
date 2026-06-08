@@ -123,15 +123,21 @@ def defended_demo_adapter() -> LLMAdapter:
 def resolve_target(spec: str) -> LLMAdapter:
     """Resolve a target spec into an adapter.
 
-    Accepts the demo keywords ``demo``/``demo-vulnerable``/``demo-defended``,
-    a bare provider (``mock``), or ``provider:model`` (e.g.
-    ``openai:gpt-4o-mini``, ``anthropic:claude-3-5-haiku``). Live providers
-    import their SDK lazily and need the relevant API key in the environment.
+    Accepts the demo keywords ``demo``/``demo-vulnerable``/``demo-defended``;
+    ``app:<url>`` to test a **running application** by its HTTP endpoint (the
+    faithful black-box target — the app supplies its own system prompt); a bare
+    provider (``mock``); or ``provider:model`` (e.g. ``openai:gpt-4o-mini``,
+    ``ollama:gemma4:e2b-it-q4_K_M`` for a local model). Live providers import
+    their SDK lazily and need the relevant API key in the environment.
     """
     spec = (spec or "").strip()
     if spec in ("", "demo", "demo-vulnerable"):
         return vulnerable_demo_adapter()
     if spec == "demo-defended":
         return defended_demo_adapter()
+    if spec.startswith("app:"):
+        from ..adapters.app_endpoint import AppEndpointAdapter
+
+        return AppEndpointAdapter(endpoint=spec[len("app:"):])
     provider, sep, model = spec.partition(":")
     return get_adapter(provider, model or None) if sep else get_adapter(provider)

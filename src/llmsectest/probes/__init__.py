@@ -24,12 +24,14 @@ from .demo import (
     resolve_target,
     vulnerable_demo_adapter,
 )
+from .application import app_cases, run_app_scan
 from .models import ProbeCase, ProbeOutcome
 from .runner import run_probe
 
 __all__ = [
     "ProbeCase",
     "ProbeOutcome",
+    "app_cases",
     "available_detectors",
     "cases_for",
     "covered_categories",
@@ -38,6 +40,7 @@ __all__ = [
     "get_detector",
     "register_detector",
     "resolve_target",
+    "run_app_scan",
     "run_probe",
     "vulnerable_demo_adapter",
 ]

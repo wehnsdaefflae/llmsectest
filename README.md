@@ -52,6 +52,7 @@ llmsectest                                   # offline demo target (shows findin
 llmsectest --target openai:gpt-4o-mini       # scan a live model
 llmsectest --target anthropic:claude-3-5-haiku --report-formats=sarif,html,json,markdown
 llmsectest --target ollama:gemma4:e2b-it-q4_K_M  # local model via Ollama — no API key, no paid calls
+llmsectest --target app:http://localhost:8000/chat  # test YOUR running app (black-box, real guardrails)
 llmsectest --target demo-defended            # offline hardened target (passes)
 
 llmsectest --list-probes                     # list the corpus
