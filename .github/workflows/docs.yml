@@ -1,0 +1,33 @@
+name: docs
+
+on:
+  push:
+    branches: [main]
+    paths: ["docs/**", "mkdocs.yml", "src/llmsectest/**", ".github/workflows/docs.yml"]
+  pull_request:
+    paths: ["docs/**", "mkdocs.yml", "src/llmsectest/**"]
+  workflow_dispatch: {}
+
+jobs:
+  # Always validate the docs build (strict catches broken refs + autodoc).
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install -e ".[docs]"
+      - run: mkdocs build --strict
+
+  # Publish to GitHub Pages — manual trigger only, so docs never auto-publish.
+  deploy:
+    if: github.event_name == 'workflow_dispatch'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions: { contents: write }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install -e ".[docs]"
+      - run: mkdocs gh-deploy --force

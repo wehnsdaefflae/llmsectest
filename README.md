@@ -5,6 +5,10 @@ A pytest-native security testing framework for LLM applications, mapped to the
 Write security tests as ordinary pytest tests; get SARIF / HTML / JSON / Markdown
 reports and severity- and risk-scored findings.
 
+📖 **Documentation: [docs.llmsec.dev](https://docs.llmsec.dev)** — getting started, testing your
+running app, the OWASP coverage map, CLI and API reference. Build locally with
+`pip install -e ".[docs]" && mkdocs serve`.
+
 Funded by the German Federal Ministry of Research, Technology and Space (BMFTR)
 via the [Prototype Fund](https://prototypefund.de) (FKZ 16IS26S10). MIT-licensed.
 See [Funding](#funding).

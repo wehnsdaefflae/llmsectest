@@ -1,0 +1,61 @@
+site_name: LLMSecTest
+site_description: Pytest-native security testing for LLM applications — OWASP LLM Top 10 (2025).
+site_url: https://docs.llmsec.dev/
+repo_url: https://github.com/wehnsdaefflae/llmsectest
+repo_name: wehnsdaefflae/llmsectest
+edit_uri: edit/main/docs/
+copyright: MIT-licensed. Funded by the German Prototype Fund (BMFTR, FKZ 16IS26S10).
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.tabs
+    - navigation.top
+    - content.code.copy
+    - content.code.annotate
+    - search.suggest
+  palette:
+    - scheme: default
+      primary: indigo
+      toggle: { icon: material/brightness-7, name: Switch to dark mode }
+    - scheme: slate
+      primary: indigo
+      toggle: { icon: material/brightness-4, name: Switch to light mode }
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            docstring_style: google
+            show_root_heading: true
+            show_source: true
+            members_order: source
+            separate_signature: true
+            show_signature_annotations: true
+            merge_init_into_class: true
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - pymdownx.highlight: { anchor_linenums: true }
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+  - pymdownx.tabbed: { alternate_style: true }
+  - toc: { permalink: true }
+
+nav:
+  - Home: index.md
+  - Getting started: getting-started.md
+  - Guides:
+      - Test your running app: guides/target-app.md
+      - Author your own tests: guides/authoring.md
+      - CI/CD integration: guides/ci.md
+  - OWASP LLM Top 10:
+      - Coverage map: owasp/index.md
+      - LLM01 Prompt Injection: owasp/llm01.md
+  - CLI reference: cli.md
+  - API reference: api.md

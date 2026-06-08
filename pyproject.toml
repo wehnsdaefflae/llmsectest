@@ -27,6 +27,7 @@ anthropic = ["anthropic>=0.39"]
 huggingface = ["huggingface_hub>=0.25"]
 all = ["openai>=1.0", "anthropic>=0.39", "huggingface_hub>=0.25"]
 dev = ["pytest>=7.4.0", "pytest-cov", "ruff", "mypy"]
+docs = ["mkdocs-material>=9.7", "mkdocstrings[python]>=1.0"]
 
 [project.scripts]
 llmsectest = "llmsectest.__main__:main"
@@ -36,6 +37,7 @@ llmsectest = "llmsectest.plugin"
 
 [project.urls]
 Homepage = "https://llmsec.dev"
+Documentation = "https://docs.llmsec.dev"
 Repository = "https://github.com/wehnsdaefflae/llmsectest"
 
 [tool.hatch.build.targets.wheel]
