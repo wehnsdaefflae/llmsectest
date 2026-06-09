@@ -654,6 +654,24 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Coverage map
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -670,6 +688,36 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#testing-a-real-application-black-box" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Testing a real application (black-box)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -785,6 +833,25 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#testing-a-real-application-black-box" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Testing a real application (black-box)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -895,6 +962,21 @@ LLMSecTest will not claim coverage a target's modality didn't actually exercise.
 <p>The white-box categories are sequenced across the project's milestones (supply-chain/SBOM, embedding
 weaknesses and stress/consumption tests land together with their fixtures). Each consumes a concrete
 input you provide — your <code>requirements</code>/lockfile, your vector store, or your rate/resource limits.</p>
+<h2 id="testing-a-real-application-black-box">Testing a real application (black-box)<a class="headerlink" href="#testing-a-real-application-black-box" title="Permanent link">&para;</a></h2>
+<p>When you point LLMSecTest at a running app (<code>--target app:&lt;url&gt;</code>, or the <code>run_app_scan</code> API on the app's
+system prompt), it tests <strong>only what black-box access can actually reach</strong>, and reports the rest — never
+a silent pass:</p>
+<ul>
+<li><strong>LLM01 (prompt injection)</strong> and <strong>LLM05 (improper output handling)</strong> transfer with no setup: the
+  marker lives in the attack, so the app needs to reveal nothing for a finding to be unambiguous.</li>
+<li><strong>LLM07 (system-prompt leakage)</strong>, <strong>LLM02 (sensitive disclosure)</strong> and <strong>LLM06 (excessive agency)</strong>
+  light up once you tell LLMSecTest what a leak looks like — the app's own system prompt, a known secret
+  it holds, or its privileged action signatures. Without that, they are reported as <em>not exercised</em> with
+  the reason, rather than passed vacuously.</li>
+<li>The white-box categories (LLM03/04/08/10) and LLM09 (oracle) are likewise surfaced as not-exercised.</li>
+</ul>
+<p>Every scan prints a coverage footer accounting for <strong>all ten</strong> categories, so the report never overstates
+what was tested.</p>
 
 
 

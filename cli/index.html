@@ -796,6 +796,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#coverage-footer-no-silent-gaps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Coverage footer (no silent gaps)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#exit-code" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -905,6 +916,17 @@
     <span class="md-ellipsis">
       
         Gating, baselines and policy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#coverage-footer-no-silent-gaps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Coverage footer (no silent gaps)
       
     </span>
   </a>
@@ -1045,6 +1067,13 @@ packaged OWASP probe suite against your chosen target and writes reports.</p>
 </tbody>
 </table>
 <p>Any other <code>pytest</code> option (e.g. <code>-k</code>, <code>-v</code>, <code>-x</code>) is passed straight through.</p>
+<h2 id="coverage-footer-no-silent-gaps">Coverage footer (no silent gaps)<a class="headerlink" href="#coverage-footer-no-silent-gaps" title="Permanent link">&para;</a></h2>
+<p>Every run ends with a footer listing <strong>all ten</strong> OWASP categories — which this run exercised and which
+it did not, with the reason — so a category is never silently left untested. A model/demo target
+exercises the implemented categories (LLM01/02/05/06/07); a real app endpoint (<code>--target app:&lt;url&gt;</code>) is
+black-box and scopes to the categories that transfer (LLM01, LLM05), surfacing the rest (LLM07/02/06 need
+the app's prompt/secret/actions via the <code>run_app_scan</code> API; LLM03/04/08/09/10 are white-box or need an
+oracle). <code>llmsectest --check</code> prints the same map with each category's CVSS score.</p>
 <h2 id="exit-code">Exit code<a class="headerlink" href="#exit-code" title="Permanent link">&para;</a></h2>
 <p>Non-zero when the target is vulnerable (findings present) — so the command fails your pipeline. Use
 <code>--risk-threshold</code> or <code>--compare-baseline</code> to control exactly what fails.</p>
