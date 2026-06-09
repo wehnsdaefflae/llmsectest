@@ -940,7 +940,9 @@ inside your app, so it works black-box against any endpoint.</p>
 <h2 id="reading-a-finding">Reading a finding<a class="headerlink" href="#reading-a-finding" title="Permanent link">&para;</a></h2>
 <p>A finding names the technique, the OWASP category (LLM01), a severity, and the evidence — for example
 <em>"target obeyed the injected instruction and emitted marker: PWNED-LLM01-DELIM"</em>, alongside the prompt
-and the app's response. In SARIF it lands in your code-scanning view mapped to LLM01.</p>
+and the app's response. In SARIF it lands in your code-scanning view mapped to LLM01, carrying LLM01's
+CVSS v4.0 base score (<code>9.2</code>, vector <code>CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:L/VI:H/VA:N/SC:L/SI:H/SA:N</code>)
+as its <code>security-severity</code>.</p>
 <h2 id="remediation">Remediation<a class="headerlink" href="#remediation" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Treat <strong>all</strong> model input as untrusted — including tool outputs, retrieved documents, and prior turns.</li>

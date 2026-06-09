@@ -812,11 +812,14 @@ a given target — the live, authoritative map is <code>llmsectest --check</code
 <li><strong>White-box</strong> — needs your application's internals (dependencies, RAG/vector store, resource limits,
   model/data provenance) and is covered by dedicated modules.</li>
 </ul>
+<p>Each category also carries a representative <strong>CVSS v4.0 base score</strong> (worst-case for the class),
+reported as the SARIF <code>security-severity</code> of its findings.</p>
 <table>
 <thead>
 <tr>
 <th>Category</th>
 <th>Modality</th>
+<th>CVSS v4.0</th>
 <th>Status today</th>
 </tr>
 </thead>
@@ -824,51 +827,61 @@ a given target — the live, authoritative map is <code>llmsectest --check</code
 <tr>
 <td><a href="llm01/">LLM01 Prompt Injection</a></td>
 <td>black-box</td>
+<td>9.2 Critical</td>
 <td>✅ probes</td>
 </tr>
 <tr>
 <td>LLM02 Sensitive Information Disclosure</td>
 <td>black-box / white-box</td>
+<td>9.2 Critical</td>
 <td>✅ probes</td>
 </tr>
 <tr>
 <td>LLM03 Supply Chain</td>
 <td>white-box — requires deps/SBOM</td>
+<td>9.5 Critical</td>
 <td>planned (per milestone)</td>
 </tr>
 <tr>
 <td>LLM04 Data and Model Poisoning</td>
 <td>white-box — requires model/data provenance</td>
+<td>7.1 High</td>
 <td>planned</td>
 </tr>
 <tr>
 <td>LLM05 Improper Output Handling</td>
 <td>black-box / white-box</td>
+<td>9.9 Critical</td>
 <td>✅ probes</td>
 </tr>
 <tr>
 <td>LLM06 Excessive Agency</td>
 <td>black-box / white-box</td>
+<td>10.0 Critical</td>
 <td>✅ probes</td>
 </tr>
 <tr>
 <td>LLM07 System Prompt Leakage</td>
 <td>black-box</td>
+<td>8.7 High</td>
 <td>✅ probes</td>
 </tr>
 <tr>
 <td>LLM08 Vector and Embedding Weaknesses</td>
 <td>white-box — requires RAG/vector store</td>
+<td>7.1 High</td>
 <td>planned</td>
 </tr>
 <tr>
 <td>LLM09 Misinformation</td>
 <td>black-box — output verification</td>
+<td>5.3 Medium</td>
 <td>planned</td>
 </tr>
 <tr>
 <td>LLM10 Unbounded Consumption</td>
 <td>white-box — requires rate/resource limits</td>
+<td>8.7 High</td>
 <td>planned</td>
 </tr>
 </tbody>

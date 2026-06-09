@@ -1119,6 +1119,78 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#scoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scoring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#llmsectest.reporting.cvss" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        cvss
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="cvss">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#llmsectest.reporting.cvss.CVSSScore" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CVSSScore
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#llmsectest.reporting.cvss.score_vector" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        score_vector
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#llmsectest.reporting.cvss.cvss_for_category" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        cvss_for_category
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#llmsectest.reporting.cvss.library_available" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        library_available
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1474,6 +1546,78 @@
     <span class="md-ellipsis">
       
         available_detectors
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scoring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#llmsectest.reporting.cvss" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        cvss
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="cvss">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#llmsectest.reporting.cvss.CVSSScore" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CVSSScore
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#llmsectest.reporting.cvss.score_vector" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        score_vector
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#llmsectest.reporting.cvss.cvss_for_category" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        cvss_for_category
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#llmsectest.reporting.cvss.library_available" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        library_available
       
     </span>
   </a>
@@ -2703,6 +2847,265 @@ application's guardrails, not the bare model.</p>
               <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-45">45</a></span>
 <span class="normal"><a href="#__codelineno-0-46">46</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-45" name="__codelineno-0-45"></a><span class="k">def</span><span class="w"> </span><span class="nf">available_detectors</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <a id="__codelineno-0-46" name="__codelineno-0-46"></a>    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">_REGISTRY</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div><h2 id="scoring">Scoring<a class="headerlink" href="#scoring" title="Permanent link">&para;</a></h2>
+<p>CVSS v4.0 base scoring for OWASP categories. Each category carries a
+representative <code>CVSS:4.0</code> base vector; the ten canonical scores ship baked into
+the dependency-free core, with the optional <code>cvss</code> library used for arbitrary
+vectors. Reported as the SARIF <code>security-severity</code> of each finding.</p>
+
+
+<div class="doc doc-object doc-module">
+
+
+
+<h2 id="llmsectest.reporting.cvss" class="doc doc-heading">
+            <span class="doc doc-object-name doc-module-name">llmsectest.reporting.cvss</span>
+
+
+<a href="#llmsectest.reporting.cvss" class="headerlink" title="Permanent link">&para;</a></h2>
+
+    <div class="doc doc-contents first">
+
+        <p>CVSS v4.0 scoring for OWASP LLM categories.</p>
+<p>Each OWASP LLM category carries a representative <code>CVSS:4.0</code> base vector
+(see :mod:<code>llmsectest.reporting.owasp_metadata</code>). This module turns a vector
+into its base score and qualitative severity.</p>
+<p>Design: the MIT core stays dependency-free. When the optional :mod:<code>cvss</code>
+package (RedHatProductSecurity, LGPLv3+) is installed it computes the score for
+<em>any</em> vector — including custom ones. When it is absent we fall back to a table
+of scores baked from the ten canonical category vectors, so the standard reports
+are fully populated with no extra dependency. A custom vector with no library
+installed degrades gracefully to <code>None</code> (callers then use the marker-based
+severity placeholder). Install the optional path with <code>pip install
+llmsectest[cvss]</code>.</p>
+<p>The baked numbers below were produced with <code>cvss</code> 3.6 and are asserted to match
+the library in the test-suite, so the two paths can never silently diverge.</p>
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="llmsectest.reporting.cvss.CVSSScore" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">CVSSScore</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#llmsectest.reporting.cvss.CVSSScore" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">CVSSScore</span><span class="p">(</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">vector</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">base_score</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">severity</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">CVSS_VERSION</span><span class="p">,</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>A computed CVSS v4.0 base score.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="llmsectest.reporting.cvss.score_vector" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">score_vector</span>
+
+
+<a href="#llmsectest.reporting.cvss.score_vector" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">score_vector</span><span class="p">(</span><span class="n">vector</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CVSSScore</span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return the CVSS v4.0 base score for a vector, or <code>None</code> if it cannot
+be scored offline.</p>
+<p>Uses the optional :mod:<code>cvss</code> library when available (any vector); otherwise
+falls back to the baked table of canonical category vectors. A non-canonical
+vector with no library installed returns <code>None</code> rather than guessing.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/llmsectest/reporting/cvss.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-63">63</a></span>
+<span class="normal"><a href="#__codelineno-0-64">64</a></span>
+<span class="normal"><a href="#__codelineno-0-65">65</a></span>
+<span class="normal"><a href="#__codelineno-0-66">66</a></span>
+<span class="normal"><a href="#__codelineno-0-67">67</a></span>
+<span class="normal"><a href="#__codelineno-0-68">68</a></span>
+<span class="normal"><a href="#__codelineno-0-69">69</a></span>
+<span class="normal"><a href="#__codelineno-0-70">70</a></span>
+<span class="normal"><a href="#__codelineno-0-71">71</a></span>
+<span class="normal"><a href="#__codelineno-0-72">72</a></span>
+<span class="normal"><a href="#__codelineno-0-73">73</a></span>
+<span class="normal"><a href="#__codelineno-0-74">74</a></span>
+<span class="normal"><a href="#__codelineno-0-75">75</a></span>
+<span class="normal"><a href="#__codelineno-0-76">76</a></span>
+<span class="normal"><a href="#__codelineno-0-77">77</a></span>
+<span class="normal"><a href="#__codelineno-0-78">78</a></span>
+<span class="normal"><a href="#__codelineno-0-79">79</a></span>
+<span class="normal"><a href="#__codelineno-0-80">80</a></span>
+<span class="normal"><a href="#__codelineno-0-81">81</a></span>
+<span class="normal"><a href="#__codelineno-0-82">82</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-63" name="__codelineno-0-63"></a><span class="k">def</span><span class="w"> </span><span class="nf">score_vector</span><span class="p">(</span><span class="n">vector</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CVSSScore</span><span class="p">]:</span>
+<a id="__codelineno-0-64" name="__codelineno-0-64"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the CVSS v4.0 base score for a vector, or ``None`` if it cannot</span>
+<a id="__codelineno-0-65" name="__codelineno-0-65"></a><span class="sd">    be scored offline.</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66"></a>
+<a id="__codelineno-0-67" name="__codelineno-0-67"></a><span class="sd">    Uses the optional :mod:`cvss` library when available (any vector); otherwise</span>
+<a id="__codelineno-0-68" name="__codelineno-0-68"></a><span class="sd">    falls back to the baked table of canonical category vectors. A non-canonical</span>
+<a id="__codelineno-0-69" name="__codelineno-0-69"></a><span class="sd">    vector with no library installed returns ``None`` rather than guessing.</span>
+<a id="__codelineno-0-70" name="__codelineno-0-70"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-71" name="__codelineno-0-71"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">vector</span><span class="p">:</span>
+<a id="__codelineno-0-72" name="__codelineno-0-72"></a>        <span class="k">return</span> <span class="kc">None</span>
+<a id="__codelineno-0-73" name="__codelineno-0-73"></a>    <span class="k">if</span> <span class="n">_HAVE_CVSS</span><span class="p">:</span>
+<a id="__codelineno-0-74" name="__codelineno-0-74"></a>        <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-0-75" name="__codelineno-0-75"></a>            <span class="n">c</span> <span class="o">=</span> <span class="n">_CVSS4</span><span class="p">(</span><span class="n">vector</span><span class="p">)</span>
+<a id="__codelineno-0-76" name="__codelineno-0-76"></a>            <span class="k">return</span> <span class="n">CVSSScore</span><span class="p">(</span><span class="n">vector</span><span class="o">=</span><span class="n">vector</span><span class="p">,</span> <span class="n">base_score</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">base_score</span><span class="p">,</span> <span class="n">severity</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">severities</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+<a id="__codelineno-0-77" name="__codelineno-0-77"></a>        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+<a id="__codelineno-0-78" name="__codelineno-0-78"></a>            <span class="k">return</span> <span class="kc">None</span>
+<a id="__codelineno-0-79" name="__codelineno-0-79"></a>    <span class="n">baked</span> <span class="o">=</span> <span class="n">_BAKED_SCORES</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">vector</span><span class="p">)</span>
+<a id="__codelineno-0-80" name="__codelineno-0-80"></a>    <span class="k">if</span> <span class="n">baked</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-81" name="__codelineno-0-81"></a>        <span class="k">return</span> <span class="kc">None</span>
+<a id="__codelineno-0-82" name="__codelineno-0-82"></a>    <span class="k">return</span> <span class="n">CVSSScore</span><span class="p">(</span><span class="n">vector</span><span class="o">=</span><span class="n">vector</span><span class="p">,</span> <span class="n">base_score</span><span class="o">=</span><span class="n">baked</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">severity</span><span class="o">=</span><span class="n">baked</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="llmsectest.reporting.cvss.cvss_for_category" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">cvss_for_category</span>
+
+
+<a href="#llmsectest.reporting.cvss.cvss_for_category" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">cvss_for_category</span><span class="p">(</span><span class="n">marker</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CVSSScore</span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return the canonical CVSS v4.0 base score for an OWASP marker
+(e.g. <code>"owasp_llm01"</code>), or <code>None</code> if the category has no vector.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/llmsectest/reporting/cvss.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-85">85</a></span>
+<span class="normal"><a href="#__codelineno-0-86">86</a></span>
+<span class="normal"><a href="#__codelineno-0-87">87</a></span>
+<span class="normal"><a href="#__codelineno-0-88">88</a></span>
+<span class="normal"><a href="#__codelineno-0-89">89</a></span>
+<span class="normal"><a href="#__codelineno-0-90">90</a></span>
+<span class="normal"><a href="#__codelineno-0-91">91</a></span>
+<span class="normal"><a href="#__codelineno-0-92">92</a></span>
+<span class="normal"><a href="#__codelineno-0-93">93</a></span>
+<span class="normal"><a href="#__codelineno-0-94">94</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-85" name="__codelineno-0-85"></a><span class="k">def</span><span class="w"> </span><span class="nf">cvss_for_category</span><span class="p">(</span><span class="n">marker</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CVSSScore</span><span class="p">]:</span>
+<a id="__codelineno-0-86" name="__codelineno-0-86"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the canonical CVSS v4.0 base score for an OWASP marker</span>
+<a id="__codelineno-0-87" name="__codelineno-0-87"></a><span class="sd">    (e.g. ``&quot;owasp_llm01&quot;``), or ``None`` if the category has no vector.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-88" name="__codelineno-0-88"></a>    <span class="c1"># Imported lazily to avoid a circular import at module load time.</span>
+<a id="__codelineno-0-89" name="__codelineno-0-89"></a>    <span class="kn">from</span><span class="w"> </span><span class="nn">.owasp_metadata</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_owasp_category</span>
+<a id="__codelineno-0-90" name="__codelineno-0-90"></a>
+<a id="__codelineno-0-91" name="__codelineno-0-91"></a>    <span class="n">category</span> <span class="o">=</span> <span class="n">get_owasp_category</span><span class="p">(</span><span class="n">marker</span><span class="p">)</span>
+<a id="__codelineno-0-92" name="__codelineno-0-92"></a>    <span class="k">if</span> <span class="n">category</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">category</span><span class="p">,</span> <span class="s2">&quot;cvss_vector&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+<a id="__codelineno-0-93" name="__codelineno-0-93"></a>        <span class="k">return</span> <span class="kc">None</span>
+<a id="__codelineno-0-94" name="__codelineno-0-94"></a>    <span class="k">return</span> <span class="n">score_vector</span><span class="p">(</span><span class="n">category</span><span class="o">.</span><span class="n">cvss_vector</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="llmsectest.reporting.cvss.library_available" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">library_available</span>
+
+
+<a href="#llmsectest.reporting.cvss.library_available" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">library_available</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>True if the optional :mod:<code>cvss</code> library is installed (any vector can be
+scored); False if only the baked canonical vectors are scorable.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/llmsectest/reporting/cvss.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-97"> 97</a></span>
+<span class="normal"><a href="#__codelineno-0-98"> 98</a></span>
+<span class="normal"><a href="#__codelineno-0-99"> 99</a></span>
+<span class="normal"><a href="#__codelineno-0-100">100</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-97" name="__codelineno-0-97"></a><span class="k">def</span><span class="w"> </span><span class="nf">library_available</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-0-98" name="__codelineno-0-98"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;True if the optional :mod:`cvss` library is installed (any vector can be</span>
+<a id="__codelineno-0-99" name="__codelineno-0-99"></a><span class="sd">    scored); False if only the baked canonical vectors are scorable.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-100" name="__codelineno-0-100"></a>    <span class="k">return</span> <span class="n">_HAVE_CVSS</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
