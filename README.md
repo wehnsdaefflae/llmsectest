@@ -9,6 +9,8 @@ reports with CVSS v4.0- and risk-scored findings.
 running app, the OWASP coverage map, CLI and API reference. Build locally with
 `pip install -e ".[docs]" && mkdocs serve`.
 
+📝 **What's new:** see the [changelog](CHANGELOG.md) (also on the [docs site](https://docs.llmsec.dev/changelog/)); the forward plan is the [roadmap](https://llmsec.dev/#roadmap).
+
 Funded by the German Federal Ministry of Research, Technology and Space (BMFTR)
 via the [Prototype Fund](https://prototypefund.de) (FKZ 16IS26S10). MIT-licensed.
 See [Funding](#funding).
