@@ -955,7 +955,8 @@ reported as the SARIF <code>security-severity</code> of its findings.</p>
 </table>
 <div class="admonition warning">
 <p class="admonition-title">No silent gaps</p>
-<p>A category not yet covered is reported as <strong>planned</strong> with what it needs — never silently skipped.
+<p>All ten categories run on every invocation. A category not yet implemented appears as a <strong>skipped
+test reported <code>not yet implemented</code></strong> (with what it needs and when it lands) — never silently absent.
 LLMSecTest will not claim coverage a target's modality didn't actually exercise. Run
 <code>llmsectest --check</code> for the current state.</p>
 </div>
