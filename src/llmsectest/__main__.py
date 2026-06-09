@@ -177,6 +177,7 @@ def _has_explicit_path(args: list) -> bool:
 _APP_SUITE_MODULES = (
     "test_llm01_prompt_injection.py",
     "test_llm05_improper_output_handling.py",
+    "test_owasp_coverage.py",  # enumerates all 10 — unimplemented ones skip "not yet implemented"
 )
 
 
@@ -205,7 +206,7 @@ def _print_coverage_footer(target: str | None) -> None:
         covered = set(covered_categories())
         exercised = [m for m in sorted(OWASP_LLM_CATEGORIES) if m in covered]
         skipped = [
-            (m, f"{_TESTABILITY[m][0]} — {_TESTABILITY[m][1] or 'planned'}")
+            (m, f"not yet implemented ({_TESTABILITY[m][0]} — {_TESTABILITY[m][1] or 'planned'})")
             for m in sorted(OWASP_LLM_CATEGORIES) if m not in covered
         ]
         print(f"Coverage this run — {len(exercised)}/10 OWASP categories exercised. "
@@ -238,6 +239,7 @@ def run_suite(args: list, target: str | None) -> int:
 
     cmd = [
         sys.executable, "-m", "pytest",
+        "-rs",  # always print skip reasons, so "not yet implemented" categories are visible
         *sarif_args,
         *test_path,
         *args,

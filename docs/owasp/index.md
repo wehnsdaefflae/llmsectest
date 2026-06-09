@@ -25,7 +25,8 @@ reported as the SARIF `security-severity` of its findings.
 | LLM10 Unbounded Consumption | white-box — requires rate/resource limits | 8.7 High | planned |
 
 !!! warning "No silent gaps"
-    A category not yet covered is reported as **planned** with what it needs — never silently skipped.
+    All ten categories run on every invocation. A category not yet implemented appears as a **skipped
+    test reported `not yet implemented`** (with what it needs and when it lands) — never silently absent.
     LLMSecTest will not claim coverage a target's modality didn't actually exercise. Run
     `llmsectest --check` for the current state.
 

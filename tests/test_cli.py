@@ -94,3 +94,22 @@ def test_run_suite_uses_explicit_path_when_given(monkeypatch):
     monkeypatch.setattr(cli.subprocess, "call", lambda cmd: captured.setdefault("cmd", cmd) or 0)
     cli.run_suite(["tests"], None)
     assert str(cli.SUITE_DIR) not in captured["cmd"]
+
+
+def test_run_suite_shows_skip_reasons(monkeypatch):
+    captured = {}
+    monkeypatch.setattr(cli.subprocess, "call", lambda cmd: captured.setdefault("cmd", cmd) or 0)
+    cli.run_suite([], None)
+    assert "-rs" in captured["cmd"]  # skip reasons ("not yet implemented") always print
+
+
+def test_app_target_scopes_modules_and_keeps_all_ten_coverage(monkeypatch):
+    captured = {}
+    monkeypatch.setattr(cli.subprocess, "call", lambda cmd: captured.setdefault("cmd", cmd) or 0)
+    cli.run_suite([], "app:http://localhost:8000/chat")
+    cmd = captured["cmd"]
+    # the all-10 coverage module runs, so unimplemented categories still surface
+    assert any("test_owasp_coverage.py" in a for a in cmd)
+    assert any("test_llm01_prompt_injection.py" in a for a in cmd)
+    # canary-only modules are NOT run vacuously against a real app whose secrets we don't hold
+    assert not any(("test_llm02" in a or "test_llm06" in a or "test_llm07" in a) for a in cmd)

@@ -71,9 +71,12 @@ to choose your own. `--validate` with no path checks the current target's report
 
 ### No silent gaps
 
-Every run ends with a coverage footer listing **all ten** OWASP categories — which
-this run exercised and which it did not, with the reason — so a category is never
-silently left untested. What's reachable depends on the target:
+**All ten** OWASP categories run on every invocation: the implemented ones execute
+real probes, and the not-yet-implemented ones appear as skipped tests that say
+`not yet implemented` (with what they need and when they land) — so a category is
+never silently absent. A run also ends with a coverage footer summarising which
+categories were exercised and which were not, and why. What's reachable depends on
+the target:
 
 - **A model/demo target** exercises the implemented categories (LLM01/02/05/06/07);
   the rest are white-box (need the app's deps/RAG/limits) or need an oracle, and are
