@@ -18,6 +18,9 @@ class OWASPCategory:
     tags: List[str]
     remediation_steps: List[str]
     compliance_frameworks: List[str]  # List of frameworks this category maps to
+    # Representative CVSS:4.0 base vector for this vulnerability class (worst-case
+    # for the category). Scored by :mod:`llmsectest.reporting.cvss`.
+    cvss_vector: str = ""
 
 
 OWASP_LLM_CATEGORIES: Dict[str, OWASPCategory] = {
@@ -394,6 +397,27 @@ OWASP_LLM_CATEGORIES: Dict[str, OWASPCategory] = {
         compliance_frameworks=["NIST AI RMF", "ISO/IEC 42001", "EU AI Act", "NIST CSF 2.0", "SOC 2", "ISO/IEC 27001"],
     ),
 }
+
+
+# Representative CVSS:4.0 base vector per category — the worst-case for the
+# vulnerability class, kept in one auditable block and attached to each category
+# below. Scored by :mod:`llmsectest.reporting.cvss` (the baked scores there mirror
+# these vectors and are asserted equal to the cvss library in the test suite).
+_CVSS_VECTORS: Dict[str, str] = {
+    "owasp_llm01": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:L/VI:H/VA:N/SC:L/SI:H/SA:N",
+    "owasp_llm02": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:N/VA:N/SC:H/SI:N/SA:N",
+    "owasp_llm03": "CVSS:4.0/AV:N/AC:H/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H",
+    "owasp_llm04": "CVSS:4.0/AV:N/AC:H/AT:P/PR:L/UI:N/VC:L/VI:H/VA:N/SC:L/SI:H/SA:N",
+    "owasp_llm05": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:N/SC:H/SI:H/SA:N",
+    "owasp_llm06": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H",
+    "owasp_llm07": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N",
+    "owasp_llm08": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:L/VA:N/SC:L/SI:L/SA:N",
+    "owasp_llm09": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:N/VI:L/VA:N/SC:N/SI:L/SA:N",
+    "owasp_llm10": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:L",
+}
+
+for _marker, _vector in _CVSS_VECTORS.items():
+    OWASP_LLM_CATEGORIES[_marker].cvss_vector = _vector
 
 
 def get_owasp_category(marker: str) -> Optional[OWASPCategory]:

@@ -533,6 +533,26 @@ class TestSARIFGeneration:
         result = sarif["runs"][0]["results"][0]
         assert result["properties"]["owasp_category"] == "LLM01"
 
+    def test_sarif_security_severity_is_cvss_base_score(self, sample_results):
+        """security-severity uses the OWASP category's real CVSS v4.0 base score,
+        not the flat marker-based placeholder."""
+        generator = SARIFGenerator("llmsectest", "0.1.0", source_root=".")
+        sarif = json.loads(generator.generate(sample_results))
+        rules = {r["id"]: r for r in sarif["runs"][0]["tool"]["driver"]["rules"]}
+        rule = rules["test_basic_injection"]  # owasp_llm01
+        assert rule["properties"]["security-severity"] == "9.2"
+        assert rule["properties"]["cvss_version"] == "4.0"
+        assert rule["properties"]["cvss_base_severity"] == "Critical"
+        assert rule["properties"]["cvss_vector"].startswith("CVSS:4.0/")
+
+    def test_sarif_result_carries_cvss(self, sample_results):
+        """Each finding carries the CVSS base score/severity/vector."""
+        generator = SARIFGenerator("llmsectest", "0.1.0", source_root=".")
+        sarif = json.loads(generator.generate(sample_results))
+        result = sarif["runs"][0]["results"][0]
+        assert result["properties"]["cvss_base_score"] == 9.2
+        assert result["properties"]["cvss_base_severity"] == "Critical"
+
     def test_sarif_compliance_frameworks(self, sample_results):
         """Verify compliance framework data is included in run properties."""
         generator = SARIFGenerator("llmsectest", "0.1.0", source_root=".")

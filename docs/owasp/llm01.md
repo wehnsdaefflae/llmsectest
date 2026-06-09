@@ -31,7 +31,9 @@ llmsectest --target app:http://localhost:8000/chat
 
 A finding names the technique, the OWASP category (LLM01), a severity, and the evidence — for example
 *"target obeyed the injected instruction and emitted marker: PWNED-LLM01-DELIM"*, alongside the prompt
-and the app's response. In SARIF it lands in your code-scanning view mapped to LLM01.
+and the app's response. In SARIF it lands in your code-scanning view mapped to LLM01, carrying LLM01's
+CVSS v4.0 base score (`9.2`, vector `CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:L/VI:H/VA:N/SC:L/SI:H/SA:N`)
+as its `security-severity`.
 
 ## Remediation
 

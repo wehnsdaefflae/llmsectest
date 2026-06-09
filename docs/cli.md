@@ -13,7 +13,7 @@ llmsectest --check | --list-probes | --validate <file.sarif>
 | Flag | Description |
 |---|---|
 | `--target <spec>` | What to test: `app:<url>`, `ollama:<model>`, `openai:<model>`, `anthropic:<model>`, `huggingface:<model>`, `mock`, `demo`, `demo-defended`. Omit it to scan the offline demo app. |
-| `--check` | Print the OWASP LLM Top 10 coverage map and each category's test modality, then exit. |
+| `--check` | Print the OWASP LLM Top 10 coverage map, each category's test modality and its CVSS v4.0 base score, then exit. |
 | `--list-probes` | List the red-team corpus that ships today, then exit. |
 | `--validate <file>` | Validate an existing SARIF file against the v2.1.0 schema, then exit. |
 

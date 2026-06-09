@@ -16,7 +16,10 @@ SARIF_SEVERITY_MAP = {
     "info": "none"
 }
 
-# Numeric severity scores for security tools (CVSS-like)
+# Numeric severity scores for security tools (CVSS-like). Fallback only: SARIF
+# `security-severity` now uses the real CVSS v4.0 base score for OWASP-tagged
+# findings (see reporting/cvss.py); this map is used for tests with no OWASP
+# category.
 SEVERITY_SCORES = {
     "critical": "9.0",
     "high": "7.0",

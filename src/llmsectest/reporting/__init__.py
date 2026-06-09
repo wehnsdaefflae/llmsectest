@@ -1,24 +1,28 @@
 """Reporting layer: pytest result model, scoring, and report generators.
 
 Turns captured test outcomes into SARIF v2.1.0 / HTML / JSON / Markdown
-security reports with OWASP LLM Top-10 metadata, CVSS-style severity, risk
+security reports with OWASP LLM Top-10 metadata, CVSS v4.0 base scoring, risk
 scoring, baselines, and policy gating.
 """
 
 import json
 
 from .console_summary import generate_console_summary
+from .cvss import CVSSScore, cvss_for_category, score_vector
 from .models import TestResult
 from .risk_scorer import RiskScore, RiskScoringEngine
 from .statistics import calculate_statistics, get_coverage_gaps
 
 __all__ = [
+    "CVSSScore",
     "RiskScore",
     "RiskScoringEngine",
     "TestResult",
     "calculate_statistics",
+    "cvss_for_category",
     "generate_console_summary",
     "get_coverage_gaps",
+    "score_vector",
     "validate_sarif",
 ]
 

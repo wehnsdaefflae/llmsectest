@@ -75,20 +75,26 @@ _TESTABILITY = {
 def check_coverage():
     """List the OWASP categories, which have probes, and what the rest need."""
     from .probes import covered_categories
+    from .reporting.cvss import cvss_for_category, library_available
 
     covered = set(covered_categories())
     print_banner()
     print("\nOWASP LLM Top 10 (2025) — coverage & how each is tested:")
-    print("-" * 68)
+    print("-" * 78)
     for marker, category in sorted(OWASP_LLM_CATEGORIES.items()):
         modality, requires = _TESTABILITY.get(marker, ("?", None))
         if marker in covered:
             status = f"✓ probes   ({modality})"
         else:
             status = f"  planned  ({modality} — {requires or 'planned'})"
-        print(f"  [{status}] {category.id}: {category.name}")
-    print("-" * 68)
+        cvss = cvss_for_category(marker)
+        cvss_col = f"CVSS {cvss.base_score:>4} {cvss.severity}" if cvss else ""
+        print(f"  [{status}] {category.id}: {category.name:<34s} {cvss_col}")
+    print("-" * 78)
     print(f"\nImplemented: {len(covered)}/{len(OWASP_LLM_CATEGORIES)} categories.")
+    print("CVSS v4.0 base scores per category (worst-case for the class); reported as")
+    print(f"SARIF security-severity. cvss library installed: {library_available()} "
+          "(baked scores used otherwise).")
     print("Black-box categories test your running app via  --target app:<url> .")
     print("White-box categories need app internals (deps/RAG/limits) and land per milestone.")
 
@@ -127,6 +133,43 @@ def _extract_target(args: list) -> tuple[list, str | None]:
     return rest, target
 
 
+# Options that consume a following value in the ``--opt value`` (space-separated)
+# form. Used so an option's value is never mistaken for a positional test path.
+# Covers the llmsectest plugin's value-taking options plus common pytest ones.
+_VALUE_OPTS = frozenset({
+    # llmsectest plugin options
+    "--sarif-output", "--report-formats", "--report-dir",
+    "--security-policy", "--risk-threshold", "--min-coverage",
+    # common pytest value-taking options
+    "-k", "-m", "-p", "-o", "-c", "-n", "--rootdir", "--maxfail",
+    "--deselect", "--ignore", "--confcutdir", "--report-log",
+})
+
+
+def _has_explicit_path(args: list) -> bool:
+    """True if ``args`` contains a positional pytest test path.
+
+    A token is a test path only if it (1) is not an option, (2) is not the value
+    of a known value-taking option in ``--opt value`` form, and (3) refers to
+    something pytest could actually collect — an existing file/dir, optionally
+    with a ``::nodeid`` suffix. Both guards together close the documented
+    ``--opt value`` footgun, where e.g. ``--report-dir tmp`` was mistaken for a
+    positional path and silently skipped the packaged suite.
+    """
+    skip_next = False
+    for a in args:
+        if skip_next:
+            skip_next = False
+            continue
+        if a.startswith("-"):
+            if a in _VALUE_OPTS:
+                skip_next = True
+            continue
+        if Path(a.split("::", 1)[0]).exists():
+            return True
+    return False
+
+
 def run_suite(args: list, target: str | None) -> int:
     """Run the packaged probe suite (or an explicit path) with reporting on."""
     Path("results").mkdir(exist_ok=True)
@@ -134,8 +177,7 @@ def run_suite(args: list, target: str | None) -> int:
         os.environ["LLMSECTEST_TARGET"] = target
 
     # Default to the packaged suite when no explicit test path is given.
-    has_path = any(not a.startswith("-") for a in args)
-    test_path = [] if has_path else [str(SUITE_DIR)]
+    test_path = [] if _has_explicit_path(args) else [str(SUITE_DIR)]
 
     # Inject a per-target SARIF path unless the user chose one explicitly.
     user_sarif = any(a == "--sarif-output" or a.startswith("--sarif-output=") for a in args)

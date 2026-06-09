@@ -18,6 +18,7 @@ from .compliance_mapper import (
     get_compliance_summary,
 )
 from .constants import SARIF_SEVERITY_MAP, SEVERITY_SCORES
+from .cvss import cvss_for_category
 
 
 class SARIFGenerator:
@@ -161,8 +162,21 @@ class SARIFGenerator:
                 # Build comprehensive property tags
                 properties = {
                     "tags": result.markers + get_security_tags(result.markers),
-                    "security-severity": self._get_numeric_severity(result),
                 }
+
+                # security-severity: prefer the OWASP category's real CVSS v4.0
+                # base score; fall back to the marker-based placeholder for tests
+                # with no OWASP category. (GitHub code-scanning buckets findings
+                # by this numeric property.)
+                cvss_score = cvss_for_category(owasp_markers[0]) if owasp_markers else None
+                if cvss_score is not None:
+                    properties["security-severity"] = f"{cvss_score.base_score}"
+                    properties["cvss_version"] = cvss_score.version
+                    properties["cvss_vector"] = cvss_score.vector
+                    properties["cvss_base_score"] = cvss_score.base_score
+                    properties["cvss_base_severity"] = cvss_score.severity
+                else:
+                    properties["security-severity"] = self._get_numeric_severity(result)
 
                 # Add OWASP-specific properties
                 if owasp_category:
@@ -258,6 +272,13 @@ class SARIFGenerator:
                 if owasp_category:
                     sarif_result["properties"]["owasp_category"] = owasp_category.id
                     sarif_result["properties"]["owasp_name"] = owasp_category.name
+
+                    # Attach the category's CVSS v4.0 base score to the finding.
+                    cvss_score = cvss_for_category(owasp_markers[0]) if owasp_markers else None
+                    if cvss_score is not None:
+                        sarif_result["properties"]["cvss_base_score"] = cvss_score.base_score
+                        sarif_result["properties"]["cvss_base_severity"] = cvss_score.severity
+                        sarif_result["properties"]["cvss_vector"] = cvss_score.vector
 
                     # Add remediation suggestions as SARIF fixes
                     if owasp_category.remediation_steps:

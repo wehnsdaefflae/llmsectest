@@ -42,3 +42,18 @@ Attack cases, target resolution, the runner, and application-mode scans.
         - get_detector
         - register_detector
         - available_detectors
+
+## Scoring
+
+CVSS v4.0 base scoring for OWASP categories. Each category carries a
+representative `CVSS:4.0` base vector; the ten canonical scores ship baked into
+the dependency-free core, with the optional `cvss` library used for arbitrary
+vectors. Reported as the SARIF `security-severity` of each finding.
+
+::: llmsectest.reporting.cvss
+    options:
+      members:
+        - CVSSScore
+        - score_vector
+        - cvss_for_category
+        - library_available

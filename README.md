@@ -3,7 +3,7 @@
 A pytest-native security testing framework for LLM applications, mapped to the
 [OWASP LLM Top 10](https://owasp.org/www-project-top-10-for-large-language-model-applications/).
 Write security tests as ordinary pytest tests; get SARIF / HTML / JSON / Markdown
-reports and severity- and risk-scored findings.
+reports with CVSS v4.0- and risk-scored findings.
 
 📖 **Documentation: [docs.llmsec.dev](https://docs.llmsec.dev)** — getting started, testing your
 running app, the OWASP coverage map, CLI and API reference. Build locally with
@@ -19,8 +19,9 @@ See [Funding](#funding).
 > adapter-driven probe suite covering **OWASP LLM01 (prompt injection), LLM02
 > (sensitive information disclosure), LLM05 (improper output handling), LLM06
 > (excessive agency) and LLM07 (system prompt leakage)** — 5 of the 10 OWASP LLM
-> Top 10 (2025) categories. The remaining categories and CVSS v4 scoring follow
-> on the roadmap. The modules
+> Top 10 (2025) categories. Findings are scored with **CVSS v4.0** base scores
+> per OWASP category (reported as SARIF `security-severity`). The remaining
+> categories follow on the roadmap. The modules
 > under [`examples/`](examples/) demonstrate the reporting pipeline across all
 > ten categories with deterministic mock fixtures.
 
@@ -106,17 +107,22 @@ llmsectest --check                    # list OWASP coverage
 llmsectest --validate results/out.sarif
 ```
 
-A failed security test becomes a SARIF finding with OWASP metadata, CWE tags,
-CVSS-style severity, and remediation guidance — ready for the GitHub Security
-tab. See [`examples/`](examples/) for one test module per OWASP category.
+A failed security test becomes a SARIF finding with OWASP metadata, CWE tags, a
+**CVSS v4.0 base score** (vector + score, surfaced as `security-severity`), and
+remediation guidance — ready for the GitHub Security tab. See [`examples/`](examples/)
+for one test module per OWASP category.
 
 ## Install
 
 ```bash
 pip install llmsectest                 # core
 pip install "llmsectest[anthropic]"    # + Anthropic SDK
+pip install "llmsectest[cvss]"         # + score custom CVSS vectors (core ships the OWASP-category scores)
 pip install "llmsectest[all]"          # all providers
 ```
+
+The ten OWASP-category CVSS v4.0 scores ship in the dependency-free core; the
+optional `[cvss]` extra (LGPLv3+) is only needed to score *custom* vectors.
 
 ## Development
 

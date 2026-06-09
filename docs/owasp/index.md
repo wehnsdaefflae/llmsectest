@@ -8,18 +8,21 @@ a given target — the live, authoritative map is `llmsectest --check`.
 - **White-box** — needs your application's internals (dependencies, RAG/vector store, resource limits,
   model/data provenance) and is covered by dedicated modules.
 
-| Category | Modality | Status today |
-|---|---|---|
-| [LLM01 Prompt Injection](llm01.md) | black-box | ✅ probes |
-| LLM02 Sensitive Information Disclosure | black-box / white-box | ✅ probes |
-| LLM03 Supply Chain | white-box — requires deps/SBOM | planned (per milestone) |
-| LLM04 Data and Model Poisoning | white-box — requires model/data provenance | planned |
-| LLM05 Improper Output Handling | black-box / white-box | ✅ probes |
-| LLM06 Excessive Agency | black-box / white-box | ✅ probes |
-| LLM07 System Prompt Leakage | black-box | ✅ probes |
-| LLM08 Vector and Embedding Weaknesses | white-box — requires RAG/vector store | planned |
-| LLM09 Misinformation | black-box — output verification | planned |
-| LLM10 Unbounded Consumption | white-box — requires rate/resource limits | planned |
+Each category also carries a representative **CVSS v4.0 base score** (worst-case for the class),
+reported as the SARIF `security-severity` of its findings.
+
+| Category | Modality | CVSS v4.0 | Status today |
+|---|---|---|---|
+| [LLM01 Prompt Injection](llm01.md) | black-box | 9.2 Critical | ✅ probes |
+| LLM02 Sensitive Information Disclosure | black-box / white-box | 9.2 Critical | ✅ probes |
+| LLM03 Supply Chain | white-box — requires deps/SBOM | 9.5 Critical | planned (per milestone) |
+| LLM04 Data and Model Poisoning | white-box — requires model/data provenance | 7.1 High | planned |
+| LLM05 Improper Output Handling | black-box / white-box | 9.9 Critical | ✅ probes |
+| LLM06 Excessive Agency | black-box / white-box | 10.0 Critical | ✅ probes |
+| LLM07 System Prompt Leakage | black-box | 8.7 High | ✅ probes |
+| LLM08 Vector and Embedding Weaknesses | white-box — requires RAG/vector store | 7.1 High | planned |
+| LLM09 Misinformation | black-box — output verification | 5.3 Medium | planned |
+| LLM10 Unbounded Consumption | white-box — requires rate/resource limits | 8.7 High | planned |
 
 !!! warning "No silent gaps"
     A category not yet covered is reported as **planned** with what it needs — never silently skipped.

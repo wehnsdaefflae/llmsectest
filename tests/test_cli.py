@@ -51,3 +51,46 @@ def test_run_suite_respects_explicit_sarif_output(monkeypatch):
     cli.run_suite(["--sarif-output=custom/out.sarif"], "demo-defended")
     sarif_opts = [a for a in captured["cmd"] if a.startswith("--sarif-output")]
     assert sarif_opts == ["--sarif-output=custom/out.sarif"]
+
+
+# --- the --opt value footgun: an option's value must not be read as a test path ---
+
+def test_has_explicit_path_empty():
+    assert cli._has_explicit_path([]) is False
+
+
+def test_has_explicit_path_real_positional():
+    # `tests` exists relative to the repo root (pytest cwd) -> a real test path.
+    assert cli._has_explicit_path(["tests"]) is True
+
+
+def test_value_opt_value_is_not_a_path_even_if_it_exists():
+    # `--report-dir tests` consumes `tests` as the option value; despite the dir
+    # existing it must NOT be treated as a positional path (the documented footgun).
+    assert cli._has_explicit_path(["--report-dir", "tests"]) is False
+    assert cli._has_explicit_path(["--report-formats", "sarif,html"]) is False
+    assert cli._has_explicit_path(["-k", "injection"]) is False
+
+
+def test_unknown_value_is_not_a_path_when_it_does_not_exist():
+    assert cli._has_explicit_path(["--report-dir", "no_such_dir_zzz"]) is False
+    assert cli._has_explicit_path(["no_such_path_zzz"]) is False
+
+
+def test_real_positional_after_a_value_opt_is_found():
+    assert cli._has_explicit_path(["--report-dir", "tests", "tests"]) is True
+
+
+def test_run_suite_keeps_packaged_suite_with_spaced_value_option(monkeypatch):
+    captured = {}
+    monkeypatch.setattr(cli.subprocess, "call", lambda cmd: captured.setdefault("cmd", cmd) or 0)
+    cli.run_suite(["--report-dir", "tests"], None)
+    # The packaged suite must still be the test path (footgun fixed).
+    assert str(cli.SUITE_DIR) in captured["cmd"]
+
+
+def test_run_suite_uses_explicit_path_when_given(monkeypatch):
+    captured = {}
+    monkeypatch.setattr(cli.subprocess, "call", lambda cmd: captured.setdefault("cmd", cmd) or 0)
+    cli.run_suite(["tests"], None)
+    assert str(cli.SUITE_DIR) not in captured["cmd"]
