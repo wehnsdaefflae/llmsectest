@@ -69,6 +69,21 @@ Each run writes to a per-target path (`results/<target-slug>.sarif`), so scannin
 several targets in a row never overwrites an earlier report; pass `--sarif-output`
 to choose your own. `--validate` with no path checks the current target's report.
 
+### No silent gaps
+
+Every run ends with a coverage footer listing **all ten** OWASP categories — which
+this run exercised and which it did not, with the reason — so a category is never
+silently left untested. What's reachable depends on the target:
+
+- **A model/demo target** exercises the implemented categories (LLM01/02/05/06/07);
+  the rest are white-box (need the app's deps/RAG/limits) or need an oracle, and are
+  reported as not-exercised.
+- **A real app endpoint** (`--target app:<url>`) is black-box: the attack-side-marker
+  categories transfer (**LLM01** prompt injection, **LLM05** improper output handling).
+  **LLM07/02/06** light up when you tell LLMSecTest what to look for — the app's own
+  system prompt, a known secret it holds, or its privileged action signatures (see
+  the `run_app_scan` API). The footer always shows exactly what was and wasn't run.
+
 Live providers import their SDK lazily and read the relevant API key from the
 environment. The corpus and detectors are importable, too:
 

@@ -24,14 +24,25 @@ from .demo import (
     resolve_target,
     vulnerable_demo_adapter,
 )
-from .application import app_cases, run_app_scan
+from .application import (
+    ALL_CATEGORIES,
+    AppScanResult,
+    CategoryCoverage,
+    app_cases,
+    app_coverage,
+    run_app_scan,
+)
 from .models import ProbeCase, ProbeOutcome
 from .runner import run_probe
 
 __all__ = [
+    "ALL_CATEGORIES",
+    "AppScanResult",
+    "CategoryCoverage",
     "ProbeCase",
     "ProbeOutcome",
     "app_cases",
+    "app_coverage",
     "available_detectors",
     "cases_for",
     "covered_categories",

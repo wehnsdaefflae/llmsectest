@@ -38,6 +38,15 @@ llmsectest --check | --list-probes | --validate <file.sarif>
 
 Any other `pytest` option (e.g. `-k`, `-v`, `-x`) is passed straight through.
 
+## Coverage footer (no silent gaps)
+
+Every run ends with a footer listing **all ten** OWASP categories — which this run exercised and which
+it did not, with the reason — so a category is never silently left untested. A model/demo target
+exercises the implemented categories (LLM01/02/05/06/07); a real app endpoint (`--target app:<url>`) is
+black-box and scopes to the categories that transfer (LLM01, LLM05), surfacing the rest (LLM07/02/06 need
+the app's prompt/secret/actions via the `run_app_scan` API; LLM03/04/08/09/10 are white-box or need an
+oracle). `llmsectest --check` prints the same map with each category's CVSS score.
+
 ## Exit code
 
 Non-zero when the target is vulnerable (findings present) — so the command fails your pipeline. Use

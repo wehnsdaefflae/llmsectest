@@ -32,3 +32,20 @@ reported as the SARIF `security-severity` of its findings.
 The white-box categories are sequenced across the project's milestones (supply-chain/SBOM, embedding
 weaknesses and stress/consumption tests land together with their fixtures). Each consumes a concrete
 input you provide — your `requirements`/lockfile, your vector store, or your rate/resource limits.
+
+## Testing a real application (black-box)
+
+When you point LLMSecTest at a running app (`--target app:<url>`, or the `run_app_scan` API on the app's
+system prompt), it tests **only what black-box access can actually reach**, and reports the rest — never
+a silent pass:
+
+- **LLM01 (prompt injection)** and **LLM05 (improper output handling)** transfer with no setup: the
+  marker lives in the attack, so the app needs to reveal nothing for a finding to be unambiguous.
+- **LLM07 (system-prompt leakage)**, **LLM02 (sensitive disclosure)** and **LLM06 (excessive agency)**
+  light up once you tell LLMSecTest what a leak looks like — the app's own system prompt, a known secret
+  it holds, or its privileged action signatures. Without that, they are reported as *not exercised* with
+  the reason, rather than passed vacuously.
+- The white-box categories (LLM03/04/08/10) and LLM09 (oracle) are likewise surfaced as not-exercised.
+
+Every scan prints a coverage footer accounting for **all ten** categories, so the report never overstates
+what was tested.

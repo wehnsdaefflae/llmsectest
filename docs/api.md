@@ -36,7 +36,10 @@ Attack cases, target resolution, the runner, and application-mode scans.
         - resolve_target
         - run_probe
         - app_cases
+        - app_coverage
         - run_app_scan
+        - AppScanResult
+        - CategoryCoverage
         - cases_for
         - covered_categories
         - get_detector

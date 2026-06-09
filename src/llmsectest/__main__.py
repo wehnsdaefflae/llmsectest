@@ -170,14 +170,67 @@ def _has_explicit_path(args: list) -> bool:
     return False
 
 
+# Against a real app endpoint (`app:<url>`) only the attack-side-marker categories
+# transfer black-box: the canary-based LLM02/06/07 cases would pass vacuously
+# (they need a secret/prompt/actions we don't control). So scope an app run to the
+# modules that genuinely test an unknown app, and surface the rest in the footer.
+_APP_SUITE_MODULES = (
+    "test_llm01_prompt_injection.py",
+    "test_llm05_improper_output_handling.py",
+)
+
+
+def _is_app_target(target: str | None) -> bool:
+    return bool(target) and target.startswith("app:")
+
+
+def _print_coverage_footer(target: str | None) -> None:
+    """Surface which OWASP categories this run did and did not exercise — so a
+    category is never silently left untested."""
+    def cid(marker: str) -> str:
+        return marker.replace("owasp_llm", "LLM")
+
+    print("\n" + "-" * 68)
+    if _is_app_target(target):
+        from .probes.application import app_coverage
+
+        cov = app_coverage("")  # bare endpoint: no app prompt/secret/actions supplied
+        exercised = [c.owasp for c in cov if c.exercised]
+        skipped = [(c.owasp, c.reason) for c in cov if not c.exercised]
+        print(f"Application-scan coverage — {len(exercised)}/10 OWASP categories "
+              "exercised black-box. No silent gaps:")
+    else:
+        from .probes import covered_categories
+
+        covered = set(covered_categories())
+        exercised = [m for m in sorted(OWASP_LLM_CATEGORIES) if m in covered]
+        skipped = [
+            (m, f"{_TESTABILITY[m][0]} — {_TESTABILITY[m][1] or 'planned'}")
+            for m in sorted(OWASP_LLM_CATEGORIES) if m not in covered
+        ]
+        print(f"Coverage this run — {len(exercised)}/10 OWASP categories exercised. "
+              "No silent gaps:")
+    print("  exercised:    " + ", ".join(cid(m) for m in exercised))
+    for marker, reason in skipped:
+        print(f"  not exercised {cid(marker)}: {reason}")
+    print("Full map: llmsectest --check")
+    print("-" * 68)
+
+
 def run_suite(args: list, target: str | None) -> int:
     """Run the packaged probe suite (or an explicit path) with reporting on."""
     Path("results").mkdir(exist_ok=True)
     if target:
         os.environ["LLMSECTEST_TARGET"] = target
 
-    # Default to the packaged suite when no explicit test path is given.
-    test_path = [] if _has_explicit_path(args) else [str(SUITE_DIR)]
+    # Default to the packaged suite when no explicit test path is given; for an app
+    # endpoint, scope to the categories that actually transfer black-box.
+    if _has_explicit_path(args):
+        test_path = []
+    elif _is_app_target(target):
+        test_path = [str(SUITE_DIR / m) for m in _APP_SUITE_MODULES]
+    else:
+        test_path = [str(SUITE_DIR)]
 
     # Inject a per-target SARIF path unless the user chose one explicitly.
     user_sarif = any(a == "--sarif-output" or a.startswith("--sarif-output=") for a in args)
@@ -192,7 +245,9 @@ def run_suite(args: list, target: str | None) -> int:
     print_banner()
     print(f"\nTarget: {target or f'{DEFAULT_TARGET} (offline demo)'}")
     print(f"Running: {' '.join(cmd)}\n")
-    return subprocess.call(cmd)
+    rc = subprocess.call(cmd)
+    _print_coverage_footer(target)
+    return rc
 
 
 def main():
