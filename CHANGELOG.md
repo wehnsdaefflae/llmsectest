@@ -4,10 +4,12 @@ All notable changes to LLMSecTest are recorded here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project aims to follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-LLMSecTest is pre-1.0 and built in the open, so everything below is **unreleased** (not yet tagged
-on PyPI). The forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
+LLMSecTest is pre-1.0 and built in the open. `0.1.0` is the first tagged GitHub release; it is **not
+yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ## [Unreleased]
+
+## [0.1.0] - 2026-06-10
 
 ### Added
 - **CVSS v4.0 scoring.** Each OWASP category carries a representative `CVSS:4.0` base vector; findings
@@ -46,4 +48,5 @@ on PyPI). The forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap)
 - CLI: a space-separated option value (e.g. `--report-dir tmp`) was mistaken for a positional test path
   and silently skipped the packaged suite. (2026-06-09)
 
-[Unreleased]: https://github.com/wehnsdaefflae/llmsectest/commits/main
+[Unreleased]: https://github.com/wehnsdaefflae/llmsectest/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/wehnsdaefflae/llmsectest/releases/tag/v0.1.0
