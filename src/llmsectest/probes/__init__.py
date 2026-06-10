@@ -10,9 +10,16 @@ packaged pytest suite in :mod:`llmsectest.suite` runs them.
 from __future__ import annotations
 
 from .corpus import (
+    SCANNER_CATEGORIES,
     cases_for,
     covered_categories,
     get_corpus,
+)
+from .supplychain import (
+    Dependency,
+    SupplyChainFinding,
+    discover_manifests,
+    scan_dependencies,
 )
 from .detectors import (
     available_detectors,
@@ -37,21 +44,26 @@ from .runner import run_probe
 
 __all__ = [
     "ALL_CATEGORIES",
+    "SCANNER_CATEGORIES",
     "AppScanResult",
     "CategoryCoverage",
+    "Dependency",
     "ProbeCase",
     "ProbeOutcome",
+    "SupplyChainFinding",
     "app_cases",
     "app_coverage",
     "available_detectors",
     "cases_for",
     "covered_categories",
     "defended_demo_adapter",
+    "discover_manifests",
     "get_corpus",
     "get_detector",
     "register_detector",
     "resolve_target",
     "run_app_scan",
     "run_probe",
+    "scan_dependencies",
     "vulnerable_demo_adapter",
 ]

@@ -26,7 +26,8 @@ The provider-agnostic target layer. `get_adapter` builds an adapter; vendor SDKs
 
 ## Probes
 
-Attack cases, target resolution, the runner, and application-mode scans.
+Attack cases, target resolution, the runner, application-mode scans, and the
+white-box LLM03 supply-chain scanner.
 
 ::: llmsectest.probes
     options:
@@ -45,6 +46,10 @@ Attack cases, target resolution, the runner, and application-mode scans.
         - get_detector
         - register_detector
         - available_detectors
+        - scan_dependencies
+        - discover_manifests
+        - SupplyChainFinding
+        - Dependency
 
 ## Scoring
 

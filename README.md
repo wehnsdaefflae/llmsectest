@@ -15,15 +15,15 @@ Funded by the German Federal Ministry of Research, Technology and Space (BMFTR)
 via the [Prototype Fund](https://prototypefund.de) (FKZ 16IS26S10). MIT-licensed.
 See [Funding](#funding).
 
-> **Status: pre-alpha (grant week 1).** In place: the unified LLM adapter; the
+> **Status: pre-alpha (grant week 2).** In place: the unified LLM adapter; the
 > pytest plugin + reporting layer (SARIF v2.1.0 / HTML / JSON / Markdown, OWASP
-> metadata, risk scoring, baselines, policy gates); and the first real,
-> adapter-driven probe suite covering **OWASP LLM01 (prompt injection), LLM02
-> (sensitive information disclosure), LLM05 (improper output handling), LLM06
-> (excessive agency) and LLM07 (system prompt leakage)** — 5 of the 10 OWASP LLM
-> Top 10 (2025) categories. Findings are scored with **CVSS v4.0** base scores
-> per OWASP category (reported as SARIF `security-severity`). The remaining
-> categories follow on the roadmap. The modules
+> metadata, risk scoring, baselines, policy gates); the real, adapter-driven probe
+> suite covering **OWASP LLM01 (prompt injection), LLM02 (sensitive information
+> disclosure), LLM05 (improper output handling), LLM06 (excessive agency) and LLM07
+> (system prompt leakage)**; and a white-box **LLM03 (supply chain)** dependency
+> scanner — **6 of the 10** OWASP LLM Top 10 (2025) categories. Findings are scored
+> with **CVSS v4.0** base scores per OWASP category (reported as SARIF
+> `security-severity`). The remaining categories follow on the roadmap. The modules
 > under [`examples/`](examples/) demonstrate the reporting pipeline across all
 > ten categories with deterministic mock fixtures.
 
@@ -60,6 +60,7 @@ llmsectest --target openai:gpt-4o-mini       # scan a live model
 llmsectest --target anthropic:claude-3-5-haiku --report-formats=sarif,html,json,markdown
 llmsectest --target ollama:gemma4:e2b-it-q4_K_M  # local model via Ollama — no API key, no paid calls
 llmsectest --target app:http://localhost:8000/chat  # test YOUR running app (black-box, real guardrails)
+llmsectest --target app:http://localhost:8000/chat --repo .  # ...and scan its dependencies (LLM03)
 llmsectest --target demo-defended            # offline hardened target (passes)
 
 llmsectest --list-probes                     # list the corpus
@@ -80,9 +81,14 @@ never silently absent. A run also ends with a coverage footer summarising which
 categories were exercised and which were not, and why. What's reachable depends on
 the target:
 
-- **A model/demo target** exercises the implemented categories (LLM01/02/05/06/07);
-  the rest are white-box (need the app's deps/RAG/limits) or need an oracle, and are
-  reported as not-exercised.
+- **A model/demo target** exercises the implemented black-box categories
+  (LLM01/02/05/06/07); the rest need an oracle or app internals, and are reported as
+  not-exercised.
+- **`--repo <path>`** adds the white-box **LLM03 (supply chain)** scan: it reads the
+  project's dependency manifests (`requirements*.txt`, `pyproject.toml`, `Pipfile`) and
+  flags known-malicious/typosquatted packages, unpinned or unbounded versions, direct
+  VCS/URL installs and insecure indexes — offline and deterministic. Without `--repo`,
+  LLM03 reports itself skipped (needs a repo), never a silent pass.
 - **A real app endpoint** (`--target app:<url>`) is black-box: the attack-side-marker
   categories transfer (**LLM01** prompt injection, **LLM05** improper output handling).
   **LLM07/02/06** light up when you tell LLMSecTest what to look for — the app's own

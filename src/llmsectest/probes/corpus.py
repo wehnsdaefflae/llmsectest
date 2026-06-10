@@ -365,11 +365,19 @@ def get_corpus() -> list[ProbeCase]:
     ]
 
 
+# OWASP categories implemented via a static white-box scanner rather than an
+# adapter-driven probe corpus. LLM03 ships a supply-chain dependency scanner
+# (:mod:`llmsectest.probes.supplychain`), driven by the suite when a repo path is
+# supplied. These count as *covered* even though they have no :class:`ProbeCase`.
+SCANNER_CATEGORIES = frozenset({"owasp_llm03"})
+
+
 def cases_for(owasp: str) -> list[ProbeCase]:
     """Return the cases for a single OWASP marker (e.g. ``"owasp_llm01"``)."""
     return [c for c in get_corpus() if c.owasp == owasp]
 
 
 def covered_categories() -> list[str]:
-    """OWASP markers that currently have probes."""
-    return sorted({c.owasp for c in get_corpus()})
+    """OWASP markers that ship a tester — an adapter-driven probe corpus or a
+    static scanner (LLM03 supply-chain)."""
+    return sorted({c.owasp for c in get_corpus()} | SCANNER_CATEGORIES)

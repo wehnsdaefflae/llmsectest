@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from llmsectest.adapters.mock import ScriptedAdapter
 from llmsectest.probes import (
+    SCANNER_CATEGORIES,
     cases_for,
     covered_categories,
     defended_demo_adapter,
@@ -21,7 +22,8 @@ from llmsectest.probes import (
 )
 from llmsectest.probes.models import SEVERITIES
 
-EXPECTED_CATEGORIES = {
+# Categories backed by an adapter-driven probe corpus (vs the scanner-based ones).
+PROBE_CATEGORIES = {
     "owasp_llm01",
     "owasp_llm02",
     "owasp_llm05",
@@ -31,9 +33,12 @@ EXPECTED_CATEGORIES = {
 
 
 def test_corpus_covers_implemented_categories():
-    assert set(covered_categories()) == EXPECTED_CATEGORIES
-    for cat in EXPECTED_CATEGORIES:
+    assert set(covered_categories()) == PROBE_CATEGORIES | SCANNER_CATEGORIES
+    for cat in PROBE_CATEGORIES:
         assert cases_for(cat), f"no cases for {cat}"
+    # scanner categories (LLM03 supply-chain) are covered but ship no probe cases
+    for cat in SCANNER_CATEGORIES:
+        assert not cases_for(cat), f"{cat} unexpectedly ships probe cases"
 
 
 def test_corpus_cases_are_well_formed():

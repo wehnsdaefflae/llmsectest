@@ -13,6 +13,7 @@ llmsectest --check | --list-probes | --validate <file.sarif>
 | Flag | Description |
 |---|---|
 | `--target <spec>` | What to test: `app:<url>`, `ollama:<model>`, `openai:<model>`, `anthropic:<model>`, `huggingface:<model>`, `mock`, `demo`, `demo-defended`. Omit it to scan the offline demo app. |
+| `--repo <path>` | Add the white-box **LLM03 (supply chain)** scan of that project's dependency manifests (`requirements*.txt`, `pyproject.toml`, `Pipfile`). Combine with `--target` to test an app and its dependencies in one run. |
 | `--check` | Print the OWASP LLM Top 10 coverage map, each category's test modality and its CVSS v4.0 base score, then exit. |
 | `--list-probes` | List the red-team corpus that ships today, then exit. |
 | `--validate <file>` | Validate an existing SARIF file against the v2.1.0 schema, then exit. |
@@ -44,9 +45,10 @@ All ten OWASP categories run on every invocation: the implemented ones execute r
 not-yet-implemented ones are reported as **skipped tests** that say `not yet implemented` (skip reasons
 print by default). A run also ends with a footer listing **all ten** categories — which this run
 exercised and which it did not, with the reason — so a category is never silently left untested. A model/demo target
-exercises the implemented categories (LLM01/02/05/06/07); a real app endpoint (`--target app:<url>`) is
+exercises the implemented probe categories (LLM01/02/05/06/07); adding `--repo <path>` runs the white-box
+**LLM03 (supply chain)** scan as well. A real app endpoint (`--target app:<url>`) is
 black-box and scopes to the categories that transfer (LLM01, LLM05), surfacing the rest (LLM07/02/06 need
-the app's prompt/secret/actions via the `run_app_scan` API; LLM03/04/08/09/10 are white-box or need an
+the app's prompt/secret/actions via the `run_app_scan` API; LLM04/08/09/10 are white-box or need an
 oracle). `llmsectest --check` prints the same map with each category's CVSS score.
 
 ## Exit code
@@ -58,6 +60,8 @@ Non-zero when the target is vulnerable (findings present) — so the command fai
 
 ```bash
 llmsectest --target app:http://localhost:8000/chat
+llmsectest --target app:http://localhost:8000/chat --repo .   # app + its dependencies (LLM03)
+llmsectest --repo .                                            # supply-chain scan only
 llmsectest --target ollama:gemma4:e2b-it-q4_K_M --report-formats=sarif,html
 llmsectest --target app:http://localhost:8000/chat --compare-baseline --risk-threshold=high
 llmsectest --check

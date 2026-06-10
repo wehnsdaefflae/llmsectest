@@ -9,6 +9,15 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
 
 ## [Unreleased]
 
+### Added
+- **OWASP LLM03 (Supply Chain) scanning.** A white-box dependency scanner reads a project's
+  manifests (`requirements*.txt`, `pyproject.toml` incl. Poetry, `Pipfile`) and flags
+  known-malicious / typosquatted packages, unpinned or unbounded versions, direct VCS/URL installs
+  and insecure/extra package indexes — deterministic and offline (no network). Enable it with the new
+  `--repo <path>` flag; findings carry the LLM03 CVSS v4.0 base score (9.5) in SARIF. Coverage is now
+  **6/10** OWASP categories. Without `--repo`, LLM03 reports itself skipped (needs a repo), never a
+  silent pass. (2026-06-10)
+
 ## [0.1.0] - 2026-06-10
 
 ### Added

@@ -10,6 +10,8 @@ Examples:
     python -m llmsectest                                  # demo run (offline)
     python -m llmsectest --target openai:gpt-4o-mini      # scan a live model
     python -m llmsectest --target demo-defended           # offline hardened demo
+    python -m llmsectest --target app:http://localhost:8000 --repo .  # app + its deps
+    python -m llmsectest --repo .                          # add the LLM03 supply-chain scan
     python -m llmsectest --report-formats=sarif,html,json,markdown
     python -m llmsectest --list-probes                    # list the corpus
     python -m llmsectest --check                          # OWASP coverage map
@@ -61,7 +63,7 @@ def print_banner():
 _TESTABILITY = {
     "owasp_llm01": ("black-box", None),
     "owasp_llm02": ("black-box", None),
-    "owasp_llm03": ("white-box", "requires the app's dependencies/SBOM"),
+    "owasp_llm03": ("white-box", "requires --repo <path> (dependency manifests)"),
     "owasp_llm04": ("white-box", "requires training-data/model provenance"),
     "owasp_llm05": ("black-box", None),
     "owasp_llm06": ("black-box", None),
@@ -74,7 +76,7 @@ _TESTABILITY = {
 
 def check_coverage():
     """List the OWASP categories, which have probes, and what the rest need."""
-    from .probes import covered_categories
+    from .probes import SCANNER_CATEGORIES, covered_categories
     from .reporting.cvss import cvss_for_category, library_available
 
     covered = set(covered_categories())
@@ -84,7 +86,8 @@ def check_coverage():
     for marker, category in sorted(OWASP_LLM_CATEGORIES.items()):
         modality, requires = _TESTABILITY.get(marker, ("?", None))
         if marker in covered:
-            status = f"✓ probes   ({modality})"
+            kind = "scan  " if marker in SCANNER_CATEGORIES else "probes"
+            status = f"✓ {kind} ({modality})"
         else:
             status = f"  planned  ({modality} — {requires or 'planned'})"
         cvss = cvss_for_category(marker)
@@ -113,24 +116,35 @@ def list_probes():
         print(f"  {case.severity:>8s}  {case.id}  ({case.technique})")
 
 
-def _extract_target(args: list) -> tuple[list, str | None]:
-    """Pull a --target value out of args; return (remaining_args, target)."""
-    target = None
+def _extract_opt(args: list, opt: str) -> tuple[list, str | None]:
+    """Pull ``--opt VALUE`` / ``--opt=VALUE`` out of ``args``.
+
+    Returns ``(remaining_args, value)`` with both the flag and its value removed,
+    so the value can never be mistaken for a positional pytest test path. Used for
+    the llmsectest-level options (``--target``, ``--repo``) that the CLI consumes
+    before delegating the rest to pytest.
+    """
+    value = None
     rest = []
     i = 0
     while i < len(args):
         a = args[i]
-        if a == "--target":
-            target = args[i + 1] if i + 1 < len(args) else None
+        if a == opt:
+            value = args[i + 1] if i + 1 < len(args) else None
             i += 2
             continue
-        if a.startswith("--target="):
-            target = a.split("=", 1)[1]
+        if a.startswith(opt + "="):
+            value = a.split("=", 1)[1]
             i += 1
             continue
         rest.append(a)
         i += 1
-    return rest, target
+    return rest, value
+
+
+def _extract_target(args: list) -> tuple[list, str | None]:
+    """Pull a --target value out of args; return (remaining_args, target)."""
+    return _extract_opt(args, "--target")
 
 
 # Options that consume a following value in the ``--opt value`` (space-separated)
@@ -177,6 +191,7 @@ def _has_explicit_path(args: list) -> bool:
 _APP_SUITE_MODULES = (
     "test_llm01_prompt_injection.py",
     "test_llm05_improper_output_handling.py",
+    "test_llm03_supply_chain.py",  # white-box repo scan; self-skips without --repo
     "test_owasp_coverage.py",  # enumerates all 10 — unimplemented ones skip "not yet implemented"
 )
 
@@ -201,14 +216,23 @@ def _print_coverage_footer(target: str | None) -> None:
         print(f"Application-scan coverage — {len(exercised)}/10 OWASP categories "
               "exercised black-box. No silent gaps:")
     else:
-        from .probes import covered_categories
+        from .probes import SCANNER_CATEGORIES, covered_categories
 
         covered = set(covered_categories())
-        exercised = [m for m in sorted(OWASP_LLM_CATEGORIES) if m in covered]
-        skipped = [
-            (m, f"not yet implemented ({_TESTABILITY[m][0]} — {_TESTABILITY[m][1] or 'planned'})")
-            for m in sorted(OWASP_LLM_CATEGORIES) if m not in covered
-        ]
+        has_repo = bool(os.environ.get("LLMSECTEST_REPO"))
+        exercised, skipped = [], []
+        for m in sorted(OWASP_LLM_CATEGORIES):
+            if m in covered:
+                # A scanner category only fires when its input (a repo) is supplied.
+                if m in SCANNER_CATEGORIES and not has_repo:
+                    skipped.append((m, "needs --repo <path> to scan dependencies"))
+                else:
+                    exercised.append(m)
+            else:
+                skipped.append(
+                    (m, f"not yet implemented ({_TESTABILITY[m][0]} — "
+                        f"{_TESTABILITY[m][1] or 'planned'})")
+                )
         print(f"Coverage this run — {len(exercised)}/10 OWASP categories exercised. "
               "No silent gaps:")
     print("  exercised:    " + ", ".join(cid(m) for m in exercised))
@@ -218,11 +242,17 @@ def _print_coverage_footer(target: str | None) -> None:
     print("-" * 68)
 
 
-def run_suite(args: list, target: str | None) -> int:
-    """Run the packaged probe suite (or an explicit path) with reporting on."""
+def run_suite(args: list, target: str | None, repo: str | None = None) -> int:
+    """Run the packaged probe suite (or an explicit path) with reporting on.
+
+    ``repo`` (from ``--repo``) enables the white-box LLM03 supply-chain scan
+    against that project's dependency manifests, alongside the model/app probes.
+    """
     Path("results").mkdir(exist_ok=True)
     if target:
         os.environ["LLMSECTEST_TARGET"] = target
+    if repo:
+        os.environ["LLMSECTEST_REPO"] = repo
 
     # Default to the packaged suite when no explicit test path is given; for an app
     # endpoint, scope to the categories that actually transfer black-box.
@@ -266,6 +296,7 @@ def main():
         return 0
 
     args, target = _extract_target(args)
+    args, repo = _extract_opt(args, "--repo")
 
     if "--validate" in args:
         from .reporting import validate_sarif
@@ -276,7 +307,7 @@ def main():
         path = nxt if (nxt and not nxt.startswith("-")) else default_sarif_path(target)
         return 0 if validate_sarif(path) else 1
 
-    return run_suite(args, target)
+    return run_suite(args, target, repo)
 
 
 if __name__ == "__main__":

@@ -15,7 +15,7 @@ reported as the SARIF `security-severity` of its findings.
 |---|---|---|---|
 | [LLM01 Prompt Injection](llm01.md) | black-box | 9.2 Critical | ✅ probes |
 | LLM02 Sensitive Information Disclosure | black-box / white-box | 9.2 Critical | ✅ probes |
-| LLM03 Supply Chain | white-box — requires deps/SBOM | 9.5 Critical | planned (per milestone) |
+| [LLM03 Supply Chain](llm03.md) | white-box — requires `--repo` | 9.5 Critical | ✅ scan |
 | LLM04 Data and Model Poisoning | white-box — requires model/data provenance | 7.1 High | planned |
 | LLM05 Improper Output Handling | black-box / white-box | 9.9 Critical | ✅ probes |
 | LLM06 Excessive Agency | black-box / white-box | 10.0 Critical | ✅ probes |
@@ -30,9 +30,11 @@ reported as the SARIF `security-severity` of its findings.
     LLMSecTest will not claim coverage a target's modality didn't actually exercise. Run
     `llmsectest --check` for the current state.
 
-The white-box categories are sequenced across the project's milestones (supply-chain/SBOM, embedding
-weaknesses and stress/consumption tests land together with their fixtures). Each consumes a concrete
-input you provide — your `requirements`/lockfile, your vector store, or your rate/resource limits.
+The first white-box category — **LLM03 (supply chain)** — ships now: pass `--repo <path>` to scan the
+project's dependency manifests (see the [LLM03 deep-dive](llm03.md)). The remaining white-box categories
+are sequenced across the project's milestones (embedding weaknesses and stress/consumption tests land
+together with their fixtures). Each consumes a concrete input you provide — your `requirements`/lockfile,
+your vector store, or your rate/resource limits.
 
 ## Testing a real application (black-box)
 
@@ -46,7 +48,9 @@ a silent pass:
   light up once you tell LLMSecTest what a leak looks like — the app's own system prompt, a known secret
   it holds, or its privileged action signatures. Without that, they are reported as *not exercised* with
   the reason, rather than passed vacuously.
-- The white-box categories (LLM03/04/08/10) and LLM09 (oracle) are likewise surfaced as not-exercised.
+- The white-box categories are likewise surfaced as not-exercised — except **LLM03 (supply chain)**,
+  which runs from the repo: add `--repo <path>` and it scans the dependency manifests alongside the
+  endpoint probes. LLM04/08/10 and LLM09 (oracle) remain not-exercised until their milestones.
 
 Every scan prints a coverage footer accounting for **all ten** categories, so the report never overstates
 what was tested.

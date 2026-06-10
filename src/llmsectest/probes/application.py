@@ -201,8 +201,9 @@ def _skip_reasons(
         "owasp_llm02": "needs a real secret/canary the app holds — pass --app-secret to enable",
         "owasp_llm06": "needs the app's privileged tool/action signature(s) — pass --app-action to enable",
         "owasp_llm07": "needs the app's system prompt to know what a leak looks like — pass --app-prompt",
+        # implemented but driven from the repo, not the endpoint
+        "owasp_llm03": "white-box supply-chain scan runs from the repo — pass --repo <path>",
         # not yet implemented (no probe ships for these categories yet)
-        "owasp_llm03": "not yet implemented — white-box supply-chain/SBOM (milestone 3)",
         "owasp_llm04": "not yet implemented — white-box data/model provenance (milestone 3)",
         "owasp_llm08": "not yet implemented — white-box RAG / vector store (milestone 3)",
         "owasp_llm09": "not yet implemented — needs a non-circular misinformation oracle",

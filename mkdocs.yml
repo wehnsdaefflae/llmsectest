@@ -58,6 +58,7 @@ nav:
   - OWASP LLM Top 10:
       - Coverage map: owasp/index.md
       - LLM01 Prompt Injection: owasp/llm01.md
+      - LLM03 Supply Chain: owasp/llm03.md
   - CLI reference: cli.md
   - API reference: api.md
   - Changelog: changelog.md

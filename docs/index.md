@@ -31,7 +31,7 @@ target — run `llmsectest --check` to see the live map.
 |---|---|---|
 | LLM01 | Prompt Injection | **black-box** — your app endpoint |
 | LLM02 | Sensitive Information Disclosure | black-box (or white-box) |
-| LLM03 | Supply Chain | white-box — your deps/SBOM |
+| LLM03 | Supply Chain | white-box — your deps (`--repo`) |
 | LLM04 | Data and Model Poisoning | white-box — model/data provenance |
 | LLM05 | Improper Output Handling | black-box (or white-box) |
 | LLM06 | Excessive Agency | black-box (or white-box) |
@@ -44,6 +44,6 @@ target — run `llmsectest --check` to see the live map.
 **[OWASP coverage](owasp/index.md)** · **[API reference](api.md)**
 
 !!! note "Status"
-    Pre-alpha (active grant development). Black-box categories **LLM01/02/05/06/07** ship today; the
-    remaining categories land per milestone. Coverage claims here always match what the tool actually
-    does — see `llmsectest --check`.
+    Pre-alpha (active grant development). Black-box categories **LLM01/02/05/06/07** plus the white-box
+    **LLM03 (supply chain)** scan (`--repo`) ship today — **6/10**; the remaining categories land per
+    milestone. Coverage claims here always match what the tool actually does — see `llmsectest --check`.
