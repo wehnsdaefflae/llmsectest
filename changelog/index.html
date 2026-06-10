@@ -706,6 +706,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../owasp/llm03/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM03 Supply Chain
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -856,6 +884,34 @@
   
 </li>
         
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#010-2026-06-10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        0.1.0 - 2026-06-10
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="0.1.0 - 2026-06-10">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
           <li class="md-nav__item">
   <a href="#changed" class="md-nav__link">
     <span class="md-ellipsis">
@@ -940,6 +996,34 @@
   
 </li>
         
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#010-2026-06-10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        0.1.0 - 2026-06-10
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="0.1.0 - 2026-06-10">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
           <li class="md-nav__item">
   <a href="#changed" class="md-nav__link">
     <span class="md-ellipsis">
@@ -991,10 +1075,21 @@
 <p>All notable changes to LLMSecTest are recorded here. The format follows
 <a href="https://keepachangelog.com/en/1.1.0/">Keep a Changelog</a>, and the project aims to follow
 <a href="https://semver.org/spec/v2.0.0.html">Semantic Versioning</a>.</p>
-<p>LLMSecTest is pre-1.0 and built in the open, so everything below is <strong>unreleased</strong> (not yet tagged
-on PyPI). The forward-looking plan is the <a href="https://llmsec.dev/#roadmap">roadmap</a>.</p>
-<h2 id="unreleased"><a href="https://github.com/wehnsdaefflae/llmsectest/commits/main">Unreleased</a><a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
+<p>LLMSecTest is pre-1.0 and built in the open. <code>0.1.0</code> is the first tagged GitHub release; it is <strong>not
+yet published to PyPI</strong>. The forward-looking plan is the <a href="https://llmsec.dev/#roadmap">roadmap</a>.</p>
+<h2 id="unreleased"><a href="https://github.com/wehnsdaefflae/llmsectest/compare/v0.1.0...HEAD">Unreleased</a><a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
 <h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>OWASP LLM03 (Supply Chain) scanning.</strong> A white-box dependency scanner reads a project's
+  manifests (<code>requirements*.txt</code>, <code>pyproject.toml</code> incl. Poetry, <code>Pipfile</code>) and flags
+  known-malicious / typosquatted packages, unpinned or unbounded versions, direct VCS/URL installs
+  and insecure/extra package indexes — deterministic and offline (no network). Enable it with the new
+  <code>--repo &lt;path&gt;</code> flag; findings carry the LLM03 CVSS v4.0 base score (9.5) in SARIF. Coverage is now
+  <strong>6/10</strong> OWASP categories. Without <code>--repo</code>, LLM03 reports itself skipped (needs a repo), never a
+  silent pass. (2026-06-10)</li>
+</ul>
+<h2 id="010-2026-06-10"><a href="https://github.com/wehnsdaefflae/llmsectest/releases/tag/v0.1.0">0.1.0</a> - 2026-06-10<a class="headerlink" href="#010-2026-06-10" title="Permanent link">&para;</a></h2>
+<h3 id="added_1">Added<a class="headerlink" href="#added_1" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>CVSS v4.0 scoring.</strong> Each OWASP category carries a representative <code>CVSS:4.0</code> base vector; findings
   report its base score as the SARIF <code>security-severity</code>. The ten canonical scores ship in the

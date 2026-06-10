@@ -771,6 +771,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="llm03/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM03 Supply Chain
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -950,10 +978,10 @@ reported as the SARIF <code>security-severity</code> of its findings.</p>
 <td>✅ probes</td>
 </tr>
 <tr>
-<td>LLM03 Supply Chain</td>
-<td>white-box — requires deps/SBOM</td>
+<td><a href="llm03/">LLM03 Supply Chain</a></td>
+<td>white-box — requires <code>--repo</code></td>
 <td>9.5 Critical</td>
-<td>planned (per milestone)</td>
+<td>✅ scan</td>
 </tr>
 <tr>
 <td>LLM04 Data and Model Poisoning</td>
@@ -1006,9 +1034,11 @@ test reported <code>not yet implemented</code></strong> (with what it needs and 
 LLMSecTest will not claim coverage a target's modality didn't actually exercise. Run
 <code>llmsectest --check</code> for the current state.</p>
 </div>
-<p>The white-box categories are sequenced across the project's milestones (supply-chain/SBOM, embedding
-weaknesses and stress/consumption tests land together with their fixtures). Each consumes a concrete
-input you provide — your <code>requirements</code>/lockfile, your vector store, or your rate/resource limits.</p>
+<p>The first white-box category — <strong>LLM03 (supply chain)</strong> — ships now: pass <code>--repo &lt;path&gt;</code> to scan the
+project's dependency manifests (see the <a href="llm03/">LLM03 deep-dive</a>). The remaining white-box categories
+are sequenced across the project's milestones (embedding weaknesses and stress/consumption tests land
+together with their fixtures). Each consumes a concrete input you provide — your <code>requirements</code>/lockfile,
+your vector store, or your rate/resource limits.</p>
 <h2 id="testing-a-real-application-black-box">Testing a real application (black-box)<a class="headerlink" href="#testing-a-real-application-black-box" title="Permanent link">&para;</a></h2>
 <p>When you point LLMSecTest at a running app (<code>--target app:&lt;url&gt;</code>, or the <code>run_app_scan</code> API on the app's
 system prompt), it tests <strong>only what black-box access can actually reach</strong>, and reports the rest — never
@@ -1020,7 +1050,9 @@ a silent pass:</p>
   light up once you tell LLMSecTest what a leak looks like — the app's own system prompt, a known secret
   it holds, or its privileged action signatures. Without that, they are reported as <em>not exercised</em> with
   the reason, rather than passed vacuously.</li>
-<li>The white-box categories (LLM03/04/08/10) and LLM09 (oracle) are likewise surfaced as not-exercised.</li>
+<li>The white-box categories are likewise surfaced as not-exercised — except <strong>LLM03 (supply chain)</strong>,
+  which runs from the repo: add <code>--repo &lt;path&gt;</code> and it scans the dependency manifests alongside the
+  endpoint probes. LLM04/08/10 and LLM09 (oracle) remain not-exercised until their milestones.</li>
 </ul>
 <p>Every scan prints a coverage footer accounting for <strong>all ten</strong> categories, so the report never overstates
 what was tested.</p>

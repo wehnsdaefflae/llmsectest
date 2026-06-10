@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://docs.llmsec.dev/guides/target-app/">
+        <link rel="canonical" href="https://docs.llmsec.dev/owasp/llm03/">
       
       
-        <link rel="prev" href="../../getting-started/">
+        <link rel="prev" href="../llm01/">
       
       
-        <link rel="next" href="../authoring/">
+        <link rel="next" href="../../cli/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Test your running app - LLMSecTest</title>
+        <title>LLM03 Supply Chain - LLMSecTest</title>
       
     
     
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#test-your-running-application" class="md-skip">
+        <a href="#llm03-supply-chain" class="md-skip">
           Skip to content
         </a>
       
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Test your running app
+              LLM03 Supply Chain
             
           </span>
         </div>
@@ -263,13 +263,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="./" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../../guides/target-app/" class="md-tabs__link">
           
   
   
@@ -285,11 +283,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../../owasp/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
           
   
   
@@ -461,31 +461,26 @@
       
   
   
-    
   
   
-  
     
     
     
     
-      
-        
-        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
             
   
   
@@ -503,7 +498,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -518,37 +513,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Test your running app
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../guides/target-app/" class="md-nav__link">
         
   
   
@@ -564,87 +532,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#point-at-your-app-endpoint" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Point at your app endpoint
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Point at your app endpoint">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#request-and-response-shapes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Request and response shapes
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#no-paid-calls-back-your-app-with-a-local-model" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        No paid calls: back your app with a local model
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#whats-covered-against-an-endpoint" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        What's covered against an endpoint
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#when-you-cant-run-the-app-the-persona-proxy" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        When you can't run the app: the persona proxy
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -657,7 +544,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../authoring/" class="md-nav__link">
+      <a href="../../guides/authoring/" class="md-nav__link">
         
   
   
@@ -685,7 +572,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ci/" class="md-nav__link">
+      <a href="../../guides/ci/" class="md-nav__link">
         
   
   
@@ -717,26 +604,31 @@
       
   
   
+    
   
   
+  
     
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
         
           
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
             
   
   
@@ -754,7 +646,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
@@ -772,7 +664,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../owasp/" class="md-nav__link">
+      <a href="../" class="md-nav__link">
         
   
   
@@ -800,7 +692,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../owasp/llm01/" class="md-nav__link">
+      <a href="../llm01/" class="md-nav__link">
         
   
   
@@ -825,10 +717,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../owasp/llm03/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM03 Supply Chain
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -844,6 +763,59 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#how-llmsectest-tests-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How LLMSecTest tests it
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reading-a-finding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reading a finding
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#remediation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Remediation
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -964,38 +936,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#point-at-your-app-endpoint" class="md-nav__link">
+  <a href="#how-llmsectest-tests-it" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Point at your app endpoint
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Point at your app endpoint">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#request-and-response-shapes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Request and response shapes
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#no-paid-calls-back-your-app-with-a-local-model" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        No paid calls: back your app with a local model
+        How LLMSecTest tests it
       
     </span>
   </a>
@@ -1003,10 +947,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#whats-covered-against-an-endpoint" class="md-nav__link">
+  <a href="#reading-a-finding" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What's covered against an endpoint
+        Reading a finding
       
     </span>
   </a>
@@ -1014,10 +958,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#when-you-cant-run-the-app-the-persona-proxy" class="md-nav__link">
+  <a href="#remediation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        When you can't run the app: the persona proxy
+        Remediation
       
     </span>
   </a>
@@ -1044,58 +988,60 @@
   
 
 
-<h1 id="test-your-running-application">Test your running application<a class="headerlink" href="#test-your-running-application" title="Permanent link">&para;</a></h1>
-<p>This is the point of LLMSecTest: test the <strong>application</strong>, not a bare model. When you target your
-app's own endpoint, its real system prompt, guardrails, RAG context and tools are all exercised — so a
-finding reflects how your app actually behaves under attack.</p>
-<h2 id="point-at-your-app-endpoint">Point at your app endpoint<a class="headerlink" href="#point-at-your-app-endpoint" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:https://your-app.example.com/chat
+<h1 id="llm03-supply-chain">LLM03 — Supply Chain<a class="headerlink" href="#llm03-supply-chain" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>Vulnerabilities in third-party packages, models and tooling an LLM application depends on.</p>
+</blockquote>
+<p><strong>Modality:</strong> white-box (needs your repo). <strong>Status:</strong> covered.</p>
+<p>An LLM application inherits the supply chain of everything it installs. A compromised, malicious or
+typosquatted dependency runs with the app's full privileges; an <strong>unpinned</strong> dependency silently pulls
+whatever the registry serves next — including a release published by an attacker who took over the
+package. The 2025 OWASP list calls this out as LLM03, spanning vulnerable packages, tampered models and
+insecure install paths.</p>
+<h2 id="how-llmsectest-tests-it">How LLMSecTest tests it<a class="headerlink" href="#how-llmsectest-tests-it" title="Permanent link">&para;</a></h2>
+<p>Point LLMSecTest at the project with <code>--repo &lt;path&gt;</code>. It reads the dependency manifests
+(<code>requirements*.txt</code>, <code>pyproject.toml</code> including Poetry, and <code>Pipfile</code>) — recursing through the repo so
+monorepos and nested projects are covered, while skipping vendored/virtualenv trees — and flags, per
+declared dependency:</p>
+<ul>
+<li><strong>Known-malicious / typosquatted package</strong> (<code>critical</code>) — the name matches a curated list of packages
+  documented to have carried malware on PyPI or to squat a popular package / stdlib module. A hit is
+  high-signal: these are real malicious uploads, not a fuzzy typo heuristic.</li>
+<li><strong>Direct VCS / URL install</strong> (<code>high</code>) — pulled from a git ref or arbitrary URL (<code>git+https://…</code>,
+  <code>pkg @ https://…</code>) instead of the index, bypassing its integrity, signing and yank guarantees.</li>
+<li><strong>Unpinned dependency</strong> (<code>high</code>) — no version constraint at all, so the build floats to <em>any</em> future
+  version, including a compromised one.</li>
+<li><strong>No upper bound</strong> (<code>medium</code>) — a lower bound only (<code>&gt;=1.0</code>) still admits an unvetted future major.</li>
+<li><strong>Insecure / extra package index</strong> (<code>high</code> / <code>medium</code>) — an index over cleartext <code>http://</code> (MITM), or
+  an extra index that widens the dependency-confusion surface.</li>
+</ul>
+<p>Exact pins (<code>==</code> / <code>===</code>), compatible-release (<code>~=</code>) and fully bounded ranges (<code>&gt;=x,&lt;y</code>) are treated as
+safe and produce no finding. The scan is <strong>deterministic and offline</strong> — no network, no package-index
+queries — so it is safe and reproducible in CI. (A networked CVE/advisory lookup via OSV / pip-audit is
+a planned optional extra.)</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>llmsectest<span class="w"> </span>--repo<span class="w"> </span>.<span class="w">                                   </span><span class="c1"># scan this project&#39;s dependencies</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat<span class="w"> </span>--repo<span class="w"> </span>.<span class="w">   </span><span class="c1"># app probes + supply-chain scan</span>
 </code></pre></div>
-<p>LLMSecTest POSTs the <strong>attacker turn</strong> to your endpoint and reads the reply. It sends <em>only</em> the user
-message — your application supplies its own system prompt, which is exactly what we want to test.</p>
-<h3 id="request-and-response-shapes">Request and response shapes<a class="headerlink" href="#request-and-response-shapes" title="Permanent link">&para;</a></h3>
-<p>By default the request body is <code>{"message": "&lt;attacker input&gt;"}</code> and the reply is auto-detected across
-common shapes: a top-level <code>reply</code> / <code>response</code> / <code>message</code> / <code>content</code> / <code>answer</code> field, or the
-OpenAI-style <code>choices[0].message.content</code>. If your app differs, configure it (Python API):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">llmsectest.adapters.app_endpoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">AppEndpointAdapter</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">target</span> <span class="o">=</span> <span class="n">AppEndpointAdapter</span><span class="p">(</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">endpoint</span><span class="o">=</span><span class="s2">&quot;https://your-app.example.com/v1/chat&quot;</span><span class="p">,</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="n">request_field</span><span class="o">=</span><span class="s2">&quot;prompt&quot;</span><span class="p">,</span>            <span class="c1"># your app&#39;s input field</span>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="n">response_path</span><span class="o">=</span><span class="s2">&quot;data.0.text&quot;</span><span class="p">,</span>       <span class="c1"># dotted path to the reply in the JSON</span>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;Authorization&quot;</span><span class="p">:</span> <span class="s2">&quot;Bearer &lt;token&gt;&quot;</span><span class="p">},</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    <span class="n">extra_body</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;session_id&quot;</span><span class="p">:</span> <span class="s2">&quot;llmsectest&quot;</span><span class="p">},</span>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="p">)</span>
-</code></pre></div>
-<h2 id="no-paid-calls-back-your-app-with-a-local-model">No paid calls: back your app with a local model<a class="headerlink" href="#no-paid-calls-back-your-app-with-a-local-model" title="Permanent link">&para;</a></h2>
-<p>Run your app in a test configuration whose LLM backend points at a <strong>local</strong> model (e.g. Ollama),
-then test it — zero API cost:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># 1) your app, configured to call a local OpenAI-compatible endpoint:</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">OPENAI_BASE_URL</span><span class="o">=</span>http://localhost:11434/v1<span class="w">   </span><span class="c1"># Ollama</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>ollama<span class="w">                        </span><span class="c1"># ignored by Ollama</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>./run-your-app.sh<span class="w"> </span><span class="p">&amp;</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="c1"># 2) test it</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat
-</code></pre></div>
-<h2 id="whats-covered-against-an-endpoint">What's covered against an endpoint<a class="headerlink" href="#whats-covered-against-an-endpoint" title="Permanent link">&para;</a></h2>
-<p>Endpoint testing is <strong>black-box</strong>, so it covers the prompt-facing OWASP categories:
-<strong>LLM01 (prompt injection)</strong>, <strong>LLM05 (improper output handling)</strong>, <strong>LLM06 (excessive agency)</strong>, and
-— with a configured canary — <strong>LLM02/LLM07</strong> disclosure/leakage. The white-box categories
-(LLM03/04/08/10) need your app's internals and are covered by their own modules per milestone. Always
-check <code>llmsectest --check</code>.</p>
-<h2 id="when-you-cant-run-the-app-the-persona-proxy">When you can't run the app: the persona proxy<a class="headerlink" href="#when-you-cant-run-the-app-the-persona-proxy" title="Permanent link">&para;</a></h2>
-<p>If you only have the app's system prompt (not a running instance), load it onto a model and test that
-as a proxy. Lower fidelity (no guardrail/RAG/tool code), but useful:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">llmsectest.adapters</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_adapter</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">llmsectest.probes</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_app_scan</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">target</span> <span class="o">=</span> <span class="n">get_adapter</span><span class="p">(</span><span class="s2">&quot;ollama&quot;</span><span class="p">,</span> <span class="s2">&quot;gemma4:e2b-it-q4_K_M&quot;</span><span class="p">)</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="n">prompt</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;my_app_system_prompt.txt&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="k">for</span> <span class="n">outcome</span> <span class="ow">in</span> <span class="n">run_app_scan</span><span class="p">(</span><span class="s2">&quot;my-app&quot;</span><span class="p">,</span> <span class="n">prompt</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">outcome</span><span class="o">.</span><span class="n">case</span><span class="o">.</span><span class="n">owasp</span><span class="p">,</span> <span class="s2">&quot;VULNERABLE&quot;</span> <span class="k">if</span> <span class="n">outcome</span><span class="o">.</span><span class="n">vulnerable</span> <span class="k">else</span> <span class="s2">&quot;ok&quot;</span><span class="p">,</span> <span class="n">outcome</span><span class="o">.</span><span class="n">evidence</span><span class="p">)</span>
-</code></pre></div>
-<p>See <a href="../../api/"><code>run_app_scan</code></a> in the API reference.</p>
+<p>Without <code>--repo</code>, LLM03 is reported as a <strong>skipped</strong> test (with the reason that it needs a repo) — never
+a silent pass.</p>
+<h2 id="reading-a-finding">Reading a finding<a class="headerlink" href="#reading-a-finding" title="Permanent link">&para;</a></h2>
+<p>A finding names the technique, the package, the manifest it came from, the evidence and a concrete
+remediation — for example <em>"[unpinned dependency floats to any future version] requests
+(requirements.txt): 'requests' has no version constraint, so the build pulls whatever the index serves
+next"</em>. In SARIF it maps to LLM03 and carries LLM03's CVSS v4.0 base score (<code>9.5</code>) as its
+<code>security-severity</code>.</p>
+<h2 id="remediation">Remediation<a class="headerlink" href="#remediation" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Pin</strong> dependencies to reviewed versions, ideally with hashes (<code>pip install --require-hashes</code>, a
+  lockfile, or <code>uv</code>/<code>poetry</code> locks).</li>
+<li>Remove any flagged known-malicious package immediately and <strong>audit for compromise</strong> (leaked
+  credentials, unexpected network calls).</li>
+<li>Install only from a trusted index over HTTPS; avoid mixing public and private indexes without
+  per-package pinning (dependency confusion).</li>
+<li>Prefer released packages over direct git/URL installs; if a fork is unavoidable, pin it to an
+  immutable commit hash.</li>
+</ul>
+<p>See the <a href="https://genai.owasp.org/llmrisk/llm03-supply-chain/">OWASP LLM03 entry</a> for the full guidance.</p>
 
 
 
