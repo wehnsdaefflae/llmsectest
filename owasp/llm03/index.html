@@ -791,6 +791,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#known-cve-lookup-osv-opt-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Known-CVE lookup (--osv, opt-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#reading-a-finding" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -947,6 +958,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#known-cve-lookup-osv-opt-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Known-CVE lookup (--osv, opt-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#reading-a-finding" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1016,11 +1038,22 @@ declared dependency:</p>
   an extra index that widens the dependency-confusion surface.</li>
 </ul>
 <p>Exact pins (<code>==</code> / <code>===</code>), compatible-release (<code>~=</code>) and fully bounded ranges (<code>&gt;=x,&lt;y</code>) are treated as
-safe and produce no finding. The scan is <strong>deterministic and offline</strong> — no network, no package-index
-queries — so it is safe and reproducible in CI. (A networked CVE/advisory lookup via OSV / pip-audit is
-a planned optional extra.)</p>
+structurally safe and produce no structural finding. The scan is <strong>deterministic and offline</strong> — no
+network, no package-index queries — so it is safe and reproducible in CI.</p>
+<h2 id="known-cve-lookup-osv-opt-in">Known-CVE lookup (<code>--osv</code>, opt-in)<a class="headerlink" href="#known-cve-lookup-osv-opt-in" title="Permanent link">&para;</a></h2>
+<p>A safely-pinned version can still be a <em>known-vulnerable</em> version. Adding <code>--osv</code> checks every
+<strong>exactly-pinned</strong> dependency (<code>==X.Y.Z</code>) against <a href="https://osv.dev">OSV.dev</a> — the open,
+cross-ecosystem advisory database that also backs <code>pip-audit</code> — via its free batch API (no key, no
+auth). Published advisories against the pinned version become one aggregated finding per package,
+linking the OSV advisory ids.</p>
+<p>Only exact pins are queried: a range like <code>&gt;=1.0</code> doesn't determine which version an install actually
+receives, so a static manifest scan cannot honestly attribute a CVE to it (resolving the live
+environment is <code>pip-audit</code>'s job). The lookup is <strong>off by default</strong> so the standard scan stays
+offline; every non-run state — not requested, nothing exactly pinned, or a failed lookup — appears as
+an explicit <strong>skip reason</strong>, never as "no known CVEs".</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>llmsectest<span class="w"> </span>--repo<span class="w"> </span>.<span class="w">                                   </span><span class="c1"># scan this project&#39;s dependencies</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat<span class="w"> </span>--repo<span class="w"> </span>.<span class="w">   </span><span class="c1"># app probes + supply-chain scan</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>llmsectest<span class="w"> </span>--repo<span class="w"> </span>.<span class="w"> </span>--osv<span class="w">                             </span><span class="c1"># + known-CVE lookup via OSV.dev</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat<span class="w"> </span>--repo<span class="w"> </span>.<span class="w">   </span><span class="c1"># app probes + supply-chain scan</span>
 </code></pre></div>
 <p>Without <code>--repo</code>, LLM03 is reported as a <strong>skipped</strong> test (with the reason that it needs a repo) — never
 a silent pass.</p>

@@ -1080,6 +1080,12 @@ yet published to PyPI</strong>. The forward-looking plan is the <a href="https:/
 <h2 id="unreleased"><a href="https://github.com/wehnsdaefflae/llmsectest/compare/v0.1.0...HEAD">Unreleased</a><a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
 <h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
 <ul>
+<li><strong>LLM03 known-CVE lookup via OSV.dev (<code>--osv</code>).</strong> With <code>--repo</code>, the new opt-in <code>--osv</code> flag checks
+  every exactly-pinned dependency (<code>==X.Y.Z</code>) against the free OSV.dev advisory API (no key) and turns
+  published advisories into findings — one aggregated finding per vulnerable package, linking the OSV
+  ids. The structural scan stays the offline default; "not requested", "nothing exactly pinned" and
+  "lookup failed" each surface as an explicit skip reason, never as a clean result. (2026-06-11)</li>
+<li><strong><code>--version</code> flag</strong> prints the installed llmsectest version. (2026-06-11)</li>
 <li><strong>OWASP LLM03 (Supply Chain) scanning.</strong> A white-box dependency scanner reads a project's
   manifests (<code>requirements*.txt</code>, <code>pyproject.toml</code> incl. Poetry, <code>Pipfile</code>) and flags
   known-malicious / typosquatted packages, unpinned or unbounded versions, direct VCS/URL installs
