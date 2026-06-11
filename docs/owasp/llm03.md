@@ -29,12 +29,26 @@ declared dependency:
   an extra index that widens the dependency-confusion surface.
 
 Exact pins (`==` / `===`), compatible-release (`~=`) and fully bounded ranges (`>=x,<y`) are treated as
-safe and produce no finding. The scan is **deterministic and offline** — no network, no package-index
-queries — so it is safe and reproducible in CI. (A networked CVE/advisory lookup via OSV / pip-audit is
-a planned optional extra.)
+structurally safe and produce no structural finding. The scan is **deterministic and offline** — no
+network, no package-index queries — so it is safe and reproducible in CI.
+
+## Known-CVE lookup (`--osv`, opt-in)
+
+A safely-pinned version can still be a *known-vulnerable* version. Adding `--osv` checks every
+**exactly-pinned** dependency (`==X.Y.Z`) against [OSV.dev](https://osv.dev) — the open,
+cross-ecosystem advisory database that also backs `pip-audit` — via its free batch API (no key, no
+auth). Published advisories against the pinned version become one aggregated finding per package,
+linking the OSV advisory ids.
+
+Only exact pins are queried: a range like `>=1.0` doesn't determine which version an install actually
+receives, so a static manifest scan cannot honestly attribute a CVE to it (resolving the live
+environment is `pip-audit`'s job). The lookup is **off by default** so the standard scan stays
+offline; every non-run state — not requested, nothing exactly pinned, or a failed lookup — appears as
+an explicit **skip reason**, never as "no known CVEs".
 
 ```bash
 llmsectest --repo .                                   # scan this project's dependencies
+llmsectest --repo . --osv                             # + known-CVE lookup via OSV.dev
 llmsectest --target app:http://localhost:8000/chat --repo .   # app probes + supply-chain scan
 ```
 

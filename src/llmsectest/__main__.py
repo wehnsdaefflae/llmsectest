@@ -12,10 +12,12 @@ Examples:
     python -m llmsectest --target demo-defended           # offline hardened demo
     python -m llmsectest --target app:http://localhost:8000 --repo .  # app + its deps
     python -m llmsectest --repo .                          # add the LLM03 supply-chain scan
+    python -m llmsectest --repo . --osv                    # + known-CVE lookup via OSV.dev
     python -m llmsectest --report-formats=sarif,html,json,markdown
     python -m llmsectest --list-probes                    # list the corpus
     python -m llmsectest --check                          # OWASP coverage map
     python -m llmsectest --validate results/out.sarif     # validate a SARIF file
+    python -m llmsectest --version                        # print the version
 
 A failing probe is a *finding*: a non-zero exit means the target is vulnerable.
 With no --target, the suite runs against a built-in offline demo app.
@@ -100,6 +102,8 @@ def check_coverage():
           "(baked scores used otherwise).")
     print("Black-box categories test your running app via  --target app:<url> .")
     print("White-box categories need app internals (deps/RAG/limits) and land per milestone.")
+    print("LLM03: --repo <path> scans dependency manifests offline; adding --osv also")
+    print("queries OSV.dev for known CVEs in exactly-pinned versions (networked, no key).")
 
 
 def list_probes():
@@ -145,6 +149,12 @@ def _extract_opt(args: list, opt: str) -> tuple[list, str | None]:
 def _extract_target(args: list) -> tuple[list, str | None]:
     """Pull a --target value out of args; return (remaining_args, target)."""
     return _extract_opt(args, "--target")
+
+
+def _extract_flag(args: list, flag: str) -> tuple[list, bool]:
+    """Pull a boolean ``--flag`` out of ``args``; return (remaining_args, present)."""
+    rest = [a for a in args if a != flag]
+    return rest, len(rest) != len(args)
 
 
 # Options that consume a following value in the ``--opt value`` (space-separated)
@@ -206,6 +216,7 @@ def _print_coverage_footer(target: str | None) -> None:
     def cid(marker: str) -> str:
         return marker.replace("owasp_llm", "LLM")
 
+    osv_on = bool(os.environ.get("LLMSECTEST_OSV"))
     print("\n" + "-" * 68)
     if _is_app_target(target):
         from .probes.application import app_coverage
@@ -238,21 +249,31 @@ def _print_coverage_footer(target: str | None) -> None:
     print("  exercised:    " + ", ".join(cid(m) for m in exercised))
     for marker, reason in skipped:
         print(f"  not exercised {cid(marker)}: {reason}")
+    if not _is_app_target(target) and "owasp_llm03" in exercised:
+        # Surface the depth of the LLM03 scan too, not just that it ran.
+        print("  LLM03 depth:  structural scan "
+              + ("+ OSV.dev known-CVE lookup (--osv)" if osv_on
+                 else "only — add --osv for a known-CVE lookup (networked, no key)"))
     print("Full map: llmsectest --check")
     print("-" * 68)
 
 
-def run_suite(args: list, target: str | None, repo: str | None = None) -> int:
+def run_suite(args: list, target: str | None, repo: str | None = None,
+              osv: bool = False) -> int:
     """Run the packaged probe suite (or an explicit path) with reporting on.
 
     ``repo`` (from ``--repo``) enables the white-box LLM03 supply-chain scan
     against that project's dependency manifests, alongside the model/app probes.
+    ``osv`` (from ``--osv``) additionally queries OSV.dev for known CVEs in the
+    repo's exactly-pinned dependency versions (networked, opt-in).
     """
     Path("results").mkdir(exist_ok=True)
     if target:
         os.environ["LLMSECTEST_TARGET"] = target
     if repo:
         os.environ["LLMSECTEST_REPO"] = repo
+    if osv:
+        os.environ["LLMSECTEST_OSV"] = "1"
 
     # Default to the packaged suite when no explicit test path is given; for an app
     # endpoint, scope to the categories that actually transfer black-box.
@@ -288,6 +309,14 @@ def main():
     if "--help" in args or "-h" in args:
         print(__doc__)
         return 0
+    if "--version" in args:
+        from importlib.metadata import PackageNotFoundError, version
+
+        try:
+            print(f"llmsectest {version('llmsectest')}")
+        except PackageNotFoundError:
+            print("llmsectest (not installed — running from source)")
+        return 0
     if "--check" in args:
         check_coverage()
         return 0
@@ -297,6 +326,7 @@ def main():
 
     args, target = _extract_target(args)
     args, repo = _extract_opt(args, "--repo")
+    args, osv = _extract_flag(args, "--osv")
 
     if "--validate" in args:
         from .reporting import validate_sarif
@@ -307,7 +337,7 @@ def main():
         path = nxt if (nxt and not nxt.startswith("-")) else default_sarif_path(target)
         return 0 if validate_sarif(path) else 1
 
-    return run_suite(args, target, repo)
+    return run_suite(args, target, repo, osv)
 
 
 if __name__ == "__main__":

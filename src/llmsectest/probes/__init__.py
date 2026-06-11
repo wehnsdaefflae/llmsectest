@@ -18,8 +18,14 @@ from .corpus import (
 from .supplychain import (
     Dependency,
     SupplyChainFinding,
+    collect_dependencies,
     discover_manifests,
     scan_dependencies,
+)
+from .osv import (
+    OsvScanResult,
+    pinned_version,
+    scan_known_vulnerabilities,
 )
 from .detectors import (
     available_detectors,
@@ -48,6 +54,7 @@ __all__ = [
     "AppScanResult",
     "CategoryCoverage",
     "Dependency",
+    "OsvScanResult",
     "ProbeCase",
     "ProbeOutcome",
     "SupplyChainFinding",
@@ -55,15 +62,18 @@ __all__ = [
     "app_coverage",
     "available_detectors",
     "cases_for",
+    "collect_dependencies",
     "covered_categories",
     "defended_demo_adapter",
     "discover_manifests",
     "get_corpus",
     "get_detector",
+    "pinned_version",
     "register_detector",
     "resolve_target",
     "run_app_scan",
     "run_probe",
     "scan_dependencies",
+    "scan_known_vulnerabilities",
     "vulnerable_demo_adapter",
 ]

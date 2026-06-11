@@ -61,6 +61,7 @@ llmsectest --target anthropic:claude-3-5-haiku --report-formats=sarif,html,json,
 llmsectest --target ollama:gemma4:e2b-it-q4_K_M  # local model via Ollama — no API key, no paid calls
 llmsectest --target app:http://localhost:8000/chat  # test YOUR running app (black-box, real guardrails)
 llmsectest --target app:http://localhost:8000/chat --repo .  # ...and scan its dependencies (LLM03)
+llmsectest --repo . --osv                    # + known-CVE lookup for pinned deps via OSV.dev
 llmsectest --target demo-defended            # offline hardened target (passes)
 
 llmsectest --list-probes                     # list the corpus
@@ -89,6 +90,12 @@ the target:
   flags known-malicious/typosquatted packages, unpinned or unbounded versions, direct
   VCS/URL installs and insecure indexes — offline and deterministic. Without `--repo`,
   LLM03 reports itself skipped (needs a repo), never a silent pass.
+- **`--osv`** (with `--repo`) adds a **known-CVE lookup**: every exactly-pinned
+  dependency (`==X.Y.Z`) is checked against [OSV.dev](https://osv.dev) — the open
+  advisory database behind pip-audit — and published advisories become findings
+  (networked, free, no API key). Ranges aren't queried: a static scan can't know
+  which version a range resolves to. Not requested, nothing pinned, or a failed
+  lookup each surface as an explicit skip reason, never as "clean".
 - **A real app endpoint** (`--target app:<url>`) is black-box: the attack-side-marker
   categories transfer (**LLM01** prompt injection, **LLM05** improper output handling).
   **LLM07/02/06** light up when you tell LLMSecTest what to look for — the app's own

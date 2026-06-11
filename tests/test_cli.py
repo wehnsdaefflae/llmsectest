@@ -113,3 +113,30 @@ def test_app_target_scopes_modules_and_keeps_all_ten_coverage(monkeypatch):
     assert any("test_llm01_prompt_injection.py" in a for a in cmd)
     # canary-only modules are NOT run vacuously against a real app whose secrets we don't hold
     assert not any(("test_llm02" in a or "test_llm06" in a or "test_llm07" in a) for a in cmd)
+
+
+# --- the --osv opt-in and --version ----------------------------------------------
+
+def test_extract_flag_pulls_boolean_out_of_args():
+    rest, osv = cli._extract_flag(["--osv", "-q"], "--osv")
+    assert osv is True and rest == ["-q"]
+    rest, osv = cli._extract_flag(["-q"], "--osv")
+    assert osv is False and rest == ["-q"]
+
+
+def test_run_suite_sets_osv_env_only_when_requested(monkeypatch):
+    monkeypatch.setattr(cli.subprocess, "call", lambda cmd: 0)
+    # delenv first so monkeypatch restores the pre-test absence at teardown
+    monkeypatch.delenv("LLMSECTEST_OSV", raising=False)
+    monkeypatch.delenv("LLMSECTEST_REPO", raising=False)
+    cli.run_suite([], None, repo=".", osv=False)
+    assert "LLMSECTEST_OSV" not in cli.os.environ
+    cli.run_suite([], None, repo=".", osv=True)
+    assert cli.os.environ.get("LLMSECTEST_OSV") == "1"
+
+
+def test_version_flag_prints_version(monkeypatch, capsys):
+    monkeypatch.setattr(cli.sys, "argv", ["llmsectest", "--version"])
+    assert cli.main() == 0
+    out = capsys.readouterr().out
+    assert out.startswith("llmsectest")

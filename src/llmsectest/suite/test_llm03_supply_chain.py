@@ -5,6 +5,14 @@ dependency manifests rather than prompting a model. The repo to scan comes from
 ``LLMSECTEST_REPO`` (the ``llmsectest`` CLI sets it from ``--repo``). With no repo
 supplied the category is reported as skipped-with-reason — never a silent pass —
 so a developer always sees that LLM03 ran and what it needs to fire.
+
+Two layers, each surfaced separately:
+
+* **structural** (offline, always with ``--repo``): malicious/typosquat names,
+  unpinned/unbounded versions, direct VCS/URL installs, insecure indexes;
+* **known CVEs** (networked, opt-in via ``--osv`` → ``LLMSECTEST_OSV``): OSV.dev
+  advisories against exactly-pinned versions. Not requested, nothing queryable,
+  or a failed lookup each shows as an explicit skip reason — never as "clean".
 """
 
 import os
@@ -12,6 +20,7 @@ from pathlib import Path
 
 import pytest
 
+from llmsectest.probes.osv import scan_known_vulnerabilities
 from llmsectest.probes.supplychain import discover_manifests, scan_dependencies
 
 
@@ -29,16 +38,39 @@ def _load():
     return scan_dependencies(path), ""
 
 
+def _osv_params(repo: str) -> list:
+    """Params for the known-CVE layer — each non-run state is a visible skip."""
+    if not os.environ.get("LLMSECTEST_OSV"):
+        return [pytest.param(None, id="osv-cve-lookup", marks=pytest.mark.skip(
+            reason="LLM03 known-CVE lookup not requested — pass --osv to query "
+                   "OSV.dev for advisories against pinned versions (networked)"))]
+    result = scan_known_vulnerabilities(repo)
+    if result.error:
+        return [pytest.param(None, id="osv-cve-lookup", marks=pytest.mark.skip(
+            reason=f"LLM03 known-CVE lookup failed: {result.error}"))]
+    if result.queried == 0:
+        return [pytest.param(None, id="osv-cve-lookup", marks=pytest.mark.skip(
+            reason="LLM03 known-CVE lookup: no exactly-pinned (==X.Y.Z) dependencies "
+                   "to query — OSV can only attribute advisories to a concrete version"))]
+    if not result.findings:
+        return [pytest.param(None, id=f"no-known-cves-{result.queried}-pinned-queried")]
+    return [pytest.param(f, id=f.id, marks=getattr(pytest.mark, f.severity))
+            for f in result.findings]
+
+
 def _params():
     findings, skip = _load()
     if skip:
         # one skipped test, with the reason, so the category is never silently absent
         return [pytest.param(None, id="supply-chain",
                              marks=pytest.mark.skip(reason=f"LLM03 supply chain: {skip}"))]
-    if not findings:
-        return [pytest.param(None, id="no-supply-chain-risk")]
-    # one test per finding so each risky dependency is its own SARIF result
-    return [pytest.param(f, id=f.id, marks=getattr(pytest.mark, f.severity)) for f in findings]
+    params = (
+        [pytest.param(None, id="no-structural-supply-chain-risk")] if not findings
+        # one test per finding so each risky dependency is its own SARIF result
+        else [pytest.param(f, id=f.id, marks=getattr(pytest.mark, f.severity))
+              for f in findings]
+    )
+    return params + _osv_params(os.environ["LLMSECTEST_REPO"])
 
 
 @pytest.mark.security
@@ -46,7 +78,7 @@ def _params():
 @pytest.mark.parametrize("finding", _params())
 def test_supply_chain(finding):
     if finding is None:
-        return  # no repo (skipped via mark) or manifests scanned with no risk found
+        return  # no repo (skipped via mark) or layer scanned with no risk found
     pytest.fail(
         f"[{finding.technique}] {finding.package} ({finding.manifest}): "
         f"{finding.evidence}\n  → {finding.recommendation}"

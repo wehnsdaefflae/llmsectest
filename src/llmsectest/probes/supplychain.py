@@ -30,9 +30,9 @@ Exact pins (``==`` / ``===``), compatible-release (``~=``) and fully bounded ran
 
 Manifests understood: ``requirements*.txt`` (incl. ``-e`` / index directives),
 PEP 621 ``pyproject.toml`` (``[project]`` + optional-dependencies), Poetry
-(``[tool.poetry.dependencies]``) and ``Pipfile``. A CVE/advisory lookup
-(OSV / pip-audit) that needs the network is a planned optional extra; this core
-is the offline, zero-dependency baseline.
+(``[tool.poetry.dependencies]``) and ``Pipfile``. This core is the offline,
+zero-dependency baseline; the opt-in networked known-CVE lookup on top of it
+lives in :mod:`llmsectest.probes.osv` (CLI ``--osv``).
 """
 
 from __future__ import annotations
@@ -347,6 +347,30 @@ def _classify(dep: Dependency) -> SupplyChainFinding | None:
     return None
 
 
+def _parse_manifest(manifest: Path, rel: str) -> tuple[list[Dependency], list[SupplyChainFinding]]:
+    """Dispatch one manifest to its parser; returns (deps, index-directive findings)."""
+    if manifest.name == "pyproject.toml":
+        return _parse_pyproject(manifest, rel), []
+    if manifest.name == "Pipfile":
+        return _parse_pipfile(manifest, rel), []
+    return _parse_requirements(manifest, rel)
+
+
+def collect_dependencies(repo: str | Path) -> list[Dependency]:
+    """Parse every declared dependency out of all manifests under ``repo``.
+
+    The shared parse pass behind both the structural classifier
+    (:func:`scan_dependencies`) and the OSV known-vulnerability lookup
+    (:mod:`llmsectest.probes.osv`) — one normalised dependency list, whatever
+    the manifest format.
+    """
+    repo = Path(repo)
+    deps: list[Dependency] = []
+    for manifest in discover_manifests(repo):
+        deps.extend(_parse_manifest(manifest, str(manifest.relative_to(repo)))[0])
+    return deps
+
+
 def scan_dependencies(repo: str | Path) -> list[SupplyChainFinding]:
     """Scan every dependency manifest under ``repo`` for supply-chain risks.
 
@@ -357,13 +381,7 @@ def scan_dependencies(repo: str | Path) -> list[SupplyChainFinding]:
     findings: list[SupplyChainFinding] = []
     seen: set[tuple[str, str]] = set()  # (canonical name, technique-class) — dedupe across manifests
     for manifest in discover_manifests(repo):
-        rel = str(manifest.relative_to(repo))
-        if manifest.name == "pyproject.toml":
-            deps, dir_findings = _parse_pyproject(manifest, rel), []
-        elif manifest.name == "Pipfile":
-            deps, dir_findings = _parse_pipfile(manifest, rel), []
-        else:
-            deps, dir_findings = _parse_requirements(manifest, rel)
+        deps, dir_findings = _parse_manifest(manifest, str(manifest.relative_to(repo)))
         findings.extend(dir_findings)
         for dep in deps:
             finding = _classify(dep)

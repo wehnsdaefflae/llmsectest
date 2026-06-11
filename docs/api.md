@@ -48,8 +48,12 @@ white-box LLM03 supply-chain scanner.
         - available_detectors
         - scan_dependencies
         - discover_manifests
+        - collect_dependencies
         - SupplyChainFinding
         - Dependency
+        - scan_known_vulnerabilities
+        - pinned_version
+        - OsvScanResult
 
 ## Scoring
 

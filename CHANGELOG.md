@@ -10,6 +10,12 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
 ## [Unreleased]
 
 ### Added
+- **LLM03 known-CVE lookup via OSV.dev (`--osv`).** With `--repo`, the new opt-in `--osv` flag checks
+  every exactly-pinned dependency (`==X.Y.Z`) against the free OSV.dev advisory API (no key) and turns
+  published advisories into findings — one aggregated finding per vulnerable package, linking the OSV
+  ids. The structural scan stays the offline default; "not requested", "nothing exactly pinned" and
+  "lookup failed" each surface as an explicit skip reason, never as a clean result. (2026-06-11)
+- **`--version` flag** prints the installed llmsectest version. (2026-06-11)
 - **OWASP LLM03 (Supply Chain) scanning.** A white-box dependency scanner reads a project's
   manifests (`requirements*.txt`, `pyproject.toml` incl. Poetry, `Pipfile`) and flags
   known-malicious / typosquatted packages, unpinned or unbounded versions, direct VCS/URL installs

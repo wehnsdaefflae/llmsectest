@@ -14,9 +14,11 @@ llmsectest --check | --list-probes | --validate <file.sarif>
 |---|---|
 | `--target <spec>` | What to test: `app:<url>`, `ollama:<model>`, `openai:<model>`, `anthropic:<model>`, `huggingface:<model>`, `mock`, `demo`, `demo-defended`. Omit it to scan the offline demo app. |
 | `--repo <path>` | Add the white-box **LLM03 (supply chain)** scan of that project's dependency manifests (`requirements*.txt`, `pyproject.toml`, `Pipfile`). Combine with `--target` to test an app and its dependencies in one run. |
+| `--osv` | With `--repo`: also query [OSV.dev](https://osv.dev) for **known CVEs** in every exactly-pinned (`==X.Y.Z`) dependency (networked, free, no API key). Off by default so the scan stays offline/deterministic; any non-run state (not requested, nothing pinned, lookup failed) appears as an explicit skip reason. |
 | `--check` | Print the OWASP LLM Top 10 coverage map, each category's test modality and its CVSS v4.0 base score, then exit. |
 | `--list-probes` | List the red-team corpus that ships today, then exit. |
 | `--validate <file>` | Validate an existing SARIF file against the v2.1.0 schema, then exit. |
+| `--version` | Print the installed llmsectest version, then exit. |
 
 ## Reporting options (pytest plugin)
 
@@ -62,6 +64,7 @@ Non-zero when the target is vulnerable (findings present) — so the command fai
 llmsectest --target app:http://localhost:8000/chat
 llmsectest --target app:http://localhost:8000/chat --repo .   # app + its dependencies (LLM03)
 llmsectest --repo .                                            # supply-chain scan only
+llmsectest --repo . --osv                                      # + known-CVE lookup (OSV.dev)
 llmsectest --target ollama:gemma4:e2b-it-q4_K_M --report-formats=sarif,html
 llmsectest --target app:http://localhost:8000/chat --compare-baseline --risk-threshold=high
 llmsectest --check
