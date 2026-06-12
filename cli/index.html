@@ -1077,6 +1077,18 @@ packaged OWASP probe suite against your chosen target and writes reports.</p>
 <td>With <code>--repo</code>: also query <a href="https://osv.dev">OSV.dev</a> for <strong>known CVEs</strong> in every exactly-pinned (<code>==X.Y.Z</code>) dependency (networked, free, no API key). Off by default so the scan stays offline/deterministic; any non-run state (not requested, nothing pinned, lookup failed) appears as an explicit skip reason.</td>
 </tr>
 <tr>
+<td><code>--app-prompt &lt;text-or-file&gt;</code></td>
+<td>With <code>--target app:&lt;url&gt;</code>: the app's <strong>own system prompt</strong> (inline text, or a path to a file holding it) — unlocks <strong>LLM07</strong> leakage detection, since we then know what a leaked instruction looks like.</td>
+</tr>
+<tr>
+<td><code>--app-secret &lt;value&gt;</code></td>
+<td>With <code>--target app:&lt;url&gt;</code>: a <strong>real secret/canary the app holds</strong> — unlocks <strong>LLM02</strong>; a disclosure is then unambiguous (no FP-prone heuristics).</td>
+</tr>
+<tr>
+<td><code>--app-action &lt;signature&gt;</code></td>
+<td>With <code>--target app:&lt;url&gt;</code>: a <strong>privileged tool/action signature</strong> of the app (e.g. <code>"ACTION: refund("</code>). Repeatable — unlocks <strong>LLM06</strong>; an unauthorized invocation is then unambiguous.</td>
+</tr>
+<tr>
 <td><code>--check</code></td>
 <td>Print the OWASP LLM Top 10 coverage map, each category's test modality and its CVSS v4.0 base score, then exit.</td>
 </tr>
@@ -1160,8 +1172,9 @@ print by default). A run also ends with a footer listing <strong>all ten</strong
 exercised and which it did not, with the reason — so a category is never silently left untested. A model/demo target
 exercises the implemented probe categories (LLM01/02/05/06/07); adding <code>--repo &lt;path&gt;</code> runs the white-box
 <strong>LLM03 (supply chain)</strong> scan as well. A real app endpoint (<code>--target app:&lt;url&gt;</code>) is
-black-box and scopes to the categories that transfer (LLM01, LLM05), surfacing the rest (LLM07/02/06 need
-the app's prompt/secret/actions via the <code>run_app_scan</code> API; LLM04/08/09/10 are white-box or need an
+black-box: LLM01 and LLM05 always run, and <strong>LLM07/LLM02/LLM06 join them when you pass
+<code>--app-prompt</code> / <code>--app-secret</code> / <code>--app-action</code></strong> — each category whose input is missing is
+reported as skipped with the flag that would enable it (LLM04/08/09/10 are white-box or need an
 oracle). <code>llmsectest --check</code> prints the same map with each category's CVSS score.</p>
 <h2 id="exit-code">Exit code<a class="headerlink" href="#exit-code" title="Permanent link">&para;</a></h2>
 <p>Non-zero when the target is vulnerable (findings present) — so the command fails your pipeline. Use
@@ -1169,11 +1182,14 @@ oracle). <code>llmsectest --check</code> prints the same map with each category'
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat<span class="w"> </span>--repo<span class="w"> </span>.<span class="w">   </span><span class="c1"># app + its dependencies (LLM03)</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>llmsectest<span class="w"> </span>--repo<span class="w"> </span>.<span class="w">                                            </span><span class="c1"># supply-chain scan only</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>llmsectest<span class="w"> </span>--repo<span class="w"> </span>.<span class="w"> </span>--osv<span class="w">                                      </span><span class="c1"># + known-CVE lookup (OSV.dev)</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>ollama:gemma4:e2b-it-q4_K_M<span class="w"> </span>--report-formats<span class="o">=</span>sarif,html
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat<span class="w"> </span>--compare-baseline<span class="w"> </span>--risk-threshold<span class="o">=</span>high
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>llmsectest<span class="w"> </span>--check
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span>--app-prompt<span class="w"> </span>prompt.txt<span class="w"> </span>--app-secret<span class="w"> </span><span class="s2">&quot;sk-canary&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span>--app-action<span class="w"> </span><span class="s2">&quot;ACTION: refund(&quot;</span><span class="w"> </span>--app-action<span class="w"> </span><span class="s2">&quot;ACTION: delete_user(&quot;</span><span class="w">  </span><span class="c1"># + LLM07/02/06</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>llmsectest<span class="w"> </span>--repo<span class="w"> </span>.<span class="w">                                            </span><span class="c1"># supply-chain scan only</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>llmsectest<span class="w"> </span>--repo<span class="w"> </span>.<span class="w"> </span>--osv<span class="w">                                      </span><span class="c1"># + known-CVE lookup (OSV.dev)</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>ollama:gemma4:e2b-it-q4_K_M<span class="w"> </span>--report-formats<span class="o">=</span>sarif,html
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat<span class="w"> </span>--compare-baseline<span class="w"> </span>--risk-threshold<span class="o">=</span>high
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>llmsectest<span class="w"> </span>--check
 </code></pre></div>
 
 
