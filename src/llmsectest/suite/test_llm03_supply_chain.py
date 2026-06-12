@@ -20,13 +20,15 @@ from pathlib import Path
 
 import pytest
 
+from llmsectest import envvars
+
 from llmsectest.probes.osv import scan_known_vulnerabilities
 from llmsectest.probes.supplychain import discover_manifests, scan_dependencies
 
 
 def _load():
     """Return (findings, skip_reason). ``findings`` is None when skipped."""
-    repo = os.environ.get("LLMSECTEST_REPO")
+    repo = os.environ.get(envvars.REPO)
     if not repo:
         return None, "no project repo supplied — pass --repo <path> to scan dependencies"
     path = Path(repo)
@@ -40,7 +42,7 @@ def _load():
 
 def _osv_params(repo: str) -> list:
     """Params for the known-CVE layer — each non-run state is a visible skip."""
-    if not os.environ.get("LLMSECTEST_OSV"):
+    if not os.environ.get(envvars.OSV):
         return [pytest.param(None, id="osv-cve-lookup", marks=pytest.mark.skip(
             reason="LLM03 known-CVE lookup not requested — pass --osv to query "
                    "OSV.dev for advisories against pinned versions (networked)"))]
@@ -70,7 +72,7 @@ def _params():
         else [pytest.param(f, id=f.id, marks=getattr(pytest.mark, f.severity))
               for f in findings]
     )
-    return params + _osv_params(os.environ["LLMSECTEST_REPO"])
+    return params + _osv_params(os.environ[envvars.REPO])
 
 
 @pytest.mark.security

@@ -13,6 +13,17 @@ Examples:
     python -m llmsectest --target app:http://localhost:8000 --repo .  # app + its deps
     python -m llmsectest --repo .                          # add the LLM03 supply-chain scan
     python -m llmsectest --repo . --osv                    # + known-CVE lookup via OSV.dev
+    python -m llmsectest --target app:http://localhost:8000 \\
+        --app-prompt prompt.txt --app-secret "sk-canary-123" \\
+        --app-action "ACTION: refund(" --app-action "ACTION: delete_user("
+                          # deeper app scan: the dev-supplied inputs unlock LLM07/02/06
+
+Application scans (``--target app:<url>``) always exercise LLM01 + LLM05
+black-box. Three optional inputs unlock the remaining black-box categories:
+``--app-prompt`` (the app's own system prompt — inline text or a file path)
+enables LLM07, ``--app-secret`` (a real secret the app holds) enables LLM02,
+and ``--app-action`` (a privileged tool/action signature; repeatable) enables
+LLM06. Categories without their input are reported as skipped-with-reason.
     python -m llmsectest --report-formats=sarif,html,json,markdown
     python -m llmsectest --list-probes                    # list the corpus
     python -m llmsectest --check                          # OWASP coverage map
@@ -33,6 +44,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+from . import envvars
 from .reporting.owasp_metadata import OWASP_LLM_CATEGORIES
 
 SUITE_DIR = Path(__file__).resolve().parent / "suite"
@@ -101,6 +113,8 @@ def check_coverage():
     print(f"SARIF security-severity. cvss library installed: {library_available()} "
           "(baked scores used otherwise).")
     print("Black-box categories test your running app via  --target app:<url> .")
+    print("App scans always exercise LLM01+LLM05; add --app-prompt / --app-secret /")
+    print("--app-action (repeatable) to unlock LLM07 / LLM02 / LLM06 black-box.")
     print("White-box categories need app internals (deps/RAG/limits) and land per milestone.")
     print("LLM03: --repo <path> scans dependency manifests offline; adding --osv also")
     print("queries OSV.dev for known CVEs in exactly-pinned versions (networked, no key).")
@@ -120,30 +134,37 @@ def list_probes():
         print(f"  {case.severity:>8s}  {case.id}  ({case.technique})")
 
 
-def _extract_opt(args: list, opt: str) -> tuple[list, str | None]:
-    """Pull ``--opt VALUE`` / ``--opt=VALUE`` out of ``args``.
+def _extract_multi_opt(args: list, opt: str) -> tuple[list, list[str]]:
+    """Pull every ``--opt VALUE`` / ``--opt=VALUE`` occurrence out of ``args``.
 
-    Returns ``(remaining_args, value)`` with both the flag and its value removed,
-    so the value can never be mistaken for a positional pytest test path. Used for
-    the llmsectest-level options (``--target``, ``--repo``) that the CLI consumes
-    before delegating the rest to pytest.
+    Returns ``(remaining_args, values)`` with each flag and its value removed,
+    so a value can never be mistaken for a positional pytest test path. Used for
+    the llmsectest-level options (``--target``, ``--repo``, ``--app-action``…)
+    that the CLI consumes before delegating the rest to pytest.
     """
-    value = None
+    values: list[str] = []
     rest = []
     i = 0
     while i < len(args):
         a = args[i]
         if a == opt:
-            value = args[i + 1] if i + 1 < len(args) else None
+            if i + 1 < len(args):
+                values.append(args[i + 1])
             i += 2
             continue
         if a.startswith(opt + "="):
-            value = a.split("=", 1)[1]
+            values.append(a.split("=", 1)[1])
             i += 1
             continue
         rest.append(a)
         i += 1
-    return rest, value
+    return rest, values
+
+
+def _extract_opt(args: list, opt: str) -> tuple[list, str | None]:
+    """Like :func:`_extract_multi_opt` for a single-valued option (last one wins)."""
+    rest, values = _extract_multi_opt(args, opt)
+    return rest, values[-1] if values else None
 
 
 def _extract_target(args: list) -> tuple[list, str | None]:
@@ -195,12 +216,14 @@ def _has_explicit_path(args: list) -> bool:
 
 
 # Against a real app endpoint (`app:<url>`) only the attack-side-marker categories
-# transfer black-box: the canary-based LLM02/06/07 cases would pass vacuously
-# (they need a secret/prompt/actions we don't control). So scope an app run to the
-# modules that genuinely test an unknown app, and surface the rest in the footer.
+# transfer black-box: the canary-based LLM02/06/07 corpus cases would pass vacuously
+# (they probe for a secret/persona a real app doesn't hold). So scope an app run to
+# the modules that genuinely test an unknown app; the application-mode module adds
+# LLM02/06/07 back when the dev supplies --app-secret/--app-action/--app-prompt.
 _APP_SUITE_MODULES = (
     "test_llm01_prompt_injection.py",
     "test_llm05_improper_output_handling.py",
+    "test_application_mode.py",  # LLM02/06/07 from dev-supplied inputs; skips otherwise
     "test_llm03_supply_chain.py",  # white-box repo scan; self-skips without --repo
     "test_owasp_coverage.py",  # enumerates all 10 — unimplemented ones skip "not yet implemented"
 )
@@ -216,12 +239,15 @@ def _print_coverage_footer(target: str | None) -> None:
     def cid(marker: str) -> str:
         return marker.replace("owasp_llm", "LLM")
 
-    osv_on = bool(os.environ.get("LLMSECTEST_OSV"))
+    osv_on = bool(os.environ.get(envvars.OSV))
     print("\n" + "-" * 68)
     if _is_app_target(target):
         from .probes.application import app_coverage
 
-        cov = app_coverage("")  # bare endpoint: no app prompt/secret/actions supplied
+        # Reflect the dev-supplied inputs (--app-prompt/--app-secret/--app-action),
+        # so the footer reports exactly what this run could and could not reach.
+        prompt, secret, actions = envvars.app_inputs_from_env()
+        cov = app_coverage(prompt, known_secret=secret, forbidden_actions=actions or None)
         exercised = [c.owasp for c in cov if c.exercised]
         skipped = [(c.owasp, c.reason) for c in cov if not c.exercised]
         print(f"Application-scan coverage — {len(exercised)}/10 OWASP categories "
@@ -230,7 +256,7 @@ def _print_coverage_footer(target: str | None) -> None:
         from .probes import SCANNER_CATEGORIES, covered_categories
 
         covered = set(covered_categories())
-        has_repo = bool(os.environ.get("LLMSECTEST_REPO"))
+        has_repo = bool(os.environ.get(envvars.REPO))
         exercised, skipped = [], []
         for m in sorted(OWASP_LLM_CATEGORIES):
             if m in covered:
@@ -259,21 +285,32 @@ def _print_coverage_footer(target: str | None) -> None:
 
 
 def run_suite(args: list, target: str | None, repo: str | None = None,
-              osv: bool = False) -> int:
+              osv: bool = False, app_prompt: str | None = None,
+              app_secret: str | None = None,
+              app_actions: tuple[str, ...] = ()) -> int:
     """Run the packaged probe suite (or an explicit path) with reporting on.
 
     ``repo`` (from ``--repo``) enables the white-box LLM03 supply-chain scan
     against that project's dependency manifests, alongside the model/app probes.
     ``osv`` (from ``--osv``) additionally queries OSV.dev for known CVEs in the
     repo's exactly-pinned dependency versions (networked, opt-in).
+    ``app_prompt``/``app_secret``/``app_actions`` (from ``--app-prompt``/
+    ``--app-secret``/``--app-action``) are the dev-supplied application inputs
+    that unlock LLM07/LLM02/LLM06 against an ``app:<url>`` target.
     """
     Path("results").mkdir(exist_ok=True)
     if target:
-        os.environ["LLMSECTEST_TARGET"] = target
+        os.environ[envvars.TARGET] = target
     if repo:
-        os.environ["LLMSECTEST_REPO"] = repo
+        os.environ[envvars.REPO] = repo
     if osv:
-        os.environ["LLMSECTEST_OSV"] = "1"
+        os.environ[envvars.OSV] = "1"
+    if app_prompt:
+        os.environ[envvars.APP_PROMPT] = app_prompt
+    if app_secret:
+        os.environ[envvars.APP_SECRET] = app_secret
+    if app_actions:
+        os.environ[envvars.APP_ACTIONS] = envvars.ACTIONS_SEPARATOR.join(app_actions)
 
     # Default to the packaged suite when no explicit test path is given; for an app
     # endpoint, scope to the categories that actually transfer black-box.
@@ -327,6 +364,19 @@ def main():
     args, target = _extract_target(args)
     args, repo = _extract_opt(args, "--repo")
     args, osv = _extract_flag(args, "--osv")
+    args, app_prompt = _extract_opt(args, "--app-prompt")
+    args, app_secret = _extract_opt(args, "--app-secret")
+    args, app_actions = _extract_multi_opt(args, "--app-action")
+
+    if (app_prompt or app_secret or app_actions) and not _is_app_target(target):
+        # Silently ignoring an app input would be a silent coverage gap.
+        print("error: --app-prompt/--app-secret/--app-action describe a running "
+              "application and require --target app:<url> "
+              f"(got {target or 'the offline demo'})", file=sys.stderr)
+        return 2
+    if app_prompt and Path(app_prompt).is_file():
+        # System prompts are long and multiline — accept a file path too.
+        app_prompt = Path(app_prompt).read_text(encoding="utf-8")
 
     if "--validate" in args:
         from .reporting import validate_sarif
@@ -337,7 +387,9 @@ def main():
         path = nxt if (nxt and not nxt.startswith("-")) else default_sarif_path(target)
         return 0 if validate_sarif(path) else 1
 
-    return run_suite(args, target, repo, osv)
+    return run_suite(args, target, repo, osv,
+                     app_prompt=app_prompt, app_secret=app_secret,
+                     app_actions=tuple(app_actions))
 
 
 if __name__ == "__main__":

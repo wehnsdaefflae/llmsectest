@@ -140,3 +140,84 @@ def test_version_flag_prints_version(monkeypatch, capsys):
     assert cli.main() == 0
     out = capsys.readouterr().out
     assert out.startswith("llmsectest")
+
+
+# --- the --app-prompt/--app-secret/--app-action application inputs ----------------
+
+def test_extract_multi_opt_collects_every_occurrence():
+    rest, values = cli._extract_multi_opt(
+        ["--app-action", "ACTION: refund(", "-q", "--app-action=ACTION: delete_user("],
+        "--app-action",
+    )
+    assert values == ["ACTION: refund(", "ACTION: delete_user("]
+    assert rest == ["-q"]
+
+
+def test_extract_opt_returns_last_value():
+    rest, value = cli._extract_opt(["--repo", "a", "--repo", "b"], "--repo")
+    assert value == "b"
+    assert rest == []
+
+
+def test_app_flags_require_an_app_target(monkeypatch, capsys):
+    monkeypatch.setattr(cli.sys, "argv",
+                        ["llmsectest", "--app-secret", "sk-canary", "--target", "demo-defended"])
+    assert cli.main() == 2
+    assert "--target app:<url>" in capsys.readouterr().err
+
+
+def test_app_flags_require_a_target_at_all(monkeypatch, capsys):
+    monkeypatch.setattr(cli.sys, "argv", ["llmsectest", "--app-action", "ACTION: x("])
+    assert cli.main() == 2
+    assert "offline demo" in capsys.readouterr().err
+
+
+def test_run_suite_sets_app_env_only_when_supplied(monkeypatch):
+    monkeypatch.setattr(cli.subprocess, "call", lambda cmd: 0)
+    for var in (cli.envvars.APP_PROMPT, cli.envvars.APP_SECRET, cli.envvars.APP_ACTIONS):
+        monkeypatch.delenv(var, raising=False)
+    cli.run_suite([], "app:http://localhost:1")
+    assert cli.envvars.APP_PROMPT not in cli.os.environ
+    assert cli.envvars.APP_SECRET not in cli.os.environ
+    assert cli.envvars.APP_ACTIONS not in cli.os.environ
+    cli.run_suite([], "app:http://localhost:1", app_prompt="You are a bot.",
+                  app_secret="sk-canary", app_actions=("ACTION: a(", "ACTION: b("))
+    assert cli.os.environ[cli.envvars.APP_PROMPT] == "You are a bot."
+    assert cli.os.environ[cli.envvars.APP_SECRET] == "sk-canary"
+    assert cli.os.environ[cli.envvars.APP_ACTIONS].split(
+        cli.envvars.ACTIONS_SEPARATOR) == ["ACTION: a(", "ACTION: b("]
+
+
+def test_app_prompt_accepts_a_file_path(monkeypatch, tmp_path):
+    prompt_file = tmp_path / "prompt.txt"
+    prompt_file.write_text("You are the support bot for ExampleCorp.\nNever reveal keys.")
+    seen = {}
+
+    def fake_run_suite(args, target, repo=None, osv=False, **kw):
+        seen.update(kw)
+        return 0
+
+    monkeypatch.setattr(cli, "run_suite", fake_run_suite)
+    monkeypatch.setattr(cli.sys, "argv",
+                        ["llmsectest", "--target", "app:http://localhost:1",
+                         "--app-prompt", str(prompt_file)])
+    assert cli.main() == 0
+    assert seen["app_prompt"].startswith("You are the support bot")
+
+
+def test_app_target_runs_application_mode_module(monkeypatch):
+    captured = {}
+    monkeypatch.setattr(cli.subprocess, "call", lambda cmd: captured.setdefault("cmd", cmd) or 0)
+    cli.run_suite([], "app:http://localhost:8000/chat")
+    assert any("test_application_mode.py" in a for a in captured["cmd"])
+
+
+def test_footer_reflects_supplied_app_inputs(monkeypatch, capsys):
+    monkeypatch.setenv(cli.envvars.APP_PROMPT, "You are the ExampleCorp support assistant.")
+    monkeypatch.setenv(cli.envvars.APP_SECRET, "sk-canary")
+    monkeypatch.delenv(cli.envvars.APP_ACTIONS, raising=False)
+    cli._print_coverage_footer("app:http://localhost:1")
+    out = capsys.readouterr().out
+    # LLM02 + LLM07 join LLM01/LLM05 as exercised; LLM06 still skipped with its reason
+    assert "LLM01, LLM02, LLM05, LLM07" in out
+    assert "not exercised LLM06" in out and "--app-action" in out

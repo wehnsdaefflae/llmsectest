@@ -15,6 +15,9 @@ llmsectest --check | --list-probes | --validate <file.sarif>
 | `--target <spec>` | What to test: `app:<url>`, `ollama:<model>`, `openai:<model>`, `anthropic:<model>`, `huggingface:<model>`, `mock`, `demo`, `demo-defended`. Omit it to scan the offline demo app. |
 | `--repo <path>` | Add the white-box **LLM03 (supply chain)** scan of that project's dependency manifests (`requirements*.txt`, `pyproject.toml`, `Pipfile`). Combine with `--target` to test an app and its dependencies in one run. |
 | `--osv` | With `--repo`: also query [OSV.dev](https://osv.dev) for **known CVEs** in every exactly-pinned (`==X.Y.Z`) dependency (networked, free, no API key). Off by default so the scan stays offline/deterministic; any non-run state (not requested, nothing pinned, lookup failed) appears as an explicit skip reason. |
+| `--app-prompt <text-or-file>` | With `--target app:<url>`: the app's **own system prompt** (inline text, or a path to a file holding it) — unlocks **LLM07** leakage detection, since we then know what a leaked instruction looks like. |
+| `--app-secret <value>` | With `--target app:<url>`: a **real secret/canary the app holds** — unlocks **LLM02**; a disclosure is then unambiguous (no FP-prone heuristics). |
+| `--app-action <signature>` | With `--target app:<url>`: a **privileged tool/action signature** of the app (e.g. `"ACTION: refund("`). Repeatable — unlocks **LLM06**; an unauthorized invocation is then unambiguous. |
 | `--check` | Print the OWASP LLM Top 10 coverage map, each category's test modality and its CVSS v4.0 base score, then exit. |
 | `--list-probes` | List the red-team corpus that ships today, then exit. |
 | `--validate <file>` | Validate an existing SARIF file against the v2.1.0 schema, then exit. |
@@ -49,8 +52,9 @@ print by default). A run also ends with a footer listing **all ten** categories 
 exercised and which it did not, with the reason — so a category is never silently left untested. A model/demo target
 exercises the implemented probe categories (LLM01/02/05/06/07); adding `--repo <path>` runs the white-box
 **LLM03 (supply chain)** scan as well. A real app endpoint (`--target app:<url>`) is
-black-box and scopes to the categories that transfer (LLM01, LLM05), surfacing the rest (LLM07/02/06 need
-the app's prompt/secret/actions via the `run_app_scan` API; LLM04/08/09/10 are white-box or need an
+black-box: LLM01 and LLM05 always run, and **LLM07/LLM02/LLM06 join them when you pass
+`--app-prompt` / `--app-secret` / `--app-action`** — each category whose input is missing is
+reported as skipped with the flag that would enable it (LLM04/08/09/10 are white-box or need an
 oracle). `llmsectest --check` prints the same map with each category's CVSS score.
 
 ## Exit code
@@ -63,6 +67,9 @@ Non-zero when the target is vulnerable (findings present) — so the command fai
 ```bash
 llmsectest --target app:http://localhost:8000/chat
 llmsectest --target app:http://localhost:8000/chat --repo .   # app + its dependencies (LLM03)
+llmsectest --target app:http://localhost:8000/chat \
+    --app-prompt prompt.txt --app-secret "sk-canary" \
+    --app-action "ACTION: refund(" --app-action "ACTION: delete_user("  # + LLM07/02/06
 llmsectest --repo .                                            # supply-chain scan only
 llmsectest --repo . --osv                                      # + known-CVE lookup (OSV.dev)
 llmsectest --target ollama:gemma4:e2b-it-q4_K_M --report-formats=sarif,html

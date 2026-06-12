@@ -48,11 +48,28 @@ llmsectest --target app:http://localhost:8000/chat
 
 ## What's covered against an endpoint
 
-Endpoint testing is **black-box**, so it covers the prompt-facing OWASP categories:
-**LLM01 (prompt injection)**, **LLM05 (improper output handling)**, **LLM06 (excessive agency)**, and
-— with a configured canary — **LLM02/LLM07** disclosure/leakage. The white-box categories
-(LLM03/04/08/10) need your app's internals and are covered by their own modules per milestone. Always
-check `llmsectest --check`.
+Endpoint testing is **black-box**. **LLM01 (prompt injection)** and **LLM05 (improper output
+handling)** always run — their markers live in the attack, so the scan needs nothing from you.
+Three more categories light up when you tell LLMSecTest what only you, the app's developer, know:
+
+```bash
+llmsectest --target app:http://localhost:8000/chat \
+    --app-prompt prompt.txt \                      # your app's system prompt → LLM07
+    --app-secret "sk-canary-123" \                 # a real secret it holds   → LLM02
+    --app-action "ACTION: refund(" \               # a privileged tool call   → LLM06
+    --app-action "ACTION: delete_user("            # (repeatable)
+```
+
+- **`--app-prompt`** — the app's own system prompt (inline text or a file path). Knowing it means
+  the scan knows what a **leaked instruction** looks like (LLM07).
+- **`--app-secret`** — a real secret/canary value the app holds. A disclosure is then unambiguous —
+  no false-positive-prone heuristics (LLM02).
+- **`--app-action`** — a privileged tool/action signature your app can execute; repeat the flag for
+  several. An unauthorized invocation is then unambiguous (LLM06).
+
+Each category whose input you don't supply shows up as an **explicit skip naming the flag** that
+would enable it — never a silent gap. The white-box categories (LLM03/04/08/10) need your app's
+internals and are covered by their own modules per milestone. Always check `llmsectest --check`.
 
 ## When you can't run the app: the persona proxy
 

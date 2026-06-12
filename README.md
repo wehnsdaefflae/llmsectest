@@ -1,5 +1,9 @@
 # LLMSecTest
 
+[![CI](https://github.com/wehnsdaefflae/llmsectest/actions/workflows/ci.yml/badge.svg)](https://github.com/wehnsdaefflae/llmsectest/actions/workflows/ci.yml)
+[![docs](https://github.com/wehnsdaefflae/llmsectest/actions/workflows/docs.yml/badge.svg)](https://docs.llmsec.dev)
+[![license: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
 A pytest-native security testing framework for LLM applications, mapped to the
 [OWASP LLM Top 10](https://owasp.org/www-project-top-10-for-large-language-model-applications/).
 Write security tests as ordinary pytest tests; get SARIF / HTML / JSON / Markdown
@@ -61,6 +65,9 @@ llmsectest --target anthropic:claude-3-5-haiku --report-formats=sarif,html,json,
 llmsectest --target ollama:gemma4:e2b-it-q4_K_M  # local model via Ollama — no API key, no paid calls
 llmsectest --target app:http://localhost:8000/chat  # test YOUR running app (black-box, real guardrails)
 llmsectest --target app:http://localhost:8000/chat --repo .  # ...and scan its dependencies (LLM03)
+llmsectest --target app:http://localhost:8000/chat \
+    --app-prompt prompt.txt --app-secret "sk-canary" --app-action "ACTION: refund("
+                                             # deeper app scan: unlocks LLM07/LLM02/LLM06
 llmsectest --repo . --osv                    # + known-CVE lookup for pinned deps via OSV.dev
 llmsectest --target demo-defended            # offline hardened target (passes)
 
@@ -97,10 +104,13 @@ the target:
   which version a range resolves to. Not requested, nothing pinned, or a failed
   lookup each surface as an explicit skip reason, never as "clean".
 - **A real app endpoint** (`--target app:<url>`) is black-box: the attack-side-marker
-  categories transfer (**LLM01** prompt injection, **LLM05** improper output handling).
-  **LLM07/02/06** light up when you tell LLMSecTest what to look for — the app's own
-  system prompt, a known secret it holds, or its privileged action signatures (see
-  the `run_app_scan` API). The footer always shows exactly what was and wasn't run.
+  categories always transfer (**LLM01** prompt injection, **LLM05** improper output
+  handling). **LLM07/02/06** light up when you tell LLMSecTest what to look for:
+  `--app-prompt <text-or-file>` (the app's own system prompt) enables **LLM07**
+  leakage detection, `--app-secret <value>` (a real secret the app holds) enables
+  **LLM02**, and `--app-action <signature>` (a privileged tool call, repeatable)
+  enables **LLM06** — same inputs as the `run_app_scan` API. The footer always
+  shows exactly what was and wasn't run.
 
 Live providers import their SDK lazily and read the relevant API key from the
 environment. The corpus and detectors are importable, too:

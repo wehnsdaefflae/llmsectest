@@ -10,13 +10,14 @@ import os
 
 import pytest
 
+from llmsectest import envvars
 from llmsectest.probes import resolve_target
 from llmsectest.probes.runner import run_probe
 
 
 @pytest.fixture(scope="session")
 def target_adapter():
-    return resolve_target(os.environ.get("LLMSECTEST_TARGET", "demo-vulnerable"))
+    return resolve_target(os.environ.get(envvars.TARGET, "demo-vulnerable"))
 
 
 @pytest.fixture

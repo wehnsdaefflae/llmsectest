@@ -10,6 +10,18 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
 ## [Unreleased]
 
 ### Added
+- **`--app-prompt` / `--app-secret` / `--app-action` CLI flags.** An application scan
+  (`--target app:<url>`) always exercises LLM01 + LLM05 black-box; these new flags unlock the
+  remaining black-box categories from the command line — the app's own system prompt (inline or a
+  file path) enables **LLM07** leakage detection, a real secret the app holds enables **LLM02**, and
+  its privileged tool/action signature(s) (repeatable flag) enable **LLM06**. Previously these inputs
+  existed only on the `run_app_scan` Python API, so a CLI endpoint scan reached 2/10 categories; now
+  it reaches up to 5/10, and every category whose input is missing is reported as a skip naming the
+  flag that would enable it. The coverage footer reflects the supplied inputs. (2026-06-12)
+- **CI workflow.** Every push and pull request now runs `ruff` + the unit suite on Python
+  3.11/3.12/3.13, plus a smoke job that installs the package, scans the offline hardened demo and
+  validates the emitted SARIF — so "it actually runs" is checked, not just the unit tests. README
+  carries the badge. (2026-06-12)
 - **LLM03 known-CVE lookup via OSV.dev (`--osv`).** With `--repo`, the new opt-in `--osv` flag checks
   every exactly-pinned dependency (`==X.Y.Z`) against the free OSV.dev advisory API (no key) and turns
   published advisories into findings — one aggregated finding per vulnerable package, linking the OSV
@@ -23,6 +35,11 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
   `--repo <path>` flag; findings carry the LLM03 CVSS v4.0 base score (9.5) in SARIF. Coverage is now
   **6/10** OWASP categories. Without `--repo`, LLM03 reports itself skipped (needs a repo), never a
   silent pass. (2026-06-10)
+
+### Changed
+- The `LLMSECTEST_*` environment variables that carry CLI options to the packaged suite are now
+  defined once in `llmsectest.envvars` (shared by the CLI, the suite and the coverage footer), so the
+  two sides of that contract cannot drift. (2026-06-12)
 
 ## [0.1.0] - 2026-06-10
 
