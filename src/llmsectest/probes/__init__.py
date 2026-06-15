@@ -32,6 +32,13 @@ from .detectors import (
     get_detector,
     register_detector,
 )
+from .redteam import (
+    REDTEAM_SYSTEM_PROMPT,
+    RedTeamBehavior,
+    builtin_behaviors,
+    load_redteam_set,
+    redteam_cases,
+)
 from .demo import (
     defended_demo_adapter,
     resolve_target,
@@ -57,10 +64,13 @@ __all__ = [
     "OsvScanResult",
     "ProbeCase",
     "ProbeOutcome",
+    "REDTEAM_SYSTEM_PROMPT",
+    "RedTeamBehavior",
     "SupplyChainFinding",
     "app_cases",
     "app_coverage",
     "available_detectors",
+    "builtin_behaviors",
     "cases_for",
     "collect_dependencies",
     "covered_categories",
@@ -68,7 +78,9 @@ __all__ = [
     "discover_manifests",
     "get_corpus",
     "get_detector",
+    "load_redteam_set",
     "pinned_version",
+    "redteam_cases",
     "register_detector",
     "resolve_target",
     "run_app_scan",

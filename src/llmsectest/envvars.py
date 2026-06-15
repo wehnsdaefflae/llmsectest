@@ -8,14 +8,15 @@ contract cannot drift apart.
 
 CLI option → environment variable:
 
-========================  ==========================
-``--target <spec>``       :data:`TARGET`
-``--repo <path>``         :data:`REPO`
-``--osv``                 :data:`OSV` (``"1"`` when requested)
-``--app-prompt <text>``   :data:`APP_PROMPT`
-``--app-secret <value>``  :data:`APP_SECRET`
-``--app-action <sig>``    :data:`APP_ACTIONS` (repeatable; joined)
-========================  ==========================
+==========================  ==========================
+``--target <spec>``         :data:`TARGET`
+``--repo <path>``           :data:`REPO`
+``--osv``                   :data:`OSV` (``"1"`` when requested)
+``--redteam-set <csv>``     :data:`REDTEAM_SET`
+``--app-prompt <text>``     :data:`APP_PROMPT`
+``--app-secret <value>``    :data:`APP_SECRET`
+``--app-action <sig>``      :data:`APP_ACTIONS` (repeatable; joined)
+==========================  ==========================
 """
 
 from __future__ import annotations
@@ -25,6 +26,7 @@ import os
 TARGET = "LLMSECTEST_TARGET"
 REPO = "LLMSECTEST_REPO"
 OSV = "LLMSECTEST_OSV"
+REDTEAM_SET = "LLMSECTEST_REDTEAM_SET"
 APP_PROMPT = "LLMSECTEST_APP_PROMPT"
 APP_SECRET = "LLMSECTEST_APP_SECRET"
 APP_ACTIONS = "LLMSECTEST_APP_ACTIONS"

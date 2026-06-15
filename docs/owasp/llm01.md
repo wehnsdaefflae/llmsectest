@@ -27,6 +27,30 @@ Techniques in the corpus include:
 llmsectest --target app:http://localhost:8000/chat
 ```
 
+## Red-team jailbreak prompts (JailbreakBench / AdvBench)
+
+Beyond the marker-injection corpus, LLMSecTest runs a **red-team set** of harmful-behavior prompts and
+checks whether your target **refuses** them. These behaviors plant no marker, so a different oracle
+applies — a **refusal oracle** (inverted polarity): the target is a finding when it *complies* with a
+harmful request instead of refusing it.
+
+- The full corpus is the MIT-licensed **[JailbreakBench JBB-Behaviors](https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors)**
+  set — 100 curated misuse behaviors (18% sourced from **AdvBench**, 27% from HarmBench/TDC, 55% original),
+  plus 100 benign twins for false-positive testing. Download `data/harmful-behaviors.csv` once and run:
+
+  ```bash
+  llmsectest --redteam-set jbb/data/harmful-behaviors.csv --target ollama:llama3
+  ```
+
+- Without `--redteam-set`, a small built-in starter set ships so an offline run still exercises the oracle.
+- The oracle is the **refusal-string baseline** (Zou et al. 2023): it matches standard refusal phrases and
+  the behavior's affirmative target completion. It is deliberately conservative — it errs toward "refused",
+  so it **under-reports** successful jailbreaks rather than raising false findings. For higher recall, swap
+  in a classifier oracle (Llama-Guard, GLiGuard, or garak's ModernBERT refusal detector) via the detector
+  registry; that work is on the [roadmap](https://llmsec.dev/#roadmap).
+
+This deepens LLM01 — it is not a separate OWASP category.
+
 ## Reading a finding
 
 A finding names the technique, the OWASP category (LLM01), a severity, and the evidence — for example

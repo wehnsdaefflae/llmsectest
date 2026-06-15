@@ -10,6 +10,15 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
 ## [Unreleased]
 
 ### Added
+- **Red-team jailbreak prompts (JailbreakBench / AdvBench) under LLM01.** A new red-team module scores
+  a target with a **refusal oracle** — inverted from the canary detectors: a red-team behavior plants no
+  token, so the target is a finding when it **complies** with a harmful request instead of refusing it.
+  Point `--redteam-set <csv>` at the MIT-licensed [JailbreakBench JBB-Behaviors](https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors)
+  set (100 behaviors; 18% from AdvBench, 27% from HarmBench/TDC) to run the full benchmark; without it a
+  small built-in starter set ships so an offline run still exercises the oracle. The oracle errs toward
+  "refused" (it under-reports rather than raising false findings); a classifier oracle (Llama-Guard /
+  GLiGuard / garak's ModernBERT refusal detector) is the documented optional upgrade. This deepens LLM01;
+  it does not change the 6/10 category count. (2026-06-15)
 - **`--app-prompt` / `--app-secret` / `--app-action` CLI flags.** An application scan
   (`--target app:<url>`) always exercises LLM01 + LLM05 black-box; these new flags unlock the
   remaining black-box categories from the command line — the app's own system prompt (inline or a

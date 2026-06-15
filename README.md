@@ -19,13 +19,16 @@ Funded by the German Federal Ministry of Research, Technology and Space (BMFTR)
 via the [Prototype Fund](https://prototypefund.de) (FKZ 16IS26S10). MIT-licensed.
 See [Funding](#funding).
 
-> **Status: pre-alpha (grant week 2).** In place: the unified LLM adapter; the
+> **Status: pre-alpha (grant week 3).** In place: the unified LLM adapter; the
 > pytest plugin + reporting layer (SARIF v2.1.0 / HTML / JSON / Markdown, OWASP
 > metadata, risk scoring, baselines, policy gates); the real, adapter-driven probe
 > suite covering **OWASP LLM01 (prompt injection), LLM02 (sensitive information
 > disclosure), LLM05 (improper output handling), LLM06 (excessive agency) and LLM07
 > (system prompt leakage)**; and a white-box **LLM03 (supply chain)** dependency
-> scanner — **6 of the 10** OWASP LLM Top 10 (2025) categories. Findings are scored
+> scanner — **6 of the 10** OWASP LLM Top 10 (2025) categories. LLM01 also runs a
+> **red-team jailbreak set** scored by a refusal oracle (the MIT
+> [JailbreakBench](https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors) /
+> AdvBench corpus via `--redteam-set`). Findings are scored
 > with **CVSS v4.0** base scores per OWASP category (reported as SARIF
 > `security-severity`). The remaining categories follow on the roadmap. The modules
 > under [`examples/`](examples/) demonstrate the reporting pipeline across all
@@ -56,7 +59,8 @@ llm = ScriptedAdapter(lambda req: "SECRET-LEAKED" if "key" in req.messages[-1].c
 
 The packaged probe suite drives a curated red-team corpus (LLM01/02/05/06/07) through
 the adapter against a target you choose, and writes a SARIF report. A failing
-probe is a *finding*, so a non-zero exit means the target is vulnerable.
+probe is a *finding*, so a non-zero exit means the target is vulnerable. LLM01 also
+runs a red-team jailbreak set (JailbreakBench/AdvBench) scored by a refusal oracle.
 
 ```bash
 llmsectest                                   # offline demo target (shows findings)
@@ -69,6 +73,7 @@ llmsectest --target app:http://localhost:8000/chat \
     --app-prompt prompt.txt --app-secret "sk-canary" --app-action "ACTION: refund("
                                              # deeper app scan: unlocks LLM07/LLM02/LLM06
 llmsectest --repo . --osv                    # + known-CVE lookup for pinned deps via OSV.dev
+llmsectest --redteam-set jbb/harmful-behaviors.csv  # 100 JailbreakBench red-team prompts (LLM01)
 llmsectest --target demo-defended            # offline hardened target (passes)
 
 llmsectest --list-probes                     # list the corpus
@@ -92,6 +97,12 @@ the target:
 - **A model/demo target** exercises the implemented black-box categories
   (LLM01/02/05/06/07); the rest need an oracle or app internals, and are reported as
   not-exercised.
+- **`--redteam-set <csv>`** deepens **LLM01** with a red-team jailbreak set: point it
+  at the MIT-licensed [JailbreakBench JBB-Behaviors](https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors)
+  CSV (100 behaviours; 18% from AdvBench) and a target is a finding when it **complies**
+  with a harmful request instead of refusing it (a refusal oracle — inverted from the
+  canary detectors). Without the flag a built-in starter set runs, so an offline scan
+  still exercises the oracle; the footer prints the LLM01 red-team depth.
 - **`--repo <path>`** adds the white-box **LLM03 (supply chain)** scan: it reads the
   project's dependency manifests (`requirements*.txt`, `pyproject.toml`, `Pipfile`) and
   flags known-malicious/typosquatted packages, unpinned or unbounded versions, direct

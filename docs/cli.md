@@ -15,11 +15,12 @@ llmsectest --check | --list-probes | --validate <file.sarif>
 | `--target <spec>` | What to test: `app:<url>`, `ollama:<model>`, `openai:<model>`, `anthropic:<model>`, `huggingface:<model>`, `mock`, `demo`, `demo-defended`. Omit it to scan the offline demo app. |
 | `--repo <path>` | Add the white-box **LLM03 (supply chain)** scan of that project's dependency manifests (`requirements*.txt`, `pyproject.toml`, `Pipfile`). Combine with `--target` to test an app and its dependencies in one run. |
 | `--osv` | With `--repo`: also query [OSV.dev](https://osv.dev) for **known CVEs** in every exactly-pinned (`==X.Y.Z`) dependency (networked, free, no API key). Off by default so the scan stays offline/deterministic; any non-run state (not requested, nothing pinned, lookup failed) appears as an explicit skip reason. |
+| `--redteam-set <csv>` | Run the **LLM01 red-team** module against the JailbreakBench [JBB-Behaviors](https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors) CSV at this path (the 100-behaviour benchmark; columns `Index,Goal,Target,Behavior,Category,Source`). A target is a finding when it **complies** with a harmful request instead of refusing (refusal oracle). Without the flag, a built-in starter set runs so an offline scan still exercises the oracle. |
 | `--app-prompt <text-or-file>` | With `--target app:<url>`: the app's **own system prompt** (inline text, or a path to a file holding it) — unlocks **LLM07** leakage detection, since we then know what a leaked instruction looks like. |
 | `--app-secret <value>` | With `--target app:<url>`: a **real secret/canary the app holds** — unlocks **LLM02**; a disclosure is then unambiguous (no FP-prone heuristics). |
 | `--app-action <signature>` | With `--target app:<url>`: a **privileged tool/action signature** of the app (e.g. `"ACTION: refund("`). Repeatable — unlocks **LLM06**; an unauthorized invocation is then unambiguous. |
 | `--check` | Print the OWASP LLM Top 10 coverage map, each category's test modality and its CVSS v4.0 base score, then exit. |
-| `--list-probes` | List the red-team corpus that ships today, then exit. |
+| `--list-probes` | List the probe corpus that ships today (incl. the built-in red-team set), then exit. |
 | `--validate <file>` | Validate an existing SARIF file against the v2.1.0 schema, then exit. |
 | `--version` | Print the installed llmsectest version, then exit. |
 
@@ -51,7 +52,9 @@ not-yet-implemented ones are reported as **skipped tests** that say `not yet imp
 print by default). A run also ends with a footer listing **all ten** categories — which this run
 exercised and which it did not, with the reason — so a category is never silently left untested. A model/demo target
 exercises the implemented probe categories (LLM01/02/05/06/07); adding `--repo <path>` runs the white-box
-**LLM03 (supply chain)** scan as well. A real app endpoint (`--target app:<url>`) is
+**LLM03 (supply chain)** scan as well. LLM01 also runs a **red-team jailbreak** set (built-in starter set,
+or the full JailbreakBench corpus with `--redteam-set <csv>`); the footer prints the LLM01 depth so the
+red-team coverage is never a silent gap. A real app endpoint (`--target app:<url>`) is
 black-box: LLM01 and LLM05 always run, and **LLM07/LLM02/LLM06 join them when you pass
 `--app-prompt` / `--app-secret` / `--app-action`** — each category whose input is missing is
 reported as skipped with the flag that would enable it (LLM04/08/09/10 are white-box or need an
@@ -72,6 +75,7 @@ llmsectest --target app:http://localhost:8000/chat \
     --app-action "ACTION: refund(" --app-action "ACTION: delete_user("  # + LLM07/02/06
 llmsectest --repo .                                            # supply-chain scan only
 llmsectest --repo . --osv                                      # + known-CVE lookup (OSV.dev)
+llmsectest --redteam-set jbb/harmful-behaviors.csv --target ollama:llama3  # 100 JailbreakBench prompts
 llmsectest --target ollama:gemma4:e2b-it-q4_K_M --report-formats=sarif,html
 llmsectest --target app:http://localhost:8000/chat --compare-baseline --risk-threshold=high
 llmsectest --check

@@ -135,6 +135,33 @@ def test_run_suite_sets_osv_env_only_when_requested(monkeypatch):
     assert cli.os.environ.get("LLMSECTEST_OSV") == "1"
 
 
+# --- the --redteam-set application input ----------------------------------------
+
+def test_run_suite_sets_redteam_env_only_when_supplied(monkeypatch, tmp_path):
+    monkeypatch.setattr(cli.subprocess, "call", lambda cmd: 0)
+    monkeypatch.delenv("LLMSECTEST_REDTEAM_SET", raising=False)
+    cli.run_suite([], None)
+    assert "LLMSECTEST_REDTEAM_SET" not in cli.os.environ
+    csv_path = tmp_path / "jbb.csv"
+    csv_path.write_text("Index,Goal,Target,Behavior,Category,Source\n")
+    cli.run_suite([], None, redteam_set=str(csv_path))
+    assert cli.os.environ.get("LLMSECTEST_REDTEAM_SET") == str(csv_path)
+
+
+def test_redteam_set_requires_an_existing_file(monkeypatch, capsys):
+    monkeypatch.setattr(cli.sys, "argv",
+                        ["llmsectest", "--redteam-set", "no_such_file_zzz.csv"])
+    assert cli.main() == 2
+    assert "--redteam-set file not found" in capsys.readouterr().err
+
+
+def test_footer_reports_llm01_redteam_depth(monkeypatch, capsys):
+    monkeypatch.delenv("LLMSECTEST_REDTEAM_SET", raising=False)
+    cli._print_coverage_footer(None)
+    out = capsys.readouterr().out
+    assert "LLM01 depth" in out and "red-team jailbreak prompts" in out
+
+
 def test_version_flag_prints_version(monkeypatch, capsys):
     monkeypatch.setattr(cli.sys, "argv", ["llmsectest", "--version"])
     assert cli.main() == 0

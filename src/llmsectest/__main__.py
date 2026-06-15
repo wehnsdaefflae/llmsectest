@@ -13,6 +13,7 @@ Examples:
     python -m llmsectest --target app:http://localhost:8000 --repo .  # app + its deps
     python -m llmsectest --repo .                          # add the LLM03 supply-chain scan
     python -m llmsectest --repo . --osv                    # + known-CVE lookup via OSV.dev
+    python -m llmsectest --redteam-set jbb/harmful-behaviors.csv  # 100 JailbreakBench prompts (LLM01)
     python -m llmsectest --target app:http://localhost:8000 \\
         --app-prompt prompt.txt --app-secret "sk-canary-123" \\
         --app-action "ACTION: refund(" --app-action "ACTION: delete_user("
@@ -123,6 +124,7 @@ def check_coverage():
 def list_probes():
     """Print every probe case in the corpus."""
     from .probes import get_corpus
+    from .probes.redteam import builtin_behaviors
 
     print_banner()
     print(f"\n{len(get_corpus())} probe cases:\n")
@@ -132,6 +134,9 @@ def list_probes():
             current = case.owasp
             print(f"\n{OWASP_LLM_CATEGORIES[case.owasp].id} — {OWASP_LLM_CATEGORIES[case.owasp].name}")
         print(f"  {case.severity:>8s}  {case.id}  ({case.technique})")
+    n = len(builtin_behaviors())
+    print(f"\n+ {n} red-team jailbreak prompts under LLM01 (built-in starter set; "
+          "--redteam-set <csv> runs the full JailbreakBench JBB-Behaviors set of 100)")
 
 
 def _extract_multi_opt(args: list, opt: str) -> tuple[list, list[str]]:
@@ -222,6 +227,7 @@ def _has_explicit_path(args: list) -> bool:
 # LLM02/06/07 back when the dev supplies --app-secret/--app-action/--app-prompt.
 _APP_SUITE_MODULES = (
     "test_llm01_prompt_injection.py",
+    "test_redteam_jailbreaks.py",  # LLM01 red-team: does the app refuse harmful asks? (black-box)
     "test_llm05_improper_output_handling.py",
     "test_application_mode.py",  # LLM02/06/07 from dev-supplied inputs; skips otherwise
     "test_llm03_supply_chain.py",  # white-box repo scan; self-skips without --repo
@@ -275,6 +281,18 @@ def _print_coverage_footer(target: str | None) -> None:
     print("  exercised:    " + ", ".join(cid(m) for m in exercised))
     for marker, reason in skipped:
         print(f"  not exercised {cid(marker)}: {reason}")
+    if "owasp_llm01" in exercised:
+        # Surface the LLM01 red-team depth (the JailbreakBench module), not just
+        # that LLM01 ran — so the red-team coverage is never a silent gap. Count
+        # only the in-memory built-in set; name an external set by its path (the
+        # suite run itself reports how many of it ran) — the footer never does IO.
+        from .probes.redteam import builtin_behaviors
+
+        rt_path = os.environ.get(envvars.REDTEAM_SET) or None
+        depth = (f"red-team set {rt_path}" if rt_path
+                 else f"{len(builtin_behaviors())} built-in red-team jailbreak prompts")
+        print(f"  LLM01 depth:  marker-injection corpus + {depth}; "
+              "--redteam-set <csv> runs the full JailbreakBench JBB-Behaviors set")
     if not _is_app_target(target) and "owasp_llm03" in exercised:
         # Surface the depth of the LLM03 scan too, not just that it ran.
         print("  LLM03 depth:  structural scan "
@@ -285,7 +303,8 @@ def _print_coverage_footer(target: str | None) -> None:
 
 
 def run_suite(args: list, target: str | None, repo: str | None = None,
-              osv: bool = False, app_prompt: str | None = None,
+              osv: bool = False, redteam_set: str | None = None,
+              app_prompt: str | None = None,
               app_secret: str | None = None,
               app_actions: tuple[str, ...] = ()) -> int:
     """Run the packaged probe suite (or an explicit path) with reporting on.
@@ -294,23 +313,30 @@ def run_suite(args: list, target: str | None, repo: str | None = None,
     against that project's dependency manifests, alongside the model/app probes.
     ``osv`` (from ``--osv``) additionally queries OSV.dev for known CVEs in the
     repo's exactly-pinned dependency versions (networked, opt-in).
+    ``redteam_set`` (from ``--redteam-set``) points the LLM01 red-team module at
+    a JailbreakBench JBB-Behaviors CSV; without it the built-in starter set runs.
     ``app_prompt``/``app_secret``/``app_actions`` (from ``--app-prompt``/
     ``--app-secret``/``--app-action``) are the dev-supplied application inputs
     that unlock LLM07/LLM02/LLM06 against an ``app:<url>`` target.
     """
     Path("results").mkdir(exist_ok=True)
-    if target:
-        os.environ[envvars.TARGET] = target
-    if repo:
-        os.environ[envvars.REPO] = repo
-    if osv:
-        os.environ[envvars.OSV] = "1"
-    if app_prompt:
-        os.environ[envvars.APP_PROMPT] = app_prompt
-    if app_secret:
-        os.environ[envvars.APP_SECRET] = app_secret
-    if app_actions:
-        os.environ[envvars.APP_ACTIONS] = envvars.ACTIONS_SEPARATOR.join(app_actions)
+    # Only-when-supplied env vars travel from the CLI to the suite subprocess;
+    # an absent value must leave the variable unset (the suite treats unset as
+    # "use the default") — see envvars for the contract.
+    suite_env = {
+        envvars.TARGET: target,
+        envvars.REPO: repo,
+        envvars.OSV: "1" if osv else None,
+        envvars.REDTEAM_SET: redteam_set,
+        envvars.APP_PROMPT: app_prompt,
+        envvars.APP_SECRET: app_secret,
+        envvars.APP_ACTIONS: (
+            envvars.ACTIONS_SEPARATOR.join(app_actions) if app_actions else None
+        ),
+    }
+    for name, value in suite_env.items():
+        if value:
+            os.environ[name] = value
 
     # Default to the packaged suite when no explicit test path is given; for an app
     # endpoint, scope to the categories that actually transfer black-box.
@@ -364,9 +390,15 @@ def main():
     args, target = _extract_target(args)
     args, repo = _extract_opt(args, "--repo")
     args, osv = _extract_flag(args, "--osv")
+    args, redteam_set = _extract_opt(args, "--redteam-set")
     args, app_prompt = _extract_opt(args, "--app-prompt")
     args, app_secret = _extract_opt(args, "--app-secret")
     args, app_actions = _extract_multi_opt(args, "--app-action")
+
+    if redteam_set and not Path(redteam_set).is_file():
+        # Fail loudly rather than silently falling back to the built-in set.
+        print(f"error: --redteam-set file not found: {redteam_set}", file=sys.stderr)
+        return 2
 
     if (app_prompt or app_secret or app_actions) and not _is_app_target(target):
         # Silently ignoring an app input would be a silent coverage gap.
@@ -387,7 +419,7 @@ def main():
         path = nxt if (nxt and not nxt.startswith("-")) else default_sarif_path(target)
         return 0 if validate_sarif(path) else 1
 
-    return run_suite(args, target, repo, osv,
+    return run_suite(args, target, repo, osv, redteam_set=redteam_set,
                      app_prompt=app_prompt, app_secret=app_secret,
                      app_actions=tuple(app_actions))
 

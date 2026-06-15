@@ -26,8 +26,8 @@ The provider-agnostic target layer. `get_adapter` builds an adapter; vendor SDKs
 
 ## Probes
 
-Attack cases, target resolution, the runner, application-mode scans, and the
-white-box LLM03 supply-chain scanner.
+Attack cases, target resolution, the runner, application-mode scans, the
+white-box LLM03 supply-chain scanner, and the LLM01 red-team set.
 
 ::: llmsectest.probes
     options:
@@ -46,6 +46,10 @@ white-box LLM03 supply-chain scanner.
         - get_detector
         - register_detector
         - available_detectors
+        - redteam_cases
+        - load_redteam_set
+        - builtin_behaviors
+        - RedTeamBehavior
         - scan_dependencies
         - discover_manifests
         - collect_dependencies
@@ -54,6 +58,17 @@ white-box LLM03 supply-chain scanner.
         - scan_known_vulnerabilities
         - pinned_version
         - OsvScanResult
+
+### Red-team detector
+
+The refusal oracle that scores the red-team set (inverted polarity: a target is
+a finding when it complies with a harmful request instead of refusing it).
+
+::: llmsectest.probes.detectors
+    options:
+      members:
+        - refusal_oracle
+        - REFUSAL_MARKERS
 
 ## Scoring
 
