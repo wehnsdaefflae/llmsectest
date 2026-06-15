@@ -763,6 +763,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#red-team-jailbreak-prompts-jailbreakbench-advbench" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Red-team jailbreak prompts (JailbreakBench / AdvBench)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#reading-a-finding" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -947,6 +958,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#red-team-jailbreak-prompts-jailbreakbench-advbench" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Red-team jailbreak prompts (JailbreakBench / AdvBench)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#reading-a-finding" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1011,6 +1033,27 @@ inside your app, so it works black-box against any endpoint.</p>
 </ul>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat
 </code></pre></div>
+<h2 id="red-team-jailbreak-prompts-jailbreakbench-advbench">Red-team jailbreak prompts (JailbreakBench / AdvBench)<a class="headerlink" href="#red-team-jailbreak-prompts-jailbreakbench-advbench" title="Permanent link">&para;</a></h2>
+<p>Beyond the marker-injection corpus, LLMSecTest runs a <strong>red-team set</strong> of harmful-behavior prompts and
+checks whether your target <strong>refuses</strong> them. These behaviors plant no marker, so a different oracle
+applies — a <strong>refusal oracle</strong> (inverted polarity): the target is a finding when it <em>complies</em> with a
+harmful request instead of refusing it.</p>
+<ul>
+<li>The full corpus is the MIT-licensed <strong><a href="https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors">JailbreakBench JBB-Behaviors</a></strong>
+  set — 100 curated misuse behaviors (18% sourced from <strong>AdvBench</strong>, 27% from HarmBench/TDC, 55% original),
+  plus 100 benign twins for false-positive testing. Download <code>data/harmful-behaviors.csv</code> once and run:</li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>llmsectest<span class="w"> </span>--redteam-set<span class="w"> </span>jbb/data/harmful-behaviors.csv<span class="w"> </span>--target<span class="w"> </span>ollama:llama3
+</code></pre></div>
+<ul>
+<li>Without <code>--redteam-set</code>, a small built-in starter set ships so an offline run still exercises the oracle.</li>
+<li>The oracle is the <strong>refusal-string baseline</strong> (Zou et al. 2023): it matches standard refusal phrases and
+  the behavior's affirmative target completion. It is deliberately conservative — it errs toward "refused",
+  so it <strong>under-reports</strong> successful jailbreaks rather than raising false findings. For higher recall, swap
+  in a classifier oracle (Llama-Guard, GLiGuard, or garak's ModernBERT refusal detector) via the detector
+  registry; that work is on the <a href="https://llmsec.dev/#roadmap">roadmap</a>.</li>
+</ul>
+<p>This deepens LLM01 — it is not a separate OWASP category.</p>
 <h2 id="reading-a-finding">Reading a finding<a class="headerlink" href="#reading-a-finding" title="Permanent link">&para;</a></h2>
 <p>A finding names the technique, the OWASP category (LLM01), a severity, and the evidence — for example
 <em>"target obeyed the injected instruction and emitted marker: PWNED-LLM01-DELIM"</em>, alongside the prompt

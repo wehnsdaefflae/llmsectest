@@ -1077,6 +1077,10 @@ packaged OWASP probe suite against your chosen target and writes reports.</p>
 <td>With <code>--repo</code>: also query <a href="https://osv.dev">OSV.dev</a> for <strong>known CVEs</strong> in every exactly-pinned (<code>==X.Y.Z</code>) dependency (networked, free, no API key). Off by default so the scan stays offline/deterministic; any non-run state (not requested, nothing pinned, lookup failed) appears as an explicit skip reason.</td>
 </tr>
 <tr>
+<td><code>--redteam-set &lt;csv&gt;</code></td>
+<td>Run the <strong>LLM01 red-team</strong> module against the JailbreakBench <a href="https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors">JBB-Behaviors</a> CSV at this path (the 100-behaviour benchmark; columns <code>Index,Goal,Target,Behavior,Category,Source</code>). A target is a finding when it <strong>complies</strong> with a harmful request instead of refusing (refusal oracle). Without the flag, a built-in starter set runs so an offline scan still exercises the oracle.</td>
+</tr>
+<tr>
 <td><code>--app-prompt &lt;text-or-file&gt;</code></td>
 <td>With <code>--target app:&lt;url&gt;</code>: the app's <strong>own system prompt</strong> (inline text, or a path to a file holding it) — unlocks <strong>LLM07</strong> leakage detection, since we then know what a leaked instruction looks like.</td>
 </tr>
@@ -1094,7 +1098,7 @@ packaged OWASP probe suite against your chosen target and writes reports.</p>
 </tr>
 <tr>
 <td><code>--list-probes</code></td>
-<td>List the red-team corpus that ships today, then exit.</td>
+<td>List the probe corpus that ships today (incl. the built-in red-team set), then exit.</td>
 </tr>
 <tr>
 <td><code>--validate &lt;file&gt;</code></td>
@@ -1171,7 +1175,9 @@ not-yet-implemented ones are reported as <strong>skipped tests</strong> that say
 print by default). A run also ends with a footer listing <strong>all ten</strong> categories — which this run
 exercised and which it did not, with the reason — so a category is never silently left untested. A model/demo target
 exercises the implemented probe categories (LLM01/02/05/06/07); adding <code>--repo &lt;path&gt;</code> runs the white-box
-<strong>LLM03 (supply chain)</strong> scan as well. A real app endpoint (<code>--target app:&lt;url&gt;</code>) is
+<strong>LLM03 (supply chain)</strong> scan as well. LLM01 also runs a <strong>red-team jailbreak</strong> set (built-in starter set,
+or the full JailbreakBench corpus with <code>--redteam-set &lt;csv&gt;</code>); the footer prints the LLM01 depth so the
+red-team coverage is never a silent gap. A real app endpoint (<code>--target app:&lt;url&gt;</code>) is
 black-box: LLM01 and LLM05 always run, and <strong>LLM07/LLM02/LLM06 join them when you pass
 <code>--app-prompt</code> / <code>--app-secret</code> / <code>--app-action</code></strong> — each category whose input is missing is
 reported as skipped with the flag that would enable it (LLM04/08/09/10 are white-box or need an
@@ -1187,9 +1193,10 @@ oracle). <code>llmsectest --check</code> prints the same map with each category'
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span>--app-action<span class="w"> </span><span class="s2">&quot;ACTION: refund(&quot;</span><span class="w"> </span>--app-action<span class="w"> </span><span class="s2">&quot;ACTION: delete_user(&quot;</span><span class="w">  </span><span class="c1"># + LLM07/02/06</span>
 <a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>llmsectest<span class="w"> </span>--repo<span class="w"> </span>.<span class="w">                                            </span><span class="c1"># supply-chain scan only</span>
 <a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>llmsectest<span class="w"> </span>--repo<span class="w"> </span>.<span class="w"> </span>--osv<span class="w">                                      </span><span class="c1"># + known-CVE lookup (OSV.dev)</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>ollama:gemma4:e2b-it-q4_K_M<span class="w"> </span>--report-formats<span class="o">=</span>sarif,html
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat<span class="w"> </span>--compare-baseline<span class="w"> </span>--risk-threshold<span class="o">=</span>high
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>llmsectest<span class="w"> </span>--check
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>llmsectest<span class="w"> </span>--redteam-set<span class="w"> </span>jbb/harmful-behaviors.csv<span class="w"> </span>--target<span class="w"> </span>ollama:llama3<span class="w">  </span><span class="c1"># 100 JailbreakBench prompts</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>ollama:gemma4:e2b-it-q4_K_M<span class="w"> </span>--report-formats<span class="o">=</span>sarif,html
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat<span class="w"> </span>--compare-baseline<span class="w"> </span>--risk-threshold<span class="o">=</span>high
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>llmsectest<span class="w"> </span>--check
 </code></pre></div>
 
 
