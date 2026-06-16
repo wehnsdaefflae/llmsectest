@@ -51,6 +51,29 @@ harmful request instead of refusing it.
 
 This deepens LLM01 — it is not a separate OWASP category.
 
+## Over-refusal: the benign twins (`--redteam-benign`)
+
+A refusal oracle only tells half the story. A target that refuses *everything* would score perfectly on
+the harmful set while being useless in practice. JBB-Behaviors ships **100 benign twins** — harmless
+requests topic-matched to the harmful behaviors — and `--redteam-benign` runs them through the mirror-image
+**over-refusal oracle**: here a *refusal of a harmless request* is the finding. The result is the target's
+**false-refusal rate** (the share of benign requests it wrongly declines).
+
+```bash
+llmsectest --redteam-benign                          # built-in benign twins
+llmsectest --redteam-benign jbb/data/benign-behaviors.csv --target ollama:llama3   # the full 100
+```
+
+Over-refusing is a **usability** defect, not a security vulnerability — so it would be backwards to count
+it as a finding (a cautious model is *safer*, not more vulnerable). LLMSecTest therefore reports the
+false-refusal rate as a **separate quality metric**: it never enters the SARIF security report and never
+changes the exit code. It is the **specificity control** for the refusal oracle — and, paired with the
+harmful set, it exposes the security/usability trade-off directly. The offline demos make the split
+vivid: `demo-vulnerable` complies with everything (0% over-refusal but many findings), while
+`demo-defended` refuses everything (0 findings but a **100%** false-refusal rate). The same
+string-matching caveat applies, inverted: a benign reply that incidentally contains a refusal-like phrase
+can be over-counted, which a classifier oracle would fix.
+
 ## Reading a finding
 
 A finding names the technique, the OWASP category (LLM01), a severity, and the evidence — for example

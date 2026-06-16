@@ -50,6 +50,11 @@ white-box LLM03 supply-chain scanner, and the LLM01 red-team set.
         - load_redteam_set
         - builtin_behaviors
         - RedTeamBehavior
+        - benign_cases
+        - load_benign_set
+        - builtin_benign
+        - measure_false_refusal
+        - FalseRefusalReport
         - scan_dependencies
         - discover_manifests
         - collect_dependencies
@@ -59,15 +64,18 @@ white-box LLM03 supply-chain scanner, and the LLM01 red-team set.
         - pinned_version
         - OsvScanResult
 
-### Red-team detector
+### Red-team detectors
 
 The refusal oracle that scores the red-team set (inverted polarity: a target is
-a finding when it complies with a harmful request instead of refusing it).
+a finding when it complies with a harmful request instead of refusing it), and
+its mirror image — the over-refusal oracle that flags a refusal of a *benign*
+twin (the false-refusal-rate metric, a usability signal kept out of the findings).
 
 ::: llmsectest.probes.detectors
     options:
       members:
         - refusal_oracle
+        - over_refusal_oracle
         - REFUSAL_MARKERS
 
 ## Scoring

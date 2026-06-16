@@ -162,6 +162,50 @@ def test_footer_reports_llm01_redteam_depth(monkeypatch, capsys):
     assert "LLM01 depth" in out and "red-team jailbreak prompts" in out
 
 
+# --- the --redteam-benign over-refusal metric -----------------------------------
+
+def test_extract_opt_flag_handles_bare_equals_and_space_forms():
+    # bare: enabled, no path
+    assert cli._extract_opt_flag(["--redteam-benign", "-q"], "--redteam-benign") \
+        == (["-q"], True, None)
+    # bare before another option stays bare (value not consumed)
+    assert cli._extract_opt_flag(["--redteam-benign", "--target", "x"], "--redteam-benign") \
+        == (["--target", "x"], True, None)
+    # equals form carries a path
+    assert cli._extract_opt_flag(["--redteam-benign=b.csv"], "--redteam-benign") \
+        == ([], True, "b.csv")
+    # space form carries a path
+    assert cli._extract_opt_flag(["--redteam-benign", "b.csv", "-q"], "--redteam-benign") \
+        == (["-q"], True, "b.csv")
+    # absent
+    assert cli._extract_opt_flag(["-q"], "--redteam-benign") == (["-q"], False, None)
+
+
+def test_redteam_benign_runs_measurement_only_when_enabled(monkeypatch, capsys):
+    monkeypatch.setattr(cli.subprocess, "call", lambda cmd: 0)
+    # disabled: no over-refusal block
+    cli.run_suite([], "demo-defended", redteam_benign=False)
+    assert "false-refusal rate" not in capsys.readouterr().out
+    # enabled (built-in twins): the over-defensive demo over-refuses every twin
+    cli.run_suite([], "demo-defended", redteam_benign=True)
+    out = capsys.readouterr().out
+    assert "Over-refusal (benign-twin) measurement" in out
+    assert "false-refusal rate: 100%" in out
+
+
+def test_redteam_benign_does_not_change_exit_code(monkeypatch):
+    # the security suite's rc is preserved; the usability metric never gates the build
+    monkeypatch.setattr(cli.subprocess, "call", lambda cmd: 7)
+    assert cli.run_suite([], "demo-defended", redteam_benign=True) == 7
+
+
+def test_redteam_benign_requires_an_existing_file_when_a_path_is_given(monkeypatch, capsys):
+    monkeypatch.setattr(cli.sys, "argv",
+                        ["llmsectest", "--redteam-benign=no_such_file_zzz.csv"])
+    assert cli.main() == 2
+    assert "--redteam-benign file not found" in capsys.readouterr().err
+
+
 def test_version_flag_prints_version(monkeypatch, capsys):
     monkeypatch.setattr(cli.sys, "argv", ["llmsectest", "--version"])
     assert cli.main() == 0

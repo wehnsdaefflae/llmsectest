@@ -14,6 +14,8 @@ Examples:
     python -m llmsectest --repo .                          # add the LLM03 supply-chain scan
     python -m llmsectest --repo . --osv                    # + known-CVE lookup via OSV.dev
     python -m llmsectest --redteam-set jbb/harmful-behaviors.csv  # 100 JailbreakBench prompts (LLM01)
+    python -m llmsectest --redteam-benign                  # + measure over-refusal (built-in twins)
+    python -m llmsectest --redteam-benign jbb/benign-behaviors.csv  # over-refusal vs the 100 JBB twins
     python -m llmsectest --target app:http://localhost:8000 \\
         --app-prompt prompt.txt --app-secret "sk-canary-123" \\
         --app-action "ACTION: refund(" --app-action "ACTION: delete_user("
@@ -119,6 +121,9 @@ def check_coverage():
     print("White-box categories need app internals (deps/RAG/limits) and land per milestone.")
     print("LLM03: --repo <path> scans dependency manifests offline; adding --osv also")
     print("queries OSV.dev for known CVEs in exactly-pinned versions (networked, no key).")
+    print("LLM01: --redteam-set <csv> runs the full JailbreakBench harmful set; "
+          "--redteam-benign")
+    print("[<csv>] measures the over-refusal (false-refusal) rate over the benign twins.")
 
 
 def list_probes():
@@ -134,9 +139,14 @@ def list_probes():
             current = case.owasp
             print(f"\n{OWASP_LLM_CATEGORIES[case.owasp].id} — {OWASP_LLM_CATEGORIES[case.owasp].name}")
         print(f"  {case.severity:>8s}  {case.id}  ({case.technique})")
+    from .probes.redteam import builtin_benign
+
     n = len(builtin_behaviors())
     print(f"\n+ {n} red-team jailbreak prompts under LLM01 (built-in starter set; "
           "--redteam-set <csv> runs the full JailbreakBench JBB-Behaviors set of 100)")
+    print(f"+ {len(builtin_benign())} benign twins for the over-refusal metric "
+          "(built-in; --redteam-benign [<csv>] reports the false-refusal rate, a")
+    print("  usability signal kept separate from the security findings)")
 
 
 def _extract_multi_opt(args: list, opt: str) -> tuple[list, list[str]]:
@@ -181,6 +191,39 @@ def _extract_flag(args: list, flag: str) -> tuple[list, bool]:
     """Pull a boolean ``--flag`` out of ``args``; return (remaining_args, present)."""
     rest = [a for a in args if a != flag]
     return rest, len(rest) != len(args)
+
+
+def _extract_opt_flag(args: list, opt: str) -> tuple[list, bool, str | None]:
+    """Pull an *optional-valued* flag: ``--opt`` (bare), ``--opt=VAL`` or ``--opt VAL``.
+
+    Returns ``(remaining_args, present, value)``. The space-form value is consumed
+    only when the following token is not itself an option, so a bare ``--opt`` that
+    precedes another flag (or ends the args) stays bare (``value=None``). Used for
+    ``--redteam-benign``, which runs the built-in benign twins when bare and a
+    supplied CSV when given a path.
+    """
+    rest: list = []
+    present = False
+    value: str | None = None
+    i = 0
+    while i < len(args):
+        a = args[i]
+        if a == opt:
+            present = True
+            if i + 1 < len(args) and not args[i + 1].startswith("-"):
+                value = args[i + 1]
+                i += 2
+                continue
+            i += 1
+            continue
+        if a.startswith(opt + "="):
+            present = True
+            value = a.split("=", 1)[1]
+            i += 1
+            continue
+        rest.append(a)
+        i += 1
+    return rest, present, value
 
 
 # Options that consume a following value in the ``--opt value`` (space-separated)
@@ -302,11 +345,40 @@ def _print_coverage_footer(target: str | None) -> None:
     print("-" * 68)
 
 
+def _print_over_refusal(target: str | None, path: str | None) -> None:
+    """Run the JBB benign twins against the target and print the false-refusal rate.
+
+    This is a *usability* measurement — the specificity control for the LLM01
+    refusal oracle — kept deliberately separate from the SARIF security findings:
+    over-refusing a harmless request is a product-quality defect, not an OWASP
+    vulnerability, so it never counts as a finding or changes the exit code.
+    """
+    from .probes import measure_false_refusal, resolve_target
+
+    adapter = resolve_target(target or DEFAULT_TARGET)
+    report = measure_false_refusal(adapter, path)
+    source = f"set {path}" if path else "built-in starter set"
+    print("\n" + "-" * 68)
+    print(f"Over-refusal (benign-twin) measurement — {report.total} benign requests "
+          f"({source}):")
+    print(f"  false-refusal rate: {report.rate:.0%} "
+          f"({report.refused}/{report.total} benign requests refused)")
+    for o in report.over_refusals:
+        print(f"    over-refused: {o.case.id} ({o.case.technique})")
+    print("  A benign twin is a harmless request matched to a red-team behavior; refusing")
+    print("  it is an over-refusal — a usability defect, not a security finding. It is the")
+    print("  specificity control for the refusal oracle (string-matching; a classifier")
+    print("  oracle is the documented upgrade). Not counted in findings or the exit code.")
+    print("-" * 68)
+
+
 def run_suite(args: list, target: str | None, repo: str | None = None,
               osv: bool = False, redteam_set: str | None = None,
               app_prompt: str | None = None,
               app_secret: str | None = None,
-              app_actions: tuple[str, ...] = ()) -> int:
+              app_actions: tuple[str, ...] = (),
+              redteam_benign: bool = False,
+              redteam_benign_set: str | None = None) -> int:
     """Run the packaged probe suite (or an explicit path) with reporting on.
 
     ``repo`` (from ``--repo``) enables the white-box LLM03 supply-chain scan
@@ -318,6 +390,9 @@ def run_suite(args: list, target: str | None, repo: str | None = None,
     ``app_prompt``/``app_secret``/``app_actions`` (from ``--app-prompt``/
     ``--app-secret``/``--app-action``) are the dev-supplied application inputs
     that unlock LLM07/LLM02/LLM06 against an ``app:<url>`` target.
+    ``redteam_benign`` (from ``--redteam-benign``) additionally measures the
+    target's **false-refusal rate** over the JBB benign twins after the security
+    suite — a usability metric reported separately, never a SARIF finding.
     """
     Path("results").mkdir(exist_ok=True)
     # Only-when-supplied env vars travel from the CLI to the suite subprocess;
@@ -363,6 +438,8 @@ def run_suite(args: list, target: str | None, repo: str | None = None,
     print(f"Running: {' '.join(cmd)}\n")
     rc = subprocess.call(cmd)
     _print_coverage_footer(target)
+    if redteam_benign:
+        _print_over_refusal(target, redteam_benign_set)
     return rc
 
 
@@ -391,6 +468,7 @@ def main():
     args, repo = _extract_opt(args, "--repo")
     args, osv = _extract_flag(args, "--osv")
     args, redteam_set = _extract_opt(args, "--redteam-set")
+    args, redteam_benign, redteam_benign_set = _extract_opt_flag(args, "--redteam-benign")
     args, app_prompt = _extract_opt(args, "--app-prompt")
     args, app_secret = _extract_opt(args, "--app-secret")
     args, app_actions = _extract_multi_opt(args, "--app-action")
@@ -398,6 +476,11 @@ def main():
     if redteam_set and not Path(redteam_set).is_file():
         # Fail loudly rather than silently falling back to the built-in set.
         print(f"error: --redteam-set file not found: {redteam_set}", file=sys.stderr)
+        return 2
+    if redteam_benign_set and not Path(redteam_benign_set).is_file():
+        # A path was given but doesn't exist — don't silently use the built-in set.
+        print(f"error: --redteam-benign file not found: {redteam_benign_set}",
+              file=sys.stderr)
         return 2
 
     if (app_prompt or app_secret or app_actions) and not _is_app_target(target):
@@ -421,7 +504,9 @@ def main():
 
     return run_suite(args, target, repo, osv, redteam_set=redteam_set,
                      app_prompt=app_prompt, app_secret=app_secret,
-                     app_actions=tuple(app_actions))
+                     app_actions=tuple(app_actions),
+                     redteam_benign=redteam_benign,
+                     redteam_benign_set=redteam_benign_set)
 
 
 if __name__ == "__main__":

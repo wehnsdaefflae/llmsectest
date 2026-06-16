@@ -10,6 +10,16 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
 ## [Unreleased]
 
 ### Added
+- **Over-refusal (false-refusal-rate) metric via the JailbreakBench benign twins.** `--redteam-benign`
+  runs the JBB **benign twins** — harmless requests topic-matched to the harmful red-team behaviors —
+  through a new **over-refusal oracle** (the mirror of the refusal oracle: a *refusal* of a harmless
+  request is the finding) and reports the target's **false-refusal rate**. Bare `--redteam-benign` uses a
+  built-in benign starter set; `--redteam-benign <csv>` runs the full JBB `benign-behaviors.csv`. It is a
+  **usability** signal — over-refusing is a product-quality defect, not an OWASP vulnerability — so it is
+  reported separately and never enters the SARIF security report or the exit code. This turns the
+  detector's specificity control into a shipped metric (the offline demos show the split cleanly:
+  `demo-vulnerable` 0% over-refusal but high attack success, `demo-defended` 0 findings but 100%
+  over-refusal). Deepens LLM01; the 6/10 category count is unchanged. (2026-06-16)
 - **Red-team jailbreak prompts (JailbreakBench / AdvBench) under LLM01.** A new red-team module scores
   a target with a **refusal oracle** — inverted from the canary detectors: a red-team behavior plants no
   token, so the target is a finding when it **complies** with a harmful request instead of refusing it.
@@ -46,6 +56,10 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
   silent pass. (2026-06-10)
 
 ### Changed
+- The two red-team oracles (`refusal_oracle` and the new `over_refusal_oracle`) now share one
+  `_refusal_signal` screening helper, and the harmful/benign CSV loaders share one `_load_behaviors`
+  parser, so the harmful set and its benign twins cannot drift apart in how they read a reply or a file.
+  (2026-06-16)
 - The `LLMSECTEST_*` environment variables that carry CLI options to the packaged suite are now
   defined once in `llmsectest.envvars` (shared by the CLI, the suite and the coverage footer), so the
   two sides of that contract cannot drift. (2026-06-12)

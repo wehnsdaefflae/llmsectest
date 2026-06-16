@@ -34,9 +34,14 @@ from .detectors import (
 )
 from .redteam import (
     REDTEAM_SYSTEM_PROMPT,
+    FalseRefusalReport,
     RedTeamBehavior,
+    benign_cases,
     builtin_behaviors,
+    builtin_benign,
+    load_benign_set,
     load_redteam_set,
+    measure_false_refusal,
     redteam_cases,
 )
 from .demo import (
@@ -61,6 +66,7 @@ __all__ = [
     "AppScanResult",
     "CategoryCoverage",
     "Dependency",
+    "FalseRefusalReport",
     "OsvScanResult",
     "ProbeCase",
     "ProbeOutcome",
@@ -70,7 +76,9 @@ __all__ = [
     "app_cases",
     "app_coverage",
     "available_detectors",
+    "benign_cases",
     "builtin_behaviors",
+    "builtin_benign",
     "cases_for",
     "collect_dependencies",
     "covered_categories",
@@ -78,7 +86,9 @@ __all__ = [
     "discover_manifests",
     "get_corpus",
     "get_detector",
+    "load_benign_set",
     "load_redteam_set",
+    "measure_false_refusal",
     "pinned_version",
     "redteam_cases",
     "register_detector",

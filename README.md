@@ -28,7 +28,9 @@ See [Funding](#funding).
 > scanner — **6 of the 10** OWASP LLM Top 10 (2025) categories. LLM01 also runs a
 > **red-team jailbreak set** scored by a refusal oracle (the MIT
 > [JailbreakBench](https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors) /
-> AdvBench corpus via `--redteam-set`). Findings are scored
+> AdvBench corpus via `--redteam-set`), and `--redteam-benign` measures the
+> target's **over-refusal (false-refusal) rate** against the matched benign twins —
+> a usability signal kept separate from the security findings. Findings are scored
 > with **CVSS v4.0** base scores per OWASP category (reported as SARIF
 > `security-severity`). The remaining categories follow on the roadmap. The modules
 > under [`examples/`](examples/) demonstrate the reporting pipeline across all
@@ -74,6 +76,7 @@ llmsectest --target app:http://localhost:8000/chat \
                                              # deeper app scan: unlocks LLM07/LLM02/LLM06
 llmsectest --repo . --osv                    # + known-CVE lookup for pinned deps via OSV.dev
 llmsectest --redteam-set jbb/harmful-behaviors.csv  # 100 JailbreakBench red-team prompts (LLM01)
+llmsectest --redteam-benign                  # + measure the over-refusal (false-refusal) rate
 llmsectest --target demo-defended            # offline hardened target (passes)
 
 llmsectest --list-probes                     # list the corpus
@@ -103,6 +106,12 @@ the target:
   with a harmful request instead of refusing it (a refusal oracle — inverted from the
   canary detectors). Without the flag a built-in starter set runs, so an offline scan
   still exercises the oracle; the footer prints the LLM01 red-team depth.
+- **`--redteam-benign [<csv>]`** measures **over-refusal**: it runs the JBB **benign
+  twins** (harmless requests matched to the harmful behaviours) and reports the
+  target's **false-refusal rate** — the share of harmless requests it wrongly refuses.
+  Over-refusing is a usability defect, not a vulnerability, so this is reported as a
+  separate quality metric and never enters the SARIF findings or the exit code. Bare
+  uses a built-in benign set; pass JBB's `benign-behaviors.csv` for the full 100.
 - **`--repo <path>`** adds the white-box **LLM03 (supply chain)** scan: it reads the
   project's dependency manifests (`requirements*.txt`, `pyproject.toml`, `Pipfile`) and
   flags known-malicious/typosquatted packages, unpinned or unbounded versions, direct
