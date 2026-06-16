@@ -1102,6 +1102,16 @@ yet published to PyPI</strong>. The forward-looking plan is the <a href="https:/
 <h2 id="unreleased"><a href="https://github.com/wehnsdaefflae/llmsectest/compare/v0.1.0...HEAD">Unreleased</a><a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
 <h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
 <ul>
+<li><strong>Over-refusal (false-refusal-rate) metric via the JailbreakBench benign twins.</strong> <code>--redteam-benign</code>
+  runs the JBB <strong>benign twins</strong> — harmless requests topic-matched to the harmful red-team behaviors —
+  through a new <strong>over-refusal oracle</strong> (the mirror of the refusal oracle: a <em>refusal</em> of a harmless
+  request is the finding) and reports the target's <strong>false-refusal rate</strong>. Bare <code>--redteam-benign</code> uses a
+  built-in benign starter set; <code>--redteam-benign &lt;csv&gt;</code> runs the full JBB <code>benign-behaviors.csv</code>. It is a
+  <strong>usability</strong> signal — over-refusing is a product-quality defect, not an OWASP vulnerability — so it is
+  reported separately and never enters the SARIF security report or the exit code. This turns the
+  detector's specificity control into a shipped metric (the offline demos show the split cleanly:
+  <code>demo-vulnerable</code> 0% over-refusal but high attack success, <code>demo-defended</code> 0 findings but 100%
+  over-refusal). Deepens LLM01; the 6/10 category count is unchanged. (2026-06-16)</li>
 <li><strong>Red-team jailbreak prompts (JailbreakBench / AdvBench) under LLM01.</strong> A new red-team module scores
   a target with a <strong>refusal oracle</strong> — inverted from the canary detectors: a red-team behavior plants no
   token, so the target is a finding when it <strong>complies</strong> with a harmful request instead of refusing it.
@@ -1139,6 +1149,10 @@ yet published to PyPI</strong>. The forward-looking plan is the <a href="https:/
 </ul>
 <h3 id="changed">Changed<a class="headerlink" href="#changed" title="Permanent link">&para;</a></h3>
 <ul>
+<li>The two red-team oracles (<code>refusal_oracle</code> and the new <code>over_refusal_oracle</code>) now share one
+  <code>_refusal_signal</code> screening helper, and the harmful/benign CSV loaders share one <code>_load_behaviors</code>
+  parser, so the harmful set and its benign twins cannot drift apart in how they read a reply or a file.
+  (2026-06-16)</li>
 <li>The <code>LLMSECTEST_*</code> environment variables that carry CLI options to the packaged suite are now
   defined once in <code>llmsectest.envvars</code> (shared by the CLI, the suite and the coverage footer), so the
   two sides of that contract cannot drift. (2026-06-12)</li>

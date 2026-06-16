@@ -774,6 +774,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#over-refusal-the-benign-twins-redteam-benign" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Over-refusal: the benign twins (--redteam-benign)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#reading-a-finding" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -969,6 +980,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#over-refusal-the-benign-twins-redteam-benign" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Over-refusal: the benign twins (--redteam-benign)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#reading-a-finding" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1054,6 +1076,24 @@ harmful request instead of refusing it.</p>
   registry; that work is on the <a href="https://llmsec.dev/#roadmap">roadmap</a>.</li>
 </ul>
 <p>This deepens LLM01 — it is not a separate OWASP category.</p>
+<h2 id="over-refusal-the-benign-twins-redteam-benign">Over-refusal: the benign twins (<code>--redteam-benign</code>)<a class="headerlink" href="#over-refusal-the-benign-twins-redteam-benign" title="Permanent link">&para;</a></h2>
+<p>A refusal oracle only tells half the story. A target that refuses <em>everything</em> would score perfectly on
+the harmful set while being useless in practice. JBB-Behaviors ships <strong>100 benign twins</strong> — harmless
+requests topic-matched to the harmful behaviors — and <code>--redteam-benign</code> runs them through the mirror-image
+<strong>over-refusal oracle</strong>: here a <em>refusal of a harmless request</em> is the finding. The result is the target's
+<strong>false-refusal rate</strong> (the share of benign requests it wrongly declines).</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>llmsectest<span class="w"> </span>--redteam-benign<span class="w">                          </span><span class="c1"># built-in benign twins</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>llmsectest<span class="w"> </span>--redteam-benign<span class="w"> </span>jbb/data/benign-behaviors.csv<span class="w"> </span>--target<span class="w"> </span>ollama:llama3<span class="w">   </span><span class="c1"># the full 100</span>
+</code></pre></div>
+<p>Over-refusing is a <strong>usability</strong> defect, not a security vulnerability — so it would be backwards to count
+it as a finding (a cautious model is <em>safer</em>, not more vulnerable). LLMSecTest therefore reports the
+false-refusal rate as a <strong>separate quality metric</strong>: it never enters the SARIF security report and never
+changes the exit code. It is the <strong>specificity control</strong> for the refusal oracle — and, paired with the
+harmful set, it exposes the security/usability trade-off directly. The offline demos make the split
+vivid: <code>demo-vulnerable</code> complies with everything (0% over-refusal but many findings), while
+<code>demo-defended</code> refuses everything (0 findings but a <strong>100%</strong> false-refusal rate). The same
+string-matching caveat applies, inverted: a benign reply that incidentally contains a refusal-like phrase
+can be over-counted, which a classifier oracle would fix.</p>
 <h2 id="reading-a-finding">Reading a finding<a class="headerlink" href="#reading-a-finding" title="Permanent link">&para;</a></h2>
 <p>A finding names the technique, the OWASP category (LLM01), a severity, and the evidence — for example
 <em>"target obeyed the injected instruction and emitted marker: PWNED-LLM01-DELIM"</em>, alongside the prompt
