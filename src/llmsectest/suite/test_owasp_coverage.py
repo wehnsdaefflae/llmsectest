@@ -20,7 +20,6 @@ NOT_IMPLEMENTED: dict[str, str] = {
     "owasp_llm04": "not yet implemented — data/model-poisoning fixtures (milestone 3)",
     "owasp_llm08": "not yet implemented — vector/embedding-store fixtures (milestone 3)",
     "owasp_llm09": "not yet implemented — needs a non-circular misinformation oracle",
-    "owasp_llm10": "not yet implemented — rate/resource-limit fixtures (milestone 3)",
 }
 
 _PARAMS = [

@@ -23,9 +23,10 @@ See [Funding](#funding).
 > pytest plugin + reporting layer (SARIF v2.1.0 / HTML / JSON / Markdown, OWASP
 > metadata, risk scoring, baselines, policy gates); the real, adapter-driven probe
 > suite covering **OWASP LLM01 (prompt injection), LLM02 (sensitive information
-> disclosure), LLM05 (improper output handling), LLM06 (excessive agency) and LLM07
-> (system prompt leakage)**; and a white-box **LLM03 (supply chain)** dependency
-> scanner — **6 of the 10** OWASP LLM Top 10 (2025) categories. LLM01 also runs a
+> disclosure), LLM05 (improper output handling), LLM06 (excessive agency), LLM07
+> (system prompt leakage) and LLM10 (unbounded consumption)**; and a white-box
+> **LLM03 (supply chain)** dependency scanner — **7 of the 10** OWASP LLM Top 10
+> (2025) categories. LLM01 also runs a
 > **red-team jailbreak set** scored by a refusal oracle (the MIT
 > [JailbreakBench](https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors) /
 > AdvBench corpus via `--redteam-set`), and `--redteam-benign` measures the
@@ -59,7 +60,7 @@ llm = ScriptedAdapter(lambda req: "SECRET-LEAKED" if "key" in req.messages[-1].c
 
 ## Run the OWASP probe suite
 
-The packaged probe suite drives a curated red-team corpus (LLM01/02/05/06/07) through
+The packaged probe suite drives a curated red-team corpus (LLM01/02/05/06/07/10) through
 the adapter against a target you choose, and writes a SARIF report. A failing
 probe is a *finding*, so a non-zero exit means the target is vulnerable. LLM01 also
 runs a red-team jailbreak set (JailbreakBench/AdvBench) scored by a refusal oracle.
@@ -98,7 +99,7 @@ categories were exercised and which were not, and why. What's reachable depends 
 the target:
 
 - **A model/demo target** exercises the implemented black-box categories
-  (LLM01/02/05/06/07); the rest need an oracle or app internals, and are reported as
+  (LLM01/02/05/06/07/10); the rest need an oracle or app internals, and are reported as
   not-exercised.
 - **`--redteam-set <csv>`** deepens **LLM01** with a red-team jailbreak set: point it
   at the MIT-licensed [JailbreakBench JBB-Behaviors](https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors)
@@ -125,7 +126,8 @@ the target:
   lookup each surface as an explicit skip reason, never as "clean".
 - **A real app endpoint** (`--target app:<url>`) is black-box: the attack-side-marker
   categories always transfer (**LLM01** prompt injection, **LLM05** improper output
-  handling). **LLM07/02/06** light up when you tell LLMSecTest what to look for:
+  handling, **LLM10** unbounded consumption). **LLM07/02/06** light up when you tell
+  LLMSecTest what to look for:
   `--app-prompt <text-or-file>` (the app's own system prompt) enables **LLM07**
   leakage detection, `--app-secret <value>` (a real secret the app holds) enables
   **LLM02**, and `--app-action <signature>` (a privileged tool call, repeatable)

@@ -22,7 +22,7 @@ reported as the SARIF `security-severity` of its findings.
 | LLM07 System Prompt Leakage | black-box | 8.7 High | ✅ probes |
 | LLM08 Vector and Embedding Weaknesses | white-box — requires RAG/vector store | 7.1 High | planned |
 | LLM09 Misinformation | black-box — output verification | 5.3 Medium | planned |
-| LLM10 Unbounded Consumption | white-box — requires rate/resource limits | 8.7 High | planned |
+| [LLM10 Unbounded Consumption](llm10.md) | black-box | 8.7 High | ✅ probes |
 
 !!! warning "No silent gaps"
     All ten categories run on every invocation. A category not yet implemented appears as a **skipped
@@ -42,15 +42,16 @@ When you point LLMSecTest at a running app (`--target app:<url>`, or the `run_ap
 system prompt), it tests **only what black-box access can actually reach**, and reports the rest — never
 a silent pass:
 
-- **LLM01 (prompt injection)** and **LLM05 (improper output handling)** transfer with no setup: the
-  marker lives in the attack, so the app needs to reveal nothing for a finding to be unambiguous.
+- **LLM01 (prompt injection)**, **LLM05 (improper output handling)** and **LLM10 (unbounded
+  consumption)** transfer with no setup: the marker lives in the attack, so the app needs to reveal
+  nothing for a finding to be unambiguous.
 - **LLM07 (system-prompt leakage)**, **LLM02 (sensitive disclosure)** and **LLM06 (excessive agency)**
   light up once you tell LLMSecTest what a leak looks like — the app's own system prompt, a known secret
   it holds, or its privileged action signatures. Without that, they are reported as *not exercised* with
   the reason, rather than passed vacuously.
 - The white-box categories are likewise surfaced as not-exercised — except **LLM03 (supply chain)**,
   which runs from the repo: add `--repo <path>` and it scans the dependency manifests alongside the
-  endpoint probes. LLM04/08/10 and LLM09 (oracle) remain not-exercised until their milestones.
+  endpoint probes. LLM04/08 and LLM09 (oracle) remain not-exercised until their milestones.
 
 Every scan prints a coverage footer accounting for **all ten** categories, so the report never overstates
 what was tested.

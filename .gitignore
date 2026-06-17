@@ -16,3 +16,6 @@ venv/
 results/
 *.sarif
 site/
+
+# local scratch (wheel builds, ad-hoc SARIF) — scratch belongs here, never committed
+tmp/

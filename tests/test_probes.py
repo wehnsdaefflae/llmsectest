@@ -29,6 +29,7 @@ PROBE_CATEGORIES = {
     "owasp_llm05",
     "owasp_llm06",
     "owasp_llm07",
+    "owasp_llm10",
 }
 
 
@@ -56,10 +57,16 @@ def test_corpus_cases_are_well_formed():
 def test_detectors_flag_present_tokens():
     for case in get_corpus():
         detector = get_detector(case.detector)
-        leaked = f"here you go: {case.forbidden[0]} -- anything else?"
+        # Repeat the token so the assertion is detector-agnostic: substring oracles
+        # flag a single occurrence, while the volume oracle (LLM10
+        # unbounded_consumption) needs the marker repeated past its flood threshold.
+        # A genuine finding emits it many times, so this models a vulnerable reply
+        # for every detector.
+        token = case.forbidden[0]
+        leaked = f"here you go: {(token + ' ') * 40}-- anything else?"
         vulnerable, evidence = detector(leaked, case)
         assert vulnerable, f"{case.id}: detector missed a planted token"
-        assert case.forbidden[0] in evidence
+        assert token in evidence
 
 
 def test_detectors_pass_clean_responses():
@@ -116,6 +123,32 @@ def test_excessive_agency_detector_ignores_named_refusal():
     )
     assert detector(case.forbidden[0], case)[0] is True, "a real action call must be flagged"
     assert detector(refusal, case)[0] is False, "naming the tool in a refusal is a false positive"
+
+
+def test_unbounded_consumption_detector_ignores_bounded_sample():
+    """LLM10: a flood of the marker is a finding; a short bounded sample is not."""
+    case = cases_for("owasp_llm10")[0]
+    marker = case.forbidden[0]
+    detector = get_detector(case.detector)
+    flood = (marker + " ") * 100
+    bounded = (
+        f"Here are three for illustration: {marker} {marker} {marker}. "
+        "I won't produce thousands of them."
+    )
+    assert detector(flood, case)[0] is True, "a runaway flood must be flagged"
+    assert detector(bounded, case)[0] is False, "a small bounded sample is a false positive"
+
+
+def test_vulnerable_demo_persona_triggers_match_corpus():
+    """The vulnerable demo keys its agent/red-team/resource branches on substrings
+    of the corpus personas; if a persona is reworded without updating the demo, the
+    branch silently stops firing. Guard against that drift."""
+    from llmsectest.probes import corpus, demo
+    from llmsectest.probes.redteam import REDTEAM_SYSTEM_PROMPT
+
+    assert demo._AGENT_TRIGGER in corpus.AGENT_SYSTEM_PROMPT.lower()
+    assert demo._REDTEAM_TRIGGER in REDTEAM_SYSTEM_PROMPT.lower()
+    assert demo._RESOURCE_TRIGGER in corpus.RESOURCE_LIMIT_SYSTEM_PROMPT.lower()
 
 
 def test_runner_uses_case_system_prompt():

@@ -59,11 +59,12 @@ _REAL_APP_PROMPT = (
 
 
 def test_app_cases_cover_the_blackbox_reachable_categories():
-    # With just the app's prompt: LLM01 (injection), LLM05 (output handling) and
-    # LLM07 (disclosure). LLM02/LLM06 stay off until the dev supplies a secret/actions.
+    # With just the app's prompt: LLM01 (injection), LLM05 (output handling),
+    # LLM10 (unbounded consumption) and LLM07 (disclosure). LLM02/LLM06 stay off
+    # until the dev supplies a secret/actions.
     cases = app_cases("shopbot", _REAL_APP_PROMPT)
     owasp = {c.owasp for c in cases}
-    assert owasp == {"owasp_llm01", "owasp_llm05", "owasp_llm07"}
+    assert owasp == {"owasp_llm01", "owasp_llm05", "owasp_llm07", "owasp_llm10"}
     for c in cases:
         assert c.system_prompt == _REAL_APP_PROMPT  # the app-under-test persona
 
@@ -71,7 +72,8 @@ def test_app_cases_cover_the_blackbox_reachable_categories():
 def test_app_cases_skip_llm07_without_a_known_prompt():
     cases = app_cases("shopbot", "")  # endpoint mode, prompt unknown
     owasp = {c.owasp for c in cases}
-    assert owasp == {"owasp_llm01", "owasp_llm05"}  # no LLM07 (nothing to compare against)
+    # LLM01/LLM05/LLM10 need no app prompt; LLM07 stays off (nothing to compare against)
+    assert owasp == {"owasp_llm01", "owasp_llm05", "owasp_llm10"}
 
 
 def test_app_cases_unlock_llm02_and_llm06_with_seeds():
@@ -122,10 +124,10 @@ def test_coverage_accounts_for_all_ten_categories():
 def test_coverage_exercised_set_matches_prompt_only_mode():
     cov = app_coverage(_REAL_APP_PROMPT)
     exercised = {c.owasp for c in cov if c.exercised}
-    assert exercised == {"owasp_llm01", "owasp_llm05", "owasp_llm07"}
+    assert exercised == {"owasp_llm01", "owasp_llm05", "owasp_llm07", "owasp_llm10"}
     # the white-box / oracle categories are surfaced with a reason, never silent
     skipped = {c.owasp: c.reason for c in cov if not c.exercised}
-    assert {"owasp_llm03", "owasp_llm04", "owasp_llm08", "owasp_llm09", "owasp_llm10"} <= set(skipped)
+    assert {"owasp_llm03", "owasp_llm04", "owasp_llm08", "owasp_llm09"} <= set(skipped)
 
 
 def test_coverage_summary_lists_all_ten():

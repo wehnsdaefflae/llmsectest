@@ -87,7 +87,7 @@ _TESTABILITY = {
     "owasp_llm07": ("black-box", None),
     "owasp_llm08": ("white-box", "requires the app's RAG / vector store"),
     "owasp_llm09": ("black-box", "output-verification module planned"),
-    "owasp_llm10": ("white-box", "requires the app's rate/resource limits"),
+    "owasp_llm10": ("black-box", None),
 }
 
 

@@ -52,15 +52,15 @@ All ten OWASP categories run on every invocation: the implemented ones execute r
 not-yet-implemented ones are reported as **skipped tests** that say `not yet implemented` (skip reasons
 print by default). A run also ends with a footer listing **all ten** categories — which this run
 exercised and which it did not, with the reason — so a category is never silently left untested. A model/demo target
-exercises the implemented probe categories (LLM01/02/05/06/07); adding `--repo <path>` runs the white-box
+exercises the implemented probe categories (LLM01/02/05/06/07/10); adding `--repo <path>` runs the white-box
 **LLM03 (supply chain)** scan as well. LLM01 also runs a **red-team jailbreak** set (built-in starter set,
 or the full JailbreakBench corpus with `--redteam-set <csv>`); the footer prints the LLM01 depth so the
 red-team coverage is never a silent gap. Adding `--redteam-benign` prints, *below* the security report, the
 target's **over-refusal (false-refusal) rate** over the benign twins — a usability metric kept out of the
 findings and the exit code. A real app endpoint (`--target app:<url>`) is
-black-box: LLM01 and LLM05 always run, and **LLM07/LLM02/LLM06 join them when you pass
+black-box: LLM01, LLM05 and LLM10 always run, and **LLM07/LLM02/LLM06 join them when you pass
 `--app-prompt` / `--app-secret` / `--app-action`** — each category whose input is missing is
-reported as skipped with the flag that would enable it (LLM04/08/09/10 are white-box or need an
+reported as skipped with the flag that would enable it (LLM04/08 are white-box and LLM09 needs an
 oracle). `llmsectest --check` prints the same map with each category's CVSS score.
 
 ## Exit code

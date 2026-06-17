@@ -289,6 +289,7 @@ def test_footer_reflects_supplied_app_inputs(monkeypatch, capsys):
     monkeypatch.delenv(cli.envvars.APP_ACTIONS, raising=False)
     cli._print_coverage_footer("app:http://localhost:1")
     out = capsys.readouterr().out
-    # LLM02 + LLM07 join LLM01/LLM05 as exercised; LLM06 still skipped with its reason
-    assert "LLM01, LLM02, LLM05, LLM07" in out
+    # LLM02 + LLM07 join the always-on LLM01/LLM05/LLM10 as exercised; LLM06 still
+    # skipped with its reason.
+    assert "LLM01, LLM02, LLM05, LLM07, LLM10" in out
     assert "not exercised LLM06" in out and "--app-action" in out

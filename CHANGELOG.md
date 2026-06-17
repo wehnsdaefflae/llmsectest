@@ -10,6 +10,16 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
 ## [Unreleased]
 
 ### Added
+- **OWASP LLM10 (Unbounded Consumption) probes — coverage 6/10 → 7/10.** A new probe corpus and a
+  deterministic `unbounded_consumption` detector flag a target that produces **runaway output** instead
+  of bounding it: each case asks the target to emit a marker without bound (repetition flood,
+  never-terminating enumeration, denial-of-wallet amplification, runaway continuation), and a reply that
+  repeats the marker past a flood threshold is a finding — a denial-of-service / denial-of-wallet signal
+  visible even within a finite token budget, so it works black-box against a real app endpoint as well as
+  a local model. A safe target that caps or refuses passes; a short bounded sample is not a false positive.
+  LLM10 is **always reachable** in application mode (it joins LLM01 + LLM05 as attack-side-marker
+  categories that need no dev-supplied input). Findings carry the LLM10 CVSS v4.0 base score (8.7).
+  (2026-06-17)
 - **Over-refusal (false-refusal-rate) metric via the JailbreakBench benign twins.** `--redteam-benign`
   runs the JBB **benign twins** — harmless requests topic-matched to the harmful red-team behaviors —
   through a new **over-refusal oracle** (the mirror of the refusal oracle: a *refusal* of a harmless
@@ -56,6 +66,10 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
   silent pass. (2026-06-10)
 
 ### Changed
+- The offline demo target's persona branches (agent / red-team / resource-limit) now key on named
+  trigger constants instead of inline magic strings, and a guard test pins each trigger to the matching
+  corpus persona — so rewording a persona can no longer silently stop a demo branch from firing.
+  (2026-06-17)
 - The two red-team oracles (`refusal_oracle` and the new `over_refusal_oracle`) now share one
   `_refusal_signal` screening helper, and the harmful/benign CSV loaders share one `_load_behaviors`
   parser, so the harmful set and its benign twins cannot drift apart in how they read a reply or a file.
