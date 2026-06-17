@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://docs.llmsec.dev/cli/">
       
       
-        <link rel="prev" href="../owasp/llm03/">
+        <link rel="prev" href="../owasp/llm10/">
       
       
         <link rel="next" href="../api/">
@@ -736,6 +736,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../owasp/llm10/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM10 Unbounded Consumption
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1178,15 +1206,15 @@ packaged OWASP probe suite against your chosen target and writes reports.</p>
 not-yet-implemented ones are reported as <strong>skipped tests</strong> that say <code>not yet implemented</code> (skip reasons
 print by default). A run also ends with a footer listing <strong>all ten</strong> categories — which this run
 exercised and which it did not, with the reason — so a category is never silently left untested. A model/demo target
-exercises the implemented probe categories (LLM01/02/05/06/07); adding <code>--repo &lt;path&gt;</code> runs the white-box
+exercises the implemented probe categories (LLM01/02/05/06/07/10); adding <code>--repo &lt;path&gt;</code> runs the white-box
 <strong>LLM03 (supply chain)</strong> scan as well. LLM01 also runs a <strong>red-team jailbreak</strong> set (built-in starter set,
 or the full JailbreakBench corpus with <code>--redteam-set &lt;csv&gt;</code>); the footer prints the LLM01 depth so the
 red-team coverage is never a silent gap. Adding <code>--redteam-benign</code> prints, <em>below</em> the security report, the
 target's <strong>over-refusal (false-refusal) rate</strong> over the benign twins — a usability metric kept out of the
 findings and the exit code. A real app endpoint (<code>--target app:&lt;url&gt;</code>) is
-black-box: LLM01 and LLM05 always run, and <strong>LLM07/LLM02/LLM06 join them when you pass
+black-box: LLM01, LLM05 and LLM10 always run, and <strong>LLM07/LLM02/LLM06 join them when you pass
 <code>--app-prompt</code> / <code>--app-secret</code> / <code>--app-action</code></strong> — each category whose input is missing is
-reported as skipped with the flag that would enable it (LLM04/08/09/10 are white-box or need an
+reported as skipped with the flag that would enable it (LLM04/08 are white-box and LLM09 needs an
 oracle). <code>llmsectest --check</code> prints the same map with each category's CVSS score.</p>
 <h2 id="exit-code">Exit code<a class="headerlink" href="#exit-code" title="Permanent link">&para;</a></h2>
 <p>Non-zero when the target is vulnerable (findings present) — so the command fails your pipeline. Use

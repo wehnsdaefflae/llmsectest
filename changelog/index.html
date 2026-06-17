@@ -734,6 +734,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../owasp/llm10/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM10 Unbounded Consumption
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1102,6 +1130,16 @@ yet published to PyPI</strong>. The forward-looking plan is the <a href="https:/
 <h2 id="unreleased"><a href="https://github.com/wehnsdaefflae/llmsectest/compare/v0.1.0...HEAD">Unreleased</a><a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
 <h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
 <ul>
+<li><strong>OWASP LLM10 (Unbounded Consumption) probes — coverage 6/10 → 7/10.</strong> A new probe corpus and a
+  deterministic <code>unbounded_consumption</code> detector flag a target that produces <strong>runaway output</strong> instead
+  of bounding it: each case asks the target to emit a marker without bound (repetition flood,
+  never-terminating enumeration, denial-of-wallet amplification, runaway continuation), and a reply that
+  repeats the marker past a flood threshold is a finding — a denial-of-service / denial-of-wallet signal
+  visible even within a finite token budget, so it works black-box against a real app endpoint as well as
+  a local model. A safe target that caps or refuses passes; a short bounded sample is not a false positive.
+  LLM10 is <strong>always reachable</strong> in application mode (it joins LLM01 + LLM05 as attack-side-marker
+  categories that need no dev-supplied input). Findings carry the LLM10 CVSS v4.0 base score (8.7).
+  (2026-06-17)</li>
 <li><strong>Over-refusal (false-refusal-rate) metric via the JailbreakBench benign twins.</strong> <code>--redteam-benign</code>
   runs the JBB <strong>benign twins</strong> — harmless requests topic-matched to the harmful red-team behaviors —
   through a new <strong>over-refusal oracle</strong> (the mirror of the refusal oracle: a <em>refusal</em> of a harmless
@@ -1149,6 +1187,10 @@ yet published to PyPI</strong>. The forward-looking plan is the <a href="https:/
 </ul>
 <h3 id="changed">Changed<a class="headerlink" href="#changed" title="Permanent link">&para;</a></h3>
 <ul>
+<li>The offline demo target's persona branches (agent / red-team / resource-limit) now key on named
+  trigger constants instead of inline magic strings, and a guard test pins each trigger to the matching
+  corpus persona — so rewording a persona can no longer silently stop a demo branch from firing.
+  (2026-06-17)</li>
 <li>The two red-team oracles (<code>refusal_oracle</code> and the new <code>over_refusal_oracle</code>) now share one
   <code>_refusal_signal</code> screening helper, and the harmful/benign CSV loaders share one <code>_load_behaviors</code>
   parser, so the harmful set and its benign twins cannot drift apart in how they read a reply or a file.

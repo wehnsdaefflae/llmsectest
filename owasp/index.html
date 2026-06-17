@@ -799,6 +799,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="llm10/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM10 Unbounded Consumption
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1020,10 +1048,10 @@ reported as the SARIF <code>security-severity</code> of its findings.</p>
 <td>planned</td>
 </tr>
 <tr>
-<td>LLM10 Unbounded Consumption</td>
-<td>white-box — requires rate/resource limits</td>
+<td><a href="llm10/">LLM10 Unbounded Consumption</a></td>
+<td>black-box</td>
 <td>8.7 High</td>
-<td>planned</td>
+<td>✅ probes</td>
 </tr>
 </tbody>
 </table>
@@ -1044,15 +1072,16 @@ your vector store, or your rate/resource limits.</p>
 system prompt), it tests <strong>only what black-box access can actually reach</strong>, and reports the rest — never
 a silent pass:</p>
 <ul>
-<li><strong>LLM01 (prompt injection)</strong> and <strong>LLM05 (improper output handling)</strong> transfer with no setup: the
-  marker lives in the attack, so the app needs to reveal nothing for a finding to be unambiguous.</li>
+<li><strong>LLM01 (prompt injection)</strong>, <strong>LLM05 (improper output handling)</strong> and <strong>LLM10 (unbounded
+  consumption)</strong> transfer with no setup: the marker lives in the attack, so the app needs to reveal
+  nothing for a finding to be unambiguous.</li>
 <li><strong>LLM07 (system-prompt leakage)</strong>, <strong>LLM02 (sensitive disclosure)</strong> and <strong>LLM06 (excessive agency)</strong>
   light up once you tell LLMSecTest what a leak looks like — the app's own system prompt, a known secret
   it holds, or its privileged action signatures. Without that, they are reported as <em>not exercised</em> with
   the reason, rather than passed vacuously.</li>
 <li>The white-box categories are likewise surfaced as not-exercised — except <strong>LLM03 (supply chain)</strong>,
   which runs from the repo: add <code>--repo &lt;path&gt;</code> and it scans the dependency manifests alongside the
-  endpoint probes. LLM04/08/10 and LLM09 (oracle) remain not-exercised until their milestones.</li>
+  endpoint probes. LLM04/08 and LLM09 (oracle) remain not-exercised until their milestones.</li>
 </ul>
 <p>Every scan prints a coverage footer accounting for <strong>all ten</strong> categories, so the report never overstates
 what was tested.</p>
