@@ -1090,7 +1090,8 @@ a silent pass.</p>
 remediation — for example <em>"[unpinned dependency floats to any future version] requests
 (requirements.txt): 'requests' has no version constraint, so the build pulls whatever the index serves
 next"</em>. In SARIF it maps to LLM03 and carries LLM03's CVSS v4.0 base score (<code>9.5</code>) as its
-<code>security-severity</code>.</p>
+<code>security-severity</code>. Its <strong>location points at the manifest in the scanned project</strong> (e.g.
+<code>pyproject.toml</code>), since that is where the cause lives — not at LLMSecTest's own test file.</p>
 <h2 id="remediation">Remediation<a class="headerlink" href="#remediation" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>Pin</strong> dependencies to reviewed versions, ideally with hashes (<code>pip install --require-hashes</code>, a

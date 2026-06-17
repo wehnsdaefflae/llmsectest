@@ -913,6 +913,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#fixed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#changed" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -963,7 +974,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fixed" class="md-nav__link">
+  <a href="#fixed_1" class="md-nav__link">
     <span class="md-ellipsis">
       
         Fixed
@@ -1036,6 +1047,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#fixed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#changed" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1086,7 +1108,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fixed" class="md-nav__link">
+  <a href="#fixed_1" class="md-nav__link">
     <span class="md-ellipsis">
       
         Fixed
@@ -1192,6 +1214,16 @@ yet published to PyPI</strong>. The forward-looking plan is the <a href="https:/
   <strong>6/10</strong> OWASP categories. Without <code>--repo</code>, LLM03 reports itself skipped (needs a repo), never a
   silent pass. (2026-06-10)</li>
 </ul>
+<h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>LLM03 (supply chain) findings now point at the manifest in the <em>tested</em> project</strong>, not at the
+  scanner's own test file. Each supply-chain finding records the offending manifest's repo-relative path
+  (<code>requirements.txt</code>, <code>pyproject.toml</code>, …) as an artifact location, so the SARIF/HTML location reads e.g.
+  <code>pyproject.toml</code> in the scanned repo instead of <code>src/llmsectest/suite/test_llm03_supply_chain.py</code>.
+  Behavioural findings (whose cause is a model response, with no project source line) still point at the
+  test node. (Manifest line numbers are a follow-on; <code>tomllib</code> does not expose them for <code>pyproject.toml</code>.)
+  (2026-06-17)</li>
+</ul>
 <h3 id="changed">Changed<a class="headerlink" href="#changed" title="Permanent link">&para;</a></h3>
 <ul>
 <li>The offline demo target's persona branches (agent / red-team / resource-limit) now key on named
@@ -1242,7 +1274,7 @@ yet published to PyPI</strong>. The forward-looking plan is the <a href="https:/
 <li>SARIF <code>security-severity</code> now carries the real CVSS v4.0 base score instead of a flat severity
   placeholder. (2026-06-09)</li>
 </ul>
-<h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_1">Fixed<a class="headerlink" href="#fixed_1" title="Permanent link">&para;</a></h3>
 <ul>
 <li>CLI: a space-separated option value (e.g. <code>--report-dir tmp</code>) was mistaken for a positional test path
   and silently skipped the packaged suite. (2026-06-09)</li>
