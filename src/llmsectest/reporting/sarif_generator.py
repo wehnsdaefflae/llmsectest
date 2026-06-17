@@ -251,7 +251,11 @@ class SARIFGenerator:
                     get_owasp_category(owasp_markers[0]) if owasp_markers else None
                 )
 
-                message_text = result.longrepr or "Test failed"
+                # Prefer the clean finding message (what the tested app/project did
+                # wrong) recorded by the suite; fall back to the pytest longrepr only
+                # when none was recorded. This keeps this tool's own test source and
+                # assertion traceback out of the report.
+                message_text = result.properties.get("llmsec_finding") or result.longrepr or "Test failed"
 
                 # Mark regressions prominently
                 is_regression = result.nodeid in regressed_test_ids

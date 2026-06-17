@@ -73,6 +73,13 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
   silent pass. (2026-06-10)
 
 ### Fixed
+- **A finding's message is now the clean finding, not pytest's traceback through our own code.** The SARIF
+  message used to be the raw pytest `longrepr` — which embeds this tool's test-function source and the
+  `>assert` / `E AssertionError` lines, making the report look like the vulnerability was in llmsectest. The
+  suite now records a clean message per finding (the attack technique, the detector's evidence, the attack
+  prompt, and the **app's response**) and the report uses that; LLM03 records its package/manifest/evidence/
+  remediation line. So the report describes *what the tested app/project did wrong*, with none of the
+  scanner's internals. (2026-06-17)
 - **Findings now locate at the *tested target*, never at llmsectest's own files.** A finding's SARIF/HTML
   location used to be the pytest node inside this tool, which is misleading: the vulnerability is in the
   app under test, not in the scanner. Now every finding records the tested artifact: **LLM03 (supply chain)**

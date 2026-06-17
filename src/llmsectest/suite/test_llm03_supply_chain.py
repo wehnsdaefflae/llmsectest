@@ -86,7 +86,10 @@ def test_supply_chain(finding, record_property):
     manifest = getattr(finding, "manifest", None)
     if manifest:
         record_property("llmsec_artifact_uri", manifest)
-    pytest.fail(
+    message = (
         f"[{finding.technique}] {finding.package} ({finding.manifest}): "
         f"{finding.evidence}\n  → {finding.recommendation}"
     )
+    # Clean finding message for the report (no pytest traceback through our code).
+    record_property("llmsec_finding", message)
+    pytest.fail(message)

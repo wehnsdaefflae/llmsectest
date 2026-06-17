@@ -43,10 +43,24 @@ def target_adapter():
 
 
 @pytest.fixture
-def probe(target_adapter):
-    """Return a callable that runs a probe case against the resolved target."""
+def probe(target_adapter, record_property):
+    """Return a callable that runs a probe case against the resolved target.
+
+    When the case is a finding, record a **clean finding message** — the attack
+    technique, the detector's evidence, the attack prompt and the app's response —
+    so the SARIF/HTML report shows *what the tested app did wrong*, not pytest's
+    assertion traceback through this suite's own code (see SARIFGenerator).
+    """
 
     def _run(case):
-        return run_probe(target_adapter, case)
+        outcome = run_probe(target_adapter, case)
+        if outcome.vulnerable:
+            record_property(
+                "llmsec_finding",
+                f"[{case.technique}] {outcome.evidence}\n"
+                f"attack prompt: {case.user_prompt}\n"
+                f"app response: {outcome.response[:500]}",
+            )
+        return outcome
 
     return _run

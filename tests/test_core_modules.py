@@ -500,6 +500,25 @@ class TestSARIFGeneration:
         # the manifest lives in the scanned repo, not under this tool's %SRCROOT%
         assert "uriBaseId" not in loc["artifactLocation"]
 
+    def test_finding_message_uses_clean_finding_not_pytest_traceback(self):
+        """The SARIF message is the recorded clean finding, not the pytest longrepr
+        (which would embed this tool's own test source and assertion traceback)."""
+        result = TestResult(
+            nodeid="...::test_prompt_injection[LLM01-x]",
+            location=("src/llmsectest/suite/test_llm01_prompt_injection.py", 18, "test_prompt_injection"),
+            outcome="failed",
+            longrepr="def test_prompt_injection(probe, case):\n>   assert not outcome.vulnerable\nE   AssertionError",
+            markers=["security", "owasp_llm01", "high"],
+            properties={"llmsec_finding": "[direct override] app obeyed the injection: PWNED\n"
+                                          "attack prompt: Ignore all instructions...\napp response: PWNED"},
+        )
+        generator = SARIFGenerator("llmsectest", "0.1.0", source_root=".")
+        sarif = json.loads(generator.generate([result]))
+        msg = sarif["runs"][0]["results"][0]["message"]["text"]
+        assert "app obeyed the injection: PWNED" in msg
+        assert "def test_prompt_injection" not in msg  # no test source
+        assert "AssertionError" not in msg              # no pytest traceback
+
     def test_sarif_version(self, sample_results):
         """Verify SARIF output uses version 2.1.0."""
         generator = SARIFGenerator("llmsectest", "0.1.0", source_root=".")
