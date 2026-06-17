@@ -473,6 +473,33 @@ class TestSARIFGeneration:
             ),
         ]
 
+    def test_finding_location_defaults_to_the_test_node(self, sample_results):
+        """A behavioural finding (no tested-project artifact) points at the test file."""
+        generator = SARIFGenerator("llmsectest", "0.1.0", source_root=".")
+        sarif = json.loads(generator.generate(sample_results))
+        loc = sarif["runs"][0]["results"][0]["locations"][0]["physicalLocation"]
+        assert loc["artifactLocation"]["uri"] == "tests/test_injection.py"
+        assert loc["artifactLocation"]["uriBaseId"] == "%SRCROOT%"
+        assert loc["region"]["startLine"] == 10
+
+    def test_supply_chain_finding_points_at_the_tested_manifest(self):
+        """An LLM03 finding records the tested project's manifest as an artifact uri;
+        the SARIF location points there, not at the test file inside this tool."""
+        result = TestResult(
+            nodeid="…::test_supply_chain[LLM03-unpinned-requests]",
+            location=("src/llmsectest/suite/test_llm03_supply_chain.py", 84, "test_supply_chain"),
+            outcome="failed",
+            longrepr="Failed: [unpinned dependency] requests (requirements.txt): ...",
+            markers=["security", "owasp_llm03", "high"],
+            properties={"llmsec_artifact_uri": "requirements.txt"},
+        )
+        generator = SARIFGenerator("llmsectest", "0.1.0", source_root=".")
+        sarif = json.loads(generator.generate([result]))
+        loc = sarif["runs"][0]["results"][0]["locations"][0]["physicalLocation"]
+        assert loc["artifactLocation"]["uri"] == "requirements.txt"
+        # the manifest lives in the scanned repo, not under this tool's %SRCROOT%
+        assert "uriBaseId" not in loc["artifactLocation"]
+
     def test_sarif_version(self, sample_results):
         """Verify SARIF output uses version 2.1.0."""
         generator = SARIFGenerator("llmsectest", "0.1.0", source_root=".")

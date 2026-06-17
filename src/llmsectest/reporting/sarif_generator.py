@@ -214,6 +214,28 @@ class SARIFGenerator:
 
         return list(rules.values())
 
+    def _physical_location(self, result: TestResult) -> Dict[str, Any]:
+        """Where the finding points.
+
+        A white-box finding about the *tested* project (e.g. an LLM03 supply-chain
+        risk in a dependency manifest) records the offending artifact's repo-relative
+        path as the ``llmsec_artifact_uri`` test property; point the SARIF location
+        there, in the scanned project, rather than at the test file inside this tool.
+        Behavioural findings have no project source line for their cause, so they
+        fall back to the test node that produced them.
+        """
+        artifact = result.properties.get("llmsec_artifact_uri")
+        if artifact:
+            location: Dict[str, Any] = {"artifactLocation": {"uri": artifact}}
+            line = result.properties.get("llmsec_artifact_line")
+            if line:
+                location["region"] = {"startLine": int(line), "startColumn": 1}
+            return location
+        return {
+            "artifactLocation": {"uri": result.file_path, "uriBaseId": "%SRCROOT%"},
+            "region": {"startLine": result.line_number, "startColumn": 1},
+        }
+
     def _generate_results(self, results: List[TestResult], baseline_analysis=None) -> List[Dict[str, Any]]:
         """Generate SARIF result objects for failed tests."""
         sarif_results = []
@@ -243,18 +265,7 @@ class SARIFGenerator:
                     "level": self._get_severity_level(result),
                     "message": {"text": message_text},
                     "locations": [
-                        {
-                            "physicalLocation": {
-                                "artifactLocation": {
-                                    "uri": result.file_path,
-                                    "uriBaseId": "%SRCROOT%",
-                                },
-                                "region": {
-                                    "startLine": result.line_number,
-                                    "startColumn": 1,
-                                },
-                            }
-                        }
+                        {"physicalLocation": self._physical_location(result)}
                     ],
                     "properties": {
                         "test_outcome": result.outcome,
@@ -294,11 +305,19 @@ class SARIFGenerator:
         return sarif_results
 
     def _generate_artifacts(self, results: List[TestResult]) -> List[Dict[str, Any]]:
-        """Generate SARIF artifact objects."""
+        """Generate SARIF artifact objects, consistent with each finding's location.
+
+        A finding that points at a tested-project artifact (``llmsec_artifact_uri``,
+        e.g. an LLM03 dependency manifest) lists that manifest; otherwise the test
+        file in this tool. Mirrors :meth:`_physical_location`.
+        """
         artifacts = {}
 
         for result in results:
-            if result.file_path not in artifacts:
+            artifact = result.properties.get("llmsec_artifact_uri")
+            if artifact:
+                artifacts.setdefault(artifact, {"location": {"uri": artifact}})
+            elif result.file_path not in artifacts:
                 artifacts[result.file_path] = {
                     "location": {
                         "uri": result.file_path,

@@ -78,9 +78,14 @@ def _params():
 @pytest.mark.security
 @pytest.mark.owasp_llm03
 @pytest.mark.parametrize("finding", _params())
-def test_supply_chain(finding):
+def test_supply_chain(finding, record_property):
     if finding is None:
         return  # no repo (skipped via mark) or layer scanned with no risk found
+    # The cause lives in the *tested* project's manifest, not in this test file —
+    # record it so the SARIF location points there (see SARIFGenerator).
+    manifest = getattr(finding, "manifest", None)
+    if manifest:
+        record_property("llmsec_artifact_uri", manifest)
     pytest.fail(
         f"[{finding.technique}] {finding.package} ({finding.manifest}): "
         f"{finding.evidence}\n  → {finding.recommendation}"

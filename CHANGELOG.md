@@ -72,6 +72,15 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
   **6/10** OWASP categories. Without `--repo`, LLM03 reports itself skipped (needs a repo), never a
   silent pass. (2026-06-10)
 
+### Fixed
+- **LLM03 (supply chain) findings now point at the manifest in the *tested* project**, not at the
+  scanner's own test file. Each supply-chain finding records the offending manifest's repo-relative path
+  (`requirements.txt`, `pyproject.toml`, …) as an artifact location, so the SARIF/HTML location reads e.g.
+  `pyproject.toml` in the scanned repo instead of `src/llmsectest/suite/test_llm03_supply_chain.py`.
+  Behavioural findings (whose cause is a model response, with no project source line) still point at the
+  test node. (Manifest line numbers are a follow-on; `tomllib` does not expose them for `pyproject.toml`.)
+  (2026-06-17)
+
 ### Changed
 - The offline demo target's persona branches (agent / red-team / resource-limit) now key on named
   trigger constants instead of inline magic strings, and a guard test pins each trigger to the matching

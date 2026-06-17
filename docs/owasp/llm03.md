@@ -61,7 +61,8 @@ A finding names the technique, the package, the manifest it came from, the evide
 remediation — for example *"[unpinned dependency floats to any future version] requests
 (requirements.txt): 'requests' has no version constraint, so the build pulls whatever the index serves
 next"*. In SARIF it maps to LLM03 and carries LLM03's CVSS v4.0 base score (`9.5`) as its
-`security-severity`.
+`security-severity`. Its **location points at the manifest in the scanned project** (e.g.
+`pyproject.toml`), since that is where the cause lives — not at LLMSecTest's own test file.
 
 ## Remediation
 
