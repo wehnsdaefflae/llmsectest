@@ -15,9 +15,31 @@ from llmsectest.probes import resolve_target
 from llmsectest.probes.runner import run_probe
 
 
+def _target_spec() -> str:
+    return os.environ.get(envvars.TARGET, "demo-vulnerable")
+
+
+@pytest.fixture(autouse=True)
+def _locate_finding_at_target(record_property):
+    """Locate every finding at the **tested target**, not at this suite's own files.
+
+    A behavioural finding (prompt injection, output handling, prompt leakage, …) is
+    about the *application under test* and has no source line in our code, so its
+    SARIF location should reference the target — the app endpoint or the model —
+    rather than the pytest node inside llmsectest. We record that as the default
+    artifact for every test here; a category that knows a more specific artifact in
+    the tested project (LLM03 records the offending dependency manifest) records it
+    afterwards and overrides this (``dict(user_properties)`` keeps the last value).
+    """
+    target = _target_spec()
+    # Strip the ``app:`` scheme so the location reads as the app's plain endpoint URL.
+    artifact = target[len("app:"):] if target.startswith("app:") else target
+    record_property("llmsec_artifact_uri", artifact)
+
+
 @pytest.fixture(scope="session")
 def target_adapter():
-    return resolve_target(os.environ.get(envvars.TARGET, "demo-vulnerable"))
+    return resolve_target(_target_spec())
 
 
 @pytest.fixture

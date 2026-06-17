@@ -73,13 +73,14 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
   silent pass. (2026-06-10)
 
 ### Fixed
-- **LLM03 (supply chain) findings now point at the manifest in the *tested* project**, not at the
-  scanner's own test file. Each supply-chain finding records the offending manifest's repo-relative path
-  (`requirements.txt`, `pyproject.toml`, …) as an artifact location, so the SARIF/HTML location reads e.g.
-  `pyproject.toml` in the scanned repo instead of `src/llmsectest/suite/test_llm03_supply_chain.py`.
-  Behavioural findings (whose cause is a model response, with no project source line) still point at the
-  test node. (Manifest line numbers are a follow-on; `tomllib` does not expose them for `pyproject.toml`.)
-  (2026-06-17)
+- **Findings now locate at the *tested target*, never at llmsectest's own files.** A finding's SARIF/HTML
+  location used to be the pytest node inside this tool, which is misleading: the vulnerability is in the
+  app under test, not in the scanner. Now every finding records the tested artifact: **LLM03 (supply chain)**
+  points at the offending dependency manifest in the scanned repo (`pyproject.toml`, `requirements.txt`, …),
+  and the **behavioural categories** (LLM01/02/05/06/07/10) point at the **target under test** — the app's
+  endpoint URL for `--target app:<url>`, or the model spec for a model target — since a behavioural finding's
+  cause is the app's response and has no source line in our code. (Manifest line numbers are a follow-on;
+  `tomllib` does not expose them for `pyproject.toml`.) (2026-06-17)
 
 ### Changed
 - The offline demo target's persona branches (agent / red-team / resource-limit) now key on named
