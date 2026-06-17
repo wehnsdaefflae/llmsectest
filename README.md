@@ -83,11 +83,20 @@ llmsectest --target demo-defended            # offline hardened target (passes)
 llmsectest --list-probes                     # list the corpus
 llmsectest --check                           # OWASP coverage map
 llmsectest --target demo-defended --validate # validate that target's report
+llmsectest --render-sarif results/gpt-4o-mini.sarif   # SARIF -> standalone HTML
 ```
 
 Each run writes to a per-target path (`results/<target-slug>.sarif`), so scanning
 several targets in a row never overwrites an earlier report; pass `--sarif-output`
 to choose your own. `--validate` with no path checks the current target's report.
+
+**Browse a report as HTML.** `--render-sarif <file.sarif>` turns any SARIF v2.1.0
+report — one of ours, or any other tool's — into a single self-contained HTML page
+(`results/<target>.html` by default, or `-o <path>`): findings grouped by OWASP
+category, CVSS-scored and colour-coded by severity, each with its location,
+evidence and remediation, plus a rule-reference glossary. No server, no assets —
+open it in a browser or share the file. Handy for reviewing the reports from the
+real projects you point LLMSecTest at.
 
 ### No silent gaps
 

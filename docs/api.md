@@ -92,3 +92,15 @@ vectors. Reported as the SARIF `security-severity` of each finding.
         - score_vector
         - cvss_for_category
         - library_available
+
+## Reporting
+
+Render a finished SARIF report as a standalone HTML page (the `--render-sarif`
+CLI flag is a thin wrapper over these). Works on any SARIF v2.1.0 document, not
+only LLMSecTest's own output.
+
+::: llmsectest.reporting.sarif_html
+    options:
+      members:
+        - render_sarif_file
+        - render_sarif_html

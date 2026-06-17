@@ -31,6 +31,7 @@ LLM06. Categories without their input are reported as skipped-with-reason.
     python -m llmsectest --list-probes                    # list the corpus
     python -m llmsectest --check                          # OWASP coverage map
     python -m llmsectest --validate results/out.sarif     # validate a SARIF file
+    python -m llmsectest --render-sarif results/out.sarif # SARIF -> standalone HTML
     python -m llmsectest --version                        # print the version
 
 A failing probe is a *finding*: a non-zero exit means the target is vulnerable.
@@ -443,6 +444,34 @@ def run_suite(args: list, target: str | None, repo: str | None = None,
     return rc
 
 
+def _render_sarif(args: list) -> int:
+    """Render a finished ``.sarif`` file as a standalone HTML report.
+
+    ``--render-sarif <file.sarif>`` writes ``<file>.html`` next to it (or to
+    ``-o``/``--html-output <path>``). Works on any SARIF v2.1.0 file — ours or a
+    third party's — so a scan of a project under test can be reviewed in a browser.
+    """
+    from .reporting import render_sarif_file
+
+    rest, src = _extract_opt(args, "--render-sarif")
+    rest, out = _extract_opt(rest, "--html-output")
+    if out is None:
+        rest, out = _extract_opt(rest, "-o")
+    if not src:
+        print("error: --render-sarif requires a path to a .sarif file", file=sys.stderr)
+        return 2
+    if not Path(src).is_file():
+        print(f"error: SARIF file not found: {src}", file=sys.stderr)
+        return 2
+    try:
+        written = render_sarif_file(src, out)
+    except (ValueError, KeyError) as exc:  # malformed JSON / not SARIF-shaped
+        print(f"error: could not render {src}: {exc}", file=sys.stderr)
+        return 2
+    print(f"HTML report written to {written}")
+    return 0
+
+
 def main():
     args = sys.argv[1:]
 
@@ -463,6 +492,8 @@ def main():
     if "--list-probes" in args:
         list_probes()
         return 0
+    if "--render-sarif" in args:
+        return _render_sarif(args)
 
     args, target = _extract_target(args)
     args, repo = _extract_opt(args, "--repo")

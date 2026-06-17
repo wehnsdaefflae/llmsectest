@@ -5,7 +5,7 @@ packaged OWASP probe suite against your chosen target and writes reports.
 
 ```bash
 llmsectest [--target <spec>] [--report-formats=...] [pytest options]
-llmsectest --check | --list-probes | --validate <file.sarif>
+llmsectest --check | --list-probes | --validate <file.sarif> | --render-sarif <file.sarif>
 ```
 
 ## Wrapper commands
@@ -23,6 +23,7 @@ llmsectest --check | --list-probes | --validate <file.sarif>
 | `--check` | Print the OWASP LLM Top 10 coverage map, each category's test modality and its CVSS v4.0 base score, then exit. |
 | `--list-probes` | List the probe corpus that ships today (incl. the built-in red-team set), then exit. |
 | `--validate <file>` | Validate an existing SARIF file against the v2.1.0 schema, then exit. |
+| `--render-sarif <file>` | Render a SARIF v2.1.0 file (ours or any other tool's) as a **standalone HTML report** and exit. Writes `<file>.html` next to it, or pass `-o`/`--html-output <path>`. Findings are grouped by OWASP category, CVSS-scored and colour-coded by severity, each with its location, evidence and remediation, plus a rule-reference glossary — no server or assets, just open the file. |
 | `--version` | Print the installed llmsectest version, then exit. |
 
 ## Reporting options (pytest plugin)

@@ -10,6 +10,13 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
 ## [Unreleased]
 
 ### Added
+- **`--render-sarif <file.sarif>` — render any SARIF report as standalone HTML.** Turns a finished SARIF
+  v2.1.0 file (ours or any other tool's) into a single self-contained HTML page (inline CSS, no assets,
+  no network) — findings grouped by OWASP category, CVSS-scored and colour-coded by severity, each with
+  its location, evidence and remediation, plus a rule-reference glossary; third-party SARIF without our
+  OWASP/CVSS properties degrades gracefully. Writes `results/<target>.html` by default (or `-o <path>`).
+  New `llmsectest.reporting.sarif_html` (`render_sarif_html` / `render_sarif_file`). Lets you review the
+  reports from the real projects you scan in a browser, not just as raw JSON. (2026-06-17)
 - **OWASP LLM10 (Unbounded Consumption) probes — coverage 6/10 → 7/10.** A new probe corpus and a
   deterministic `unbounded_consumption` detector flag a target that produces **runaway output** instead
   of bounding it: each case asks the target to emit a marker without bound (repetition flood,

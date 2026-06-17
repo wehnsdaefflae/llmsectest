@@ -11,6 +11,7 @@ from .console_summary import generate_console_summary
 from .cvss import CVSSScore, cvss_for_category, score_vector
 from .models import TestResult
 from .risk_scorer import RiskScore, RiskScoringEngine
+from .sarif_html import render_sarif_file, render_sarif_html
 from .statistics import calculate_statistics, get_coverage_gaps
 
 __all__ = [
@@ -22,6 +23,8 @@ __all__ = [
     "cvss_for_category",
     "generate_console_summary",
     "get_coverage_gaps",
+    "render_sarif_file",
+    "render_sarif_html",
     "score_vector",
     "validate_sarif",
 ]
