@@ -1130,6 +1130,13 @@ yet published to PyPI</strong>. The forward-looking plan is the <a href="https:/
 <h2 id="unreleased"><a href="https://github.com/wehnsdaefflae/llmsectest/compare/v0.1.0...HEAD">Unreleased</a><a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
 <h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
 <ul>
+<li><strong><code>--render-sarif &lt;file.sarif&gt;</code> — render any SARIF report as standalone HTML.</strong> Turns a finished SARIF
+  v2.1.0 file (ours or any other tool's) into a single self-contained HTML page (inline CSS, no assets,
+  no network) — findings grouped by OWASP category, CVSS-scored and colour-coded by severity, each with
+  its location, evidence and remediation, plus a rule-reference glossary; third-party SARIF without our
+  OWASP/CVSS properties degrades gracefully. Writes <code>results/&lt;target&gt;.html</code> by default (or <code>-o &lt;path&gt;</code>).
+  New <code>llmsectest.reporting.sarif_html</code> (<code>render_sarif_html</code> / <code>render_sarif_file</code>). Lets you review the
+  reports from the real projects you scan in a browser, not just as raw JSON. (2026-06-17)</li>
 <li><strong>OWASP LLM10 (Unbounded Consumption) probes — coverage 6/10 → 7/10.</strong> A new probe corpus and a
   deterministic <code>unbounded_consumption</code> detector flag a target that produces <strong>runaway output</strong> instead
   of bounding it: each case asks the target to emit a marker without bound (repetition flood,
