@@ -1152,6 +1152,12 @@ yet published to PyPI</strong>. The forward-looking plan is the <a href="https:/
 <h2 id="unreleased"><a href="https://github.com/wehnsdaefflae/llmsectest/compare/v0.1.0...HEAD">Unreleased</a><a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
 <h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
 <ul>
+<li><strong>LM Studio adapter — <code>--target lmstudio:&lt;model&gt;</code>.</strong> A dedicated adapter for <a href="https://lmstudio.ai">LM Studio</a>'s
+  local OpenAI-compatible server (default <code>localhost:1234</code>), completing the "LM Studio + Ollama" local-model
+  interfaces — run the suite against an LM-Studio-hosted model with <strong>no API key and no paid calls</strong>. Set the
+  loaded model per target or via <code>LMSTUDIO_MODEL</code> / <code>LMSTUDIO_BASE_URL</code>. The Ollama and LM Studio adapters now
+  share one <code>_LocalOpenAICompatibleAdapter</code> base (a backend is config-only), so they cannot drift and a new
+  local runtime (vLLM, llama.cpp) is a few lines. (2026-06-18)</li>
 <li><strong><code>--render-sarif &lt;file.sarif&gt;</code> — render any SARIF report as standalone HTML.</strong> Turns a finished SARIF
   v2.1.0 file (ours or any other tool's) into a single self-contained HTML page (inline CSS, no assets,
   no network) — findings grouped by OWASP category, CVSS-scored and colour-coded by severity, each with

@@ -2883,8 +2883,7 @@ installed.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/llmsectest/adapters/__init__.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-50">50</a></span>
-<span class="normal"><a href="#__codelineno-0-51">51</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-51">51</a></span>
 <span class="normal"><a href="#__codelineno-0-52">52</a></span>
 <span class="normal"><a href="#__codelineno-0-53">53</a></span>
 <span class="normal"><a href="#__codelineno-0-54">54</a></span>
@@ -2893,17 +2892,18 @@ installed.</p>
 <span class="normal"><a href="#__codelineno-0-57">57</a></span>
 <span class="normal"><a href="#__codelineno-0-58">58</a></span>
 <span class="normal"><a href="#__codelineno-0-59">59</a></span>
-<span class="normal"><a href="#__codelineno-0-60">60</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-50" name="__codelineno-0-50"></a><span class="k">def</span><span class="w"> </span><span class="nf">get_adapter</span><span class="p">(</span><span class="n">provider</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LLMAdapter</span><span class="p">:</span>
-<a id="__codelineno-0-51" name="__codelineno-0-51"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Construct an adapter for ``provider`` (e.g. ``&quot;openai&quot;``, ``&quot;mock&quot;``).&quot;&quot;&quot;</span>
-<a id="__codelineno-0-52" name="__codelineno-0-52"></a>    <span class="n">key</span> <span class="o">=</span> <span class="n">provider</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-<a id="__codelineno-0-53" name="__codelineno-0-53"></a>    <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_REGISTRY</span><span class="p">:</span>
-<a id="__codelineno-0-54" name="__codelineno-0-54"></a>        <span class="k">raise</span> <span class="n">AdapterError</span><span class="p">(</span>
-<a id="__codelineno-0-55" name="__codelineno-0-55"></a>            <span class="sa">f</span><span class="s2">&quot;unknown provider </span><span class="si">{</span><span class="n">provider</span><span class="si">!r}</span><span class="s2">; available: </span><span class="si">{</span><span class="n">available_providers</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
-<a id="__codelineno-0-56" name="__codelineno-0-56"></a>        <span class="p">)</span>
-<a id="__codelineno-0-57" name="__codelineno-0-57"></a>    <span class="bp">cls</span> <span class="o">=</span> <span class="n">_load</span><span class="p">(</span><span class="n">_REGISTRY</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
-<a id="__codelineno-0-58" name="__codelineno-0-58"></a>    <span class="k">if</span> <span class="n">model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-59" name="__codelineno-0-59"></a>        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">model</span>
-<a id="__codelineno-0-60" name="__codelineno-0-60"></a>    <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="normal"><a href="#__codelineno-0-60">60</a></span>
+<span class="normal"><a href="#__codelineno-0-61">61</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-51" name="__codelineno-0-51"></a><span class="k">def</span><span class="w"> </span><span class="nf">get_adapter</span><span class="p">(</span><span class="n">provider</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LLMAdapter</span><span class="p">:</span>
+<a id="__codelineno-0-52" name="__codelineno-0-52"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Construct an adapter for ``provider`` (e.g. ``&quot;openai&quot;``, ``&quot;mock&quot;``).&quot;&quot;&quot;</span>
+<a id="__codelineno-0-53" name="__codelineno-0-53"></a>    <span class="n">key</span> <span class="o">=</span> <span class="n">provider</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+<a id="__codelineno-0-54" name="__codelineno-0-54"></a>    <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_REGISTRY</span><span class="p">:</span>
+<a id="__codelineno-0-55" name="__codelineno-0-55"></a>        <span class="k">raise</span> <span class="n">AdapterError</span><span class="p">(</span>
+<a id="__codelineno-0-56" name="__codelineno-0-56"></a>            <span class="sa">f</span><span class="s2">&quot;unknown provider </span><span class="si">{</span><span class="n">provider</span><span class="si">!r}</span><span class="s2">; available: </span><span class="si">{</span><span class="n">available_providers</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+<a id="__codelineno-0-57" name="__codelineno-0-57"></a>        <span class="p">)</span>
+<a id="__codelineno-0-58" name="__codelineno-0-58"></a>    <span class="bp">cls</span> <span class="o">=</span> <span class="n">_load</span><span class="p">(</span><span class="n">_REGISTRY</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+<a id="__codelineno-0-59" name="__codelineno-0-59"></a>    <span class="k">if</span> <span class="n">model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-60" name="__codelineno-0-60"></a>        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">model</span>
+<a id="__codelineno-0-61" name="__codelineno-0-61"></a>    <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -2926,9 +2926,9 @@ installed.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/llmsectest/adapters/__init__.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-31">31</a></span>
-<span class="normal"><a href="#__codelineno-0-32">32</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-31" name="__codelineno-0-31"></a><span class="k">def</span><span class="w"> </span><span class="nf">available_providers</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<a id="__codelineno-0-32" name="__codelineno-0-32"></a>    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">_REGISTRY</span><span class="p">)</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-32">32</a></span>
+<span class="normal"><a href="#__codelineno-0-33">33</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-32" name="__codelineno-0-32"></a><span class="k">def</span><span class="w"> </span><span class="nf">available_providers</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<a id="__codelineno-0-33" name="__codelineno-0-33"></a>    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">_REGISTRY</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -2955,11 +2955,11 @@ installed.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/llmsectest/adapters/__init__.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-35">35</a></span>
-<span class="normal"><a href="#__codelineno-0-36">36</a></span>
-<span class="normal"><a href="#__codelineno-0-37">37</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-35" name="__codelineno-0-35"></a><span class="k">def</span><span class="w"> </span><span class="nf">register_adapter</span><span class="p">(</span><span class="n">provider</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">type</span><span class="p">[</span><span class="n">LLMAdapter</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-36" name="__codelineno-0-36"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Register a custom adapter. ``target`` is a class or ``&quot;module:Class&quot;``.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-37" name="__codelineno-0-37"></a>    <span class="n">_REGISTRY</span><span class="p">[</span><span class="n">provider</span><span class="p">]</span> <span class="o">=</span> <span class="n">target</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-36">36</a></span>
+<span class="normal"><a href="#__codelineno-0-37">37</a></span>
+<span class="normal"><a href="#__codelineno-0-38">38</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-36" name="__codelineno-0-36"></a><span class="k">def</span><span class="w"> </span><span class="nf">register_adapter</span><span class="p">(</span><span class="n">provider</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">type</span><span class="p">[</span><span class="n">LLMAdapter</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-37" name="__codelineno-0-37"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Register a custom adapter. ``target`` is a class or ``&quot;module:Class&quot;``.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-38" name="__codelineno-0-38"></a>    <span class="n">_REGISTRY</span><span class="p">[</span><span class="n">provider</span><span class="p">]</span> <span class="o">=</span> <span class="n">target</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -3855,8 +3855,9 @@ must surface that state instead of treating the empty <code>findings</code> as c
 <code>app:&lt;url&gt;</code> to test a <strong>running application</strong> by its HTTP endpoint (the
 faithful black-box target — the app supplies its own system prompt); a bare
 provider (<code>mock</code>); or <code>provider:model</code> (e.g. <code>openai:gpt-4o-mini</code>,
-<code>ollama:gemma4:e2b-it-q4_K_M</code> for a local model). Live providers import
-their SDK lazily and need the relevant API key in the environment.</p>
+or <code>ollama:gemma4:e2b-it-q4_K_M</code> / <code>lmstudio:&lt;model&gt;</code> for a local model —
+no API key, no paid calls). Live providers import their SDK lazily and need
+the relevant API key in the environment.</p>
 
 
             <details class="mkdocstrings-source">
@@ -3881,27 +3882,29 @@ their SDK lazily and need the relevant API key in the environment.</p>
 <span class="normal"><a href="#__codelineno-0-169">169</a></span>
 <span class="normal"><a href="#__codelineno-0-170">170</a></span>
 <span class="normal"><a href="#__codelineno-0-171">171</a></span>
-<span class="normal"><a href="#__codelineno-0-172">172</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-152" name="__codelineno-0-152"></a><span class="k">def</span><span class="w"> </span><span class="nf">resolve_target</span><span class="p">(</span><span class="n">spec</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LLMAdapter</span><span class="p">:</span>
+<span class="normal"><a href="#__codelineno-0-172">172</a></span>
+<span class="normal"><a href="#__codelineno-0-173">173</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-152" name="__codelineno-0-152"></a><span class="k">def</span><span class="w"> </span><span class="nf">resolve_target</span><span class="p">(</span><span class="n">spec</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LLMAdapter</span><span class="p">:</span>
 <a id="__codelineno-0-153" name="__codelineno-0-153"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Resolve a target spec into an adapter.</span>
 <a id="__codelineno-0-154" name="__codelineno-0-154"></a>
 <a id="__codelineno-0-155" name="__codelineno-0-155"></a><span class="sd">    Accepts the demo keywords ``demo``/``demo-vulnerable``/``demo-defended``;</span>
 <a id="__codelineno-0-156" name="__codelineno-0-156"></a><span class="sd">    ``app:&lt;url&gt;`` to test a **running application** by its HTTP endpoint (the</span>
 <a id="__codelineno-0-157" name="__codelineno-0-157"></a><span class="sd">    faithful black-box target — the app supplies its own system prompt); a bare</span>
 <a id="__codelineno-0-158" name="__codelineno-0-158"></a><span class="sd">    provider (``mock``); or ``provider:model`` (e.g. ``openai:gpt-4o-mini``,</span>
-<a id="__codelineno-0-159" name="__codelineno-0-159"></a><span class="sd">    ``ollama:gemma4:e2b-it-q4_K_M`` for a local model). Live providers import</span>
-<a id="__codelineno-0-160" name="__codelineno-0-160"></a><span class="sd">    their SDK lazily and need the relevant API key in the environment.</span>
-<a id="__codelineno-0-161" name="__codelineno-0-161"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-162" name="__codelineno-0-162"></a>    <span class="n">spec</span> <span class="o">=</span> <span class="p">(</span><span class="n">spec</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-<a id="__codelineno-0-163" name="__codelineno-0-163"></a>    <span class="k">if</span> <span class="n">spec</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;demo&quot;</span><span class="p">,</span> <span class="s2">&quot;demo-vulnerable&quot;</span><span class="p">):</span>
-<a id="__codelineno-0-164" name="__codelineno-0-164"></a>        <span class="k">return</span> <span class="n">vulnerable_demo_adapter</span><span class="p">()</span>
-<a id="__codelineno-0-165" name="__codelineno-0-165"></a>    <span class="k">if</span> <span class="n">spec</span> <span class="o">==</span> <span class="s2">&quot;demo-defended&quot;</span><span class="p">:</span>
-<a id="__codelineno-0-166" name="__codelineno-0-166"></a>        <span class="k">return</span> <span class="n">defended_demo_adapter</span><span class="p">()</span>
-<a id="__codelineno-0-167" name="__codelineno-0-167"></a>    <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;app:&quot;</span><span class="p">):</span>
-<a id="__codelineno-0-168" name="__codelineno-0-168"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">..adapters.app_endpoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">AppEndpointAdapter</span>
-<a id="__codelineno-0-169" name="__codelineno-0-169"></a>
-<a id="__codelineno-0-170" name="__codelineno-0-170"></a>        <span class="k">return</span> <span class="n">AppEndpointAdapter</span><span class="p">(</span><span class="n">endpoint</span><span class="o">=</span><span class="n">spec</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="s2">&quot;app:&quot;</span><span class="p">):])</span>
-<a id="__codelineno-0-171" name="__codelineno-0-171"></a>    <span class="n">provider</span><span class="p">,</span> <span class="n">sep</span><span class="p">,</span> <span class="n">model</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-172" name="__codelineno-0-172"></a>    <span class="k">return</span> <span class="n">get_adapter</span><span class="p">(</span><span class="n">provider</span><span class="p">,</span> <span class="n">model</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">)</span> <span class="k">if</span> <span class="n">sep</span> <span class="k">else</span> <span class="n">get_adapter</span><span class="p">(</span><span class="n">provider</span><span class="p">)</span>
+<a id="__codelineno-0-159" name="__codelineno-0-159"></a><span class="sd">    or ``ollama:gemma4:e2b-it-q4_K_M`` / ``lmstudio:&lt;model&gt;`` for a local model —</span>
+<a id="__codelineno-0-160" name="__codelineno-0-160"></a><span class="sd">    no API key, no paid calls). Live providers import their SDK lazily and need</span>
+<a id="__codelineno-0-161" name="__codelineno-0-161"></a><span class="sd">    the relevant API key in the environment.</span>
+<a id="__codelineno-0-162" name="__codelineno-0-162"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-163" name="__codelineno-0-163"></a>    <span class="n">spec</span> <span class="o">=</span> <span class="p">(</span><span class="n">spec</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+<a id="__codelineno-0-164" name="__codelineno-0-164"></a>    <span class="k">if</span> <span class="n">spec</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;demo&quot;</span><span class="p">,</span> <span class="s2">&quot;demo-vulnerable&quot;</span><span class="p">):</span>
+<a id="__codelineno-0-165" name="__codelineno-0-165"></a>        <span class="k">return</span> <span class="n">vulnerable_demo_adapter</span><span class="p">()</span>
+<a id="__codelineno-0-166" name="__codelineno-0-166"></a>    <span class="k">if</span> <span class="n">spec</span> <span class="o">==</span> <span class="s2">&quot;demo-defended&quot;</span><span class="p">:</span>
+<a id="__codelineno-0-167" name="__codelineno-0-167"></a>        <span class="k">return</span> <span class="n">defended_demo_adapter</span><span class="p">()</span>
+<a id="__codelineno-0-168" name="__codelineno-0-168"></a>    <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;app:&quot;</span><span class="p">):</span>
+<a id="__codelineno-0-169" name="__codelineno-0-169"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">..adapters.app_endpoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">AppEndpointAdapter</span>
+<a id="__codelineno-0-170" name="__codelineno-0-170"></a>
+<a id="__codelineno-0-171" name="__codelineno-0-171"></a>        <span class="k">return</span> <span class="n">AppEndpointAdapter</span><span class="p">(</span><span class="n">endpoint</span><span class="o">=</span><span class="n">spec</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="s2">&quot;app:&quot;</span><span class="p">):])</span>
+<a id="__codelineno-0-172" name="__codelineno-0-172"></a>    <span class="n">provider</span><span class="p">,</span> <span class="n">sep</span><span class="p">,</span> <span class="n">model</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-173" name="__codelineno-0-173"></a>    <span class="k">return</span> <span class="n">get_adapter</span><span class="p">(</span><span class="n">provider</span><span class="p">,</span> <span class="n">model</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">)</span> <span class="k">if</span> <span class="n">sep</span> <span class="k">else</span> <span class="n">get_adapter</span><span class="p">(</span><span class="n">provider</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>

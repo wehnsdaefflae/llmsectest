@@ -1091,6 +1091,10 @@ failures, the process exits non-zero when the target is vulnerable — exactly w
 <td>A <strong>local</strong> model via <a href="https://ollama.com">Ollama</a> — no API key, no paid calls (e.g. <code>ollama:gemma4:e2b-it-q4_K_M</code>).</td>
 </tr>
 <tr>
+<td><code>lmstudio:&lt;model&gt;</code></td>
+<td>A <strong>local</strong> model via <a href="https://lmstudio.ai">LM Studio</a>'s OpenAI-compatible server (default <code>localhost:1234</code>) — no API key, no paid calls. Set <code>LMSTUDIO_BASE_URL</code> to override the port.</td>
+</tr>
+<tr>
 <td><code>openai:&lt;model&gt;</code> / <code>anthropic:&lt;model&gt;</code> / <code>huggingface:&lt;model&gt;</code></td>
 <td>A hosted model (needs the matching extra + API key in the environment).</td>
 </tr>
