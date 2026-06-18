@@ -36,6 +36,7 @@ A **target** is what you point LLMSecTest at. Choose one with `--target`:
 |---|---|
 | `app:<url>` | **Your running application's HTTP endpoint** — the faithful way to test an app (its own system prompt, guardrails, RAG and tools are in the loop). See [the guide](guides/target-app.md). |
 | `ollama:<model>` | A **local** model via [Ollama](https://ollama.com) — no API key, no paid calls (e.g. `ollama:gemma4:e2b-it-q4_K_M`). |
+| `lmstudio:<model>` | A **local** model via [LM Studio](https://lmstudio.ai)'s OpenAI-compatible server (default `localhost:1234`) — no API key, no paid calls. Set `LMSTUDIO_BASE_URL` to override the port. |
 | `openai:<model>` / `anthropic:<model>` / `huggingface:<model>` | A hosted model (needs the matching extra + API key in the environment). |
 | `demo` / `demo-defended` | Offline deterministic demo apps (no network). |
 

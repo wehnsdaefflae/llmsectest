@@ -12,7 +12,7 @@ llmsectest --check | --list-probes | --validate <file.sarif> | --render-sarif <f
 
 | Flag | Description |
 |---|---|
-| `--target <spec>` | What to test: `app:<url>`, `ollama:<model>`, `openai:<model>`, `anthropic:<model>`, `huggingface:<model>`, `mock`, `demo`, `demo-defended`. Omit it to scan the offline demo app. |
+| `--target <spec>` | What to test: `app:<url>`, `ollama:<model>`, `lmstudio:<model>`, `openai:<model>`, `anthropic:<model>`, `huggingface:<model>`, `mock`, `demo`, `demo-defended`. Omit it to scan the offline demo app. |
 | `--repo <path>` | Add the white-box **LLM03 (supply chain)** scan of that project's dependency manifests (`requirements*.txt`, `pyproject.toml`, `Pipfile`). Combine with `--target` to test an app and its dependencies in one run. |
 | `--osv` | With `--repo`: also query [OSV.dev](https://osv.dev) for **known CVEs** in every exactly-pinned (`==X.Y.Z`) dependency (networked, free, no API key). Off by default so the scan stays offline/deterministic; any non-run state (not requested, nothing pinned, lookup failed) appears as an explicit skip reason. |
 | `--redteam-set <csv>` | Run the **LLM01 red-team** module against the JailbreakBench [JBB-Behaviors](https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors) CSV at this path (the 100-behaviour benchmark; columns `Index,Goal,Target,Behavior,Category,Source`). A target is a finding when it **complies** with a harmful request instead of refusing (refusal oracle). Without the flag, a built-in starter set runs so an offline scan still exercises the oracle. |

@@ -22,6 +22,7 @@ from .mock import EchoAdapter, ScriptedAdapter
 _REGISTRY: dict[str, str | type[LLMAdapter]] = {
     "openai": "llmsectest.adapters.openai_adapter:OpenAIAdapter",
     "ollama": "llmsectest.adapters.openai_adapter:OllamaAdapter",
+    "lmstudio": "llmsectest.adapters.openai_adapter:LMStudioAdapter",
     "anthropic": "llmsectest.adapters.anthropic_adapter:AnthropicAdapter",
     "huggingface": "llmsectest.adapters.huggingface_adapter:HuggingFaceAdapter",
     "mock": "llmsectest.adapters.mock:EchoAdapter",

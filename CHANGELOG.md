@@ -10,6 +10,12 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
 ## [Unreleased]
 
 ### Added
+- **LM Studio adapter — `--target lmstudio:<model>`.** A dedicated adapter for [LM Studio](https://lmstudio.ai)'s
+  local OpenAI-compatible server (default `localhost:1234`), completing the "LM Studio + Ollama" local-model
+  interfaces — run the suite against an LM-Studio-hosted model with **no API key and no paid calls**. Set the
+  loaded model per target or via `LMSTUDIO_MODEL` / `LMSTUDIO_BASE_URL`. The Ollama and LM Studio adapters now
+  share one `_LocalOpenAICompatibleAdapter` base (a backend is config-only), so they cannot drift and a new
+  local runtime (vLLM, llama.cpp) is a few lines. (2026-06-18)
 - **`--render-sarif <file.sarif>` — render any SARIF report as standalone HTML.** Turns a finished SARIF
   v2.1.0 file (ours or any other tool's) into a single self-contained HTML page (inline CSS, no assets,
   no network) — findings grouped by OWASP category, CVSS-scored and colour-coded by severity, each with

@@ -99,6 +99,60 @@ def test_ollama_target_keeps_colons_in_model_name():
     assert adapter.model == "gemma4:e2b-it-q4_K_M"
 
 
+def test_available_providers_includes_lmstudio():
+    assert "lmstudio" in available_providers()
+
+
+def test_lmstudio_adapter_local_defaults(monkeypatch):
+    pytest.importorskip("openai")
+    monkeypatch.delenv("LMSTUDIO_MODEL", raising=False)
+    monkeypatch.delenv("LMSTUDIO_BASE_URL", raising=False)
+    adapter = get_adapter("lmstudio")  # constructs a client; no network until a call
+    assert adapter.provider == "lmstudio"
+    assert adapter.model == "local-model"
+    assert "1234" in str(adapter._client.base_url)
+
+
+def test_lmstudio_target_keeps_colons_in_model_name():
+    # a loaded LM Studio model id can contain colons — only the first splits off
+    from llmsectest.probes import resolve_target
+
+    pytest.importorskip("openai")
+    adapter = resolve_target("lmstudio:qwen3:8b")
+    assert adapter.provider == "lmstudio"
+    assert adapter.model == "qwen3:8b"
+
+
+def test_local_backend_env_overrides(monkeypatch):
+    pytest.importorskip("openai")
+    monkeypatch.setenv("LMSTUDIO_MODEL", "my-model")
+    monkeypatch.setenv("LMSTUDIO_BASE_URL", "http://localhost:9999/v1")
+    adapter = get_adapter("lmstudio")
+    assert adapter.model == "my-model"
+    assert "9999" in str(adapter._client.base_url)
+
+
+@pytest.mark.parametrize(
+    "provider, model, port",
+    [
+        ("ollama", "gemma4:e2b-it-q4_K_M", "11434"),
+        ("lmstudio", "local-model", "1234"),
+    ],
+)
+def test_local_openai_compatible_backends_defaults(monkeypatch, provider, model, port):
+    # guard: every local backend shares one base, so its defaults can't drift
+    pytest.importorskip("openai")
+    for var in ("OLLAMA_MODEL", "OLLAMA_BASE_URL", "LMSTUDIO_MODEL", "LMSTUDIO_BASE_URL"):
+        monkeypatch.delenv(var, raising=False)
+    from llmsectest.adapters.openai_adapter import _LocalOpenAICompatibleAdapter
+
+    adapter = get_adapter(provider)
+    assert isinstance(adapter, _LocalOpenAICompatibleAdapter)
+    assert adapter.provider == provider
+    assert adapter.model == model
+    assert port in str(adapter._client.base_url)
+
+
 def test_openai_base_url_allows_missing_key(monkeypatch):
     pytest.importorskip("openai")
     from llmsectest.adapters.openai_adapter import OpenAIAdapter

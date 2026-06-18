@@ -33,13 +33,13 @@ target = AppEndpointAdapter(
 
 ## No paid calls: back your app with a local model
 
-Run your app in a test configuration whose LLM backend points at a **local** model (e.g. Ollama),
-then test it — zero API cost:
+Run your app in a test configuration whose LLM backend points at a **local** model (e.g. Ollama or
+LM Studio), then test it — zero API cost:
 
 ```bash
 # 1) your app, configured to call a local OpenAI-compatible endpoint:
-export OPENAI_BASE_URL=http://localhost:11434/v1   # Ollama
-export OPENAI_API_KEY=ollama                        # ignored by Ollama
+export OPENAI_BASE_URL=http://localhost:11434/v1   # Ollama (LM Studio: http://localhost:1234/v1)
+export OPENAI_API_KEY=ollama                        # ignored by local servers
 ./run-your-app.sh &
 
 # 2) test it

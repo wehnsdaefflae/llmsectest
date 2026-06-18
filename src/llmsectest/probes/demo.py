@@ -156,8 +156,9 @@ def resolve_target(spec: str) -> LLMAdapter:
     ``app:<url>`` to test a **running application** by its HTTP endpoint (the
     faithful black-box target — the app supplies its own system prompt); a bare
     provider (``mock``); or ``provider:model`` (e.g. ``openai:gpt-4o-mini``,
-    ``ollama:gemma4:e2b-it-q4_K_M`` for a local model). Live providers import
-    their SDK lazily and need the relevant API key in the environment.
+    or ``ollama:gemma4:e2b-it-q4_K_M`` / ``lmstudio:<model>`` for a local model —
+    no API key, no paid calls). Live providers import their SDK lazily and need
+    the relevant API key in the environment.
     """
     spec = (spec or "").strip()
     if spec in ("", "demo", "demo-vulnerable"):
