@@ -79,6 +79,11 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
   silent pass. (2026-06-10)
 
 ### Fixed
+- **A long inline `--app-prompt` no longer crashes the CLI.** `--app-prompt` accepts either inline text or a
+  file path, decided via `Path(value).is_file()` — but a realistic multi-sentence system prompt overflows the
+  filesystem's name limit, so that call raised `OSError: File name too long` instead of returning `False`,
+  aborting the scan. A `_is_existing_file` helper now treats any un-stattable value as inline text; applied to
+  `--app-prompt`, `--redteam-set` and `--redteam-benign`. (Caught by a real open-webui application scan.)
 - **A finding's message is now the clean finding, not pytest's traceback through our own code.** The SARIF
   message used to be the raw pytest `longrepr` — which embeds this tool's test-function source and the
   `>assert` / `E AssertionError` lines, making the report look like the vulnerability was in llmsectest. The

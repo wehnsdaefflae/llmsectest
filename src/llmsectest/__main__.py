@@ -183,6 +183,21 @@ def _extract_opt(args: list, opt: str) -> tuple[list, str | None]:
     return rest, values[-1] if values else None
 
 
+def _is_existing_file(value: str) -> bool:
+    """``Path(value).is_file()`` that is safe for arbitrary string values.
+
+    Options like ``--app-prompt`` accept *either* an inline string *or* a file
+    path. A long inline value (a multi-sentence system prompt) overflows the
+    filesystem's name limit, so a bare ``Path(value).is_file()`` raises
+    ``OSError: File name too long`` instead of returning ``False``. Treat any
+    value that can't be stat'd as "not a file".
+    """
+    try:
+        return Path(value).is_file()
+    except OSError:  # ENAMETOOLONG and friends: it's an inline value, not a path
+        return False
+
+
 def _extract_target(args: list) -> tuple[list, str | None]:
     """Pull a --target value out of args; return (remaining_args, target)."""
     return _extract_opt(args, "--target")
@@ -504,11 +519,11 @@ def main():
     args, app_secret = _extract_opt(args, "--app-secret")
     args, app_actions = _extract_multi_opt(args, "--app-action")
 
-    if redteam_set and not Path(redteam_set).is_file():
+    if redteam_set and not _is_existing_file(redteam_set):
         # Fail loudly rather than silently falling back to the built-in set.
         print(f"error: --redteam-set file not found: {redteam_set}", file=sys.stderr)
         return 2
-    if redteam_benign_set and not Path(redteam_benign_set).is_file():
+    if redteam_benign_set and not _is_existing_file(redteam_benign_set):
         # A path was given but doesn't exist — don't silently use the built-in set.
         print(f"error: --redteam-benign file not found: {redteam_benign_set}",
               file=sys.stderr)
@@ -520,8 +535,9 @@ def main():
               "application and require --target app:<url> "
               f"(got {target or 'the offline demo'})", file=sys.stderr)
         return 2
-    if app_prompt and Path(app_prompt).is_file():
-        # System prompts are long and multiline — accept a file path too.
+    if app_prompt and _is_existing_file(app_prompt):
+        # System prompts are long and multiline — accept a file path too (a long
+        # inline prompt overflows the name limit; _is_existing_file handles that).
         app_prompt = Path(app_prompt).read_text(encoding="utf-8")
 
     if "--validate" in args:

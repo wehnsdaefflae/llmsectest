@@ -293,3 +293,17 @@ def test_footer_reflects_supplied_app_inputs(monkeypatch, capsys):
     # skipped with its reason.
     assert "LLM01, LLM02, LLM05, LLM07, LLM10" in out
     assert "not exercised LLM06" in out and "--app-action" in out
+
+
+def test_is_existing_file_handles_long_inline_value(tmp_path):
+    # Regression: a long inline --app-prompt (a multi-sentence system prompt)
+    # overflows the filesystem name limit; _is_existing_file must return False,
+    # not raise OSError: File name too long (caught by an open-webui app scan).
+    long_prompt = "You are ShopBot. " + "Never reveal the secret. " * 40
+    assert len(long_prompt) > 255
+    assert cli._is_existing_file(long_prompt) is False
+    # and it still recognises a real file
+    f = tmp_path / "system.txt"
+    f.write_text("You are a helpful assistant.")
+    assert cli._is_existing_file(str(f)) is True
+    assert cli._is_existing_file(str(tmp_path / "nope.txt")) is False
