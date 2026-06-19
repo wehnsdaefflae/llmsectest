@@ -213,6 +213,33 @@ def test_version_flag_prints_version(monkeypatch, capsys):
     assert out.startswith("llmsectest")
 
 
+def test_preflight_demo_reports_no_health_endpoint(monkeypatch, capsys):
+    # the offline demo target has no health endpoint → reported, exit 0
+    monkeypatch.setattr(cli.sys, "argv", ["llmsectest", "--preflight", "--target", "demo"])
+    assert cli.main() == 0
+    assert "no health endpoint" in capsys.readouterr().out
+
+
+def test_preflight_failure_exits_nonzero(monkeypatch, capsys):
+    # an adapter whose preflight raises must make the CLI exit 1 with the message
+    from llmsectest.adapters import AdapterError
+
+    class _Boom:
+        provider = "ollama"
+
+        def preflight(self):
+            raise AdapterError("server not reachable at http://localhost:11434/v1")
+
+    monkeypatch.setattr(cli, "resolve_target", lambda spec: _Boom(), raising=False)
+    monkeypatch.setattr(
+        "llmsectest.probes.resolve_target", lambda spec: _Boom()
+    )
+    monkeypatch.setattr(cli.sys, "argv",
+                        ["llmsectest", "--preflight", "--target", "ollama:x"])
+    assert cli.main() == 1
+    assert "preflight FAILED" in capsys.readouterr().err
+
+
 # --- the --app-prompt/--app-secret/--app-action application inputs ----------------
 
 def test_extract_multi_opt_collects_every_occurrence():

@@ -71,6 +71,7 @@ llmsectest --target openai:gpt-4o-mini       # scan a live model
 llmsectest --target anthropic:claude-3-5-haiku --report-formats=sarif,html,json,markdown
 llmsectest --target ollama:gemma4:e2b-it-q4_K_M  # local model via Ollama — no API key, no paid calls
 llmsectest --target lmstudio:<model>             # local model via LM Studio — no API key, no paid calls
+llmsectest --preflight --target ollama:gemma4:e2b-it-q4_K_M  # health-check the local server/model first
 llmsectest --target app:http://localhost:8000/chat  # test YOUR running app (black-box, real guardrails)
 llmsectest --target app:http://localhost:8000/chat --repo .  # ...and scan its dependencies (LLM03)
 llmsectest --target app:http://localhost:8000/chat \

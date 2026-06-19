@@ -13,7 +13,27 @@ from __future__ import annotations
 
 import os
 
-from .base import AdapterError, CompletionRequest, CompletionResponse, LLMAdapter
+from .base import (
+    AdapterError,
+    CompletionRequest,
+    CompletionResponse,
+    LLMAdapter,
+    PreflightResult,
+)
+
+
+def _is_connection_error(exc: BaseException) -> bool:
+    """True for a transport-level failure (server unreachable / timeout).
+
+    Checked by class name across the MRO so we needn't import the openai SDK's
+    exception types eagerly — it matches ``openai.APIConnectionError`` /
+    ``APITimeoutError`` as well as the stdlib ``ConnectionError`` / ``TimeoutError``.
+    """
+    names = {t.__name__ for t in type(exc).__mro__}
+    return bool(names & {
+        "APIConnectionError", "APITimeoutError",
+        "ConnectionError", "ConnectError", "Timeout", "TimeoutError",
+    })
 
 
 class OpenAIAdapter(LLMAdapter):
@@ -26,6 +46,7 @@ class OpenAIAdapter(LLMAdapter):
         base_url: str | None = None,
     ):
         super().__init__(model)
+        self.base_url = base_url
         try:
             from openai import OpenAI
         except ImportError as exc:  # pragma: no cover - exercised only without SDK
@@ -43,13 +64,26 @@ class OpenAIAdapter(LLMAdapter):
         self._client = OpenAI(api_key=key, base_url=base_url)
 
     def complete(self, request: CompletionRequest) -> CompletionResponse:
-        resp = self._client.chat.completions.create(
-            model=self.model,
-            messages=[{"role": m.role.value, "content": m.content} for m in request.messages],
-            max_tokens=request.max_tokens,
-            temperature=request.temperature,
-            stop=request.stop,
-        )
+        try:
+            resp = self._client.chat.completions.create(
+                model=self.model,
+                messages=[{"role": m.role.value, "content": m.content} for m in request.messages],
+                max_tokens=request.max_tokens,
+                temperature=request.temperature,
+                stop=request.stop,
+            )
+        except Exception as exc:  # noqa: BLE001 - re-raised below unless transport-level
+            # Translate a transport failure (local server down, wrong port) into
+            # a clear AdapterError instead of an opaque SDK traceback — the same
+            # actionable message preflight gives, but on the live scan path where
+            # a flaky local server is most likely to drop mid-suite. Any other
+            # error (auth, rate limit, bad request) propagates unchanged.
+            if _is_connection_error(exc):
+                raise AdapterError(
+                    f"{self.provider} request to {self.base_url or 'the OpenAI API'} "
+                    f"failed ({type(exc).__name__}: {exc}) — is the server reachable?"
+                ) from exc
+            raise
         choice = resp.choices[0]
         usage = getattr(resp, "usage", None)
         return CompletionResponse(
@@ -92,6 +126,45 @@ class _LocalOpenAICompatibleAdapter(OpenAIAdapter):
             model=model or os.environ.get(self.model_env, self.default_model),
             api_key=api_key or self.default_key,
             base_url=base_url or os.environ.get(self.base_url_env, self.default_base_url),
+        )
+
+    def preflight(self) -> PreflightResult:
+        """Verify the local server is up and the requested model is loaded.
+
+        Hits the OpenAI-compatible ``GET /v1/models`` (no key, no paid call) that
+        both Ollama and LM Studio serve. Raises :class:`AdapterError` if the
+        server is unreachable or advertises a model list that doesn't include the
+        requested model — so a down server / unloaded model fails fast with a
+        clear message instead of an opaque error deep inside the first probe. An
+        empty/absent model list leaves ``model_loaded`` unverified (``None``)
+        rather than failing, since some servers don't advertise one.
+        """
+        try:
+            listing = self._client.models.list()
+        except Exception as exc:  # noqa: BLE001 - wrapped into a clear AdapterError
+            raise AdapterError(
+                f"{self.provider} server not reachable at {self.base_url} "
+                f"({type(exc).__name__}: {exc}) — is the local server running?"
+            ) from exc
+        models = [m for m in (getattr(o, "id", "") for o in
+                              (getattr(listing, "data", None) or [])) if m]
+        if models and self.model not in models:
+            raise AdapterError(
+                f"model {self.model!r} is not loaded on the {self.provider} server "
+                f"at {self.base_url}; available: {', '.join(models)}"
+            )
+        model_loaded = (self.model in models) if models else None
+        detail = (
+            "server reachable; requested model loaded" if model_loaded
+            else "server reachable; model list not advertised (model not verified)"
+        )
+        return PreflightResult(
+            provider=self.provider,
+            reachable=True,
+            detail=detail,
+            base_url=self.base_url,
+            available_models=models,
+            model_loaded=model_loaded,
         )
 
 

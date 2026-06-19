@@ -10,6 +10,8 @@ Examples:
     python -m llmsectest                                  # demo run (offline)
     python -m llmsectest --target openai:gpt-4o-mini      # scan a live model
     python -m llmsectest --target demo-defended           # offline hardened demo
+    python -m llmsectest --preflight --target ollama:gemma4:e2b-it-q4_K_M
+                          # health-check a local server/model before a long scan
     python -m llmsectest --target app:http://localhost:8000 --repo .  # app + its deps
     python -m llmsectest --repo .                          # add the LLM03 supply-chain scan
     python -m llmsectest --repo . --osv                    # + known-CVE lookup via OSV.dev
@@ -487,6 +489,47 @@ def _render_sarif(args: list) -> int:
     return 0
 
 
+def run_preflight(target: str | None) -> int:
+    """Health-check a target before scanning (``--preflight``).
+
+    For a local OpenAI-compatible runtime (``ollama:`` / ``lmstudio:``) this
+    verifies the server is reachable and the requested model is loaded, failing
+    fast with a clear message instead of an opaque SDK error deep inside the
+    first probe. A provider with no cheap health endpoint reports that and
+    exits 0; an unreachable server / unloaded model exits 1.
+    """
+    from .adapters import AdapterError
+    from .probes import resolve_target
+
+    spec = target or DEFAULT_TARGET
+    try:
+        adapter = resolve_target(spec)
+        result = adapter.preflight()
+    except AdapterError as exc:
+        print(f"preflight FAILED — {spec}: {exc}", file=sys.stderr)
+        return 1
+    if result is None:
+        print(f"preflight: {spec} — provider "
+              f"{getattr(adapter, 'provider', '?')!r} exposes no health endpoint; "
+              "the scan will surface any error on its first request.")
+        return 0
+    print(f"preflight OK — {spec}")
+    print(f"  provider: {result.provider}")
+    if result.base_url:
+        print(f"  server:   {result.base_url} (reachable)")
+    if result.available_models:
+        shown = ", ".join(result.available_models[:8])
+        extra = len(result.available_models) - 8
+        if extra > 0:
+            shown += f" (+{extra} more)"
+        print(f"  models:   {shown}")
+    if result.model_loaded is True:
+        print(f"  model:    {adapter.model} — loaded")
+    elif result.model_loaded is None:
+        print(f"  model:    {adapter.model} — not advertised by the server (not verified)")
+    return 0
+
+
 def main():
     args = sys.argv[1:]
 
@@ -511,6 +554,9 @@ def main():
         return _render_sarif(args)
 
     args, target = _extract_target(args)
+    args, do_preflight = _extract_flag(args, "--preflight")
+    if do_preflight:
+        return run_preflight(target)
     args, repo = _extract_opt(args, "--repo")
     args, osv = _extract_flag(args, "--osv")
     args, redteam_set = _extract_opt(args, "--redteam-set")

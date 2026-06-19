@@ -13,6 +13,7 @@ from .base import (
     CompletionResponse,
     LLMAdapter,
     Message,
+    PreflightResult,
     Role,
 )
 from .mock import EchoAdapter, ScriptedAdapter
@@ -68,6 +69,7 @@ __all__ = [
     "EchoAdapter",
     "LLMAdapter",
     "Message",
+    "PreflightResult",
     "Role",
     "ScriptedAdapter",
     "available_providers",

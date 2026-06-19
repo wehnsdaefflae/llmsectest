@@ -10,6 +10,14 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
 ## [Unreleased]
 
 ### Added
+- **`--preflight` — fail-fast health check for local-model targets.** Before a long scan, `llmsectest
+  --preflight --target ollama:<model>` (or `lmstudio:<model>`) hits the local server's OpenAI-compatible
+  `GET /v1/models` — no API key, no paid call — to confirm the **server is reachable** and the requested
+  **model is loaded**, exiting 1 with a clear message (e.g. "model 'x' is not loaded; available: …")
+  instead of letting an opaque SDK error surface deep inside the first probe. A provider with no cheap
+  health endpoint reports that and exits 0. The same transport-level failures are now also translated into a
+  clear `AdapterError` on the live scan path, not just in preflight. New `LLMAdapter.preflight()` /
+  `PreflightResult`. (2026-06-19)
 - **LM Studio adapter — `--target lmstudio:<model>`.** A dedicated adapter for [LM Studio](https://lmstudio.ai)'s
   local OpenAI-compatible server (default `localhost:1234`), completing the "LM Studio + Ollama" local-model
   interfaces — run the suite against an LM-Studio-hosted model with **no API key and no paid calls**. Set the

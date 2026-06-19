@@ -170,4 +170,104 @@ def test_openai_without_key_or_base_url_raises(monkeypatch):
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     with pytest.raises(AdapterError):
         OpenAIAdapter(model="x")
+
+
+# --- preflight health check + transport-error translation -------------------
+
+class _FakeModelList:
+    def __init__(self, ids):
+        self.data = [type("M", (), {"id": i})() for i in ids]
+
+
+class _FakeModelsAPI:
+    def __init__(self, ids=(), exc=None):
+        self._ids = list(ids)
+        self._exc = exc
+
+    def list(self):
+        if self._exc is not None:
+            raise self._exc
+        return _FakeModelList(self._ids)
+
+
+class _FakeClient:
+    """Stand-in for the openai client: serves a fixed model list / raises."""
+
+    def __init__(self, ids=(), list_exc=None, create_exc=None):
+        self.base_url = "http://localhost:11434/v1"
+        self.models = _FakeModelsAPI(ids, list_exc)
+
+        class _Completions:
+            def create(_self, **kwargs):
+                raise create_exc
+
+        class _Chat:
+            completions = _Completions()
+
+        self.chat = _Chat()
+
+
+def test_base_adapter_preflight_returns_none():
+    # a provider with no cheap health endpoint reports "no check" (None)
+    assert EchoAdapter().preflight() is None
+
+
+def _ollama_adapter(monkeypatch, fake_client):
+    pytest.importorskip("openai")
+    monkeypatch.delenv("OLLAMA_MODEL", raising=False)
+    monkeypatch.delenv("OLLAMA_BASE_URL", raising=False)
+    adapter = get_adapter("ollama")
+    adapter._client = fake_client
+    return adapter
+
+
+def test_local_preflight_ok_when_model_loaded(monkeypatch):
+    from llmsectest.adapters import PreflightResult
+
+    adapter = _ollama_adapter(monkeypatch, _FakeClient(ids=["gemma4:e2b-it-q4_K_M", "x"]))
+    result = adapter.preflight()
+    assert isinstance(result, PreflightResult)
+    assert result.reachable is True
+    assert result.model_loaded is True
+    assert "gemma4:e2b-it-q4_K_M" in result.available_models
+
+
+def test_local_preflight_raises_when_model_not_loaded(monkeypatch):
+    adapter = _ollama_adapter(monkeypatch, _FakeClient(ids=["some-other-model"]))
+    with pytest.raises(AdapterError) as exc:
+        adapter.preflight()
+    # the message names the requested model and what is actually available
+    assert "not loaded" in str(exc.value)
+    assert "some-other-model" in str(exc.value)
+
+
+def test_local_preflight_model_unverified_when_list_empty(monkeypatch):
+    # a server that advertises no model list is reachable but can't confirm it
+    adapter = _ollama_adapter(monkeypatch, _FakeClient(ids=[]))
+    result = adapter.preflight()
+    assert result.reachable is True
+    assert result.model_loaded is None
+
+
+def test_local_preflight_raises_when_server_unreachable(monkeypatch):
+    adapter = _ollama_adapter(monkeypatch, _FakeClient(list_exc=ConnectionError("refused")))
+    with pytest.raises(AdapterError) as exc:
+        adapter.preflight()
+    assert "not reachable" in str(exc.value)
+
+
+def test_complete_translates_connection_error(monkeypatch):
+    adapter = _ollama_adapter(
+        monkeypatch, _FakeClient(create_exc=ConnectionError("connection refused"))
+    )
+    with pytest.raises(AdapterError) as exc:
+        adapter.complete(CompletionRequest(messages=[Message.user("hi")]))
+    assert "is the server reachable" in str(exc.value)
+
+
+def test_complete_passes_through_non_connection_error(monkeypatch):
+    # a non-transport error (e.g. a bad request) must NOT be masked as AdapterError
+    adapter = _ollama_adapter(monkeypatch, _FakeClient(create_exc=ValueError("bad arg")))
+    with pytest.raises(ValueError):
+        adapter.complete(CompletionRequest(messages=[Message.user("hi")]))
     assert Message.system("x").role is Role.SYSTEM

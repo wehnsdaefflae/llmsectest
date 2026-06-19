@@ -54,6 +54,25 @@ class CompletionResponse:
     usage: dict = field(default_factory=dict)
 
 
+@dataclass
+class PreflightResult:
+    """Outcome of an adapter health check (see :meth:`LLMAdapter.preflight`).
+
+    Returned only on success — a hard failure (server unreachable, requested
+    model not loaded) raises :class:`AdapterError` so callers fail fast with a
+    clear message instead of an opaque SDK error deep inside the first probe.
+    """
+
+    provider: str
+    reachable: bool
+    detail: str
+    base_url: str | None = None
+    available_models: list[str] = field(default_factory=list)
+    #: ``True``/``False`` when the server advertises a model list, else ``None``
+    #: (model presence could not be verified, e.g. an empty ``/v1/models``).
+    model_loaded: bool | None = None
+
+
 class AdapterError(RuntimeError):
     """Raised when an adapter cannot complete a request."""
 
@@ -74,6 +93,18 @@ class LLMAdapter(abc.ABC):
     @abc.abstractmethod
     def complete(self, request: CompletionRequest) -> CompletionResponse:
         """Run one chat completion and return the assistant text."""
+
+    def preflight(self) -> "PreflightResult | None":
+        """Best-effort health check before a scan.
+
+        Returns ``None`` when the provider exposes no cheap health endpoint (the
+        scan then proceeds and surfaces any real error on its first request).
+        Local OpenAI-compatible runtimes override this to verify the server is
+        reachable and the requested model is loaded, raising
+        :class:`AdapterError` with an actionable message on failure — so a
+        down server / unloaded model fails fast instead of mid-suite.
+        """
+        return None
 
     def prompt(self, text: str, *, system: str | None = None, **kwargs) -> str:
         """Convenience: send a single user turn, return the response text."""

@@ -24,6 +24,7 @@ llmsectest --check | --list-probes | --validate <file.sarif> | --render-sarif <f
 | `--list-probes` | List the probe corpus that ships today (incl. the built-in red-team set), then exit. |
 | `--validate <file>` | Validate an existing SARIF file against the v2.1.0 schema, then exit. |
 | `--render-sarif <file>` | Render a SARIF v2.1.0 file (ours or any other tool's) as a **standalone HTML report** and exit. Writes `<file>.html` next to it, or pass `-o`/`--html-output <path>`. Findings are grouped by OWASP category, CVSS-scored and colour-coded by severity, each with its location, evidence and remediation, plus a rule-reference glossary — no server or assets, just open the file. |
+| `--preflight` | Health-check `--target` and exit. For a local OpenAI-compatible runtime (`ollama:` / `lmstudio:`) it hits the server's `GET /v1/models` (no key, no paid call) to confirm the server is **reachable** and the requested **model is loaded** — failing fast (exit 1) with a clear message instead of an opaque SDK error deep inside the first probe. A provider with no cheap health endpoint reports that and exits 0. Run it before a long local scan. |
 | `--version` | Print the installed llmsectest version, then exit. |
 
 ## Reporting options (pytest plugin)
