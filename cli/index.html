@@ -1141,6 +1141,10 @@ packaged OWASP probe suite against your chosen target and writes reports.</p>
 <td>Render a SARIF v2.1.0 file (ours or any other tool's) as a <strong>standalone HTML report</strong> and exit. Writes <code>&lt;file&gt;.html</code> next to it, or pass <code>-o</code>/<code>--html-output &lt;path&gt;</code>. Findings are grouped by OWASP category, CVSS-scored and colour-coded by severity, each with its location, evidence and remediation, plus a rule-reference glossary — no server or assets, just open the file.</td>
 </tr>
 <tr>
+<td><code>--preflight</code></td>
+<td>Health-check <code>--target</code> and exit. For a local OpenAI-compatible runtime (<code>ollama:</code> / <code>lmstudio:</code>) it hits the server's <code>GET /v1/models</code> (no key, no paid call) to confirm the server is <strong>reachable</strong> and the requested <strong>model is loaded</strong> — failing fast (exit 1) with a clear message instead of an opaque SDK error deep inside the first probe. A provider with no cheap health endpoint reports that and exits 0. Run it before a long local scan.</td>
+</tr>
+<tr>
 <td><code>--version</code></td>
 <td>Print the installed llmsectest version, then exit.</td>
 </tr>

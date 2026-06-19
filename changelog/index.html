@@ -1152,6 +1152,14 @@ yet published to PyPI</strong>. The forward-looking plan is the <a href="https:/
 <h2 id="unreleased"><a href="https://github.com/wehnsdaefflae/llmsectest/compare/v0.1.0...HEAD">Unreleased</a><a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
 <h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
 <ul>
+<li><strong><code>--preflight</code> — fail-fast health check for local-model targets.</strong> Before a long scan, <code>llmsectest
+  --preflight --target ollama:&lt;model&gt;</code> (or <code>lmstudio:&lt;model&gt;</code>) hits the local server's OpenAI-compatible
+  <code>GET /v1/models</code> — no API key, no paid call — to confirm the <strong>server is reachable</strong> and the requested
+  <strong>model is loaded</strong>, exiting 1 with a clear message (e.g. "model 'x' is not loaded; available: …")
+  instead of letting an opaque SDK error surface deep inside the first probe. A provider with no cheap
+  health endpoint reports that and exits 0. The same transport-level failures are now also translated into a
+  clear <code>AdapterError</code> on the live scan path, not just in preflight. New <code>LLMAdapter.preflight()</code> /
+  <code>PreflightResult</code>. (2026-06-19)</li>
 <li><strong>LM Studio adapter — <code>--target lmstudio:&lt;model&gt;</code>.</strong> A dedicated adapter for <a href="https://lmstudio.ai">LM Studio</a>'s
   local OpenAI-compatible server (default <code>localhost:1234</code>), completing the "LM Studio + Ollama" local-model
   interfaces — run the suite against an LM-Studio-hosted model with <strong>no API key and no paid calls</strong>. Set the
@@ -1222,6 +1230,11 @@ yet published to PyPI</strong>. The forward-looking plan is the <a href="https:/
 </ul>
 <h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Permanent link">&para;</a></h3>
 <ul>
+<li><strong>A long inline <code>--app-prompt</code> no longer crashes the CLI.</strong> <code>--app-prompt</code> accepts either inline text or a
+  file path, decided via <code>Path(value).is_file()</code> — but a realistic multi-sentence system prompt overflows the
+  filesystem's name limit, so that call raised <code>OSError: File name too long</code> instead of returning <code>False</code>,
+  aborting the scan. A <code>_is_existing_file</code> helper now treats any un-stattable value as inline text; applied to
+  <code>--app-prompt</code>, <code>--redteam-set</code> and <code>--redteam-benign</code>. (Caught by a real open-webui application scan.)</li>
 <li><strong>A finding's message is now the clean finding, not pytest's traceback through our own code.</strong> The SARIF
   message used to be the raw pytest <code>longrepr</code> — which embeds this tool's test-function source and the
   <code>&gt;assert</code> / <code>E AssertionError</code> lines, making the report look like the vulnerability was in llmsectest. The
