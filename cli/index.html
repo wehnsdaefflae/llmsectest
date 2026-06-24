@@ -743,6 +743,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../owasp/llm08/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM08 Vector and Embedding Weaknesses
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../owasp/llm10/" class="md-nav__link">
         
   
@@ -1125,6 +1153,10 @@ packaged OWASP probe suite against your chosen target and writes reports.</p>
 <td>With <code>--target app:&lt;url&gt;</code>: a <strong>privileged tool/action signature</strong> of the app (e.g. <code>"ACTION: refund("</code>). Repeatable — unlocks <strong>LLM06</strong>; an unauthorized invocation is then unambiguous.</td>
 </tr>
 <tr>
+<td><code>--app-canary &lt;value&gt;</code></td>
+<td>With <code>--target app:&lt;url&gt;</code>: <strong>confidential content planted in the app's RAG / retrieved corpus</strong> (a unique token in an indexed document) — unlocks <strong>LLM08</strong> retrieval-exposure probes (corpus enumeration, retrieval-scope escalation, topic-targeted retrieval). A reply that reproduces the canary means the retrieval layer leaked confidential indexed content. Distinct from <code>--app-secret</code> (LLM02), where the secret lives in the <em>prompt/config</em>; here it lives in the <em>retrieved corpus</em>.</td>
+</tr>
+<tr>
 <td><code>--check</code></td>
 <td>Print the OWASP LLM Top 10 coverage map, each category's test modality and its CVSS v4.0 base score, then exit.</td>
 </tr>
@@ -1220,9 +1252,9 @@ or the full JailbreakBench corpus with <code>--redteam-set &lt;csv&gt;</code>); 
 red-team coverage is never a silent gap. Adding <code>--redteam-benign</code> prints, <em>below</em> the security report, the
 target's <strong>over-refusal (false-refusal) rate</strong> over the benign twins — a usability metric kept out of the
 findings and the exit code. A real app endpoint (<code>--target app:&lt;url&gt;</code>) is
-black-box: LLM01, LLM05 and LLM10 always run, and <strong>LLM07/LLM02/LLM06 join them when you pass
-<code>--app-prompt</code> / <code>--app-secret</code> / <code>--app-action</code></strong> — each category whose input is missing is
-reported as skipped with the flag that would enable it (LLM04/08 are white-box and LLM09 needs an
+black-box: LLM01, LLM05 and LLM10 always run, and <strong>LLM07/LLM02/LLM06/LLM08 join them when you pass
+<code>--app-prompt</code> / <code>--app-secret</code> / <code>--app-action</code> / <code>--app-canary</code></strong> — each category whose input is missing
+is reported as skipped with the flag that would enable it (LLM04 is white-box and LLM09 needs an
 oracle). <code>llmsectest --check</code> prints the same map with each category's CVSS score.</p>
 <h2 id="exit-code">Exit code<a class="headerlink" href="#exit-code" title="Permanent link">&para;</a></h2>
 <p>Non-zero when the target is vulnerable (findings present) — so the command fails your pipeline. Use
@@ -1232,14 +1264,15 @@ oracle). <code>llmsectest --check</code> prints the same map with each category'
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat<span class="w"> </span>--repo<span class="w"> </span>.<span class="w">   </span><span class="c1"># app + its dependencies (LLM03)</span>
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span>--app-prompt<span class="w"> </span>prompt.txt<span class="w"> </span>--app-secret<span class="w"> </span><span class="s2">&quot;sk-canary&quot;</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span>--app-action<span class="w"> </span><span class="s2">&quot;ACTION: refund(&quot;</span><span class="w"> </span>--app-action<span class="w"> </span><span class="s2">&quot;ACTION: delete_user(&quot;</span><span class="w">  </span><span class="c1"># + LLM07/02/06</span>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>llmsectest<span class="w"> </span>--repo<span class="w"> </span>.<span class="w">                                            </span><span class="c1"># supply-chain scan only</span>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>llmsectest<span class="w"> </span>--repo<span class="w"> </span>.<span class="w"> </span>--osv<span class="w">                                      </span><span class="c1"># + known-CVE lookup (OSV.dev)</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>llmsectest<span class="w"> </span>--redteam-set<span class="w"> </span>jbb/harmful-behaviors.csv<span class="w"> </span>--target<span class="w"> </span>ollama:llama3<span class="w">  </span><span class="c1"># 100 JailbreakBench prompts</span>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>llmsectest<span class="w"> </span>--redteam-benign<span class="w"> </span>--target<span class="w"> </span>ollama:llama3<span class="w">            </span><span class="c1"># over-refusal (false-refusal) rate</span>
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>ollama:gemma4:e2b-it-q4_K_M<span class="w"> </span>--report-formats<span class="o">=</span>sarif,html
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat<span class="w"> </span>--compare-baseline<span class="w"> </span>--risk-threshold<span class="o">=</span>high
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>llmsectest<span class="w"> </span>--check
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span>--app-action<span class="w"> </span><span class="s2">&quot;ACTION: refund(&quot;</span><span class="w"> </span>--app-action<span class="w"> </span><span class="s2">&quot;ACTION: delete_user(&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">    </span>--app-canary<span class="w"> </span><span class="s2">&quot;INTERNAL-DOC-CANARY-7f2a&quot;</span><span class="w">                             </span><span class="c1"># + LLM07/02/06/08</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>llmsectest<span class="w"> </span>--repo<span class="w"> </span>.<span class="w">                                            </span><span class="c1"># supply-chain scan only</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>llmsectest<span class="w"> </span>--repo<span class="w"> </span>.<span class="w"> </span>--osv<span class="w">                                      </span><span class="c1"># + known-CVE lookup (OSV.dev)</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>llmsectest<span class="w"> </span>--redteam-set<span class="w"> </span>jbb/harmful-behaviors.csv<span class="w"> </span>--target<span class="w"> </span>ollama:llama3<span class="w">  </span><span class="c1"># 100 JailbreakBench prompts</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>llmsectest<span class="w"> </span>--redteam-benign<span class="w"> </span>--target<span class="w"> </span>ollama:llama3<span class="w">            </span><span class="c1"># over-refusal (false-refusal) rate</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>ollama:gemma4:e2b-it-q4_K_M<span class="w"> </span>--report-formats<span class="o">=</span>sarif,html
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat<span class="w"> </span>--compare-baseline<span class="w"> </span>--risk-threshold<span class="o">=</span>high
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>llmsectest<span class="w"> </span>--check
 </code></pre></div>
 
 

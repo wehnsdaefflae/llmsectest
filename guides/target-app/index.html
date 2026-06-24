@@ -856,6 +856,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../owasp/llm08/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM08 Vector and Embedding Weaknesses
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../owasp/llm10/" class="md-nav__link">
         
   
@@ -1107,14 +1135,16 @@ LM Studio), then test it — zero API cost:</p>
 <a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat
 </code></pre></div>
 <h2 id="whats-covered-against-an-endpoint">What's covered against an endpoint<a class="headerlink" href="#whats-covered-against-an-endpoint" title="Permanent link">&para;</a></h2>
-<p>Endpoint testing is <strong>black-box</strong>. <strong>LLM01 (prompt injection)</strong> and <strong>LLM05 (improper output
-handling)</strong> always run — their markers live in the attack, so the scan needs nothing from you.
-Three more categories light up when you tell LLMSecTest what only you, the app's developer, know:</p>
+<p>Endpoint testing is <strong>black-box</strong>. <strong>LLM01 (prompt injection)</strong>, <strong>LLM05 (improper output
+handling)</strong> and <strong>LLM10 (unbounded consumption)</strong> always run — their markers live in the attack, so
+the scan needs nothing from you. Four more categories light up when you tell LLMSecTest what only
+you, the app's developer, know:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span>--app-prompt<span class="w"> </span>prompt.txt<span class="w"> </span><span class="se">\ </span><span class="w">                     </span><span class="c1"># your app&#39;s system prompt → LLM07</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span>--app-secret<span class="w"> </span><span class="s2">&quot;sk-canary-123&quot;</span><span class="w"> </span><span class="se">\ </span><span class="w">                </span><span class="c1"># a real secret it holds   → LLM02</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span>--app-action<span class="w"> </span><span class="s2">&quot;ACTION: refund(&quot;</span><span class="w"> </span><span class="se">\ </span><span class="w">              </span><span class="c1"># a privileged tool call   → LLM06</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span>--app-action<span class="w"> </span><span class="s2">&quot;ACTION: delete_user(&quot;</span><span class="w">            </span><span class="c1"># (repeatable)</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span>--app-prompt<span class="w"> </span>prompt.txt<span class="w"> </span><span class="se">\ </span><span class="w">                     </span><span class="c1"># your app&#39;s system prompt    → LLM07</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span>--app-secret<span class="w"> </span><span class="s2">&quot;sk-canary-123&quot;</span><span class="w"> </span><span class="se">\ </span><span class="w">                </span><span class="c1"># a real secret it holds      → LLM02</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span>--app-action<span class="w"> </span><span class="s2">&quot;ACTION: refund(&quot;</span><span class="w"> </span><span class="se">\ </span><span class="w">              </span><span class="c1"># a privileged tool call      → LLM06</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span>--app-action<span class="w"> </span><span class="s2">&quot;ACTION: delete_user(&quot;</span><span class="w"> </span><span class="se">\ </span><span class="w">         </span><span class="c1"># (repeatable)</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">    </span>--app-canary<span class="w"> </span><span class="s2">&quot;INTERNAL-DOC-CANARY-7f2a&quot;</span><span class="w">        </span><span class="c1"># confidential RAG content    → LLM08</span>
 </code></pre></div>
 <ul>
 <li><strong><code>--app-prompt</code></strong> — the app's own system prompt (inline text or a file path). Knowing it means
@@ -1123,10 +1153,15 @@ Three more categories light up when you tell LLMSecTest what only you, the app's
   no false-positive-prone heuristics (LLM02).</li>
 <li><strong><code>--app-action</code></strong> — a privileged tool/action signature your app can execute; repeat the flag for
   several. An unauthorized invocation is then unambiguous (LLM06).</li>
+<li><strong><code>--app-canary</code></strong> — confidential content planted in your app's <strong>RAG / retrieved corpus</strong> (a unique
+  token in an indexed document). Enables the <strong>LLM08</strong> retrieval-exposure probes: a reply that
+  reproduces the canary means the retrieval layer leaked confidential indexed content. Distinct from
+  <code>--app-secret</code> — there the secret lives in the prompt/config, here in the retrieved corpus.</li>
 </ul>
 <p>Each category whose input you don't supply shows up as an <strong>explicit skip naming the flag</strong> that
-would enable it — never a silent gap. The white-box categories (LLM03/04/08/10) need your app's
-internals and are covered by their own modules per milestone. Always check <code>llmsectest --check</code>.</p>
+would enable it — never a silent gap. The remaining white-box categories (LLM03/04, and LLM08's
+poisoning/inversion/multi-tenant dimensions) need your app's internals and are covered by their own
+modules per milestone. Always check <code>llmsectest --check</code>.</p>
 <h2 id="when-you-cant-run-the-app-the-persona-proxy">When you can't run the app: the persona proxy<a class="headerlink" href="#when-you-cant-run-the-app-the-persona-proxy" title="Permanent link">&para;</a></h2>
 <p>If you only have the app's system prompt (not a running instance), load it onto a model and test that
 as a proxy. Lower fidelity (no guardrail/RAG/tool code), but useful:</p>
