@@ -20,7 +20,7 @@ reported as the SARIF `security-severity` of its findings.
 | LLM05 Improper Output Handling | black-box / white-box | 9.9 Critical | ✅ probes |
 | LLM06 Excessive Agency | black-box / white-box | 10.0 Critical | ✅ probes |
 | LLM07 System Prompt Leakage | black-box | 8.7 High | ✅ probes |
-| LLM08 Vector and Embedding Weaknesses | white-box — requires RAG/vector store | 7.1 High | planned |
+| [LLM08 Vector and Embedding Weaknesses](llm08.md) | black-box — requires `--app-canary` (RAG) | 7.1 High | ✅ probes |
 | LLM09 Misinformation | black-box — output verification | 5.3 Medium | planned |
 | [LLM10 Unbounded Consumption](llm10.md) | black-box | 8.7 High | ✅ probes |
 
@@ -31,10 +31,11 @@ reported as the SARIF `security-severity` of its findings.
     `llmsectest --check` for the current state.
 
 The first white-box category — **LLM03 (supply chain)** — ships now: pass `--repo <path>` to scan the
-project's dependency manifests (see the [LLM03 deep-dive](llm03.md)). The remaining white-box categories
-are sequenced across the project's milestones (embedding weaknesses and stress/consumption tests land
-together with their fixtures). Each consumes a concrete input you provide — your `requirements`/lockfile,
-your vector store, or your rate/resource limits.
+project's dependency manifests (see the [LLM03 deep-dive](llm03.md)). **LLM08 (vector & embedding
+weaknesses)** ships its black-box first increment — a retrieval-exposure probe for RAG apps (see the
+[LLM08 deep-dive](llm08.md)); its white-box dimensions and **LLM04** (data/model provenance) are sequenced
+across the project's milestones. Each white-box module consumes a concrete input you provide — your
+`requirements`/lockfile or your model/data provenance.
 
 ## Testing a real application (black-box)
 
@@ -45,13 +46,16 @@ a silent pass:
 - **LLM01 (prompt injection)**, **LLM05 (improper output handling)** and **LLM10 (unbounded
   consumption)** transfer with no setup: the marker lives in the attack, so the app needs to reveal
   nothing for a finding to be unambiguous.
-- **LLM07 (system-prompt leakage)**, **LLM02 (sensitive disclosure)** and **LLM06 (excessive agency)**
-  light up once you tell LLMSecTest what a leak looks like — the app's own system prompt, a known secret
-  it holds, or its privileged action signatures. Without that, they are reported as *not exercised* with
-  the reason, rather than passed vacuously.
+- **LLM07 (system-prompt leakage)**, **LLM02 (sensitive disclosure)**, **LLM06 (excessive agency)** and
+  **LLM08 (vector & embedding weaknesses)** light up once you tell LLMSecTest what a leak looks like — the
+  app's own system prompt, a known secret it holds, its privileged action signatures, or (for a RAG app)
+  a confidential canary planted in its retrieved corpus (`--app-canary`). Without that, they are reported
+  as *not exercised* with the reason, rather than passed vacuously.
 - The white-box categories are likewise surfaced as not-exercised — except **LLM03 (supply chain)**,
   which runs from the repo: add `--repo <path>` and it scans the dependency manifests alongside the
-  endpoint probes. LLM04/08 and LLM09 (oracle) remain not-exercised until their milestones.
+  endpoint probes. LLM04 and LLM09 (oracle) remain not-exercised until their milestones; LLM08's
+  *white-box* dimensions (embedding poisoning, multi-tenant isolation, inversion) likewise — its black-box
+  retrieval-exposure probe ships now (see the [LLM08 deep-dive](llm08.md)).
 
 Every scan prints a coverage footer accounting for **all ten** categories, so the report never overstates
 what was tested.

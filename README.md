@@ -19,14 +19,15 @@ Funded by the German Federal Ministry of Research, Technology and Space (BMFTR)
 via the [Prototype Fund](https://prototypefund.de) (FKZ 16IS26S10). MIT-licensed.
 See [Funding](#funding).
 
-> **Status: pre-alpha (grant week 3).** In place: the unified LLM adapter; the
+> **Status: pre-alpha (grant week 4).** In place: the unified LLM adapter; the
 > pytest plugin + reporting layer (SARIF v2.1.0 / HTML / JSON / Markdown, OWASP
 > metadata, risk scoring, baselines, policy gates); the real, adapter-driven probe
 > suite covering **OWASP LLM01 (prompt injection), LLM02 (sensitive information
 > disclosure), LLM05 (improper output handling), LLM06 (excessive agency), LLM07
-> (system prompt leakage) and LLM10 (unbounded consumption)**; and a white-box
-> **LLM03 (supply chain)** dependency scanner — **7 of the 10** OWASP LLM Top 10
-> (2025) categories. LLM01 also runs a
+> (system prompt leakage) and LLM10 (unbounded consumption)**; a white-box
+> **LLM03 (supply chain)** dependency scanner; and a black-box **LLM08 (vector and
+> embedding weaknesses)** retrieval-exposure probe for RAG apps — **8 of the 10**
+> OWASP LLM Top 10 (2025) categories. LLM01 also runs a
 > **red-team jailbreak set** scored by a refusal oracle (the MIT
 > [JailbreakBench](https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors) /
 > AdvBench corpus via `--redteam-set`), and `--redteam-benign` measures the
@@ -75,8 +76,9 @@ llmsectest --preflight --target ollama:gemma4:e2b-it-q4_K_M  # health-check the 
 llmsectest --target app:http://localhost:8000/chat  # test YOUR running app (black-box, real guardrails)
 llmsectest --target app:http://localhost:8000/chat --repo .  # ...and scan its dependencies (LLM03)
 llmsectest --target app:http://localhost:8000/chat \
-    --app-prompt prompt.txt --app-secret "sk-canary" --app-action "ACTION: refund("
-                                             # deeper app scan: unlocks LLM07/LLM02/LLM06
+    --app-prompt prompt.txt --app-secret "sk-canary" --app-action "ACTION: refund(" \
+    --app-canary "INTERNAL-DOC-CANARY-7f2a"
+                                             # deeper app scan: unlocks LLM07/LLM02/LLM06/LLM08
 llmsectest --repo . --osv                    # + known-CVE lookup for pinned deps via OSV.dev
 llmsectest --redteam-set jbb/harmful-behaviors.csv  # 100 JailbreakBench red-team prompts (LLM01)
 llmsectest --redteam-benign                  # + measure the over-refusal (false-refusal) rate
@@ -137,13 +139,16 @@ the target:
   lookup each surface as an explicit skip reason, never as "clean".
 - **A real app endpoint** (`--target app:<url>`) is black-box: the attack-side-marker
   categories always transfer (**LLM01** prompt injection, **LLM05** improper output
-  handling, **LLM10** unbounded consumption). **LLM07/02/06** light up when you tell
+  handling, **LLM10** unbounded consumption). **LLM07/02/06/08** light up when you tell
   LLMSecTest what to look for:
   `--app-prompt <text-or-file>` (the app's own system prompt) enables **LLM07**
   leakage detection, `--app-secret <value>` (a real secret the app holds) enables
-  **LLM02**, and `--app-action <signature>` (a privileged tool call, repeatable)
-  enables **LLM06** — same inputs as the `run_app_scan` API. The footer always
-  shows exactly what was and wasn't run.
+  **LLM02**, `--app-action <signature>` (a privileged tool call, repeatable)
+  enables **LLM06**, and `--app-canary <value>` (confidential content planted in the
+  app's **RAG / retrieved corpus**) enables **LLM08** retrieval-exposure probes
+  (corpus enumeration, retrieval-scope escalation, topic-targeted retrieval — a leak
+  of the canary from a retrieved document is the finding). Same inputs as the
+  `run_app_scan` API. The footer always shows exactly what was and wasn't run.
 
 Live providers import their SDK lazily and read the relevant API key from the
 environment. The corpus and detectors are importable, too:

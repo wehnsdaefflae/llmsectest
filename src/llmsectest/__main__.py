@@ -20,15 +20,18 @@ Examples:
     python -m llmsectest --redteam-benign jbb/benign-behaviors.csv  # over-refusal vs the 100 JBB twins
     python -m llmsectest --target app:http://localhost:8000 \\
         --app-prompt prompt.txt --app-secret "sk-canary-123" \\
-        --app-action "ACTION: refund(" --app-action "ACTION: delete_user("
-                          # deeper app scan: the dev-supplied inputs unlock LLM07/02/06
+        --app-action "ACTION: refund(" --app-action "ACTION: delete_user(" \\
+        --app-canary "INTERNAL-DOC-CANARY-7f2a"
+                          # deeper app scan: the dev-supplied inputs unlock LLM07/02/06/08
 
-Application scans (``--target app:<url>``) always exercise LLM01 + LLM05
-black-box. Three optional inputs unlock the remaining black-box categories:
+Application scans (``--target app:<url>``) always exercise LLM01 + LLM05 + LLM10
+black-box. Four optional inputs unlock the remaining black-box categories:
 ``--app-prompt`` (the app's own system prompt — inline text or a file path)
 enables LLM07, ``--app-secret`` (a real secret the app holds) enables LLM02,
-and ``--app-action`` (a privileged tool/action signature; repeatable) enables
-LLM06. Categories without their input are reported as skipped-with-reason.
+``--app-action`` (a privileged tool/action signature; repeatable) enables LLM06,
+and ``--app-canary`` (confidential content planted in the app's retrieved/RAG
+corpus) enables LLM08 retrieval-exposure probes. Categories without their input
+are reported as skipped-with-reason.
     python -m llmsectest --report-formats=sarif,html,json,markdown
     python -m llmsectest --list-probes                    # list the corpus
     python -m llmsectest --check                          # OWASP coverage map
@@ -88,7 +91,7 @@ _TESTABILITY = {
     "owasp_llm05": ("black-box", None),
     "owasp_llm06": ("black-box", None),
     "owasp_llm07": ("black-box", None),
-    "owasp_llm08": ("white-box", "requires the app's RAG / vector store"),
+    "owasp_llm08": ("black-box", "requires --target app:<url> + --app-canary (RAG retrieval canary)"),
     "owasp_llm09": ("black-box", "output-verification module planned"),
     "owasp_llm10": ("black-box", None),
 }
@@ -119,9 +122,9 @@ def check_coverage():
     print(f"SARIF security-severity. cvss library installed: {library_available()} "
           "(baked scores used otherwise).")
     print("Black-box categories test your running app via  --target app:<url> .")
-    print("App scans always exercise LLM01+LLM05; add --app-prompt / --app-secret /")
-    print("--app-action (repeatable) to unlock LLM07 / LLM02 / LLM06 black-box.")
-    print("White-box categories need app internals (deps/RAG/limits) and land per milestone.")
+    print("App scans always exercise LLM01+LLM05+LLM10; add --app-prompt / --app-secret /")
+    print("--app-action (repeatable) / --app-canary to unlock LLM07 / LLM02 / LLM06 / LLM08.")
+    print("White-box categories need app internals (deps/provenance) and land per milestone.")
     print("LLM03: --repo <path> scans dependency manifests offline; adding --osv also")
     print("queries OSV.dev for known CVEs in exactly-pinned versions (networked, no key).")
     print("LLM01: --redteam-set <csv> runs the full JailbreakBench harmful set; "
@@ -291,6 +294,7 @@ _APP_SUITE_MODULES = (
     "test_redteam_jailbreaks.py",  # LLM01 red-team: does the app refuse harmful asks? (black-box)
     "test_llm05_improper_output_handling.py",
     "test_application_mode.py",  # LLM02/06/07 from dev-supplied inputs; skips otherwise
+    "test_llm08_vector_embedding.py",  # LLM08 retrieval exposure; self-skips without --app-canary
     "test_llm03_supply_chain.py",  # white-box repo scan; self-skips without --repo
     "test_owasp_coverage.py",  # enumerates all 10 — unimplemented ones skip "not yet implemented"
 )
@@ -311,25 +315,30 @@ def _print_coverage_footer(target: str | None) -> None:
     if _is_app_target(target):
         from .probes.application import app_coverage
 
-        # Reflect the dev-supplied inputs (--app-prompt/--app-secret/--app-action),
-        # so the footer reports exactly what this run could and could not reach.
-        prompt, secret, actions = envvars.app_inputs_from_env()
-        cov = app_coverage(prompt, known_secret=secret, forbidden_actions=actions or None)
+        # Reflect the dev-supplied inputs (--app-prompt/--app-secret/--app-action/
+        # --app-canary), so the footer reports exactly what this run could reach.
+        prompt, secret, actions, canary = envvars.app_inputs_from_env()
+        cov = app_coverage(prompt, known_secret=secret,
+                           forbidden_actions=actions or None, known_canary=canary)
         exercised = [c.owasp for c in cov if c.exercised]
         skipped = [(c.owasp, c.reason) for c in cov if not c.exercised]
         print(f"Application-scan coverage — {len(exercised)}/10 OWASP categories "
               "exercised black-box. No silent gaps:")
     else:
-        from .probes import SCANNER_CATEGORIES, covered_categories
+        from .probes import APP_ONLY_CATEGORIES, SCANNER_CATEGORIES, covered_categories
 
         covered = set(covered_categories())
         has_repo = bool(os.environ.get(envvars.REPO))
         exercised, skipped = [], []
         for m in sorted(OWASP_LLM_CATEGORIES):
             if m in covered:
-                # A scanner category only fires when its input (a repo) is supplied.
+                # A scanner category only fires when its input (a repo) is supplied;
+                # an application-only category (LLM08) can't fire against a bare model.
                 if m in SCANNER_CATEGORIES and not has_repo:
                     skipped.append((m, "needs --repo <path> to scan dependencies"))
+                elif m in APP_ONLY_CATEGORIES:
+                    skipped.append((m, "needs a RAG application target — "
+                                       "--target app:<url> with --app-canary"))
                 else:
                     exercised.append(m)
             else:
@@ -395,6 +404,7 @@ def run_suite(args: list, target: str | None, repo: str | None = None,
               app_prompt: str | None = None,
               app_secret: str | None = None,
               app_actions: tuple[str, ...] = (),
+              app_canary: str | None = None,
               redteam_benign: bool = False,
               redteam_benign_set: str | None = None) -> int:
     """Run the packaged probe suite (or an explicit path) with reporting on.
@@ -405,9 +415,10 @@ def run_suite(args: list, target: str | None, repo: str | None = None,
     repo's exactly-pinned dependency versions (networked, opt-in).
     ``redteam_set`` (from ``--redteam-set``) points the LLM01 red-team module at
     a JailbreakBench JBB-Behaviors CSV; without it the built-in starter set runs.
-    ``app_prompt``/``app_secret``/``app_actions`` (from ``--app-prompt``/
-    ``--app-secret``/``--app-action``) are the dev-supplied application inputs
-    that unlock LLM07/LLM02/LLM06 against an ``app:<url>`` target.
+    ``app_prompt``/``app_secret``/``app_actions``/``app_canary`` (from
+    ``--app-prompt``/``--app-secret``/``--app-action``/``--app-canary``) are the
+    dev-supplied application inputs that unlock LLM07/LLM02/LLM06/LLM08 against an
+    ``app:<url>`` target.
     ``redteam_benign`` (from ``--redteam-benign``) additionally measures the
     target's **false-refusal rate** over the JBB benign twins after the security
     suite — a usability metric reported separately, never a SARIF finding.
@@ -426,6 +437,7 @@ def run_suite(args: list, target: str | None, repo: str | None = None,
         envvars.APP_ACTIONS: (
             envvars.ACTIONS_SEPARATOR.join(app_actions) if app_actions else None
         ),
+        envvars.APP_CANARY: app_canary,
     }
     for name, value in suite_env.items():
         if value:
@@ -564,6 +576,7 @@ def main():
     args, app_prompt = _extract_opt(args, "--app-prompt")
     args, app_secret = _extract_opt(args, "--app-secret")
     args, app_actions = _extract_multi_opt(args, "--app-action")
+    args, app_canary = _extract_opt(args, "--app-canary")
 
     if redteam_set and not _is_existing_file(redteam_set):
         # Fail loudly rather than silently falling back to the built-in set.
@@ -575,10 +588,10 @@ def main():
               file=sys.stderr)
         return 2
 
-    if (app_prompt or app_secret or app_actions) and not _is_app_target(target):
+    if (app_prompt or app_secret or app_actions or app_canary) and not _is_app_target(target):
         # Silently ignoring an app input would be a silent coverage gap.
-        print("error: --app-prompt/--app-secret/--app-action describe a running "
-              "application and require --target app:<url> "
+        print("error: --app-prompt/--app-secret/--app-action/--app-canary describe a "
+              "running application and require --target app:<url> "
               f"(got {target or 'the offline demo'})", file=sys.stderr)
         return 2
     if app_prompt and _is_existing_file(app_prompt):
@@ -597,7 +610,7 @@ def main():
 
     return run_suite(args, target, repo, osv, redteam_set=redteam_set,
                      app_prompt=app_prompt, app_secret=app_secret,
-                     app_actions=tuple(app_actions),
+                     app_actions=tuple(app_actions), app_canary=app_canary,
                      redteam_benign=redteam_benign,
                      redteam_benign_set=redteam_benign_set)
 

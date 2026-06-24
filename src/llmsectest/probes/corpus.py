@@ -443,6 +443,15 @@ def get_corpus() -> list[ProbeCase]:
 # supplied. These count as *covered* even though they have no :class:`ProbeCase`.
 SCANNER_CATEGORIES = frozenset({"owasp_llm03"})
 
+# OWASP categories covered only against a running RAG *application* (black-box),
+# not the bare-model corpus. LLM08 (vector & embedding weaknesses) ships retrieval-
+# exposure probes (:func:`llmsectest.probes.application.app_cases`) that fire against
+# an ``app:<url>`` target when the developer marks the confidential retrieved-corpus
+# canary (``--app-canary``). Like :data:`SCANNER_CATEGORIES` these count as *covered*
+# although they ship no bare-model :class:`ProbeCase`; a bare-model run reports them
+# as skipped-with-reason (no retrieval corpus to attack).
+APP_ONLY_CATEGORIES = frozenset({"owasp_llm08"})
+
 
 def cases_for(owasp: str) -> list[ProbeCase]:
     """Return the cases for a single OWASP marker (e.g. ``"owasp_llm01"``)."""
@@ -450,6 +459,9 @@ def cases_for(owasp: str) -> list[ProbeCase]:
 
 
 def covered_categories() -> list[str]:
-    """OWASP markers that ship a tester — an adapter-driven probe corpus or a
-    static scanner (LLM03 supply-chain)."""
-    return sorted({c.owasp for c in get_corpus()} | SCANNER_CATEGORIES)
+    """OWASP markers that ship a tester — an adapter-driven probe corpus, a static
+    scanner (LLM03 supply-chain), or an application-only probe (LLM08 retrieval
+    exposure, black-box against a RAG ``app:<url>``)."""
+    return sorted(
+        {c.owasp for c in get_corpus()} | SCANNER_CATEGORIES | APP_ONLY_CATEGORIES
+    )

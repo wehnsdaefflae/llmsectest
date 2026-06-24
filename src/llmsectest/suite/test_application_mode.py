@@ -18,21 +18,15 @@ skip: model/demo targets already run the full canary corpus.
 """
 
 import os
-import re
 
 import pytest
 
 from llmsectest import envvars
-from llmsectest.probes.application import app_cases, app_coverage
+from llmsectest.probes.application import app_cases, app_coverage, app_name_from_endpoint
 
 # The categories this module adds on top of the always-reachable LLM01/LLM05
 # modules that an app scan already runs.
 _INPUT_CATEGORIES = ("owasp_llm02", "owasp_llm06", "owasp_llm07")
-
-
-def _app_name(target: str) -> str:
-    """A case-id-friendly name for the app under test, from its endpoint URL."""
-    return re.sub(r"[^a-z0-9]+", "-", target.removeprefix("app:").lower()).strip("-")
 
 
 def _params():
@@ -42,9 +36,11 @@ def _params():
             reason="application-mode extras apply only to --target app:<url> — "
                    "model/demo targets run the full canary corpus instead"))]
 
-    prompt, secret, actions = envvars.app_inputs_from_env()
+    # LLM08 (retrieval exposure) is gated on --app-canary and has its own module
+    # (test_llm08_vector_embedding); this module stays LLM02/06/07.
+    prompt, secret, actions, _canary = envvars.app_inputs_from_env()
     cases = [
-        c for c in app_cases(_app_name(target), prompt,
+        c for c in app_cases(app_name_from_endpoint(target), prompt,
                              known_secret=secret, forbidden_actions=actions or None)
         if c.owasp in _INPUT_CATEGORIES
     ]

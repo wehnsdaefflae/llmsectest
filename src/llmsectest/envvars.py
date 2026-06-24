@@ -16,6 +16,7 @@ CLI option → environment variable:
 ``--app-prompt <text>``     :data:`APP_PROMPT`
 ``--app-secret <value>``    :data:`APP_SECRET`
 ``--app-action <sig>``      :data:`APP_ACTIONS` (repeatable; joined)
+``--app-canary <value>``    :data:`APP_CANARY`
 ==========================  ==========================
 """
 
@@ -30,6 +31,7 @@ REDTEAM_SET = "LLMSECTEST_REDTEAM_SET"
 APP_PROMPT = "LLMSECTEST_APP_PROMPT"
 APP_SECRET = "LLMSECTEST_APP_SECRET"
 APP_ACTIONS = "LLMSECTEST_APP_ACTIONS"
+APP_CANARY = "LLMSECTEST_APP_CANARY"
 
 # Joins the repeatable ``--app-action`` values into the single APP_ACTIONS
 # variable. The ASCII unit separator cannot appear in a tool/action signature,
@@ -37,15 +39,18 @@ APP_ACTIONS = "LLMSECTEST_APP_ACTIONS"
 ACTIONS_SEPARATOR = "\x1f"
 
 
-def app_inputs_from_env() -> tuple[str, str | None, tuple[str, ...]]:
+def app_inputs_from_env() -> tuple[str, str | None, tuple[str, ...], str | None]:
     """The dev-supplied application inputs, as ``app_cases()`` expects them.
 
-    Returns ``(app_prompt, known_secret, forbidden_actions)`` — the app's own
-    system prompt (``""`` if unknown), a real secret the app holds (``None`` if
-    none named), and the app's privileged action signatures (``()`` if none).
+    Returns ``(app_prompt, known_secret, forbidden_actions, known_canary)`` — the
+    app's own system prompt (``""`` if unknown), a real secret the app holds
+    (``None`` if none named), the app's privileged action signatures (``()`` if
+    none), and a confidential canary planted in the app's retrieved corpus
+    (``None`` if none named, enables LLM08 retrieval-exposure probes).
     """
     prompt = os.environ.get(APP_PROMPT, "")
     secret = os.environ.get(APP_SECRET) or None
     raw = os.environ.get(APP_ACTIONS, "")
     actions = tuple(a for a in raw.split(ACTIONS_SEPARATOR) if a)
-    return prompt, secret, actions
+    canary = os.environ.get(APP_CANARY) or None
+    return prompt, secret, actions, canary

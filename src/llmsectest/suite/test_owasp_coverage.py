@@ -12,13 +12,17 @@ from skipped to a passing coverage assertion automatically — and the guard tes
 
 import pytest
 
-from llmsectest.probes import SCANNER_CATEGORIES, cases_for, covered_categories
+from llmsectest.probes import (
+    APP_ONLY_CATEGORIES,
+    SCANNER_CATEGORIES,
+    cases_for,
+    covered_categories,
+)
 from llmsectest.reporting.owasp_metadata import OWASP_LLM_CATEGORIES
 
 # Why each not-yet-implemented category has no tester today, and when it lands.
 NOT_IMPLEMENTED: dict[str, str] = {
     "owasp_llm04": "not yet implemented — data/model-poisoning fixtures (milestone 3)",
-    "owasp_llm08": "not yet implemented — vector/embedding-store fixtures (milestone 3)",
     "owasp_llm09": "not yet implemented — needs a non-circular misinformation oracle",
 }
 
@@ -37,6 +41,7 @@ def test_owasp_category_implemented(marker):
     if marker not in covered_categories():
         pytest.skip(f"{category.id} {category.name}: "
                     f"{NOT_IMPLEMENTED.get(marker, 'not yet implemented')}")
-    if marker in SCANNER_CATEGORIES:
-        return  # scanner-based category (e.g. LLM03 supply-chain) — no probe cases
+    if marker in SCANNER_CATEGORIES or marker in APP_ONLY_CATEGORIES:
+        return  # covered without a bare-model probe corpus — LLM03 scanner /
+                # LLM08 application-only retrieval-exposure probes (see those modules)
     assert cases_for(marker), f"{category.id} reported as covered but ships no probe cases"

@@ -48,16 +48,18 @@ llmsectest --target app:http://localhost:8000/chat
 
 ## What's covered against an endpoint
 
-Endpoint testing is **black-box**. **LLM01 (prompt injection)** and **LLM05 (improper output
-handling)** always run — their markers live in the attack, so the scan needs nothing from you.
-Three more categories light up when you tell LLMSecTest what only you, the app's developer, know:
+Endpoint testing is **black-box**. **LLM01 (prompt injection)**, **LLM05 (improper output
+handling)** and **LLM10 (unbounded consumption)** always run — their markers live in the attack, so
+the scan needs nothing from you. Four more categories light up when you tell LLMSecTest what only
+you, the app's developer, know:
 
 ```bash
 llmsectest --target app:http://localhost:8000/chat \
-    --app-prompt prompt.txt \                      # your app's system prompt → LLM07
-    --app-secret "sk-canary-123" \                 # a real secret it holds   → LLM02
-    --app-action "ACTION: refund(" \               # a privileged tool call   → LLM06
-    --app-action "ACTION: delete_user("            # (repeatable)
+    --app-prompt prompt.txt \                      # your app's system prompt    → LLM07
+    --app-secret "sk-canary-123" \                 # a real secret it holds      → LLM02
+    --app-action "ACTION: refund(" \               # a privileged tool call      → LLM06
+    --app-action "ACTION: delete_user(" \          # (repeatable)
+    --app-canary "INTERNAL-DOC-CANARY-7f2a"        # confidential RAG content    → LLM08
 ```
 
 - **`--app-prompt`** — the app's own system prompt (inline text or a file path). Knowing it means
@@ -66,10 +68,15 @@ llmsectest --target app:http://localhost:8000/chat \
   no false-positive-prone heuristics (LLM02).
 - **`--app-action`** — a privileged tool/action signature your app can execute; repeat the flag for
   several. An unauthorized invocation is then unambiguous (LLM06).
+- **`--app-canary`** — confidential content planted in your app's **RAG / retrieved corpus** (a unique
+  token in an indexed document). Enables the **LLM08** retrieval-exposure probes: a reply that
+  reproduces the canary means the retrieval layer leaked confidential indexed content. Distinct from
+  `--app-secret` — there the secret lives in the prompt/config, here in the retrieved corpus.
 
 Each category whose input you don't supply shows up as an **explicit skip naming the flag** that
-would enable it — never a silent gap. The white-box categories (LLM03/04/08/10) need your app's
-internals and are covered by their own modules per milestone. Always check `llmsectest --check`.
+would enable it — never a silent gap. The remaining white-box categories (LLM03/04, and LLM08's
+poisoning/inversion/multi-tenant dimensions) need your app's internals and are covered by their own
+modules per milestone. Always check `llmsectest --check`.
 
 ## When you can't run the app: the persona proxy
 

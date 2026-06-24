@@ -28,7 +28,8 @@ def _ids_and_skips(params):
 
 
 def _clear(monkeypatch):
-    for var in (envvars.TARGET, envvars.APP_PROMPT, envvars.APP_SECRET, envvars.APP_ACTIONS):
+    for var in (envvars.TARGET, envvars.APP_PROMPT, envvars.APP_SECRET,
+                envvars.APP_ACTIONS, envvars.APP_CANARY):
         monkeypatch.delenv(var, raising=False)
 
 
@@ -78,10 +79,11 @@ def test_partial_inputs_mix_cases_and_skips(monkeypatch):
 
 def test_app_inputs_from_env_round_trip(monkeypatch):
     _clear(monkeypatch)
-    assert envvars.app_inputs_from_env() == ("", None, ())
+    assert envvars.app_inputs_from_env() == ("", None, (), None)
     monkeypatch.setenv(envvars.APP_PROMPT, "p")
     monkeypatch.setenv(envvars.APP_ACTIONS, "a" + envvars.ACTIONS_SEPARATOR + "b")
-    assert envvars.app_inputs_from_env() == ("p", None, ("a", "b"))
+    monkeypatch.setenv(envvars.APP_CANARY, "DOC-CANARY-9z")
+    assert envvars.app_inputs_from_env() == ("p", None, ("a", "b"), "DOC-CANARY-9z")
 
 
 def test_module_is_in_the_app_scan_module_list():
@@ -95,4 +97,6 @@ def test_module_is_in_the_app_scan_module_list():
     ("app:https://api.example.com/v1", "https-api-example-com-v1"),
 ])
 def test_app_name_slug(url, expected):
-    assert mod._app_name(url) == expected
+    from llmsectest.probes import app_name_from_endpoint
+
+    assert app_name_from_endpoint(url) == expected

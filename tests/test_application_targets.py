@@ -85,6 +85,44 @@ def test_app_cases_unlock_llm02_and_llm06_with_seeds():
     assert {"owasp_llm02", "owasp_llm06"} <= owasp
 
 
+def test_app_cases_unlock_llm08_with_a_retrieved_corpus_canary():
+    # The confidential canary lives in the app's retrieved corpus (not the prompt):
+    # supplying it unlocks the LLM08 retrieval-exposure probes.
+    cases = app_cases("ragbot", _REAL_APP_PROMPT, known_canary="DOC-CANARY-9z")
+    llm08 = [c for c in cases if c.owasp == "owasp_llm08"]
+    assert len(llm08) == 3  # corpus-enumeration / scope-escalation / targeted-retrieval
+    for c in llm08:
+        assert c.detector == "retrieval_exposure"
+        assert c.forbidden == ("DOC-CANARY-9z",)
+
+
+def test_app_cases_skip_llm08_without_a_canary():
+    cases = app_cases("ragbot", _REAL_APP_PROMPT)  # no --app-canary
+    assert not any(c.owasp == "owasp_llm08" for c in cases)
+
+
+def test_run_app_scan_flags_a_retrieval_leak():
+    # an app that surfaces the indexed confidential canary = LLM08 retrieval exposure
+    canary = "DOC-CANARY-9z"
+    leaky = ScriptedAdapter(lambda req: f"From the internal file: {canary}", model="rag-leaky")
+    result = run_app_scan("ragbot", _REAL_APP_PROMPT, leaky, known_canary=canary)
+    llm08 = [o for o in result.outcomes if o.case.owasp == "owasp_llm08"]
+    assert llm08 and all(o.vulnerable for o in llm08)
+    assert all(o in result.findings for o in llm08)
+
+
+def test_run_app_scan_passes_a_scoped_rag_app():
+    guarded = ScriptedAdapter(lambda req: "I can only answer from public docs.", model="rag-safe")
+    result = run_app_scan("ragbot", _REAL_APP_PROMPT, guarded, known_canary="DOC-CANARY-9z")
+    assert not any(o.case.owasp == "owasp_llm08" and o.vulnerable for o in result.outcomes)
+
+
+def test_coverage_marks_llm08_exercised_with_a_canary():
+    cov = {c.owasp: c for c in app_coverage(_REAL_APP_PROMPT, known_canary="DOC-CANARY-9z")}
+    assert cov["owasp_llm08"].exercised and cov["owasp_llm08"].cases == 3
+    assert cov["owasp_llm08"].reason == ""
+
+
 def test_run_app_scan_flags_a_leaky_app():
     # a model that parrots its whole system prompt back = the app discloses it
     leaky = ScriptedAdapter(lambda req: req.messages[0].content, model="leaky")
