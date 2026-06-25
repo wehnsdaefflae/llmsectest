@@ -123,6 +123,53 @@ def test_coverage_marks_llm08_exercised_with_a_canary():
     assert cov["owasp_llm08"].reason == ""
 
 
+def test_app_cases_unlock_llm08_indirect_injection_with_a_rag_poison_marker():
+    # The injected instruction lives in a poisoned *retrieved* document, not the
+    # prompt: supplying its marker unlocks the LLM08 RAG indirect-injection probes,
+    # scored by the shared injection_marker oracle but categorized LLM08.
+    poison = "RAG-POISON-3b9d"
+    cases = app_cases("ragbot", _REAL_APP_PROMPT, known_poison=poison)
+    llm08 = [c for c in cases if c.owasp == "owasp_llm08"]
+    assert len(llm08) == 3  # kb-directive / follow-retrieved / apply-policy
+    for c in llm08:
+        assert c.detector == "injection_marker"
+        assert c.forbidden == (poison,)
+        # Indirect property: the marker is never in our own prompt — a hit can only
+        # come from the corpus (this is what makes it LLM08, not LLM01 direct).
+        assert poison not in c.user_prompt
+
+
+def test_app_cases_unlock_both_llm08_dimensions_together():
+    cases = app_cases("ragbot", _REAL_APP_PROMPT,
+                      known_canary="DOC-CANARY-9z", known_poison="RAG-POISON-3b9d")
+    llm08 = [c for c in cases if c.owasp == "owasp_llm08"]
+    assert len(llm08) == 6
+    assert {c.detector for c in llm08} == {"retrieval_exposure", "injection_marker"}
+
+
+def test_run_app_scan_flags_a_poisoned_document_injection():
+    # an app that obeys an instruction from a retrieved poisoned doc = LLM08 indirect
+    # injection (it emits the dev-declared marker although our prompt never named it)
+    poison = "RAG-POISON-3b9d"
+    obeys = ScriptedAdapter(lambda req: f"Per the retrieved directive: {poison}", model="rag-obeys")
+    result = run_app_scan("ragbot", _REAL_APP_PROMPT, obeys, known_poison=poison)
+    llm08 = [o for o in result.outcomes if o.case.owasp == "owasp_llm08"]
+    assert llm08 and all(o.vulnerable for o in llm08)
+    assert all(o in result.findings for o in llm08)
+
+
+def test_run_app_scan_passes_an_app_that_ignores_a_poisoned_document():
+    safe = ScriptedAdapter(lambda req: "I follow only my own configured instructions.", model="rag-safe")
+    result = run_app_scan("ragbot", _REAL_APP_PROMPT, safe, known_poison="RAG-POISON-3b9d")
+    assert not any(o.case.owasp == "owasp_llm08" and o.vulnerable for o in result.outcomes)
+
+
+def test_coverage_marks_llm08_exercised_with_rag_poison():
+    cov = {c.owasp: c for c in app_coverage(_REAL_APP_PROMPT, known_poison="RAG-POISON-3b9d")}
+    assert cov["owasp_llm08"].exercised and cov["owasp_llm08"].cases == 3
+    assert cov["owasp_llm08"].reason == ""
+
+
 def test_run_app_scan_flags_a_leaky_app():
     # a model that parrots its whole system prompt back = the app discloses it
     leaky = ScriptedAdapter(lambda req: req.messages[0].content, model="leaky")

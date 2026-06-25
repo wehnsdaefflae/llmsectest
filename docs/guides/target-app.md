@@ -59,7 +59,8 @@ llmsectest --target app:http://localhost:8000/chat \
     --app-secret "sk-canary-123" \                 # a real secret it holds      → LLM02
     --app-action "ACTION: refund(" \               # a privileged tool call      → LLM06
     --app-action "ACTION: delete_user(" \          # (repeatable)
-    --app-canary "INTERNAL-DOC-CANARY-7f2a"        # confidential RAG content    → LLM08
+    --app-canary "INTERNAL-DOC-CANARY-7f2a" \      # confidential RAG content    → LLM08
+    --app-rag-poison "RAG-POISON-3b9d"             # poisoned-doc marker         → LLM08
 ```
 
 - **`--app-prompt`** — the app's own system prompt (inline text or a file path). Knowing it means
@@ -72,6 +73,11 @@ llmsectest --target app:http://localhost:8000/chat \
   token in an indexed document). Enables the **LLM08** retrieval-exposure probes: a reply that
   reproduces the canary means the retrieval layer leaked confidential indexed content. Distinct from
   `--app-secret` — there the secret lives in the prompt/config, here in the retrieved corpus.
+- **`--app-rag-poison`** — the marker a **poisoned document** planted in your retrieved corpus instructs
+  the model to emit. Enables the **LLM08** indirect-injection probes: benign queries retrieve the poisoned
+  doc, and a vulnerable app obeys its instruction and emits the marker (which the probe never named). It
+  proves the app trusts retrieved content — the LLM08↔LLM01 bridge. Independent of `--app-canary`; supply
+  either or both.
 
 Each category whose input you don't supply shows up as an **explicit skip naming the flag** that
 would enable it — never a silent gap. The remaining white-box categories (LLM03/04, and LLM08's

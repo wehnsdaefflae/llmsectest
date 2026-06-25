@@ -20,7 +20,8 @@ llmsectest --check | --list-probes | --validate <file.sarif> | --render-sarif <f
 | `--app-prompt <text-or-file>` | With `--target app:<url>`: the app's **own system prompt** (inline text, or a path to a file holding it) — unlocks **LLM07** leakage detection, since we then know what a leaked instruction looks like. |
 | `--app-secret <value>` | With `--target app:<url>`: a **real secret/canary the app holds** — unlocks **LLM02**; a disclosure is then unambiguous (no FP-prone heuristics). |
 | `--app-action <signature>` | With `--target app:<url>`: a **privileged tool/action signature** of the app (e.g. `"ACTION: refund("`). Repeatable — unlocks **LLM06**; an unauthorized invocation is then unambiguous. |
-| `--app-canary <value>` | With `--target app:<url>`: **confidential content planted in the app's RAG / retrieved corpus** (a unique token in an indexed document) — unlocks **LLM08** retrieval-exposure probes (corpus enumeration, retrieval-scope escalation, topic-targeted retrieval). A reply that reproduces the canary means the retrieval layer leaked confidential indexed content. Distinct from `--app-secret` (LLM02), where the secret lives in the *prompt/config*; here it lives in the *retrieved corpus*. |
+| `--app-canary <value>` | With `--target app:<url>`: **confidential content planted in the app's RAG / retrieved corpus** (a unique token in an indexed document) — unlocks the **LLM08** retrieval-exposure probes (corpus enumeration, retrieval-scope escalation, topic-targeted retrieval). A reply that reproduces the canary means the retrieval layer leaked confidential indexed content. Distinct from `--app-secret` (LLM02), where the secret lives in the *prompt/config*; here it lives in the *retrieved corpus*. |
+| `--app-rag-poison <marker>` | With `--target app:<url>`: the **marker a poisoned document planted in the app's retrieved corpus instructs the model to emit** — unlocks the **LLM08** indirect-injection probes (kb-directive, follow-retrieved, apply-policy). Each is a benign query that never names the marker; if the app retrieves the poisoned doc and emits it, the app obeyed an injected instruction from retrieved content. Categorized LLM08 (not LLM01) because the injection vector is the retrieval layer — the LLM08↔LLM01 bridge. |
 | `--check` | Print the OWASP LLM Top 10 coverage map, each category's test modality and its CVSS v4.0 base score, then exit. |
 | `--list-probes` | List the probe corpus that ships today (incl. the built-in red-team set), then exit. |
 | `--validate <file>` | Validate an existing SARIF file against the v2.1.0 schema, then exit. |
@@ -62,9 +63,11 @@ red-team coverage is never a silent gap. Adding `--redteam-benign` prints, *belo
 target's **over-refusal (false-refusal) rate** over the benign twins — a usability metric kept out of the
 findings and the exit code. A real app endpoint (`--target app:<url>`) is
 black-box: LLM01, LLM05 and LLM10 always run, and **LLM07/LLM02/LLM06/LLM08 join them when you pass
-`--app-prompt` / `--app-secret` / `--app-action` / `--app-canary`** — each category whose input is missing
-is reported as skipped with the flag that would enable it (LLM04 is white-box and LLM09 needs an
-oracle). `llmsectest --check` prints the same map with each category's CVSS score.
+`--app-prompt` / `--app-secret` / `--app-action` / `--app-canary` / `--app-rag-poison`** — each category
+whose input is missing is reported as skipped with the flag that would enable it (LLM04 is white-box and
+LLM09 needs an oracle). LLM08 has two enabling markers: `--app-canary` (retrieval exposure) and
+`--app-rag-poison` (indirect injection via a poisoned retrieved document). `llmsectest --check` prints the
+same map with each category's CVSS score.
 
 ## Exit code
 
@@ -79,7 +82,8 @@ llmsectest --target app:http://localhost:8000/chat --repo .   # app + its depend
 llmsectest --target app:http://localhost:8000/chat \
     --app-prompt prompt.txt --app-secret "sk-canary" \
     --app-action "ACTION: refund(" --app-action "ACTION: delete_user(" \
-    --app-canary "INTERNAL-DOC-CANARY-7f2a"                             # + LLM07/02/06/08
+    --app-canary "INTERNAL-DOC-CANARY-7f2a" \
+    --app-rag-poison "RAG-POISON-3b9d"                                  # + LLM07/02/06/08
 llmsectest --repo .                                            # supply-chain scan only
 llmsectest --repo . --osv                                      # + known-CVE lookup (OSV.dev)
 llmsectest --redteam-set jbb/harmful-behaviors.csv --target ollama:llama3  # 100 JailbreakBench prompts

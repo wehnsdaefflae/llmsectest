@@ -36,9 +36,10 @@ def _params():
             reason="application-mode extras apply only to --target app:<url> — "
                    "model/demo targets run the full canary corpus instead"))]
 
-    # LLM08 (retrieval exposure) is gated on --app-canary and has its own module
-    # (test_llm08_vector_embedding); this module stays LLM02/06/07.
-    prompt, secret, actions, _canary = envvars.app_inputs_from_env()
+    # LLM08 (retrieval exposure + RAG indirect injection) is gated on --app-canary /
+    # --app-rag-poison and has its own module (test_llm08_vector_embedding); this
+    # module stays LLM02/06/07.
+    prompt, secret, actions, _canary, _poison = envvars.app_inputs_from_env()
     cases = [
         c for c in app_cases(app_name_from_endpoint(target), prompt,
                              known_secret=secret, forbidden_actions=actions or None)

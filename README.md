@@ -25,8 +25,9 @@ See [Funding](#funding).
 > suite covering **OWASP LLM01 (prompt injection), LLM02 (sensitive information
 > disclosure), LLM05 (improper output handling), LLM06 (excessive agency), LLM07
 > (system prompt leakage) and LLM10 (unbounded consumption)**; a white-box
-> **LLM03 (supply chain)** dependency scanner; and a black-box **LLM08 (vector and
-> embedding weaknesses)** retrieval-exposure probe for RAG apps — **8 of the 10**
+> **LLM03 (supply chain)** dependency scanner; and black-box **LLM08 (vector and
+> embedding weaknesses)** probes for RAG apps — both *retrieval exposure* and
+> *indirect prompt injection via a poisoned retrieved document* — **8 of the 10**
 > OWASP LLM Top 10 (2025) categories. LLM01 also runs a
 > **red-team jailbreak set** scored by a refusal oracle (the MIT
 > [JailbreakBench](https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors) /
@@ -77,7 +78,7 @@ llmsectest --target app:http://localhost:8000/chat  # test YOUR running app (bla
 llmsectest --target app:http://localhost:8000/chat --repo .  # ...and scan its dependencies (LLM03)
 llmsectest --target app:http://localhost:8000/chat \
     --app-prompt prompt.txt --app-secret "sk-canary" --app-action "ACTION: refund(" \
-    --app-canary "INTERNAL-DOC-CANARY-7f2a"
+    --app-canary "INTERNAL-DOC-CANARY-7f2a" --app-rag-poison "RAG-POISON-3b9d"
                                              # deeper app scan: unlocks LLM07/LLM02/LLM06/LLM08
 llmsectest --repo . --osv                    # + known-CVE lookup for pinned deps via OSV.dev
 llmsectest --redteam-set jbb/harmful-behaviors.csv  # 100 JailbreakBench red-team prompts (LLM01)
@@ -144,11 +145,15 @@ the target:
   `--app-prompt <text-or-file>` (the app's own system prompt) enables **LLM07**
   leakage detection, `--app-secret <value>` (a real secret the app holds) enables
   **LLM02**, `--app-action <signature>` (a privileged tool call, repeatable)
-  enables **LLM06**, and `--app-canary <value>` (confidential content planted in the
-  app's **RAG / retrieved corpus**) enables **LLM08** retrieval-exposure probes
-  (corpus enumeration, retrieval-scope escalation, topic-targeted retrieval — a leak
-  of the canary from a retrieved document is the finding). Same inputs as the
-  `run_app_scan` API. The footer always shows exactly what was and wasn't run.
+  enables **LLM06**, and two RAG markers enable **LLM08**: `--app-canary <value>`
+  (confidential content planted in the app's **retrieved corpus**) runs the
+  *retrieval-exposure* probes (corpus enumeration, retrieval-scope escalation,
+  topic-targeted retrieval — a leak of the canary from a retrieved document is the
+  finding), and `--app-rag-poison <marker>` (the marker a planted **poisoned
+  document** instructs the model to emit) runs the *indirect-injection* probes — a
+  benign query retrieves the poisoned doc and a vulnerable app obeys it, emitting the
+  marker although the prompt never named it (the LLM08↔LLM01 bridge). Same inputs as
+  the `run_app_scan` API. The footer always shows exactly what was and wasn't run.
 
 Live providers import their SDK lazily and read the relevant API key from the
 environment. The corpus and detectors are importable, too:

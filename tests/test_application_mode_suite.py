@@ -29,7 +29,7 @@ def _ids_and_skips(params):
 
 def _clear(monkeypatch):
     for var in (envvars.TARGET, envvars.APP_PROMPT, envvars.APP_SECRET,
-                envvars.APP_ACTIONS, envvars.APP_CANARY):
+                envvars.APP_ACTIONS, envvars.APP_CANARY, envvars.APP_RAG_POISON):
         monkeypatch.delenv(var, raising=False)
 
 
@@ -79,11 +79,13 @@ def test_partial_inputs_mix_cases_and_skips(monkeypatch):
 
 def test_app_inputs_from_env_round_trip(monkeypatch):
     _clear(monkeypatch)
-    assert envvars.app_inputs_from_env() == ("", None, (), None)
+    assert envvars.app_inputs_from_env() == ("", None, (), None, None)
     monkeypatch.setenv(envvars.APP_PROMPT, "p")
     monkeypatch.setenv(envvars.APP_ACTIONS, "a" + envvars.ACTIONS_SEPARATOR + "b")
     monkeypatch.setenv(envvars.APP_CANARY, "DOC-CANARY-9z")
-    assert envvars.app_inputs_from_env() == ("p", None, ("a", "b"), "DOC-CANARY-9z")
+    monkeypatch.setenv(envvars.APP_RAG_POISON, "RAG-POISON-3b9d")
+    assert envvars.app_inputs_from_env() == (
+        "p", None, ("a", "b"), "DOC-CANARY-9z", "RAG-POISON-3b9d")
 
 
 def test_module_is_in_the_app_scan_module_list():
