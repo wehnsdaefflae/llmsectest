@@ -1065,7 +1065,7 @@ reported as the SARIF <code>security-severity</code> of its findings.</p>
 </tr>
 <tr>
 <td><a href="llm08/">LLM08 Vector and Embedding Weaknesses</a></td>
-<td>black-box — requires <code>--app-canary</code> (RAG)</td>
+<td>black-box — requires <code>--app-canary</code> and/or <code>--app-rag-poison</code> (RAG)</td>
 <td>7.1 High</td>
 <td>✅ probes</td>
 </tr>
@@ -1092,8 +1092,9 @@ LLMSecTest will not claim coverage a target's modality didn't actually exercise.
 </div>
 <p>The first white-box category — <strong>LLM03 (supply chain)</strong> — ships now: pass <code>--repo &lt;path&gt;</code> to scan the
 project's dependency manifests (see the <a href="llm03/">LLM03 deep-dive</a>). <strong>LLM08 (vector &amp; embedding
-weaknesses)</strong> ships its black-box first increment — a retrieval-exposure probe for RAG apps (see the
-<a href="llm08/">LLM08 deep-dive</a>); its white-box dimensions and <strong>LLM04</strong> (data/model provenance) are sequenced
+weaknesses)</strong> ships two black-box dimensions — retrieval exposure and indirect injection via a poisoned
+retrieved document, for RAG apps (see the <a href="llm08/">LLM08 deep-dive</a>); its white-box dimensions and
+<strong>LLM04</strong> (data/model provenance) are sequenced
 across the project's milestones. Each white-box module consumes a concrete input you provide — your
 <code>requirements</code>/lockfile or your model/data provenance.</p>
 <h2 id="testing-a-real-application-black-box">Testing a real application (black-box)<a class="headerlink" href="#testing-a-real-application-black-box" title="Permanent link">&para;</a></h2>
@@ -1107,13 +1108,15 @@ a silent pass:</p>
 <li><strong>LLM07 (system-prompt leakage)</strong>, <strong>LLM02 (sensitive disclosure)</strong>, <strong>LLM06 (excessive agency)</strong> and
   <strong>LLM08 (vector &amp; embedding weaknesses)</strong> light up once you tell LLMSecTest what a leak looks like — the
   app's own system prompt, a known secret it holds, its privileged action signatures, or (for a RAG app)
-  a confidential canary planted in its retrieved corpus (<code>--app-canary</code>). Without that, they are reported
-  as <em>not exercised</em> with the reason, rather than passed vacuously.</li>
+  a confidential canary planted in its retrieved corpus (<code>--app-canary</code>) and/or the marker a poisoned
+  retrieved document emits (<code>--app-rag-poison</code>). Without that, they are reported as <em>not exercised</em> with
+  the reason, rather than passed vacuously.</li>
 <li>The white-box categories are likewise surfaced as not-exercised — except <strong>LLM03 (supply chain)</strong>,
   which runs from the repo: add <code>--repo &lt;path&gt;</code> and it scans the dependency manifests alongside the
   endpoint probes. LLM04 and LLM09 (oracle) remain not-exercised until their milestones; LLM08's
-  <em>white-box</em> dimensions (embedding poisoning, multi-tenant isolation, inversion) likewise — its black-box
-  retrieval-exposure probe ships now (see the <a href="llm08/">LLM08 deep-dive</a>).</li>
+  <em>white-box</em> dimensions (embedding poisoning, multi-tenant isolation, inversion) likewise — its two
+  black-box dimensions (retrieval exposure + indirect injection via a poisoned retrieved document) ship
+  now (see the <a href="llm08/">LLM08 deep-dive</a>).</li>
 </ul>
 <p>Every scan prints a coverage footer accounting for <strong>all ten</strong> categories, so the report never overstates
 what was tested.</p>

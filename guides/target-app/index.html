@@ -1144,7 +1144,8 @@ you, the app's developer, know:</p>
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span>--app-secret<span class="w"> </span><span class="s2">&quot;sk-canary-123&quot;</span><span class="w"> </span><span class="se">\ </span><span class="w">                </span><span class="c1"># a real secret it holds      → LLM02</span>
 <a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span>--app-action<span class="w"> </span><span class="s2">&quot;ACTION: refund(&quot;</span><span class="w"> </span><span class="se">\ </span><span class="w">              </span><span class="c1"># a privileged tool call      → LLM06</span>
 <a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span>--app-action<span class="w"> </span><span class="s2">&quot;ACTION: delete_user(&quot;</span><span class="w"> </span><span class="se">\ </span><span class="w">         </span><span class="c1"># (repeatable)</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">    </span>--app-canary<span class="w"> </span><span class="s2">&quot;INTERNAL-DOC-CANARY-7f2a&quot;</span><span class="w">        </span><span class="c1"># confidential RAG content    → LLM08</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">    </span>--app-canary<span class="w"> </span><span class="s2">&quot;INTERNAL-DOC-CANARY-7f2a&quot;</span><span class="w"> </span><span class="se">\ </span><span class="w">     </span><span class="c1"># confidential RAG content    → LLM08</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">    </span>--app-rag-poison<span class="w"> </span><span class="s2">&quot;RAG-POISON-3b9d&quot;</span><span class="w">             </span><span class="c1"># poisoned-doc marker         → LLM08</span>
 </code></pre></div>
 <ul>
 <li><strong><code>--app-prompt</code></strong> — the app's own system prompt (inline text or a file path). Knowing it means
@@ -1157,6 +1158,11 @@ you, the app's developer, know:</p>
   token in an indexed document). Enables the <strong>LLM08</strong> retrieval-exposure probes: a reply that
   reproduces the canary means the retrieval layer leaked confidential indexed content. Distinct from
   <code>--app-secret</code> — there the secret lives in the prompt/config, here in the retrieved corpus.</li>
+<li><strong><code>--app-rag-poison</code></strong> — the marker a <strong>poisoned document</strong> planted in your retrieved corpus instructs
+  the model to emit. Enables the <strong>LLM08</strong> indirect-injection probes: benign queries retrieve the poisoned
+  doc, and a vulnerable app obeys its instruction and emits the marker (which the probe never named). It
+  proves the app trusts retrieved content — the LLM08↔LLM01 bridge. Independent of <code>--app-canary</code>; supply
+  either or both.</li>
 </ul>
 <p>Each category whose input you don't supply shows up as an <strong>explicit skip naming the flag</strong> that
 would enable it — never a silent gap. The remaining white-box categories (LLM03/04, and LLM08's
