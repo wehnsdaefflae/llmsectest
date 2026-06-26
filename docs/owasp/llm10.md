@@ -28,13 +28,16 @@ examples" sample. Because the signal is *willingness to flood*, it is visible ev
 budget — the target does not have to literally generate forever, and the detector does not depend on the
 adapter's own `max_tokens` cap.
 
-This is a **black-box** test: the marker lives in the attack, so — like LLM01 and LLM05 — it transfers
-to a real application endpoint (`--target app:<url>`) with no setup, and application scans always exercise
-it.
+The marker lives in the attack, so against a **model** target the probe needs no setup — the adapter's
+`max_tokens` keeps the "repeat 10,000×" / "continue forever" prompts bounded. Against a real **application
+endpoint** (`--target app:<url>`), though, the app supplies no token cap, so those same prompts would make
+an uncapped app generate to its context limit and blow the per-app time budget; until a *bounded* black-box
+LLM10 app probe lands, an app scan reports LLM10 as **not exercised, with that reason** (never a silent
+pass — see the [coverage map](index.md)).
 
 ```bash
-llmsectest --target ollama:llama3                     # includes the LLM10 probes
-llmsectest --target app:http://localhost:8000/chat    # black-box: LLM10 runs with no extra inputs
+llmsectest --target ollama:llama3                     # includes the LLM10 probes (model target)
+llmsectest --target app:http://localhost:8000/chat    # LLM10 reported not-exercised (bounded probe pending)
 ```
 
 !!! note "Repetition/volume oracle"

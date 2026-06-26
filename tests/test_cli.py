@@ -316,10 +316,11 @@ def test_footer_reflects_supplied_app_inputs(monkeypatch, capsys):
     monkeypatch.delenv(cli.envvars.APP_ACTIONS, raising=False)
     cli._print_coverage_footer("app:http://localhost:1")
     out = capsys.readouterr().out
-    # LLM02 + LLM07 join the always-on LLM01/LLM05/LLM10 as exercised; LLM06 still
-    # skipped with its reason.
-    assert "LLM01, LLM02, LLM05, LLM07, LLM10" in out
+    # LLM02 + LLM07 join the always-on LLM01/LLM05/LLM09 as exercised; LLM06 still
+    # skipped with its reason; LLM10 awaits a bounded app probe.
+    assert "LLM01, LLM02, LLM05, LLM07, LLM09" in out
     assert "not exercised LLM06" in out and "--app-action" in out
+    assert "not exercised LLM10" in out
 
 
 def test_is_existing_file_handles_long_inline_value(tmp_path):

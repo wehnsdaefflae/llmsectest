@@ -23,7 +23,6 @@ from llmsectest.reporting.owasp_metadata import OWASP_LLM_CATEGORIES
 # Why each not-yet-implemented category has no tester today, and when it lands.
 NOT_IMPLEMENTED: dict[str, str] = {
     "owasp_llm04": "not yet implemented — data/model-poisoning fixtures (milestone 3)",
-    "owasp_llm09": "not yet implemented — needs a non-circular misinformation oracle",
 }
 
 _PARAMS = [

@@ -25,7 +25,7 @@ Examples:
         --app-rag-poison "RAG-POISON-MARKER-3b9d"
                           # deeper app scan: the dev-supplied inputs unlock LLM07/02/06/08
 
-Application scans (``--target app:<url>``) always exercise LLM01 + LLM05 + LLM10
+Application scans (``--target app:<url>``) always exercise LLM01 + LLM05 + LLM09
 black-box. Optional inputs unlock the remaining black-box categories:
 ``--app-prompt`` (the app's own system prompt — inline text or a file path)
 enables LLM07, ``--app-secret`` (a real secret the app holds) enables LLM02,
@@ -96,7 +96,7 @@ _TESTABILITY = {
     "owasp_llm07": ("black-box", None),
     "owasp_llm08": ("black-box", "requires --target app:<url> + --app-canary (RAG retrieval canary) "
                                  "and/or --app-rag-poison (poisoned-document marker)"),
-    "owasp_llm09": ("black-box", "output-verification module planned"),
+    "owasp_llm09": ("black-box", None),
     "owasp_llm10": ("black-box", None),
 }
 
@@ -126,7 +126,7 @@ def check_coverage():
     print(f"SARIF security-severity. cvss library installed: {library_available()} "
           "(baked scores used otherwise).")
     print("Black-box categories test your running app via  --target app:<url> .")
-    print("App scans always exercise LLM01+LLM05+LLM10; add --app-prompt / --app-secret /")
+    print("App scans always exercise LLM01+LLM05+LLM09; add --app-prompt / --app-secret /")
     print("--app-action (repeatable) / --app-canary / --app-rag-poison to unlock")
     print("LLM07 / LLM02 / LLM06 / LLM08 (retrieval exposure + RAG indirect injection).")
     print("White-box categories need app internals (deps/provenance) and land per milestone.")
@@ -298,6 +298,12 @@ _APP_SUITE_MODULES = (
     "test_llm01_prompt_injection.py",
     "test_redteam_jailbreaks.py",  # LLM01 red-team: does the app refuse harmful asks? (black-box)
     "test_llm05_improper_output_handling.py",
+    "test_llm09_misinformation.py",  # LLM09: does the app confabulate a nonexistent entity? (black-box, bounded)
+    # NB: test_llm10 is intentionally NOT here. Its corpus prompts ("repeat 10000×",
+    # "continue forever") are bounded against a *model* target (the adapter caps
+    # max_tokens) but make an *uncapped* app endpoint generate to its context limit,
+    # blowing the 10-min/app cap. A bounded black-box LLM10 app probe is a tracked
+    # follow-up (BACKLOG 2026-06-26); until then app-mode LLM10 is not exercised here.
     "test_application_mode.py",  # LLM02/06/07 from dev-supplied inputs; skips otherwise
     "test_llm08_vector_embedding.py",  # LLM08 retrieval exposure; self-skips without --app-canary
     "test_llm03_supply_chain.py",  # white-box repo scan; self-skips without --repo

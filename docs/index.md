@@ -44,6 +44,7 @@ target — run `llmsectest --check` to see the live map.
 **[OWASP coverage](owasp/index.md)** · **[API reference](api.md)**
 
 !!! note "Status"
-    Pre-alpha (active grant development). Black-box categories **LLM01/02/05/06/07** plus the white-box
-    **LLM03 (supply chain)** scan (`--repo`) ship today — **6/10**; the remaining categories land per
-    milestone. Coverage claims here always match what the tool actually does — see `llmsectest --check`.
+    Pre-alpha (active grant development). Black-box categories **LLM01/02/05/06/07/09/10**, the white-box
+    **LLM03 (supply chain)** scan (`--repo`) and the black-box **LLM08 (vector & embedding weaknesses)** RAG
+    probes ship today — **9/10**; **LLM04** lands per milestone. Coverage claims here always match what the
+    tool actually does — see `llmsectest --check`.

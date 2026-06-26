@@ -32,7 +32,11 @@ huggingface = ["huggingface_hub>=0.25"]
 cvss = ["cvss>=3.0"]
 all = ["openai>=1.0", "anthropic>=0.39", "huggingface_hub>=0.25", "cvss>=3.0"]
 dev = ["pytest>=7.4.0", "pytest-cov", "ruff", "mypy", "cvss>=3.0"]
-docs = ["mkdocs-material>=9.7", "mkdocstrings[python]>=1.0"]
+# mkdocs is pinned <2: the upstream "MkDocs 2.0" is a backward-incompatible, currently
+# unlicensed rewrite (TOML config, plugin/theme system removed, no migration path); the
+# maintained line is Material for MkDocs on mkdocs 1.x. Pinning keeps `mkdocs gh-deploy`
+# reproducible until we evaluate a successor (Zensical reads mkdocs.yml natively).
+docs = ["mkdocs<2", "mkdocs-material>=9.7,<10", "mkdocstrings[python]>=1.0"]
 
 [project.scripts]
 llmsectest = "llmsectest.__main__:main"

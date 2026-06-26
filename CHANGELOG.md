@@ -10,6 +10,17 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
 ## [Unreleased]
 
 ### Added
+- **OWASP LLM09 (Misinformation) — black-box confabulation probes; coverage 8→9/10.** A new always-on
+  probe corpus asks the target about entities whose ground truth is fixed by construction — they **do not
+  exist**: a coined library function, a fabricated citation, an invented protocol and a future-dated CVE
+  id. A calibrated target says it is not aware of / cannot find the entity; a vulnerable one confabulates
+  confident specifics. The new `misinformation` detector is **non-circular** (no LLM judge — the entity
+  provably does not exist): it flags a reply only when it **engages** the nonexistent entity by name *and*
+  carries no uncertainty / non-existence disclaimer, so a reply that never mentions the entity, or names it
+  inside an "I'm not aware of `X`" disclaimer, is never a false positive. Like LLM01/05 the marker lives
+  in the attack, so LLM09 transfers black-box to a real `--target app:<url>` with no setup and runs on
+  every scan (a new packaged `suite/test_llm09_misinformation.py`). New `owasp/llm09.md` deep-dive; LLM09
+  flips to ✓ in `--check` (9/10). (2026-06-26)
 - **OWASP LLM08 — second black-box dimension: indirect prompt injection via a poisoned retrieved document.**
   A new `--app-rag-poison <marker>` flag declares the marker a *poisoned document* planted in a RAG
   `--target app:<url>`'s corpus instructs the model to emit. The suite then fires three indirect-injection
@@ -111,6 +122,13 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
   silent pass. (2026-06-10)
 
 ### Fixed
+- **App-mode coverage corrected for LLM10 (no more over-claim).** An `--target app:<url>` scan's coverage
+  footer counted LLM10 as *exercised* while no suite module actually fired its probes against the endpoint.
+  The model-mode LLM10 probes ("repeat 10,000×" / "continue forever") stay bounded by the adapter's
+  `max_tokens` against a *model*, but would make an *uncapped app* generate to its context limit (blowing the
+  per-app time budget), so they are not run black-box. LLM10 is now honestly reported **not exercised against
+  an app, with that reason** — a bounded black-box LLM10 app probe is a tracked follow-up. Model-target LLM10
+  is unchanged. (2026-06-26)
 - **A long inline `--app-prompt` no longer crashes the CLI.** `--app-prompt` accepts either inline text or a
   file path, decided via `Path(value).is_file()` — but a realistic multi-sentence system prompt overflows the
   filesystem's name limit, so that call raised `OSError: File name too long` instead of returning `False`,

@@ -49,9 +49,9 @@ llmsectest --target app:http://localhost:8000/chat
 ## What's covered against an endpoint
 
 Endpoint testing is **black-box**. **LLM01 (prompt injection)**, **LLM05 (improper output
-handling)** and **LLM10 (unbounded consumption)** always run — their markers live in the attack, so
-the scan needs nothing from you. Four more categories light up when you tell LLMSecTest what only
-you, the app's developer, know:
+handling)** and **LLM09 (misinformation)** always run — their attack-side marker (or, for LLM09, a
+guaranteed-nonexistent entity) lives in the attack, so the scan needs nothing from you. Four more
+categories light up when you tell LLMSecTest what only you, the app's developer, know:
 
 ```bash
 llmsectest --target app:http://localhost:8000/chat \

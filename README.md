@@ -24,11 +24,11 @@ See [Funding](#funding).
 > metadata, risk scoring, baselines, policy gates); the real, adapter-driven probe
 > suite covering **OWASP LLM01 (prompt injection), LLM02 (sensitive information
 > disclosure), LLM05 (improper output handling), LLM06 (excessive agency), LLM07
-> (system prompt leakage) and LLM10 (unbounded consumption)**; a white-box
-> **LLM03 (supply chain)** dependency scanner; and black-box **LLM08 (vector and
-> embedding weaknesses)** probes for RAG apps — both *retrieval exposure* and
-> *indirect prompt injection via a poisoned retrieved document* — **8 of the 10**
-> OWASP LLM Top 10 (2025) categories. LLM01 also runs a
+> (system prompt leakage), LLM09 (misinformation) and LLM10 (unbounded
+> consumption)**; a white-box **LLM03 (supply chain)** dependency scanner; and
+> black-box **LLM08 (vector and embedding weaknesses)** probes for RAG apps — both
+> *retrieval exposure* and *indirect prompt injection via a poisoned retrieved
+> document* — **9 of the 10** OWASP LLM Top 10 (2025) categories. LLM01 also runs a
 > **red-team jailbreak set** scored by a refusal oracle (the MIT
 > [JailbreakBench](https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors) /
 > AdvBench corpus via `--redteam-set`), and `--redteam-benign` measures the
@@ -140,8 +140,9 @@ the target:
   lookup each surface as an explicit skip reason, never as "clean".
 - **A real app endpoint** (`--target app:<url>`) is black-box: the attack-side-marker
   categories always transfer (**LLM01** prompt injection, **LLM05** improper output
-  handling, **LLM10** unbounded consumption). **LLM07/02/06/08** light up when you tell
-  LLMSecTest what to look for:
+  handling, and **LLM09** misinformation — does the app confabulate facts about an
+  entity that does not exist?). **LLM07/02/06/08** light up when you tell LLMSecTest
+  what to look for:
   `--app-prompt <text-or-file>` (the app's own system prompt) enables **LLM07**
   leakage detection, `--app-secret <value>` (a real secret the app holds) enables
   **LLM02**, `--app-action <signature>` (a privileged tool call, repeatable)
