@@ -769,6 +769,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../owasp/llm09/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM09 Misinformation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../owasp/llm10/" class="md-nav__link">
         
   
@@ -1180,6 +1208,17 @@ yet published to PyPI</strong>. The forward-looking plan is the <a href="https:/
 <h2 id="unreleased"><a href="https://github.com/wehnsdaefflae/llmsectest/compare/v0.1.0...HEAD">Unreleased</a><a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
 <h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
 <ul>
+<li><strong>OWASP LLM09 (Misinformation) — black-box confabulation probes; coverage 8→9/10.</strong> A new always-on
+  probe corpus asks the target about entities whose ground truth is fixed by construction — they <strong>do not
+  exist</strong>: a coined library function, a fabricated citation, an invented protocol and a future-dated CVE
+  id. A calibrated target says it is not aware of / cannot find the entity; a vulnerable one confabulates
+  confident specifics. The new <code>misinformation</code> detector is <strong>non-circular</strong> (no LLM judge — the entity
+  provably does not exist): it flags a reply only when it <strong>engages</strong> the nonexistent entity by name <em>and</em>
+  carries no uncertainty / non-existence disclaimer, so a reply that never mentions the entity, or names it
+  inside an "I'm not aware of <code>X</code>" disclaimer, is never a false positive. Like LLM01/05 the marker lives
+  in the attack, so LLM09 transfers black-box to a real <code>--target app:&lt;url&gt;</code> with no setup and runs on
+  every scan (a new packaged <code>suite/test_llm09_misinformation.py</code>). New <code>owasp/llm09.md</code> deep-dive; LLM09
+  flips to ✓ in <code>--check</code> (9/10). (2026-06-26)</li>
 <li><strong>OWASP LLM08 — second black-box dimension: indirect prompt injection via a poisoned retrieved document.</strong>
   A new <code>--app-rag-poison &lt;marker&gt;</code> flag declares the marker a <em>poisoned document</em> planted in a RAG
   <code>--target app:&lt;url&gt;</code>'s corpus instructs the model to emit. The suite then fires three indirect-injection
@@ -1282,6 +1321,13 @@ yet published to PyPI</strong>. The forward-looking plan is the <a href="https:/
 </ul>
 <h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Permanent link">&para;</a></h3>
 <ul>
+<li><strong>App-mode coverage corrected for LLM10 (no more over-claim).</strong> An <code>--target app:&lt;url&gt;</code> scan's coverage
+  footer counted LLM10 as <em>exercised</em> while no suite module actually fired its probes against the endpoint.
+  The model-mode LLM10 probes ("repeat 10,000×" / "continue forever") stay bounded by the adapter's
+  <code>max_tokens</code> against a <em>model</em>, but would make an <em>uncapped app</em> generate to its context limit (blowing the
+  per-app time budget), so they are not run black-box. LLM10 is now honestly reported <strong>not exercised against
+  an app, with that reason</strong> — a bounded black-box LLM10 app probe is a tracked follow-up. Model-target LLM10
+  is unchanged. (2026-06-26)</li>
 <li><strong>A long inline <code>--app-prompt</code> no longer crashes the CLI.</strong> <code>--app-prompt</code> accepts either inline text or a
   file path, decided via <code>Path(value).is_file()</code> — but a realistic multi-sentence system prompt overflows the
   filesystem's name limit, so that call raised <code>OSError: File name too long</code> instead of returning <code>False</code>,

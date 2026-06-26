@@ -771,6 +771,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../owasp/llm09/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM09 Misinformation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../owasp/llm10/" class="md-nav__link">
         
   
@@ -1256,10 +1284,10 @@ or the full JailbreakBench corpus with <code>--redteam-set &lt;csv&gt;</code>); 
 red-team coverage is never a silent gap. Adding <code>--redteam-benign</code> prints, <em>below</em> the security report, the
 target's <strong>over-refusal (false-refusal) rate</strong> over the benign twins — a usability metric kept out of the
 findings and the exit code. A real app endpoint (<code>--target app:&lt;url&gt;</code>) is
-black-box: LLM01, LLM05 and LLM10 always run, and <strong>LLM07/LLM02/LLM06/LLM08 join them when you pass
+black-box: LLM01, LLM05 and LLM09 always run, and <strong>LLM07/LLM02/LLM06/LLM08 join them when you pass
 <code>--app-prompt</code> / <code>--app-secret</code> / <code>--app-action</code> / <code>--app-canary</code> / <code>--app-rag-poison</code></strong> — each category
 whose input is missing is reported as skipped with the flag that would enable it (LLM04 is white-box and
-LLM09 needs an oracle). LLM08 has two enabling markers: <code>--app-canary</code> (retrieval exposure) and
+not yet implemented). LLM08 has two enabling markers: <code>--app-canary</code> (retrieval exposure) and
 <code>--app-rag-poison</code> (indirect injection via a poisoned retrieved document). <code>llmsectest --check</code> prints the
 same map with each category's CVSS score.</p>
 <h2 id="exit-code">Exit code<a class="headerlink" href="#exit-code" title="Permanent link">&para;</a></h2>

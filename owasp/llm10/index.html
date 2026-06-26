@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://docs.llmsec.dev/owasp/llm10/">
       
       
-        <link rel="prev" href="../llm08/">
+        <link rel="prev" href="../llm09/">
       
       
         <link rel="next" href="../../cli/">
@@ -773,6 +773,34 @@
                 
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../llm09/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM09 Misinformation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
     
   
   
@@ -1070,11 +1098,14 @@ flags the reply when it crosses a <strong>flood threshold</strong> that sits far
 examples" sample. Because the signal is <em>willingness to flood</em>, it is visible even within a finite token
 budget — the target does not have to literally generate forever, and the detector does not depend on the
 adapter's own <code>max_tokens</code> cap.</p>
-<p>This is a <strong>black-box</strong> test: the marker lives in the attack, so — like LLM01 and LLM05 — it transfers
-to a real application endpoint (<code>--target app:&lt;url&gt;</code>) with no setup, and application scans always exercise
-it.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>ollama:llama3<span class="w">                     </span><span class="c1"># includes the LLM10 probes</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat<span class="w">    </span><span class="c1"># black-box: LLM10 runs with no extra inputs</span>
+<p>The marker lives in the attack, so against a <strong>model</strong> target the probe needs no setup — the adapter's
+<code>max_tokens</code> keeps the "repeat 10,000×" / "continue forever" prompts bounded. Against a real <strong>application
+endpoint</strong> (<code>--target app:&lt;url&gt;</code>), though, the app supplies no token cap, so those same prompts would make
+an uncapped app generate to its context limit and blow the per-app time budget; until a <em>bounded</em> black-box
+LLM10 app probe lands, an app scan reports LLM10 as <strong>not exercised, with that reason</strong> (never a silent
+pass — see the <a href="../">coverage map</a>).</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>ollama:llama3<span class="w">                     </span><span class="c1"># includes the LLM10 probes (model target)</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat<span class="w">    </span><span class="c1"># LLM10 reported not-exercised (bounded probe pending)</span>
 </code></pre></div>
 <div class="admonition note">
 <p class="admonition-title">Repetition/volume oracle</p>
