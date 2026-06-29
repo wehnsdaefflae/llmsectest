@@ -32,7 +32,7 @@ target — run `llmsectest --check` to see the live map.
 | LLM01 | Prompt Injection | **black-box** — your app endpoint |
 | LLM02 | Sensitive Information Disclosure | black-box (or white-box) |
 | LLM03 | Supply Chain | white-box — your deps (`--repo`) |
-| LLM04 | Data and Model Poisoning | white-box — model/data provenance |
+| LLM04 | Data and Model Poisoning | white-box — your model files (`--model-scan`) |
 | LLM05 | Improper Output Handling | black-box (or white-box) |
 | LLM06 | Excessive Agency | black-box (or white-box) |
 | LLM07 | System Prompt Leakage | **black-box** — prompt extraction |
@@ -44,7 +44,8 @@ target — run `llmsectest --check` to see the live map.
 **[OWASP coverage](owasp/index.md)** · **[API reference](api.md)**
 
 !!! note "Status"
-    Pre-alpha (active grant development). Black-box categories **LLM01/02/05/06/07/09/10**, the white-box
-    **LLM03 (supply chain)** scan (`--repo`) and the black-box **LLM08 (vector & embedding weaknesses)** RAG
-    probes ship today — **9/10**; **LLM04** lands per milestone. Coverage claims here always match what the
-    tool actually does — see `llmsectest --check`.
+    Pre-alpha (active grant development). All **10/10** OWASP LLM Top 10 (2025) categories ship today:
+    black-box probes for **LLM01/02/05/06/07/09/10**, white-box scanners for **LLM03 (supply chain)**
+    (`--repo`) and **LLM04 (data and model poisoning)** (`--model-scan`), and black-box **LLM08 (vector &
+    embedding weaknesses)** RAG probes. What remains is depth, not breadth. Coverage claims here always
+    match what the tool actually does — see `llmsectest --check`.

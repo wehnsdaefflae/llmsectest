@@ -16,7 +16,7 @@ reported as the SARIF `security-severity` of its findings.
 | [LLM01 Prompt Injection](llm01.md) | black-box | 9.2 Critical | ✅ probes |
 | LLM02 Sensitive Information Disclosure | black-box / white-box | 9.2 Critical | ✅ probes |
 | [LLM03 Supply Chain](llm03.md) | white-box — requires `--repo` | 9.5 Critical | ✅ scan |
-| LLM04 Data and Model Poisoning | white-box — requires model/data provenance | 7.1 High | planned |
+| [LLM04 Data and Model Poisoning](llm04.md) | white-box — requires `--model-scan` | 7.1 High | ✅ scan |
 | LLM05 Improper Output Handling | black-box / white-box | 9.9 Critical | ✅ probes |
 | LLM06 Excessive Agency | black-box / white-box | 10.0 Critical | ✅ probes |
 | LLM07 System Prompt Leakage | black-box | 8.7 High | ✅ probes |
@@ -25,19 +25,20 @@ reported as the SARIF `security-severity` of its findings.
 | [LLM10 Unbounded Consumption](llm10.md) | black-box | 8.7 High | ✅ probes |
 
 !!! warning "No silent gaps"
-    All ten categories run on every invocation. A category not yet implemented appears as a **skipped
-    test reported `not yet implemented`** (with what it needs and when it lands) — never silently absent.
-    LLMSecTest will not claim coverage a target's modality didn't actually exercise. Run
-    `llmsectest --check` for the current state.
+    All ten categories run on every invocation. Each ships a real probe or scanner; a category that
+    needs an input it wasn't given (a repo, a model path, an app marker) appears as a **skipped test that
+    says exactly what it needs** — never silently absent. LLMSecTest will not claim coverage a target's
+    modality didn't actually exercise. Run `llmsectest --check` for the current state.
 
-The first white-box category — **LLM03 (supply chain)** — ships now: pass `--repo <path>` to scan the
-project's dependency manifests (see the [LLM03 deep-dive](llm03.md)). **LLM08 (vector & embedding
-weaknesses)** ships two black-box dimensions — retrieval exposure and indirect injection via a poisoned
-retrieved document, for RAG apps (see the [LLM08 deep-dive](llm08.md)). **LLM09 (misinformation)** ships
-black-box confabulation probes (see the [LLM09 deep-dive](llm09.md)). LLM08's white-box dimensions and
-**LLM04** (data/model provenance) are sequenced
-across the project's milestones. Each white-box module consumes a concrete input you provide — your
-`requirements`/lockfile or your model/data provenance.
+With **LLM04**, LLMSecTest now covers the **complete** OWASP LLM Top 10 (2025) — **10/10**. The two
+white-box categories run from a path you provide: **LLM03 (supply chain)** scans the project's dependency
+manifests with `--repo <path>` (see the [LLM03 deep-dive](llm03.md)); **LLM04 (data and model poisoning)**
+scans the project's serialized model files with `--model-scan <path>`, flagging load-time code-execution
+in pickle/PyTorch artifacts (see the [LLM04 deep-dive](llm04.md)). **LLM08 (vector & embedding weaknesses)**
+ships two black-box dimensions — retrieval exposure and indirect injection via a poisoned retrieved
+document, for RAG apps (see the [LLM08 deep-dive](llm08.md)); **LLM09 (misinformation)** ships black-box
+confabulation probes (see the [LLM09 deep-dive](llm09.md)). What remains is *depth* — LLM08's white-box
+dimensions and a classifier refusal oracle — not breadth.
 
 ## Testing a real application (black-box)
 
@@ -56,10 +57,11 @@ a silent pass:
   a confidential canary planted in its retrieved corpus (`--app-canary`) and/or the marker a poisoned
   retrieved document emits (`--app-rag-poison`). Without that, they are reported as *not exercised* with
   the reason, rather than passed vacuously.
-- The white-box categories are likewise surfaced as not-exercised — except **LLM03 (supply chain)**,
-  which runs from the repo: add `--repo <path>` and it scans the dependency manifests alongside the
-  endpoint probes. LLM04 remains not-exercised until its milestone; LLM08's
-  *white-box* dimensions (embedding poisoning, multi-tenant isolation, inversion) likewise — its two
+- The white-box categories are likewise surfaced as not-exercised against an endpoint unless you supply
+  their artifact path: **LLM03 (supply chain)** runs from the repo (add `--repo <path>` to scan the
+  dependency manifests alongside the endpoint probes), and **LLM04 (data and model poisoning)** runs from
+  the model files (add `--model-scan <path>`). LLM08's *white-box* dimensions (embedding poisoning,
+  multi-tenant isolation, inversion) remain not-exercised — its two
   black-box dimensions (retrieval exposure + indirect injection via a poisoned retrieved document) ship
   now (see the [LLM08 deep-dive](llm08.md)).
 

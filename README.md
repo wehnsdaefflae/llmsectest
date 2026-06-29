@@ -25,19 +25,21 @@ See [Funding](#funding).
 > suite covering **OWASP LLM01 (prompt injection), LLM02 (sensitive information
 > disclosure), LLM05 (improper output handling), LLM06 (excessive agency), LLM07
 > (system prompt leakage), LLM09 (misinformation) and LLM10 (unbounded
-> consumption)**; a white-box **LLM03 (supply chain)** dependency scanner; and
+> consumption)**; white-box scanners for **LLM03 (supply chain)** (dependency
+> manifests) and **LLM04 (data and model poisoning)** (serialized model files); and
 > black-box **LLM08 (vector and embedding weaknesses)** probes for RAG apps — both
 > *retrieval exposure* and *indirect prompt injection via a poisoned retrieved
-> document* — **9 of the 10** OWASP LLM Top 10 (2025) categories. LLM01 also runs a
+> document* — **all 10** OWASP LLM Top 10 (2025) categories. LLM01 also runs a
 > **red-team jailbreak set** scored by a refusal oracle (the MIT
 > [JailbreakBench](https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors) /
 > AdvBench corpus via `--redteam-set`), and `--redteam-benign` measures the
 > target's **over-refusal (false-refusal) rate** against the matched benign twins —
 > a usability signal kept separate from the security findings. Findings are scored
 > with **CVSS v4.0** base scores per OWASP category (reported as SARIF
-> `security-severity`). The remaining categories follow on the roadmap. The modules
-> under [`examples/`](examples/) demonstrate the reporting pipeline across all
-> ten categories with deterministic mock fixtures.
+> `security-severity`). With LLM04 the suite now covers the **complete** OWASP LLM
+> Top 10 (2025); depth (white-box LLM08 dimensions, a classifier refusal oracle)
+> follows on the roadmap. The modules under [`examples/`](examples/) demonstrate the
+> reporting pipeline across all ten categories with deterministic mock fixtures.
 
 ## The unified adapter
 
@@ -81,6 +83,7 @@ llmsectest --target app:http://localhost:8000/chat \
     --app-canary "INTERNAL-DOC-CANARY-7f2a" --app-rag-poison "RAG-POISON-3b9d"
                                              # deeper app scan: unlocks LLM07/LLM02/LLM06/LLM08
 llmsectest --repo . --osv                    # + known-CVE lookup for pinned deps via OSV.dev
+llmsectest --model-scan models/              # scan serialized model files for poisoning (LLM04)
 llmsectest --redteam-set jbb/harmful-behaviors.csv  # 100 JailbreakBench red-team prompts (LLM01)
 llmsectest --redteam-benign                  # + measure the over-refusal (false-refusal) rate
 llmsectest --target demo-defended            # offline hardened target (passes)
@@ -105,10 +108,10 @@ real projects you point LLMSecTest at.
 
 ### No silent gaps
 
-**All ten** OWASP categories run on every invocation: the implemented ones execute
-real probes, and the not-yet-implemented ones appear as skipped tests that say
-`not yet implemented` (with what they need and when they land) — so a category is
-never silently absent. A run also ends with a coverage footer summarising which
+**All ten** OWASP categories run on every invocation: each ships a real probe or
+scanner, and any category that needs an input it wasn't given (a repo, a model
+path, an app marker) appears as a skipped test that says exactly what it needs — so
+a category is never silently absent. A run also ends with a coverage footer summarising which
 categories were exercised and which were not, and why. What's reachable depends on
 the target:
 
@@ -138,6 +141,16 @@ the target:
   (networked, free, no API key). Ranges aren't queried: a static scan can't know
   which version a range resolves to. Not requested, nothing pinned, or a failed
   lookup each surface as an explicit skip reason, never as "clean".
+- **`--model-scan <path>`** adds the white-box **LLM04 (data and model poisoning)**
+  scan: it walks the *opcode* stream of the project's serialized model files (pickle,
+  PyTorch `.pt`/`.pth`/`.ckpt` zips, numpy object arrays) with the stdlib
+  `pickletools` — never unpickling — and flags any import of a code-execution
+  primitive (`os.system`, `subprocess`, `builtins.eval`, a nested `pickle`/`torch.load`,
+  reflection gadgets) that would run when the artifact is loaded — the classic
+  "load a poisoned model, run the attacker's code" supply-side attack. Offline and
+  deterministic; a legitimate weights file (which only references tensor-rebuild
+  helpers) does not false-positive. Without `--model-scan`, LLM04 reports itself
+  skipped (needs a model path), never a silent pass.
 - **A real app endpoint** (`--target app:<url>`) is black-box: the attack-side-marker
   categories always transfer (**LLM01** prompt injection, **LLM05** improper output
   handling, and **LLM09** misinformation — does the app confabulate facts about an

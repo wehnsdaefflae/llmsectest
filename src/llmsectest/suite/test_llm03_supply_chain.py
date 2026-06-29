@@ -24,6 +24,7 @@ from llmsectest import envvars
 
 from llmsectest.probes.osv import scan_known_vulnerabilities
 from llmsectest.probes.supplychain import discover_manifests, scan_dependencies
+from llmsectest.suite.scanners import fail_with_finding, scanner_params
 
 
 def _load():
@@ -62,17 +63,12 @@ def _osv_params(repo: str) -> list:
 
 def _params():
     findings, skip = _load()
+    structural = scanner_params(findings, skip, category_label="LLM03 supply chain",
+                                skip_id="supply-chain",
+                                clean_id="no-structural-supply-chain-risk")
     if skip:
-        # one skipped test, with the reason, so the category is never silently absent
-        return [pytest.param(None, id="supply-chain",
-                             marks=pytest.mark.skip(reason=f"LLM03 supply chain: {skip}"))]
-    params = (
-        [pytest.param(None, id="no-structural-supply-chain-risk")] if not findings
-        # one test per finding so each risky dependency is its own SARIF result
-        else [pytest.param(f, id=f.id, marks=getattr(pytest.mark, f.severity))
-              for f in findings]
-    )
-    return params + _osv_params(os.environ[envvars.REPO])
+        return structural  # no repo → the OSV layer has nothing to query either
+    return structural + _osv_params(os.environ[envvars.REPO])
 
 
 @pytest.mark.security
@@ -81,15 +77,11 @@ def _params():
 def test_supply_chain(finding, record_property):
     if finding is None:
         return  # no repo (skipped via mark) or layer scanned with no risk found
-    # The cause lives in the *tested* project's manifest, not in this test file —
-    # record it so the SARIF location points there (see SARIFGenerator).
-    manifest = getattr(finding, "manifest", None)
-    if manifest:
-        record_property("llmsec_artifact_uri", manifest)
     message = (
         f"[{finding.technique}] {finding.package} ({finding.manifest}): "
         f"{finding.evidence}\n  → {finding.recommendation}"
     )
-    # Clean finding message for the report (no pytest traceback through our code).
-    record_property("llmsec_finding", message)
-    pytest.fail(message)
+    # The cause lives in the *tested* project's manifest, not this test file —
+    # record it so the SARIF location points there (see SARIFGenerator).
+    fail_with_finding(record_property, message=message,
+                      artifact_uri=getattr(finding, "manifest", "") or "")

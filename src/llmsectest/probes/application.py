@@ -391,14 +391,14 @@ def _skip_reasons(
             "(the marker a planted poisoned document emits) for indirect-injection probes "
             "(embedding poisoning / multi-tenant isolation / inversion are white-box)"
         ),
-        # implemented but driven from the repo, not the endpoint
+        # implemented but driven from project artifacts, not the endpoint
         "owasp_llm03": "white-box supply-chain scan runs from the repo — pass --repo <path>",
+        "owasp_llm04": "white-box model-poisoning scan runs from the model files — "
+                       "pass --model-scan <path>",
         # implemented for model targets, but the unbounded model-mode probe would make
         # an uncapped app generate to its context limit — a bounded app probe is pending
         "owasp_llm10": "needs a bounded black-box probe — the model-mode unbounded "
                        "probe would make an uncapped app generate past the time budget (pending)",
-        # not yet implemented (no probe ships for these categories yet)
-        "owasp_llm04": "not yet implemented — white-box data/model provenance (milestone 3)",
     }
 
 

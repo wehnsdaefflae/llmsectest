@@ -15,6 +15,7 @@ Examples:
     python -m llmsectest --target app:http://localhost:8000 --repo .  # app + its deps
     python -m llmsectest --repo .                          # add the LLM03 supply-chain scan
     python -m llmsectest --repo . --osv                    # + known-CVE lookup via OSV.dev
+    python -m llmsectest --model-scan models/              # add the LLM04 model-poisoning scan
     python -m llmsectest --redteam-set jbb/harmful-behaviors.csv  # 100 JailbreakBench prompts (LLM01)
     python -m llmsectest --redteam-benign                  # + measure over-refusal (built-in twins)
     python -m llmsectest --redteam-benign jbb/benign-behaviors.csv  # over-refusal vs the 100 JBB twins
@@ -90,7 +91,7 @@ _TESTABILITY = {
     "owasp_llm01": ("black-box", None),
     "owasp_llm02": ("black-box", None),
     "owasp_llm03": ("white-box", "requires --repo <path> (dependency manifests)"),
-    "owasp_llm04": ("white-box", "requires training-data/model provenance"),
+    "owasp_llm04": ("white-box", "requires --model-scan <path> (serialized model files)"),
     "owasp_llm05": ("black-box", None),
     "owasp_llm06": ("black-box", None),
     "owasp_llm07": ("black-box", None),
@@ -98,6 +99,15 @@ _TESTABILITY = {
                                  "and/or --app-rag-poison (poisoned-document marker)"),
     "owasp_llm09": ("black-box", None),
     "owasp_llm10": ("black-box", None),
+}
+
+
+# Each white-box scanner category fires only when its input is supplied. Single
+# source of truth for the env var the suite reads and the hint the footer prints,
+# so the two scanners (and any future one) can't drift in how they're surfaced.
+_SCANNER_INPUT = {
+    "owasp_llm03": (envvars.REPO, "needs --repo <path> to scan dependency manifests"),
+    "owasp_llm04": (envvars.MODEL_SCAN, "needs --model-scan <path> to scan model files"),
 }
 
 
@@ -129,9 +139,11 @@ def check_coverage():
     print("App scans always exercise LLM01+LLM05+LLM09; add --app-prompt / --app-secret /")
     print("--app-action (repeatable) / --app-canary / --app-rag-poison to unlock")
     print("LLM07 / LLM02 / LLM06 / LLM08 (retrieval exposure + RAG indirect injection).")
-    print("White-box categories need app internals (deps/provenance) and land per milestone.")
+    print("White-box categories need app internals (deps/model files) and run from a path.")
     print("LLM03: --repo <path> scans dependency manifests offline; adding --osv also")
     print("queries OSV.dev for known CVEs in exactly-pinned versions (networked, no key).")
+    print("LLM04: --model-scan <path> scans serialized model files (pickle/PyTorch-zip/")
+    print("numpy) offline for code-execution imports that run on load (a poisoned model).")
     print("LLM01: --redteam-set <csv> runs the full JailbreakBench harmful set; "
           "--redteam-benign")
     print("[<csv>] measures the over-refusal (false-refusal) rate over the benign twins.")
@@ -307,6 +319,7 @@ _APP_SUITE_MODULES = (
     "test_application_mode.py",  # LLM02/06/07 from dev-supplied inputs; skips otherwise
     "test_llm08_vector_embedding.py",  # LLM08 retrieval exposure; self-skips without --app-canary
     "test_llm03_supply_chain.py",  # white-box repo scan; self-skips without --repo
+    "test_llm04_data_model_poisoning.py",  # white-box model-file scan; self-skips without --model-scan
     "test_owasp_coverage.py",  # enumerates all 10 — unimplemented ones skip "not yet implemented"
 )
 
@@ -341,14 +354,15 @@ def _print_coverage_footer(target: str | None) -> None:
         from .probes import APP_ONLY_CATEGORIES, SCANNER_CATEGORIES, covered_categories
 
         covered = set(covered_categories())
-        has_repo = bool(os.environ.get(envvars.REPO))
         exercised, skipped = [], []
         for m in sorted(OWASP_LLM_CATEGORIES):
             if m in covered:
-                # A scanner category only fires when its input (a repo) is supplied;
-                # an application-only category (LLM08) can't fire against a bare model.
-                if m in SCANNER_CATEGORIES and not has_repo:
-                    skipped.append((m, "needs --repo <path> to scan dependencies"))
+                # A scanner category only fires when its input (a repo / a model
+                # path) is supplied; an application-only category (LLM08) can't
+                # fire against a bare model.
+                scanner_env, scanner_hint = _SCANNER_INPUT.get(m, (None, None))
+                if m in SCANNER_CATEGORIES and not os.environ.get(scanner_env):
+                    skipped.append((m, scanner_hint))
                 elif m in APP_ONLY_CATEGORIES:
                     skipped.append((m, "needs a RAG application target — "
                                        "--target app:<url> with --app-canary "
@@ -382,6 +396,10 @@ def _print_coverage_footer(target: str | None) -> None:
         print("  LLM03 depth:  structural scan "
               + ("+ OSV.dev known-CVE lookup (--osv)" if osv_on
                  else "only — add --osv for a known-CVE lookup (networked, no key)"))
+    if not _is_app_target(target) and "owasp_llm04" in exercised:
+        # Surface the depth of the LLM04 scan too — offline pickle/opcode scan.
+        print("  LLM04 depth:  offline serialization-opcode scan of model files "
+              "(pickle/PyTorch-zip/numpy) for code-execution imports")
     print("Full map: llmsectest --check")
     print("-" * 68)
 
@@ -415,6 +433,7 @@ def _print_over_refusal(target: str | None, path: str | None) -> None:
 
 def run_suite(args: list, target: str | None, repo: str | None = None,
               osv: bool = False, redteam_set: str | None = None,
+              model_scan: str | None = None,
               app_prompt: str | None = None,
               app_secret: str | None = None,
               app_actions: tuple[str, ...] = (),
@@ -428,6 +447,8 @@ def run_suite(args: list, target: str | None, repo: str | None = None,
     against that project's dependency manifests, alongside the model/app probes.
     ``osv`` (from ``--osv``) additionally queries OSV.dev for known CVEs in the
     repo's exactly-pinned dependency versions (networked, opt-in).
+    ``model_scan`` (from ``--model-scan``) enables the white-box LLM04 data/model-
+    poisoning scan over the serialized model files under that path (offline).
     ``redteam_set`` (from ``--redteam-set``) points the LLM01 red-team module at
     a JailbreakBench JBB-Behaviors CSV; without it the built-in starter set runs.
     ``app_prompt``/``app_secret``/``app_actions``/``app_canary``/``app_rag_poison``
@@ -448,6 +469,7 @@ def run_suite(args: list, target: str | None, repo: str | None = None,
         envvars.TARGET: target,
         envvars.REPO: repo,
         envvars.OSV: "1" if osv else None,
+        envvars.MODEL_SCAN: model_scan,
         envvars.REDTEAM_SET: redteam_set,
         envvars.APP_PROMPT: app_prompt,
         envvars.APP_SECRET: app_secret,
@@ -589,6 +611,7 @@ def main():
         return run_preflight(target)
     args, repo = _extract_opt(args, "--repo")
     args, osv = _extract_flag(args, "--osv")
+    args, model_scan = _extract_opt(args, "--model-scan")
     args, redteam_set = _extract_opt(args, "--redteam-set")
     args, redteam_benign, redteam_benign_set = _extract_opt_flag(args, "--redteam-benign")
     args, app_prompt = _extract_opt(args, "--app-prompt")
@@ -629,6 +652,7 @@ def main():
         return 0 if validate_sarif(path) else 1
 
     return run_suite(args, target, repo, osv, redteam_set=redteam_set,
+                     model_scan=model_scan,
                      app_prompt=app_prompt, app_secret=app_secret,
                      app_actions=tuple(app_actions), app_canary=app_canary,
                      app_rag_poison=app_rag_poison,

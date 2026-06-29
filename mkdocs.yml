@@ -59,6 +59,7 @@ nav:
       - Coverage map: owasp/index.md
       - LLM01 Prompt Injection: owasp/llm01.md
       - LLM03 Supply Chain: owasp/llm03.md
+      - LLM04 Data and Model Poisoning: owasp/llm04.md
       - LLM08 Vector and Embedding Weaknesses: owasp/llm08.md
       - LLM09 Misinformation: owasp/llm09.md
       - LLM10 Unbounded Consumption: owasp/llm10.md

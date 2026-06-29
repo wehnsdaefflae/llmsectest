@@ -12,6 +12,7 @@ CLI option → environment variable:
 ``--target <spec>``         :data:`TARGET`
 ``--repo <path>``           :data:`REPO`
 ``--osv``                   :data:`OSV` (``"1"`` when requested)
+``--model-scan <path>``     :data:`MODEL_SCAN`
 ``--redteam-set <csv>``     :data:`REDTEAM_SET`
 ``--app-prompt <text>``     :data:`APP_PROMPT`
 ``--app-secret <value>``    :data:`APP_SECRET`
@@ -28,6 +29,7 @@ import os
 TARGET = "LLMSECTEST_TARGET"
 REPO = "LLMSECTEST_REPO"
 OSV = "LLMSECTEST_OSV"
+MODEL_SCAN = "LLMSECTEST_MODEL_SCAN"
 REDTEAM_SET = "LLMSECTEST_REDTEAM_SET"
 APP_PROMPT = "LLMSECTEST_APP_PROMPT"
 APP_SECRET = "LLMSECTEST_APP_SECRET"

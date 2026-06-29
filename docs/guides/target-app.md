@@ -80,9 +80,10 @@ llmsectest --target app:http://localhost:8000/chat \
   either or both.
 
 Each category whose input you don't supply shows up as an **explicit skip naming the flag** that
-would enable it — never a silent gap. The remaining white-box categories (LLM03/04, and LLM08's
-poisoning/inversion/multi-tenant dimensions) need your app's internals and are covered by their own
-modules per milestone. Always check `llmsectest --check`.
+would enable it — never a silent gap. The white-box categories run from a path you provide alongside the
+endpoint scan: add `--repo <path>` for **LLM03 (supply chain)** and `--model-scan <path>` for **LLM04
+(data and model poisoning)**. LLM08's remaining white-box dimensions (poisoning/inversion/multi-tenant)
+are covered by their own modules per milestone. Always check `llmsectest --check`.
 
 ## When you can't run the app: the persona proxy
 

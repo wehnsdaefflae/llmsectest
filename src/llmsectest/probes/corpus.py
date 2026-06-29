@@ -518,8 +518,10 @@ def get_corpus() -> list[ProbeCase]:
 # OWASP categories implemented via a static white-box scanner rather than an
 # adapter-driven probe corpus. LLM03 ships a supply-chain dependency scanner
 # (:mod:`llmsectest.probes.supplychain`), driven by the suite when a repo path is
-# supplied. These count as *covered* even though they have no :class:`ProbeCase`.
-SCANNER_CATEGORIES = frozenset({"owasp_llm03"})
+# supplied; LLM04 ships a model-file poisoning scanner
+# (:mod:`llmsectest.probes.modelpoison`), driven when a model path is supplied.
+# These count as *covered* even though they have no :class:`ProbeCase`.
+SCANNER_CATEGORIES = frozenset({"owasp_llm03", "owasp_llm04"})
 
 # OWASP categories covered only against a running RAG *application* (black-box),
 # not the bare-model corpus. LLM08 (vector & embedding weaknesses) ships retrieval-
@@ -538,8 +540,8 @@ def cases_for(owasp: str) -> list[ProbeCase]:
 
 def covered_categories() -> list[str]:
     """OWASP markers that ship a tester — an adapter-driven probe corpus, a static
-    scanner (LLM03 supply-chain), or an application-only probe (LLM08 retrieval
-    exposure, black-box against a RAG ``app:<url>``)."""
+    scanner (LLM03 supply-chain, LLM04 model poisoning), or an application-only probe
+    (LLM08 retrieval exposure, black-box against a RAG ``app:<url>``)."""
     return sorted(
         {c.owasp for c in get_corpus()} | SCANNER_CATEGORIES | APP_ONLY_CATEGORIES
     )

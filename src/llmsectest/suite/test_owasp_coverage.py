@@ -21,9 +21,11 @@ from llmsectest.probes import (
 from llmsectest.reporting.owasp_metadata import OWASP_LLM_CATEGORIES
 
 # Why each not-yet-implemented category has no tester today, and when it lands.
-NOT_IMPLEMENTED: dict[str, str] = {
-    "owasp_llm04": "not yet implemented — data/model-poisoning fixtures (milestone 3)",
-}
+# Empty: every OWASP LLM Top-10 category now ships a tester (probe corpus, static
+# scanner, or application-only probe). Kept as the no-silent-gaps hook — a future
+# category that regresses to unimplemented re-appears here and the guard test in
+# ``tests/test_suite_coverage.py`` enforces this map matches what actually ships.
+NOT_IMPLEMENTED: dict[str, str] = {}
 
 _PARAMS = [
     pytest.param(marker, id=OWASP_LLM_CATEGORIES[marker].id, marks=getattr(pytest.mark, marker))

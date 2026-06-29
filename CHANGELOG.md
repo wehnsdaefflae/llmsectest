@@ -10,6 +10,23 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
 ## [Unreleased]
 
 ### Added
+- **OWASP LLM04 (Data and Model Poisoning) — white-box model-file scanner; coverage 9→10/10 (complete).**
+  A new `--model-scan <path>` flag scans the project's serialized model files for the poisoning vector
+  where a tampered weights file runs attacker code the moment it is loaded. The scanner
+  (`probes/modelpoison.py`) walks the pickle **opcode** stream with the stdlib `pickletools` — it never
+  unpickles, so scanning is safe — and flags any `GLOBAL`/`STACK_GLOBAL` that imports a code-execution
+  primitive on load: an OS/process/exec module (`os`, `subprocess`, `socket`, `ctypes`, `runpy`, …),
+  a `builtins` `eval`/`exec`/`compile`/`__import__`, a nested-unpickle primitive (`pickle.loads`,
+  `numpy.load`, `torch.load`) — `critical` — or a reflection/partial-application gadget (`operator`,
+  `functools`, `importlib`) — `high`. It understands raw pickles (protocols 0–5), PyTorch ≥1.6 zip
+  archives (`.pt`/`.pth`/`.ckpt`) and `.npz`/`.npy` (object arrays → `medium`, plus their embedded
+  pickle). The denylist is curated and exact (like LLM03's malicious-package list), so a legitimate
+  weights file — which only references tensor-rebuild helpers (`torch._utils._rebuild_tensor`,
+  `collections.OrderedDict`, `numpy.core.multiarray._reconstruct`) — produces no finding. Offline,
+  deterministic, zero new dependencies; a richer engine (ProtectAI `modelscan` / `picklescan`) behind
+  an optional extra is a tracked follow-up, mirroring how LLM03 layers OSV.dev on its offline core. LLM04
+  is the **last** OWASP LLM Top 10 (2025) category — `--check` now reports **10/10**. New packaged
+  `suite/test_llm04_data_model_poisoning.py`; new `owasp/llm04.md` deep-dive. (2026-06-29)
 - **OWASP LLM09 (Misinformation) — black-box confabulation probes; coverage 8→9/10.** A new always-on
   probe corpus asks the target about entities whose ground truth is fixed by construction — they **do not
   exist**: a coined library function, a fabricated citation, an invented protocol and a future-dated CVE
@@ -151,6 +168,10 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
   `tomllib` does not expose them for `pyproject.toml`.) (2026-06-17)
 
 ### Changed
+- The two white-box **scanner** suites (LLM03 supply chain, LLM04 model poisoning) now share one
+  `suite/scanners.py` helper (`scanner_params` + `fail_with_finding`) for the skip-with-reason /
+  clean-marker / one-case-per-finding param logic and the record-and-fail body — a single source for the
+  "no silent gap" reporting, so a future scanner category cannot drift into a silent pass. (2026-06-29)
 - The offline demo target's persona branches (agent / red-team / resource-limit) now key on named
   trigger constants instead of inline magic strings, and a guard test pins each trigger to the matching
   corpus persona — so rewording a persona can no longer silently stop a demo branch from firing.

@@ -29,6 +29,12 @@ from .osv import (
     pinned_version,
     scan_known_vulnerabilities,
 )
+from .modelpoison import (
+    ModelPoisonFinding,
+    discover_model_files,
+    scan_model_file,
+    scan_model_files,
+)
 from .detectors import (
     available_detectors,
     get_detector,
@@ -71,6 +77,7 @@ __all__ = [
     "CategoryCoverage",
     "Dependency",
     "FalseRefusalReport",
+    "ModelPoisonFinding",
     "OsvScanResult",
     "ProbeCase",
     "ProbeOutcome",
@@ -89,6 +96,7 @@ __all__ = [
     "covered_categories",
     "defended_demo_adapter",
     "discover_manifests",
+    "discover_model_files",
     "get_corpus",
     "get_detector",
     "load_benign_set",
@@ -102,5 +110,7 @@ __all__ = [
     "run_probe",
     "scan_dependencies",
     "scan_known_vulnerabilities",
+    "scan_model_file",
+    "scan_model_files",
     "vulnerable_demo_adapter",
 ]
