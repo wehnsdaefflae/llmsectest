@@ -743,6 +743,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../owasp/llm04/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM04 Data and Model Poisoning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../owasp/llm08/" class="md-nav__link">
         
   
@@ -4626,11 +4654,11 @@ of the ten OWASP categories, whether it was exercised or skipped and why.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/llmsectest/probes/corpus.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-534">534</a></span>
-<span class="normal"><a href="#__codelineno-0-535">535</a></span>
-<span class="normal"><a href="#__codelineno-0-536">536</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-534" name="__codelineno-0-534"></a><span class="k">def</span><span class="w"> </span><span class="nf">cases_for</span><span class="p">(</span><span class="n">owasp</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">ProbeCase</span><span class="p">]:</span>
-<a id="__codelineno-0-535" name="__codelineno-0-535"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the cases for a single OWASP marker (e.g. ``&quot;owasp_llm01&quot;``).&quot;&quot;&quot;</span>
-<a id="__codelineno-0-536" name="__codelineno-0-536"></a>    <span class="k">return</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">get_corpus</span><span class="p">()</span> <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">owasp</span> <span class="o">==</span> <span class="n">owasp</span><span class="p">]</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-536">536</a></span>
+<span class="normal"><a href="#__codelineno-0-537">537</a></span>
+<span class="normal"><a href="#__codelineno-0-538">538</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-536" name="__codelineno-0-536"></a><span class="k">def</span><span class="w"> </span><span class="nf">cases_for</span><span class="p">(</span><span class="n">owasp</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">ProbeCase</span><span class="p">]:</span>
+<a id="__codelineno-0-537" name="__codelineno-0-537"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the cases for a single OWASP marker (e.g. ``&quot;owasp_llm01&quot;``).&quot;&quot;&quot;</span>
+<a id="__codelineno-0-538" name="__codelineno-0-538"></a>    <span class="k">return</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">get_corpus</span><span class="p">()</span> <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">owasp</span> <span class="o">==</span> <span class="n">owasp</span><span class="p">]</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -4651,25 +4679,25 @@ of the ten OWASP categories, whether it was exercised or skipped and why.</p>
     <div class="doc doc-contents ">
 
         <p>OWASP markers that ship a tester — an adapter-driven probe corpus, a static
-scanner (LLM03 supply-chain), or an application-only probe (LLM08 retrieval
-exposure, black-box against a RAG <code>app:&lt;url&gt;</code>).</p>
+scanner (LLM03 supply-chain, LLM04 model poisoning), or an application-only probe
+(LLM08 retrieval exposure, black-box against a RAG <code>app:&lt;url&gt;</code>).</p>
 
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/llmsectest/probes/corpus.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-539">539</a></span>
-<span class="normal"><a href="#__codelineno-0-540">540</a></span>
-<span class="normal"><a href="#__codelineno-0-541">541</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-541">541</a></span>
 <span class="normal"><a href="#__codelineno-0-542">542</a></span>
 <span class="normal"><a href="#__codelineno-0-543">543</a></span>
 <span class="normal"><a href="#__codelineno-0-544">544</a></span>
-<span class="normal"><a href="#__codelineno-0-545">545</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-539" name="__codelineno-0-539"></a><span class="k">def</span><span class="w"> </span><span class="nf">covered_categories</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<a id="__codelineno-0-540" name="__codelineno-0-540"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;OWASP markers that ship a tester — an adapter-driven probe corpus, a static</span>
-<a id="__codelineno-0-541" name="__codelineno-0-541"></a><span class="sd">    scanner (LLM03 supply-chain), or an application-only probe (LLM08 retrieval</span>
-<a id="__codelineno-0-542" name="__codelineno-0-542"></a><span class="sd">    exposure, black-box against a RAG ``app:&lt;url&gt;``).&quot;&quot;&quot;</span>
-<a id="__codelineno-0-543" name="__codelineno-0-543"></a>    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span>
-<a id="__codelineno-0-544" name="__codelineno-0-544"></a>        <span class="p">{</span><span class="n">c</span><span class="o">.</span><span class="n">owasp</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">get_corpus</span><span class="p">()}</span> <span class="o">|</span> <span class="n">SCANNER_CATEGORIES</span> <span class="o">|</span> <span class="n">APP_ONLY_CATEGORIES</span>
-<a id="__codelineno-0-545" name="__codelineno-0-545"></a>    <span class="p">)</span>
+<span class="normal"><a href="#__codelineno-0-545">545</a></span>
+<span class="normal"><a href="#__codelineno-0-546">546</a></span>
+<span class="normal"><a href="#__codelineno-0-547">547</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-541" name="__codelineno-0-541"></a><span class="k">def</span><span class="w"> </span><span class="nf">covered_categories</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<a id="__codelineno-0-542" name="__codelineno-0-542"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;OWASP markers that ship a tester — an adapter-driven probe corpus, a static</span>
+<a id="__codelineno-0-543" name="__codelineno-0-543"></a><span class="sd">    scanner (LLM03 supply-chain, LLM04 model poisoning), or an application-only probe</span>
+<a id="__codelineno-0-544" name="__codelineno-0-544"></a><span class="sd">    (LLM08 retrieval exposure, black-box against a RAG ``app:&lt;url&gt;``).&quot;&quot;&quot;</span>
+<a id="__codelineno-0-545" name="__codelineno-0-545"></a>    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span>
+<a id="__codelineno-0-546" name="__codelineno-0-546"></a>        <span class="p">{</span><span class="n">c</span><span class="o">.</span><span class="n">owasp</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">get_corpus</span><span class="p">()}</span> <span class="o">|</span> <span class="n">SCANNER_CATEGORIES</span> <span class="o">|</span> <span class="n">APP_ONLY_CATEGORIES</span>
+<a id="__codelineno-0-547" name="__codelineno-0-547"></a>    <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>

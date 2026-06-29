@@ -741,6 +741,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../owasp/llm04/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM04 Data and Model Poisoning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../owasp/llm08/" class="md-nav__link">
         
   
@@ -1208,6 +1236,23 @@ yet published to PyPI</strong>. The forward-looking plan is the <a href="https:/
 <h2 id="unreleased"><a href="https://github.com/wehnsdaefflae/llmsectest/compare/v0.1.0...HEAD">Unreleased</a><a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
 <h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
 <ul>
+<li><strong>OWASP LLM04 (Data and Model Poisoning) — white-box model-file scanner; coverage 9→10/10 (complete).</strong>
+  A new <code>--model-scan &lt;path&gt;</code> flag scans the project's serialized model files for the poisoning vector
+  where a tampered weights file runs attacker code the moment it is loaded. The scanner
+  (<code>probes/modelpoison.py</code>) walks the pickle <strong>opcode</strong> stream with the stdlib <code>pickletools</code> — it never
+  unpickles, so scanning is safe — and flags any <code>GLOBAL</code>/<code>STACK_GLOBAL</code> that imports a code-execution
+  primitive on load: an OS/process/exec module (<code>os</code>, <code>subprocess</code>, <code>socket</code>, <code>ctypes</code>, <code>runpy</code>, …),
+  a <code>builtins</code> <code>eval</code>/<code>exec</code>/<code>compile</code>/<code>__import__</code>, a nested-unpickle primitive (<code>pickle.loads</code>,
+  <code>numpy.load</code>, <code>torch.load</code>) — <code>critical</code> — or a reflection/partial-application gadget (<code>operator</code>,
+  <code>functools</code>, <code>importlib</code>) — <code>high</code>. It understands raw pickles (protocols 0–5), PyTorch ≥1.6 zip
+  archives (<code>.pt</code>/<code>.pth</code>/<code>.ckpt</code>) and <code>.npz</code>/<code>.npy</code> (object arrays → <code>medium</code>, plus their embedded
+  pickle). The denylist is curated and exact (like LLM03's malicious-package list), so a legitimate
+  weights file — which only references tensor-rebuild helpers (<code>torch._utils._rebuild_tensor</code>,
+  <code>collections.OrderedDict</code>, <code>numpy.core.multiarray._reconstruct</code>) — produces no finding. Offline,
+  deterministic, zero new dependencies; a richer engine (ProtectAI <code>modelscan</code> / <code>picklescan</code>) behind
+  an optional extra is a tracked follow-up, mirroring how LLM03 layers OSV.dev on its offline core. LLM04
+  is the <strong>last</strong> OWASP LLM Top 10 (2025) category — <code>--check</code> now reports <strong>10/10</strong>. New packaged
+  <code>suite/test_llm04_data_model_poisoning.py</code>; new <code>owasp/llm04.md</code> deep-dive. (2026-06-29)</li>
 <li><strong>OWASP LLM09 (Misinformation) — black-box confabulation probes; coverage 8→9/10.</strong> A new always-on
   probe corpus asks the target about entities whose ground truth is fixed by construction — they <strong>do not
   exist</strong>: a coined library function, a fabricated citation, an invented protocol and a future-dated CVE
@@ -1351,6 +1396,10 @@ yet published to PyPI</strong>. The forward-looking plan is the <a href="https:/
 </ul>
 <h3 id="changed">Changed<a class="headerlink" href="#changed" title="Permanent link">&para;</a></h3>
 <ul>
+<li>The two white-box <strong>scanner</strong> suites (LLM03 supply chain, LLM04 model poisoning) now share one
+  <code>suite/scanners.py</code> helper (<code>scanner_params</code> + <code>fail_with_finding</code>) for the skip-with-reason /
+  clean-marker / one-case-per-finding param logic and the record-and-fail body — a single source for the
+  "no silent gap" reporting, so a future scanner category cannot drift into a silent pass. (2026-06-29)</li>
 <li>The offline demo target's persona branches (agent / red-team / resource-limit) now key on named
   trigger constants instead of inline magic strings, and a guard test pins each trigger to the matching
   corpus persona — so rewording a persona can no longer silently stop a demo branch from firing.

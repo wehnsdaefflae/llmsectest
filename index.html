@@ -810,6 +810,34 @@
   
   
     <li class="md-nav__item">
+      <a href="owasp/llm04/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM04 Data and Model Poisoning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="owasp/llm08/" class="md-nav__link">
         
   
@@ -1089,7 +1117,7 @@ target — run <code>llmsectest --check</code> to see the live map.</p>
 <tr>
 <td>LLM04</td>
 <td>Data and Model Poisoning</td>
-<td>white-box — model/data provenance</td>
+<td>white-box — your model files (<code>--model-scan</code>)</td>
 </tr>
 <tr>
 <td>LLM05</td>
@@ -1127,10 +1155,11 @@ target — run <code>llmsectest --check</code> to see the live map.</p>
 <strong><a href="owasp/">OWASP coverage</a></strong> · <strong><a href="api/">API reference</a></strong></p>
 <div class="admonition note">
 <p class="admonition-title">Status</p>
-<p>Pre-alpha (active grant development). Black-box categories <strong>LLM01/02/05/06/07/09/10</strong>, the white-box
-<strong>LLM03 (supply chain)</strong> scan (<code>--repo</code>) and the black-box <strong>LLM08 (vector &amp; embedding weaknesses)</strong> RAG
-probes ship today — <strong>9/10</strong>; <strong>LLM04</strong> lands per milestone. Coverage claims here always match what the
-tool actually does — see <code>llmsectest --check</code>.</p>
+<p>Pre-alpha (active grant development). All <strong>10/10</strong> OWASP LLM Top 10 (2025) categories ship today:
+black-box probes for <strong>LLM01/02/05/06/07/09/10</strong>, white-box scanners for <strong>LLM03 (supply chain)</strong>
+(<code>--repo</code>) and <strong>LLM04 (data and model poisoning)</strong> (<code>--model-scan</code>), and black-box <strong>LLM08 (vector &amp;
+embedding weaknesses)</strong> RAG probes. What remains is depth, not breadth. Coverage claims here always
+match what the tool actually does — see <code>llmsectest --check</code>.</p>
 </div>
 
 

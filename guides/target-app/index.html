@@ -856,6 +856,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../owasp/llm04/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM04 Data and Model Poisoning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../owasp/llm08/" class="md-nav__link">
         
   
@@ -1193,9 +1221,10 @@ categories light up when you tell LLMSecTest what only you, the app's developer,
   either or both.</li>
 </ul>
 <p>Each category whose input you don't supply shows up as an <strong>explicit skip naming the flag</strong> that
-would enable it — never a silent gap. The remaining white-box categories (LLM03/04, and LLM08's
-poisoning/inversion/multi-tenant dimensions) need your app's internals and are covered by their own
-modules per milestone. Always check <code>llmsectest --check</code>.</p>
+would enable it — never a silent gap. The white-box categories run from a path you provide alongside the
+endpoint scan: add <code>--repo &lt;path&gt;</code> for <strong>LLM03 (supply chain)</strong> and <code>--model-scan &lt;path&gt;</code> for <strong>LLM04
+(data and model poisoning)</strong>. LLM08's remaining white-box dimensions (poisoning/inversion/multi-tenant)
+are covered by their own modules per milestone. Always check <code>llmsectest --check</code>.</p>
 <h2 id="when-you-cant-run-the-app-the-persona-proxy">When you can't run the app: the persona proxy<a class="headerlink" href="#when-you-cant-run-the-app-the-persona-proxy" title="Permanent link">&para;</a></h2>
 <p>If you only have the app's system prompt (not a running instance), load it onto a model and test that
 as a proxy. Lower fidelity (no guardrail/RAG/tool code), but useful:</p>

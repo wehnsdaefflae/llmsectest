@@ -743,6 +743,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../owasp/llm04/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM04 Data and Model Poisoning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../owasp/llm08/" class="md-nav__link">
         
   
@@ -1159,6 +1187,10 @@ packaged OWASP probe suite against your chosen target and writes reports.</p>
 <tr>
 <td><code>--osv</code></td>
 <td>With <code>--repo</code>: also query <a href="https://osv.dev">OSV.dev</a> for <strong>known CVEs</strong> in every exactly-pinned (<code>==X.Y.Z</code>) dependency (networked, free, no API key). Off by default so the scan stays offline/deterministic; any non-run state (not requested, nothing pinned, lookup failed) appears as an explicit skip reason.</td>
+</tr>
+<tr>
+<td><code>--model-scan &lt;path&gt;</code></td>
+<td>Add the white-box <strong>LLM04 (data and model poisoning)</strong> scan of the serialized model files under that path. Walks each pickle's opcode stream (stdlib <code>pickletools</code>, never unpickling) and flags imports of code-execution primitives (<code>os.system</code>, <code>subprocess</code>, <code>builtins.eval</code>, nested <code>pickle</code>/<code>torch.load</code>, reflection gadgets) that would run on load — across raw pickles, PyTorch <code>.pt</code>/<code>.pth</code>/<code>.ckpt</code> zips and numpy object arrays. Offline and deterministic; a clean weights file does not false-positive.</td>
 </tr>
 <tr>
 <td><code>--redteam-set &lt;csv&gt;</code></td>
