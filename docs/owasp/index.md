@@ -46,11 +46,12 @@ When you point LLMSecTest at a running app (`--target app:<url>`, or the `run_ap
 system prompt), it tests **only what black-box access can actually reach**, and reports the rest — never
 a silent pass:
 
-- **LLM01 (prompt injection)**, **LLM05 (improper output handling)** and **LLM09 (misinformation)**
-  transfer with no setup: the attack-side marker (or, for LLM09, a guaranteed-nonexistent entity) lives in
-  the attack, so the app needs to reveal nothing for a finding to be unambiguous. (LLM10 is exercised
-  against a *model* target but reported not-exercised against an *app* endpoint until a bounded black-box
-  probe lands — an uncapped app would generate to its context limit on the unbounded prompts.)
+- **LLM01 (prompt injection)**, **LLM05 (improper output handling)**, **LLM09 (misinformation)** and
+  **LLM10 (unbounded consumption)** transfer with no setup: the attack-side marker (or, for LLM09, a
+  guaranteed-nonexistent entity) lives in the attack, so the app needs to reveal nothing for a finding to
+  be unambiguous. (LLM10 uses a *bounded* repetition-flood probe against an app — an explicit finite repeat
+  count, above the flood threshold yet a short reply — so a flooding app is flagged without the unbounded
+  model-mode prompts ever risking a runaway generation against an uncapped endpoint.)
 - **LLM07 (system-prompt leakage)**, **LLM02 (sensitive disclosure)**, **LLM06 (excessive agency)** and
   **LLM08 (vector & embedding weaknesses)** light up once you tell LLMSecTest what a leak looks like — the
   app's own system prompt, a known secret it holds, its privileged action signatures, or (for a RAG app)

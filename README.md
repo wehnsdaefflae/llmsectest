@@ -19,7 +19,7 @@ Funded by the German Federal Ministry of Research, Technology and Space (BMFTR)
 via the [Prototype Fund](https://prototypefund.de) (FKZ 16IS26S10). MIT-licensed.
 See [Funding](#funding).
 
-> **Status: pre-alpha (grant week 4).** In place: the unified LLM adapter; the
+> **Status: pre-alpha (grant week 5).** In place: the unified LLM adapter; the
 > pytest plugin + reporting layer (SARIF v2.1.0 / HTML / JSON / Markdown, OWASP
 > metadata, risk scoring, baselines, policy gates); the real, adapter-driven probe
 > suite covering **OWASP LLM01 (prompt injection), LLM02 (sensitive information
@@ -153,8 +153,12 @@ the target:
   skipped (needs a model path), never a silent pass.
 - **A real app endpoint** (`--target app:<url>`) is black-box: the attack-side-marker
   categories always transfer (**LLM01** prompt injection, **LLM05** improper output
-  handling, and **LLM09** misinformation — does the app confabulate facts about an
-  entity that does not exist?). **LLM07/02/06/08** light up when you tell LLMSecTest
+  handling, **LLM09** misinformation — does the app confabulate facts about an
+  entity that does not exist? — and **LLM10** unbounded consumption, via a *bounded*
+  repetition-flood probe: it asks the app to repeat a marker an explicit, finite
+  number of times — above the flood threshold yet a short reply — so a vulnerable app
+  that floods on demand is flagged while a disciplined one caps or refuses, with no
+  risk of a runaway generation). **LLM07/02/06/08** light up when you tell LLMSecTest
   what to look for:
   `--app-prompt <text-or-file>` (the app's own system prompt) enables **LLM07**
   leakage detection, `--app-secret <value>` (a real secret the app holds) enables

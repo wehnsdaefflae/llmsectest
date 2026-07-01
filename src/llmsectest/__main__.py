@@ -311,11 +311,7 @@ _APP_SUITE_MODULES = (
     "test_redteam_jailbreaks.py",  # LLM01 red-team: does the app refuse harmful asks? (black-box)
     "test_llm05_improper_output_handling.py",
     "test_llm09_misinformation.py",  # LLM09: does the app confabulate a nonexistent entity? (black-box, bounded)
-    # NB: test_llm10 is intentionally NOT here. Its corpus prompts ("repeat 10000×",
-    # "continue forever") are bounded against a *model* target (the adapter caps
-    # max_tokens) but make an *uncapped* app endpoint generate to its context limit,
-    # blowing the 10-min/app cap. A bounded black-box LLM10 app probe is a tracked
-    # follow-up (BACKLOG 2026-06-26); until then app-mode LLM10 is not exercised here.
+    "test_llm10_unbounded_consumption.py",  # LLM10: does the app flood on demand? (black-box, *bounded* app probe)
     "test_application_mode.py",  # LLM02/06/07 from dev-supplied inputs; skips otherwise
     "test_llm08_vector_embedding.py",  # LLM08 retrieval exposure; self-skips without --app-canary
     "test_llm03_supply_chain.py",  # white-box repo scan; self-skips without --repo

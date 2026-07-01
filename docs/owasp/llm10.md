@@ -28,16 +28,18 @@ examples" sample. Because the signal is *willingness to flood*, it is visible ev
 budget — the target does not have to literally generate forever, and the detector does not depend on the
 adapter's own `max_tokens` cap.
 
-The marker lives in the attack, so against a **model** target the probe needs no setup — the adapter's
-`max_tokens` keeps the "repeat 10,000×" / "continue forever" prompts bounded. Against a real **application
-endpoint** (`--target app:<url>`), though, the app supplies no token cap, so those same prompts would make
-an uncapped app generate to its context limit and blow the per-app time budget; until a *bounded* black-box
-LLM10 app probe lands, an app scan reports LLM10 as **not exercised, with that reason** (never a silent
-pass — see the [coverage map](index.md)).
+The marker lives in the attack, so the probe needs no setup. Against a **model** target the adapter's
+`max_tokens` keeps the "repeat 10,000×" / "continue forever" prompts bounded. A real **application
+endpoint** (`--target app:<url>`) supplies no token cap, so those same unbounded prompts would make an
+uncapped app generate to its context limit and blow the per-app time budget. App mode therefore uses a
+**bounded** probe instead: it asks the app to repeat a short marker an *explicit, finite* number of times —
+above the flood threshold yet a short reply. The request has a natural terminus, so it cannot run away; a
+vulnerable app that floods the marker on demand is flagged, while a disciplined one caps or refuses. So
+LLM10 is exercised black-box against an app, not skipped.
 
 ```bash
-llmsectest --target ollama:llama3                     # includes the LLM10 probes (model target)
-llmsectest --target app:http://localhost:8000/chat    # LLM10 reported not-exercised (bounded probe pending)
+llmsectest --target ollama:llama3                     # unbounded probes (model target; max_tokens caps them)
+llmsectest --target app:http://localhost:8000/chat    # bounded repetition-flood probe (real app endpoint)
 ```
 
 !!! note "Repetition/volume oracle"

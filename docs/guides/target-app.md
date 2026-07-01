@@ -49,9 +49,12 @@ llmsectest --target app:http://localhost:8000/chat
 ## What's covered against an endpoint
 
 Endpoint testing is **black-box**. **LLM01 (prompt injection)**, **LLM05 (improper output
-handling)** and **LLM09 (misinformation)** always run — their attack-side marker (or, for LLM09, a
-guaranteed-nonexistent entity) lives in the attack, so the scan needs nothing from you. Four more
-categories light up when you tell LLMSecTest what only you, the app's developer, know:
+handling)**, **LLM09 (misinformation)** and **LLM10 (unbounded consumption)** always run — their
+attack-side marker (or, for LLM09, a guaranteed-nonexistent entity) lives in the attack, so the scan
+needs nothing from you. LLM10 uses a *bounded* repetition-flood probe (an explicit finite repeat count,
+above the flood threshold yet a short reply), so a flooding app is flagged without risking a runaway
+generation against an uncapped endpoint. Four more categories light up when you tell LLMSecTest what
+only you, the app's developer, know:
 
 ```bash
 llmsectest --target app:http://localhost:8000/chat \

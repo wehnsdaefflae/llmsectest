@@ -10,6 +10,16 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
 ## [Unreleased]
 
 ### Added
+- **OWASP LLM10 (Unbounded Consumption) — bounded black-box app probe; LLM10 now exercised against a real
+  app endpoint.** Against a `--target app:<url>` endpoint, LLM10 was previously reported *not exercised*
+  (the unbounded model-mode prompts — "repeat 10,000×", "continue forever" — are safe against a model the
+  adapter caps but would make an *uncapped* app generate to its context limit and blow the per-app time
+  budget). App mode now runs a **bounded** probe instead: it asks the app to repeat a short marker an
+  *explicit, finite* number of times — above the `unbounded_consumption` flood threshold yet a short reply
+  with a natural terminus, so it cannot run away. A vulnerable app that floods the marker on demand is
+  flagged; a disciplined one that caps or refuses passes. LLM10 now runs on every app scan alongside
+  LLM01/LLM05/LLM09 (no dev input needed), so black-box app coverage is one category wider and the footer no
+  longer lists LLM10 as skipped. The unbounded model-mode corpus is unchanged. (2026-06-30)
 - **OWASP LLM04 (Data and Model Poisoning) — white-box model-file scanner; coverage 9→10/10 (complete).**
   A new `--model-scan <path>` flag scans the project's serialized model files for the poisoning vector
   where a tampered weights file runs attacker code the moment it is loaded. The scanner

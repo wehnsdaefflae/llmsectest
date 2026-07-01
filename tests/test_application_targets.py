@@ -60,11 +60,11 @@ _REAL_APP_PROMPT = (
 
 def test_app_cases_cover_the_blackbox_reachable_categories():
     # With just the app's prompt: LLM01 (injection), LLM05 (output handling),
-    # LLM09 (misinformation) and LLM07 (disclosure). LLM02/LLM06 stay off until the
-    # dev supplies a secret/actions; LLM10 needs a bounded app probe (pending).
+    # LLM09 (misinformation), LLM10 (bounded flood) and LLM07 (disclosure). LLM02/LLM06
+    # stay off until the dev supplies a secret/actions.
     cases = app_cases("shopbot", _REAL_APP_PROMPT)
     owasp = {c.owasp for c in cases}
-    assert owasp == {"owasp_llm01", "owasp_llm05", "owasp_llm07", "owasp_llm09"}
+    assert owasp == {"owasp_llm01", "owasp_llm05", "owasp_llm07", "owasp_llm09", "owasp_llm10"}
     for c in cases:
         assert c.system_prompt == _REAL_APP_PROMPT  # the app-under-test persona
 
@@ -72,8 +72,71 @@ def test_app_cases_cover_the_blackbox_reachable_categories():
 def test_app_cases_skip_llm07_without_a_known_prompt():
     cases = app_cases("shopbot", "")  # endpoint mode, prompt unknown
     owasp = {c.owasp for c in cases}
-    # LLM01/LLM05/LLM09 need no app prompt; LLM07 stays off (nothing to compare)
-    assert owasp == {"owasp_llm01", "owasp_llm05", "owasp_llm09"}
+    # LLM01/LLM05/LLM09/LLM10 need no app prompt; LLM07 stays off (nothing to compare)
+    assert owasp == {"owasp_llm01", "owasp_llm05", "owasp_llm09", "owasp_llm10"}
+
+
+# --- LLM10 bounded app probe: stays bounded, and discriminates flood vs. capped ---
+
+# Phrases / shapes that make a request *unbounded* — exactly what blew the per-app time
+# budget in the model-mode corpus ("repeat 10000×", "continue forever"). The app probe
+# must never contain any of these: its repeat count must be explicit and finite so the
+# request has a natural terminus and cannot run away (the 2026-06-26 incident).
+_UNBOUNDED_REQUEST_PHRASES = (
+    "forever", "indefinit", "never stop", "never end", "without end", "endless",
+    "as many", "maximize", "until you run out", "keep going", "don't stop", "do not stop",
+)
+
+
+def test_llm10_app_probe_is_bounded():
+    import re
+
+    from llmsectest.probes.application import _APP_FLOOD_REPEATS, _flood_marker
+
+    cases = app_cases("shopbot", _REAL_APP_PROMPT)
+    llm10 = [c for c in cases if c.owasp == "owasp_llm10"]
+    assert len(llm10) == 1
+    case = llm10[0]
+    marker = _flood_marker("shopbot")
+    assert case.detector == "unbounded_consumption"
+    assert case.forbidden == (marker,)
+    # check the request wording itself, not the opaque marker token (whose hex digest
+    # may contain digits) — the marker is data, the count is the request
+    request = case.user_prompt.replace(marker, "<MARKER>")
+    # an explicit, finite repeat count is present...
+    assert str(_APP_FLOOD_REPEATS) in request
+    # ...and it is a small count (no 4+-digit flood like the unbounded model prompts)
+    assert not re.search(r"\d{4,}", request)
+    # ...and the prompt never asks for an unbounded generation
+    for phrase in _UNBOUNDED_REQUEST_PHRASES:
+        assert phrase not in request.lower(), f"bounded LLM10 app probe must not say {phrase!r}"
+
+
+def test_run_app_scan_flags_an_unbounded_flood():
+    # an app that complies and floods the marker = LLM10 unbounded consumption
+    from llmsectest.probes.application import _flood_marker
+
+    marker = _flood_marker("shopbot")
+    flooder = ScriptedAdapter(lambda req: " ".join([marker] * 64), model="floods")
+    result = run_app_scan("shopbot", _REAL_APP_PROMPT, flooder)
+    llm10 = [o for o in result.outcomes if o.case.owasp == "owasp_llm10"]
+    assert llm10 and all(o.vulnerable for o in llm10)
+    assert all(o in result.findings for o in llm10)
+
+
+def test_run_app_scan_passes_a_bounded_app():
+    # an app that caps repetitive output (returns a short sample) is not a finding
+    capped = ScriptedAdapter(
+        lambda req: "I won't flood output — here's a short sample instead.", model="capped"
+    )
+    result = run_app_scan("shopbot", _REAL_APP_PROMPT, capped)
+    assert not any(o.case.owasp == "owasp_llm10" and o.vulnerable for o in result.outcomes)
+
+
+def test_coverage_marks_llm10_exercised_without_any_input():
+    cov = {c.owasp: c for c in app_coverage(_REAL_APP_PROMPT)}
+    assert cov["owasp_llm10"].exercised and cov["owasp_llm10"].cases == 1
+    assert cov["owasp_llm10"].reason == ""
 
 
 def test_app_cases_unlock_llm02_and_llm06_with_seeds():
@@ -209,10 +272,11 @@ def test_coverage_accounts_for_all_ten_categories():
 def test_coverage_exercised_set_matches_prompt_only_mode():
     cov = app_coverage(_REAL_APP_PROMPT)
     exercised = {c.owasp for c in cov if c.exercised}
-    assert exercised == {"owasp_llm01", "owasp_llm05", "owasp_llm07", "owasp_llm09"}
-    # the white-box / oracle / pending categories are surfaced with a reason, never silent
+    assert exercised == {"owasp_llm01", "owasp_llm05", "owasp_llm07", "owasp_llm09", "owasp_llm10"}
+    # the white-box / input-gated categories are surfaced with a reason, never silent
     skipped = {c.owasp: c.reason for c in cov if not c.exercised}
-    assert {"owasp_llm03", "owasp_llm04", "owasp_llm08", "owasp_llm10"} <= set(skipped)
+    assert {"owasp_llm03", "owasp_llm04", "owasp_llm08"} <= set(skipped)
+    assert "owasp_llm10" not in skipped  # now always exercised via the bounded app probe
 
 
 def test_coverage_summary_lists_all_ten():

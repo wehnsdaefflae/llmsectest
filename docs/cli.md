@@ -63,7 +63,8 @@ or the full JailbreakBench corpus with `--redteam-set <csv>`); the footer prints
 red-team coverage is never a silent gap. Adding `--redteam-benign` prints, *below* the security report, the
 target's **over-refusal (false-refusal) rate** over the benign twins — a usability metric kept out of the
 findings and the exit code. A real app endpoint (`--target app:<url>`) is
-black-box: LLM01, LLM05 and LLM09 always run, and **LLM07/LLM02/LLM06/LLM08 join them when you pass
+black-box: LLM01, LLM05, LLM09 and LLM10 (a bounded repetition-flood probe) always run, and
+**LLM07/LLM02/LLM06/LLM08 join them when you pass
 `--app-prompt` / `--app-secret` / `--app-action` / `--app-canary` / `--app-rag-poison`** — each category
 whose input is missing is reported as skipped with the flag that would enable it (LLM04 is white-box and
 not yet implemented). LLM08 has two enabling markers: `--app-canary` (retrieval exposure) and
