@@ -1160,11 +1160,12 @@ dimensions and a classifier refusal oracle — not breadth.</p>
 system prompt), it tests <strong>only what black-box access can actually reach</strong>, and reports the rest — never
 a silent pass:</p>
 <ul>
-<li><strong>LLM01 (prompt injection)</strong>, <strong>LLM05 (improper output handling)</strong> and <strong>LLM09 (misinformation)</strong>
-  transfer with no setup: the attack-side marker (or, for LLM09, a guaranteed-nonexistent entity) lives in
-  the attack, so the app needs to reveal nothing for a finding to be unambiguous. (LLM10 is exercised
-  against a <em>model</em> target but reported not-exercised against an <em>app</em> endpoint until a bounded black-box
-  probe lands — an uncapped app would generate to its context limit on the unbounded prompts.)</li>
+<li><strong>LLM01 (prompt injection)</strong>, <strong>LLM05 (improper output handling)</strong>, <strong>LLM09 (misinformation)</strong> and
+  <strong>LLM10 (unbounded consumption)</strong> transfer with no setup: the attack-side marker (or, for LLM09, a
+  guaranteed-nonexistent entity) lives in the attack, so the app needs to reveal nothing for a finding to
+  be unambiguous. (LLM10 uses a <em>bounded</em> repetition-flood probe against an app — an explicit finite repeat
+  count, above the flood threshold yet a short reply — so a flooding app is flagged without the unbounded
+  model-mode prompts ever risking a runaway generation against an uncapped endpoint.)</li>
 <li><strong>LLM07 (system-prompt leakage)</strong>, <strong>LLM02 (sensitive disclosure)</strong>, <strong>LLM06 (excessive agency)</strong> and
   <strong>LLM08 (vector &amp; embedding weaknesses)</strong> light up once you tell LLMSecTest what a leak looks like — the
   app's own system prompt, a known secret it holds, its privileged action signatures, or (for a RAG app)

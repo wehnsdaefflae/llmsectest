@@ -1192,9 +1192,12 @@ LM Studio), then test it — zero API cost:</p>
 </code></pre></div>
 <h2 id="whats-covered-against-an-endpoint">What's covered against an endpoint<a class="headerlink" href="#whats-covered-against-an-endpoint" title="Permanent link">&para;</a></h2>
 <p>Endpoint testing is <strong>black-box</strong>. <strong>LLM01 (prompt injection)</strong>, <strong>LLM05 (improper output
-handling)</strong> and <strong>LLM09 (misinformation)</strong> always run — their attack-side marker (or, for LLM09, a
-guaranteed-nonexistent entity) lives in the attack, so the scan needs nothing from you. Four more
-categories light up when you tell LLMSecTest what only you, the app's developer, know:</p>
+handling)</strong>, <strong>LLM09 (misinformation)</strong> and <strong>LLM10 (unbounded consumption)</strong> always run — their
+attack-side marker (or, for LLM09, a guaranteed-nonexistent entity) lives in the attack, so the scan
+needs nothing from you. LLM10 uses a <em>bounded</em> repetition-flood probe (an explicit finite repeat count,
+above the flood threshold yet a short reply), so a flooding app is flagged without risking a runaway
+generation against an uncapped endpoint. Four more categories light up when you tell LLMSecTest what
+only you, the app's developer, know:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span>--app-prompt<span class="w"> </span>prompt.txt<span class="w"> </span><span class="se">\ </span><span class="w">                     </span><span class="c1"># your app&#39;s system prompt    → LLM07</span>
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span>--app-secret<span class="w"> </span><span class="s2">&quot;sk-canary-123&quot;</span><span class="w"> </span><span class="se">\ </span><span class="w">                </span><span class="c1"># a real secret it holds      → LLM02</span>
