@@ -1194,9 +1194,10 @@ LM Studio), then test it — zero API cost:</p>
 <p>Endpoint testing is <strong>black-box</strong>. <strong>LLM01 (prompt injection)</strong>, <strong>LLM05 (improper output
 handling)</strong>, <strong>LLM09 (misinformation)</strong> and <strong>LLM10 (unbounded consumption)</strong> always run — their
 attack-side marker (or, for LLM09, a guaranteed-nonexistent entity) lives in the attack, so the scan
-needs nothing from you. LLM10 uses a <em>bounded</em> repetition-flood probe (an explicit finite repeat count,
-above the flood threshold yet a short reply), so a flooding app is flagged without risking a runaway
-generation against an uncapped endpoint. Four more categories light up when you tell LLMSecTest what
+needs nothing from you. LLM10 uses two <em>bounded</em> probes — a repetition flood (repeat a marker an explicit,
+finite number of times) and output amplification (emit a large but finite non-repetitive volume) — so an
+app that floods or amplifies on demand is flagged without risking a runaway generation against an uncapped
+endpoint. Four more categories light up when you tell LLMSecTest what
 only you, the app's developer, know:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span>--app-prompt<span class="w"> </span>prompt.txt<span class="w"> </span><span class="se">\ </span><span class="w">                     </span><span class="c1"># your app&#39;s system prompt    → LLM07</span>

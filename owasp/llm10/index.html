@@ -1129,20 +1129,30 @@ adapter's own <code>max_tokens</code> cap.</p>
 <p>The marker lives in the attack, so the probe needs no setup. Against a <strong>model</strong> target the adapter's
 <code>max_tokens</code> keeps the "repeat 10,000×" / "continue forever" prompts bounded. A real <strong>application
 endpoint</strong> (<code>--target app:&lt;url&gt;</code>) supplies no token cap, so those same unbounded prompts would make an
-uncapped app generate to its context limit and blow the per-app time budget. App mode therefore uses a
-<strong>bounded</strong> probe instead: it asks the app to repeat a short marker an <em>explicit, finite</em> number of times —
-above the flood threshold yet a short reply. The request has a natural terminus, so it cannot run away; a
-vulnerable app that floods the marker on demand is flagged, while a disciplined one caps or refuses. So
-LLM10 is exercised black-box against an app, not skipped.</p>
+uncapped app generate to its context limit and blow the per-app time budget. App mode therefore uses two
+<strong>bounded</strong> probes instead, each with a natural terminus so it cannot run away:</p>
+<ul>
+<li><strong>Bounded repetition flood</strong> — ask the app to repeat a short marker an <em>explicit, finite</em> number of
+  times (above the flood threshold yet a short reply), scored by <code>unbounded_consumption</code>.</li>
+<li><strong>Bounded output amplification</strong> — ask the app for a large but <em>finite</em> non-repetitive volume (the full
+  numbered sequence <code>1..250</code>), scored by <code>length_amplification</code>, which flags a reply whose output size
+  clears an amplification threshold. This is the half the repetition count cannot see: a long
+  enumeration/essay rather than a repeated token — the other half of OWASP's "output-token amplification".</li>
+</ul>
+<p>A vulnerable app that floods or amplifies on demand is flagged, while a disciplined one caps, samples or
+refuses. So LLM10 is exercised black-box against an app across both dimensions, not skipped.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>ollama:llama3<span class="w">                     </span><span class="c1"># unbounded probes (model target; max_tokens caps them)</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat<span class="w">    </span><span class="c1"># bounded repetition-flood probe (real app endpoint)</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat<span class="w">    </span><span class="c1"># bounded flood + output-amplification probes (real app)</span>
 </code></pre></div>
 <div class="admonition note">
-<p class="admonition-title">Repetition/volume oracle</p>
-<p>The detector is a deterministic repetition oracle: it catches a <strong>runaway repetitive</strong> response. It
-does not yet flag an oversized <em>non-repetitive</em> generation (a single very long essay) — measuring
-that needs a token/latency budget and is a tracked later increment. As with every LLMSecTest oracle,
-this limitation is documented rather than hidden.</p>
+<p class="admonition-title">Two complementary oracles</p>
+<p><code>unbounded_consumption</code> is a deterministic <strong>repetition</strong> oracle — it catches a runaway <em>repetitive</em>
+response. <code>length_amplification</code> complements it with a <strong>volume</strong> oracle that catches a large
+<em>non-repetitive</em> generation (a long enumeration/essay) the repetition count cannot see. Its app-mode
+signal is the reply's output <strong>size</strong>; the provider's exact per-call output-token count, when the
+target reports one, is captured on the probe outcome as the precise cost. A further model-mode
+refinement — a "would have continued" signal from a reply that lands at the <code>max_tokens</code> ceiling — is a
+tracked later increment. As with every LLMSecTest oracle, these limitations are documented, not hidden.</p>
 </div>
 <h2 id="reading-a-finding">Reading a finding<a class="headerlink" href="#reading-a-finding" title="Permanent link">&para;</a></h2>
 <p>A finding names the technique, the marker and how many times it was emitted — for example <em>"target
