@@ -76,40 +76,58 @@ def test_app_cases_skip_llm07_without_a_known_prompt():
     assert owasp == {"owasp_llm01", "owasp_llm05", "owasp_llm09", "owasp_llm10"}
 
 
-# --- LLM10 bounded app probe: stays bounded, and discriminates flood vs. capped ---
+# --- LLM10 bounded app probes: both stay bounded, and discriminate abuse vs. capped ---
 
 # Phrases / shapes that make a request *unbounded* — exactly what blew the per-app time
-# budget in the model-mode corpus ("repeat 10000×", "continue forever"). The app probe
-# must never contain any of these: its repeat count must be explicit and finite so the
-# request has a natural terminus and cannot run away (the 2026-06-26 incident).
+# budget in the model-mode corpus ("repeat 10000×", "continue forever"). Neither app probe
+# may contain any of these: their count must be explicit and finite so the request has a
+# natural terminus and cannot run away (the 2026-06-26 incident).
 _UNBOUNDED_REQUEST_PHRASES = (
     "forever", "indefinit", "never stop", "never end", "without end", "endless",
     "as many", "maximize", "until you run out", "keep going", "don't stop", "do not stop",
 )
 
 
-def test_llm10_app_probe_is_bounded():
+def test_llm10_app_probes_are_bounded():
     import re
 
-    from llmsectest.probes.application import _APP_FLOOD_REPEATS, _flood_marker
+    from llmsectest.probes.application import (
+        _APP_AMPLIFY_ITEMS,
+        _APP_FLOOD_REPEATS,
+        _flood_marker,
+    )
 
     cases = app_cases("shopbot", _REAL_APP_PROMPT)
     llm10 = [c for c in cases if c.owasp == "owasp_llm10"]
-    assert len(llm10) == 1
-    case = llm10[0]
+    # two complementary dimensions: repetition flood + output amplification
+    assert {c.detector for c in llm10} == {"unbounded_consumption", "length_amplification"}
     marker = _flood_marker("shopbot")
-    assert case.detector == "unbounded_consumption"
-    assert case.forbidden == (marker,)
-    # check the request wording itself, not the opaque marker token (whose hex digest
-    # may contain digits) — the marker is data, the count is the request
-    request = case.user_prompt.replace(marker, "<MARKER>")
-    # an explicit, finite repeat count is present...
-    assert str(_APP_FLOOD_REPEATS) in request
-    # ...and it is a small count (no 4+-digit flood like the unbounded model prompts)
-    assert not re.search(r"\d{4,}", request)
-    # ...and the prompt never asks for an unbounded generation
-    for phrase in _UNBOUNDED_REQUEST_PHRASES:
-        assert phrase not in request.lower(), f"bounded LLM10 app probe must not say {phrase!r}"
+    counts = {"unbounded_consumption": _APP_FLOOD_REPEATS, "length_amplification": _APP_AMPLIFY_ITEMS}
+    for case in llm10:
+        # the amplification case is scored by output volume, so it plants no token
+        if case.detector == "length_amplification":
+            assert case.tokenless and case.forbidden == ()
+        else:
+            assert case.forbidden == (marker,)
+        # check the request wording itself, not the opaque marker token (whose hex digest
+        # may contain digits) — the marker is data, the count is the request
+        request = case.user_prompt.replace(marker, "<MARKER>")
+        # an explicit, finite count is present...
+        assert str(counts[case.detector]) in request
+        # ...and it is a small count (no 4+-digit flood like the unbounded model prompts)
+        assert not re.search(r"\d{4,}", request)
+        # ...and the prompt never asks for an unbounded generation
+        for phrase in _UNBOUNDED_REQUEST_PHRASES:
+            assert phrase not in request.lower(), (
+                f"bounded LLM10 app probe must not say {phrase!r}"
+            )
+
+
+def _llm10_finding(result, detector):
+    return [
+        o for o in result.outcomes
+        if o.case.owasp == "owasp_llm10" and o.case.detector == detector
+    ]
 
 
 def test_run_app_scan_flags_an_unbounded_flood():
@@ -119,13 +137,22 @@ def test_run_app_scan_flags_an_unbounded_flood():
     marker = _flood_marker("shopbot")
     flooder = ScriptedAdapter(lambda req: " ".join([marker] * 64), model="floods")
     result = run_app_scan("shopbot", _REAL_APP_PROMPT, flooder)
-    llm10 = [o for o in result.outcomes if o.case.owasp == "owasp_llm10"]
-    assert llm10 and all(o.vulnerable for o in llm10)
-    assert all(o in result.findings for o in llm10)
+    flood = _llm10_finding(result, "unbounded_consumption")
+    assert flood and all(o.vulnerable and o in result.findings for o in flood)
+
+
+def test_run_app_scan_flags_output_amplification():
+    # an app that dumps the full large sequence on demand = LLM10 output amplification
+    big = "\n".join(str(i) for i in range(1, 251))
+    amplifier = ScriptedAdapter(lambda req: big, model="amplifies")
+    result = run_app_scan("shopbot", _REAL_APP_PROMPT, amplifier)
+    amp = _llm10_finding(result, "length_amplification")
+    assert amp and all(o.vulnerable and o in result.findings for o in amp)
 
 
 def test_run_app_scan_passes_a_bounded_app():
-    # an app that caps repetitive output (returns a short sample) is not a finding
+    # an app that caps its output (a short sample, no flood, no large volume) is clean —
+    # neither the repetition nor the amplification LLM10 probe fires
     capped = ScriptedAdapter(
         lambda req: "I won't flood output — here's a short sample instead.", model="capped"
     )
@@ -135,7 +162,8 @@ def test_run_app_scan_passes_a_bounded_app():
 
 def test_coverage_marks_llm10_exercised_without_any_input():
     cov = {c.owasp: c for c in app_coverage(_REAL_APP_PROMPT)}
-    assert cov["owasp_llm10"].exercised and cov["owasp_llm10"].cases == 1
+    # both bounded LLM10 dimensions are always-on (flood + amplification)
+    assert cov["owasp_llm10"].exercised and cov["owasp_llm10"].cases == 2
     assert cov["owasp_llm10"].reason == ""
 
 

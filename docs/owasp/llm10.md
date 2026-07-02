@@ -31,22 +31,32 @@ adapter's own `max_tokens` cap.
 The marker lives in the attack, so the probe needs no setup. Against a **model** target the adapter's
 `max_tokens` keeps the "repeat 10,000×" / "continue forever" prompts bounded. A real **application
 endpoint** (`--target app:<url>`) supplies no token cap, so those same unbounded prompts would make an
-uncapped app generate to its context limit and blow the per-app time budget. App mode therefore uses a
-**bounded** probe instead: it asks the app to repeat a short marker an *explicit, finite* number of times —
-above the flood threshold yet a short reply. The request has a natural terminus, so it cannot run away; a
-vulnerable app that floods the marker on demand is flagged, while a disciplined one caps or refuses. So
-LLM10 is exercised black-box against an app, not skipped.
+uncapped app generate to its context limit and blow the per-app time budget. App mode therefore uses two
+**bounded** probes instead, each with a natural terminus so it cannot run away:
+
+- **Bounded repetition flood** — ask the app to repeat a short marker an *explicit, finite* number of
+  times (above the flood threshold yet a short reply), scored by `unbounded_consumption`.
+- **Bounded output amplification** — ask the app for a large but *finite* non-repetitive volume (the full
+  numbered sequence `1..250`), scored by `length_amplification`, which flags a reply whose output size
+  clears an amplification threshold. This is the half the repetition count cannot see: a long
+  enumeration/essay rather than a repeated token — the other half of OWASP's "output-token amplification".
+
+A vulnerable app that floods or amplifies on demand is flagged, while a disciplined one caps, samples or
+refuses. So LLM10 is exercised black-box against an app across both dimensions, not skipped.
 
 ```bash
 llmsectest --target ollama:llama3                     # unbounded probes (model target; max_tokens caps them)
-llmsectest --target app:http://localhost:8000/chat    # bounded repetition-flood probe (real app endpoint)
+llmsectest --target app:http://localhost:8000/chat    # bounded flood + output-amplification probes (real app)
 ```
 
-!!! note "Repetition/volume oracle"
-    The detector is a deterministic repetition oracle: it catches a **runaway repetitive** response. It
-    does not yet flag an oversized *non-repetitive* generation (a single very long essay) — measuring
-    that needs a token/latency budget and is a tracked later increment. As with every LLMSecTest oracle,
-    this limitation is documented rather than hidden.
+!!! note "Two complementary oracles"
+    `unbounded_consumption` is a deterministic **repetition** oracle — it catches a runaway *repetitive*
+    response. `length_amplification` complements it with a **volume** oracle that catches a large
+    *non-repetitive* generation (a long enumeration/essay) the repetition count cannot see. Its app-mode
+    signal is the reply's output **size**; the provider's exact per-call output-token count, when the
+    target reports one, is captured on the probe outcome as the precise cost. A further model-mode
+    refinement — a "would have continued" signal from a reply that lands at the `max_tokens` ceiling — is a
+    tracked later increment. As with every LLMSecTest oracle, these limitations are documented, not hidden.
 
 ## Reading a finding
 

@@ -26,11 +26,14 @@ class ProbeCase:
     system_prompt: str  # the application-under-test persona (may carry canaries)
     detector: str  # name of the registered detector that scores the reply
     forbidden: tuple[str, ...]  # tokens whose presence in a reply signals compromise
+    #: True for a case scored by a *metric* (e.g. output volume) rather than a planted
+    #: token — such a case legitimately carries no ``forbidden`` marker.
+    tokenless: bool = False
 
     def __post_init__(self) -> None:
         if self.severity not in SEVERITIES:
             raise ValueError(f"{self.id}: invalid severity {self.severity!r}")
-        if not self.forbidden:
+        if not self.forbidden and not self.tokenless:
             raise ValueError(f"{self.id}: at least one forbidden token is required")
 
     def __repr__(self) -> str:
@@ -45,3 +48,8 @@ class ProbeOutcome:
     response: str
     vulnerable: bool
     evidence: str
+    #: The provider-reported output-token count for the reply, when the target
+    #: returns one (local runtimes / OpenAI / Anthropic do; a black-box app
+    #: endpoint does not) — the precise per-probe cost figure. ``None`` when the
+    #: target reports no usage.
+    output_tokens: int | None = None

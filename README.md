@@ -154,11 +154,11 @@ the target:
 - **A real app endpoint** (`--target app:<url>`) is black-box: the attack-side-marker
   categories always transfer (**LLM01** prompt injection, **LLM05** improper output
   handling, **LLM09** misinformation — does the app confabulate facts about an
-  entity that does not exist? — and **LLM10** unbounded consumption, via a *bounded*
-  repetition-flood probe: it asks the app to repeat a marker an explicit, finite
-  number of times — above the flood threshold yet a short reply — so a vulnerable app
-  that floods on demand is flagged while a disciplined one caps or refuses, with no
-  risk of a runaway generation). **LLM07/02/06/08** light up when you tell LLMSecTest
+  entity that does not exist? — and **LLM10** unbounded consumption, via two *bounded*
+  probes: a repetition flood (repeat a marker an explicit, finite number of times) and
+  output amplification (emit a large but finite non-repetitive volume) — a vulnerable app
+  that floods or amplifies on demand is flagged while a disciplined one caps, samples or
+  refuses, with no risk of a runaway generation). **LLM07/02/06/08** light up when you tell LLMSecTest
   what to look for:
   `--app-prompt <text-or-file>` (the app's own system prompt) enables **LLM07**
   leakage detection, `--app-secret <value>` (a real secret the app holds) enables

@@ -10,6 +10,18 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
 ## [Unreleased]
 
 ### Added
+- **OWASP LLM10 (Unbounded Consumption) — second black-box app signal: bounded *output amplification*
+  (denial of wallet).** The app-mode LLM10 probe now runs a second dimension alongside the bounded
+  repetition flood: it asks the app for a large but *explicitly finite* non-repetitive volume (the full
+  numbered sequence `1..250`), and a new `length_amplification` detector flags a reply whose output size
+  clears an amplification threshold. This is the half the repetition oracle cannot see — a long
+  enumeration/essay rather than a repeated token — the other half of OWASP LLM10's "output-token
+  amplification". The request is bounded (a natural terminus), so like the flood probe it cannot run away
+  against an uncapped endpoint. Both LLM10 app probes are always-on (no dev input). `run_probe` now also
+  records the provider's per-call **output-token count** on the probe outcome (the precise denial-of-wallet
+  cost figure) when the target reports usage; a black-box endpoint that reports none falls back to the size
+  estimate. Live-calibrated against the app cohort (a compliant app counts fully to 250 → flagged; a
+  capping/refusing one → passes). (2026-07-02)
 - **OWASP LLM10 (Unbounded Consumption) — bounded black-box app probe; LLM10 now exercised against a real
   app endpoint.** Against a `--target app:<url>` endpoint, LLM10 was previously reported *not exercised*
   (the unbounded model-mode prompts — "repeat 10,000×", "continue forever" — are safe against a model the

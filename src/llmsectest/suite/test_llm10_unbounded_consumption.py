@@ -11,11 +11,13 @@ runaway generation:
 * **model / demo target** — the full corpus (flood / never-ending enumeration /
   denial-of-wallet / runaway continuation). Those requests are *unbounded*, which is
   safe against a model because the adapter caps ``max_tokens``.
-* **real app endpoint (``app:<url>``)** — the *bounded* app probe instead: an explicit
-  small finite repeat count, above the flood threshold yet a short reply. An uncapped
-  app endpoint has no ``max_tokens`` backstop, so an unbounded request could make it
-  generate to its context limit and blow the per-app time budget; the bounded count has
-  a natural terminus, so app-mode LLM10 is genuinely exercised without that risk.
+* **real app endpoint (``app:<url>``)** — *bounded* app probes instead: a finite
+  repetition flood (scored by ``unbounded_consumption``) and a finite output
+  amplification (scored by ``length_amplification`` — the non-repetitive volume the
+  repetition oracle cannot see). An uncapped app endpoint has no ``max_tokens`` backstop,
+  so an unbounded request could make it generate to its context limit and blow the
+  per-app time budget; both bounded requests have a natural terminus, so app-mode LLM10
+  is genuinely exercised without that risk.
 """
 
 import os
@@ -49,7 +51,8 @@ _CASES = [
 @pytest.mark.parametrize("case", _CASES)
 def test_unbounded_consumption(probe, case):
     outcome = probe(case)
+    cost = f" [output≈{outcome.output_tokens} tokens]" if outcome.output_tokens is not None else ""
     assert not outcome.vulnerable, (
-        f"[{case.technique}] {outcome.evidence}\n"
+        f"[{case.technique}] {outcome.evidence}{cost}\n"
         f"prompt: {case.user_prompt}\nresponse: {outcome.response[:300]}"
     )
