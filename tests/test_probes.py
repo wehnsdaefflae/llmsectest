@@ -8,6 +8,7 @@ safe to keep in the default CI collection.
 
 from __future__ import annotations
 
+from llmsectest.adapters.base import CompletionResponse, LLMAdapter
 from llmsectest.adapters.mock import ScriptedAdapter
 from llmsectest.probes import (
     APP_ONLY_CATEGORIES,
@@ -35,6 +36,23 @@ PROBE_CATEGORIES = {
 }
 
 
+class _UsageAdapter(LLMAdapter):
+    """A mock target that returns fixed ``text`` with a caller-supplied ``usage`` block,
+    so a test can pin how ``run_probe`` reads the provider's output-token count."""
+
+    provider = "mock"
+
+    def __init__(self, usage: dict, text: str = "hello"):
+        super().__init__("m")
+        self._usage = usage
+        self._text = text
+
+    def complete(self, request):
+        return CompletionResponse(
+            text=self._text, model="m", provider="mock", usage=self._usage
+        )
+
+
 def test_corpus_covers_implemented_categories():
     assert set(covered_categories()) == (
         PROBE_CATEGORIES | SCANNER_CATEGORIES | APP_ONLY_CATEGORIES
@@ -53,7 +71,9 @@ def test_corpus_cases_are_well_formed():
         assert case.id not in seen_ids, f"duplicate case id {case.id}"
         seen_ids.add(case.id)
         assert case.severity in SEVERITIES
-        assert case.forbidden, f"{case.id} has no forbidden tokens"
+        # a token-scored case names its canary; a metric-scored (tokenless) case is
+        # legitimately marker-free — the ProbeCase invariant already enforces the xor
+        assert case.forbidden or case.tokenless, f"{case.id} has no forbidden tokens"
         assert case.user_prompt and case.system_prompt
         # detector must be registered
         get_detector(case.detector)
@@ -61,6 +81,10 @@ def test_corpus_cases_are_well_formed():
 
 def test_detectors_flag_present_tokens():
     for case in get_corpus():
+        # a metric-scored (tokenless) case has no planted token to leak — it is
+        # exercised through the demo-target and length/ceiling unit tests instead
+        if case.tokenless:
+            continue
         detector = get_detector(case.detector)
         # Repeat the token so the assertion is detector-agnostic: substring oracles
         # flag a single occurrence, while the volume oracle (LLM10
@@ -169,7 +193,6 @@ def test_run_probe_records_provider_output_tokens():
     """The per-probe output-token cost is captured when the provider reports it (across
     the OpenAI/Ollama and Anthropic key spellings) and is None for a target that reports
     no usage (a black-box endpoint or the offline mock)."""
-    from llmsectest.adapters.base import CompletionResponse, LLMAdapter
     from llmsectest.probes.models import ProbeCase
 
     case = ProbeCase(
@@ -177,22 +200,62 @@ def test_run_probe_records_provider_output_tokens():
         user_prompt="hi", system_prompt="", detector="injection_marker", forbidden=("X",),
     )
 
-    class _UsageAdapter(LLMAdapter):
-        provider = "mock"
-
-        def __init__(self, usage):
-            super().__init__("m")
-            self._usage = usage
-
-        def complete(self, request):
-            return CompletionResponse(
-                text="hello", model="m", provider="mock", usage=self._usage
-            )
-
     assert run_probe(_UsageAdapter({"completion_tokens": 42}), case).output_tokens == 42
     assert run_probe(_UsageAdapter({"output_tokens": 7}), case).output_tokens == 7
     assert run_probe(_UsageAdapter({}), case).output_tokens is None
     assert run_probe(ScriptedAdapter(lambda req: "hi"), case).output_tokens is None
+
+
+def test_output_ceiling_reached_signal():
+    """The token-ceiling helper flags a reply that consumed (almost) the whole budget,
+    ignores one that stayed under it, and is inert without a provider token count."""
+    from llmsectest.probes.detectors import output_ceiling_reached
+
+    assert output_ceiling_reached(512, 512)[0] is True
+    assert output_ceiling_reached(503, 512)[0] is True  # within the 0.98 margin
+    assert output_ceiling_reached(400, 512)[0] is False
+    assert output_ceiling_reached(None, 512)[0] is False  # black-box endpoint: inert
+    assert output_ceiling_reached(512, 0)[0] is False  # no usable ceiling
+
+
+def test_run_probe_flags_cost_ceiling_case_at_the_token_budget():
+    """A ``cost_ceiling`` case is flagged when the reply fills the request's max_tokens
+    budget (a would-have-continued runaway) even though its short text clears the length
+    oracle — and is clean when the target bounds itself or reports no usage."""
+    from llmsectest.probes.models import ProbeCase
+
+    case = ProbeCase(
+        id="CEIL", owasp="owasp_llm10", title="ceiling", severity="medium",
+        technique="output-token ceiling", user_prompt="write forever", system_prompt="",
+        detector="length_amplification", forbidden=(), tokenless=True, cost_ceiling=True,
+    )
+    # "hello" is far under the length oracle, so the ceiling signal is what decides here.
+    filled = run_probe(_UsageAdapter({"completion_tokens": 512}), case)
+    assert filled.vulnerable and "output-token ceiling" in filled.evidence
+    assert not run_probe(_UsageAdapter({"completion_tokens": 60}), case).vulnerable
+    assert not run_probe(_UsageAdapter({}), case).vulnerable  # no usage: inert, not a FP
+
+
+def test_cost_ceiling_is_opt_in_only():
+    """A budget-filling reply does not auto-flag an ordinary case — only the case's own
+    text detector decides unless it opts into the ceiling signal."""
+    from llmsectest.probes.models import ProbeCase
+
+    ordinary = ProbeCase(
+        id="ORD", owasp="owasp_llm01", title="t", severity="high", technique="t",
+        user_prompt="hi", system_prompt="", detector="injection_marker", forbidden=("X",),
+    )
+    outcome = run_probe(_UsageAdapter({"completion_tokens": 512}, text="benign reply"), ordinary)
+    assert not outcome.vulnerable
+
+
+def test_llm10_output_ceiling_case_is_registered():
+    """The model-mode corpus ships the non-repetitive ceiling case, opted into the
+    cost-ceiling signal and marker-free (metric-scored)."""
+    ceiling = [c for c in cases_for("owasp_llm10") if c.id == "LLM10-output-ceiling"]
+    assert len(ceiling) == 1, "the output-ceiling case must be in the LLM10 corpus"
+    case = ceiling[0]
+    assert case.cost_ceiling and case.tokenless and not case.forbidden
 
 
 def test_misinformation_detector_flags_confabulation_not_a_disclaimer():

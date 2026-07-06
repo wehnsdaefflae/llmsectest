@@ -29,6 +29,15 @@ class ProbeCase:
     #: True for a case scored by a *metric* (e.g. output volume) rather than a planted
     #: token — such a case legitimately carries no ``forbidden`` marker.
     tokenless: bool = False
+    #: When True the case is *also* flagged if the reply reached the provider's output
+    #: token ceiling (the request's ``max_tokens``) — a "would-have-continued" denial-of-
+    #: wallet signal for an unbounded request. It catches a *non-repetitive* runaway (a
+    #: long essay) and a hidden-reasoning runaway that the text detectors cannot see,
+    #: since both manifest as the completion filling the whole token budget. Evaluated in
+    #: :func:`~llmsectest.probes.runner.run_probe` from the reply's ``output_tokens``, so
+    #: it only fires against a target that reports usage (a bare model, not a black-box
+    #: app endpoint). See :func:`~llmsectest.probes.detectors.output_ceiling_reached`.
+    cost_ceiling: bool = False
 
     def __post_init__(self) -> None:
         if self.severity not in SEVERITIES:

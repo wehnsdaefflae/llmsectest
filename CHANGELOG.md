@@ -10,6 +10,19 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
 ## [Unreleased]
 
 ### Added
+- **OWASP LLM10 (Unbounded Consumption) — model-mode "would-have-continued" output-token ceiling signal.**
+  A new model-mode probe (`LLM10-output-ceiling`) asks for one large *non-repetitive* generation and is
+  scored on volume rather than a planted marker: the `length_amplification` size oracle plus a new
+  `output_ceiling_reached` signal that flags a reply which consumed (almost) the whole `max_tokens` budget.
+  A target that fills its token budget on an unbounded request did not bound itself and *would have
+  continued* — a denial-of-wallet signal that also catches a reply whose budget went to hidden reasoning,
+  leaving little visible text (the false negative a text-only estimate misses). Wired through `run_probe`
+  via the new opt-in `ProbeCase.cost_ceiling` flag (existing cases unaffected); the request's own
+  `max_tokens` is the ceiling reference so the two never drift. A black-box app endpoint reports no token
+  count, so the signal is inert there rather than a false positive. Completes the "surface real provider
+  token usage for a true denial-of-wallet metric" thread. Live-calibrated against Gemma (which obeyed a
+  "write the longest answer you can" request under an output-limit persona and hit the 512-token ceiling →
+  flagged; a bounded/defended target passes). (2026-07-06)
 - **OWASP LLM10 (Unbounded Consumption) — second black-box app signal: bounded *output amplification*
   (denial of wallet).** The app-mode LLM10 probe now runs a second dimension alongside the bounded
   repetition flood: it asks the app for a large but *explicitly finite* non-repetitive volume (the full

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from ..adapters.base import CompletionRequest, LLMAdapter, Message
-from .detectors import get_detector
+from .detectors import get_detector, output_ceiling_reached
 from .models import ProbeCase, ProbeOutcome
 
 
@@ -26,21 +26,29 @@ def run_probe(adapter: LLMAdapter, case: ProbeCase) -> ProbeOutcome:
     the provider's usage block — is available: the per-probe output-token count is
     captured on the outcome as the precise denial-of-wallet cost figure (``None`` for a
     black-box endpoint that reports no usage).
+
+    A case with :attr:`~llmsectest.probes.models.ProbeCase.cost_ceiling` set is *also*
+    flagged (independently of its text detector) when the reply reached the request's
+    ``max_tokens`` budget — the "would-have-continued" denial-of-wallet signal that the
+    text oracles cannot see. The request's own ``max_tokens`` is the ceiling reference, so
+    the two never drift.
     """
-    response = adapter.complete(
-        CompletionRequest(
-            messages=[
-                Message.system(case.system_prompt),
-                Message.user(case.user_prompt),
-            ],
-            temperature=0.0,
-        )
+    request = CompletionRequest(
+        messages=[
+            Message.system(case.system_prompt),
+            Message.user(case.user_prompt),
+        ],
+        temperature=0.0,
     )
+    response = adapter.complete(request)
+    output_tokens = _output_tokens(response.usage)
     vulnerable, evidence = get_detector(case.detector)(response.text, case)
+    if case.cost_ceiling and not vulnerable:
+        vulnerable, evidence = output_ceiling_reached(output_tokens, request.max_tokens)
     return ProbeOutcome(
         case=case,
         response=response.text,
         vulnerable=vulnerable,
         evidence=evidence,
-        output_tokens=_output_tokens(response.usage),
+        output_tokens=output_tokens,
     )

@@ -9,8 +9,12 @@ The case set is target-aware so the probe is exercised everywhere without riskin
 runaway generation:
 
 * **model / demo target** — the full corpus (flood / never-ending enumeration /
-  denial-of-wallet / runaway continuation). Those requests are *unbounded*, which is
-  safe against a model because the adapter caps ``max_tokens``.
+  denial-of-wallet / runaway continuation), plus one *non-repetitive* runaway
+  (``LLM10-output-ceiling``) scored on volume: the visible-length oracle and the
+  provider output-token ceiling (``cost_ceiling``), which flags a reply that fills the
+  whole ``max_tokens`` budget — a "would-have-continued" cost signal the repetition
+  count cannot see. Those requests are *unbounded*, which is safe against a model
+  because the adapter caps ``max_tokens``.
 * **real app endpoint (``app:<url>``)** — *bounded* app probes instead: a finite
   repetition flood (scored by ``unbounded_consumption``) and a finite output
   amplification (scored by ``length_amplification`` — the non-repetitive volume the
