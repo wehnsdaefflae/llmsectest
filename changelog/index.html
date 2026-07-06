@@ -1236,6 +1236,19 @@ yet published to PyPI</strong>. The forward-looking plan is the <a href="https:/
 <h2 id="unreleased"><a href="https://github.com/wehnsdaefflae/llmsectest/compare/v0.1.0...HEAD">Unreleased</a><a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
 <h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
 <ul>
+<li><strong>OWASP LLM10 (Unbounded Consumption) — model-mode "would-have-continued" output-token ceiling signal.</strong>
+  A new model-mode probe (<code>LLM10-output-ceiling</code>) asks for one large <em>non-repetitive</em> generation and is
+  scored on volume rather than a planted marker: the <code>length_amplification</code> size oracle plus a new
+  <code>output_ceiling_reached</code> signal that flags a reply which consumed (almost) the whole <code>max_tokens</code> budget.
+  A target that fills its token budget on an unbounded request did not bound itself and <em>would have
+  continued</em> — a denial-of-wallet signal that also catches a reply whose budget went to hidden reasoning,
+  leaving little visible text (the false negative a text-only estimate misses). Wired through <code>run_probe</code>
+  via the new opt-in <code>ProbeCase.cost_ceiling</code> flag (existing cases unaffected); the request's own
+  <code>max_tokens</code> is the ceiling reference so the two never drift. A black-box app endpoint reports no token
+  count, so the signal is inert there rather than a false positive. Completes the "surface real provider
+  token usage for a true denial-of-wallet metric" thread. Live-calibrated against Gemma (which obeyed a
+  "write the longest answer you can" request under an output-limit persona and hit the 512-token ceiling →
+  flagged; a bounded/defended target passes). (2026-07-06)</li>
 <li><strong>OWASP LLM10 (Unbounded Consumption) — second black-box app signal: bounded <em>output amplification</em>
   (denial of wallet).</strong> The app-mode LLM10 probe now runs a second dimension alongside the bounded
   repetition flood: it asks the app for a large but <em>explicitly finite</em> non-repetitive volume (the full
