@@ -1167,6 +1167,13 @@ with every LLMSecTest oracle, these limitations are documented, not hidden.</p>
 produced runaway output — emitted 'FLOOD-7741' 200 times (unbounded consumption: a safe target caps or
 refuses such a request)"</em>. In SARIF it maps to LLM10 and carries LLM10's CVSS v4.0 base score (<code>8.7</code>,
 availability-weighted) as its <code>security-severity</code>.</p>
+<p>When the target reports token usage, each finding also carries its real <strong>output-token cost</strong> (the
+<code>output_tokens</code> result property) — the concrete denial-of-wallet figure for that probe — and the run
+records a <strong><code>denial_of_wallet</code></strong> summary (total, peak and mean output tokens across every probe that
+reported usage, pass or fail). The HTML report shows the per-finding cost as a badge and the run total in
+its header, so a token-hungry-but-well-behaved target is still visible as a cost signal and CI can track
+total token spend over time. A black-box <code>app:&lt;url&gt;</code> endpoint reports no usage, so it simply contributes
+nothing to these figures rather than skewing them.</p>
 <h2 id="remediation">Remediation<a class="headerlink" href="#remediation" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>Cap output length</strong> (<code>max_tokens</code>) and total request size on every call, server-side, regardless of

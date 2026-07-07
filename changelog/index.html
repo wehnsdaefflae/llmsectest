@@ -1236,6 +1236,15 @@ yet published to PyPI</strong>. The forward-looking plan is the <a href="https:/
 <h2 id="unreleased"><a href="https://github.com/wehnsdaefflae/llmsectest/compare/v0.1.0...HEAD">Unreleased</a><a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
 <h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
 <ul>
+<li><strong>Denial-of-wallet token cost surfaced in reports (OWASP LLM10).</strong> Every probe that reports token usage
+  now records its real provider <code>output_tokens</code>, and the report carries it two ways: each SARIF finding
+  gains an <code>output_tokens</code> property (its concrete per-probe cost) and the run gains a <code>denial_of_wallet</code>
+  summary (total, peak and mean output tokens across every probe that reported usage — <em>pass or fail</em>, so a
+  well-behaved but token-hungry target is still visible as a cost signal). The HTML report renders the
+  per-finding cost as a badge and the run total in its header, so a report reader sees the denial-of-wallet
+  cost and CI can track total token spend over time. A black-box <code>app:&lt;url&gt;</code> endpoint reports no usage and
+  simply contributes nothing, so the figures never false-positive. Completes the reporting side of the
+  "surface real provider token usage for a true denial-of-wallet metric" thread. (2026-07-07)</li>
 <li><strong>OWASP LLM10 (Unbounded Consumption) — model-mode "would-have-continued" output-token ceiling signal.</strong>
   A new model-mode probe (<code>LLM10-output-ceiling</code>) asks for one large <em>non-repetitive</em> generation and is
   scored on volume rather than a planted marker: the <code>length_amplification</code> size oracle plus a new

@@ -2,62 +2,62 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://docs.llmsec.dev/</loc>
-         <lastmod>2026-07-06</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://docs.llmsec.dev/api/</loc>
-         <lastmod>2026-07-06</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://docs.llmsec.dev/changelog/</loc>
-         <lastmod>2026-07-06</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://docs.llmsec.dev/cli/</loc>
-         <lastmod>2026-07-06</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://docs.llmsec.dev/getting-started/</loc>
-         <lastmod>2026-07-06</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://docs.llmsec.dev/guides/authoring/</loc>
-         <lastmod>2026-07-06</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://docs.llmsec.dev/guides/ci/</loc>
-         <lastmod>2026-07-06</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://docs.llmsec.dev/guides/target-app/</loc>
-         <lastmod>2026-07-06</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://docs.llmsec.dev/owasp/</loc>
-         <lastmod>2026-07-06</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://docs.llmsec.dev/owasp/llm01/</loc>
-         <lastmod>2026-07-06</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://docs.llmsec.dev/owasp/llm03/</loc>
-         <lastmod>2026-07-06</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://docs.llmsec.dev/owasp/llm04/</loc>
-         <lastmod>2026-07-06</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://docs.llmsec.dev/owasp/llm08/</loc>
-         <lastmod>2026-07-06</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://docs.llmsec.dev/owasp/llm09/</loc>
-         <lastmod>2026-07-06</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
     <url>
          <loc>https://docs.llmsec.dev/owasp/llm10/</loc>
-         <lastmod>2026-07-06</lastmod>
+         <lastmod>2026-07-07</lastmod>
     </url>
 </urlset>
