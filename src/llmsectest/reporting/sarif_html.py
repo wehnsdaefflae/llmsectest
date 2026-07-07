@@ -140,6 +140,9 @@ def _finding_card(result: dict, rule: dict) -> str:
         sub.append(f'<code class="loc">{_esc(loc)}</code>')
     if cwes:
         sub.append('<span class="cwe">' + ", ".join(_esc(c) for c in cwes) + "</span>")
+    cost = _props(result).get("output_tokens")
+    if isinstance(cost, (int, float)) and not isinstance(cost, bool):
+        sub.append(f'<span class="cost">{int(cost)} output tokens</span>')
     if sub:
         parts.append('<div class="f-sub">' + " ".join(sub) + "</div>")
     if msg:
@@ -277,6 +280,7 @@ h2.cat .cnt { color:var(--muted); font-weight:500; font-size:14px; }
 .f-sub { margin-top:7px; display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
 .f-sub .loc { background:#eef1f5; padding:2px 7px; border-radius:5px; font-size:12.5px; color:#33414f; }
 .f-sub .cwe { color:var(--muted); font-size:12.5px; }
+.f-sub .cost { background:#fdf3e3; color:#8a5a12; padding:2px 7px; border-radius:5px; font-size:12.5px; }
 .f-msg { margin:11px 0 0; background:#0f172a; color:#dbe4f0; padding:12px 14px; border-radius:8px;
   font-size:12.5px; line-height:1.45; max-height:260px; overflow:auto; white-space:pre-wrap;
   word-break:break-word; }
@@ -318,7 +322,14 @@ def render_sarif_html(doc: dict, *, source_name: str | None = None,
             findings.append((result, rules.get(result.get("ruleId"), {})))
 
     generated = generated or datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    meta_bits = [b for b in (tool_str, source_name, generated) if b]
+    # Run-level denial-of-wallet cost (real provider output-token spend), when present.
+    dow = _props(runs[0]).get("denial_of_wallet") if runs else None
+    cost_bit = (
+        f"{dow['total_output_tokens']} output tokens ({dow['probes_with_usage']} probes)"
+        if isinstance(dow, dict) and "total_output_tokens" in dow
+        else None
+    )
+    meta_bits = [b for b in (tool_str, source_name, generated, cost_bit) if b]
 
     # Group findings by OWASP category, ordered LLM01..LLM10 then Other; within a
     # group, most severe first.

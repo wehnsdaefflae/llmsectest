@@ -85,6 +85,20 @@ def test_third_party_sarif_without_owasp_props_degrades_gracefully():
     assert "a generic finding" in html
 
 
+def test_renders_per_finding_output_token_cost():
+    """A finding carrying an ``output_tokens`` cost shows it as a badge; the
+    run-level denial-of-wallet total appears in the header meta line."""
+    costly = dict(_RESULT_LLM01, properties={"output_tokens": 512})
+    doc = _doc([costly], [_RULE_LLM01])
+    doc["runs"][0]["properties"] = {
+        "denial_of_wallet": {"probes_with_usage": 3, "total_output_tokens": 640,
+                             "peak_output_tokens": 512, "mean_output_tokens": 213.3}
+    }
+    html = render_sarif_html(doc)
+    assert "512 output tokens" in html                 # per-finding cost badge
+    assert "640 output tokens (3 probes)" in html      # run-level total in the meta line
+
+
 def test_render_sarif_file_writes_html(tmp_path):
     src = tmp_path / "scan.sarif"
     src.write_text(json.dumps(_doc([_RESULT_LLM01], [_RULE_LLM01])), encoding="utf-8")

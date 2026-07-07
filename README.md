@@ -213,8 +213,10 @@ llmsectest --validate results/out.sarif
 
 A failed security test becomes a SARIF finding with OWASP metadata, CWE tags, a
 **CVSS v4.0 base score** (vector + score, surfaced as `security-severity`), and
-remediation guidance — ready for the GitHub Security tab. See [`examples/`](examples/)
-for one test module per OWASP category.
+remediation guidance — ready for the GitHub Security tab. When the target reports
+token usage, each finding also carries its real **output-token cost** and the run
+records a **denial-of-wallet total** (the LLM10 cost figure, trackable over time).
+See [`examples/`](examples/) for one test module per OWASP category.
 
 ## Install
 

@@ -519,6 +519,38 @@ class TestSARIFGeneration:
         assert "def test_prompt_injection" not in msg  # no test source
         assert "AssertionError" not in msg              # no pytest traceback
 
+    def test_output_token_cost_flows_to_finding_and_run_aggregate(self):
+        """The provider's per-probe output-token cost (recorded by the probe fixture)
+        rides onto the finding's SARIF properties, and a run-level denial-of-wallet
+        aggregate is computed over every probe reporting usage — pass or fail."""
+        results = [
+            TestResult(
+                nodeid="…::test_unbounded_consumption[LLM10-output-ceiling]",
+                location=("src/llmsectest/suite/test_llm10_unbounded_consumption.py", 56, "t"),
+                outcome="failed",
+                longrepr="Failed: [runaway] target generated to the output-token ceiling",
+                markers=["security", "owasp_llm10", "high"],
+                properties={"llmsec_finding": "[runaway] hit the ceiling", "output_tokens": 512},
+            ),
+            TestResult(  # a passing probe still contributes its cost to the run total
+                nodeid="…::test_unbounded_consumption[LLM10-flood]",
+                location=("src/llmsectest/suite/test_llm10_unbounded_consumption.py", 56, "t"),
+                outcome="passed",
+                markers=["security", "owasp_llm10", "high"],
+                properties={"output_tokens": 40},
+            ),
+        ]
+        generator = SARIFGenerator("llmsectest", "0.1.0", source_root=".")
+        sarif = json.loads(generator.generate(results))
+        run = sarif["runs"][0]
+        # per-finding cost on the (single) failed result
+        assert run["results"][0]["properties"]["output_tokens"] == 512
+        # run-level aggregate over both probes (pass + fail)
+        dow = run["properties"]["denial_of_wallet"]
+        assert dow["probes_with_usage"] == 2
+        assert dow["total_output_tokens"] == 552
+        assert dow["peak_output_tokens"] == 512
+
     def test_sarif_version(self, sample_results):
         """Verify SARIF output uses version 2.1.0."""
         generator = SARIFGenerator("llmsectest", "0.1.0", source_root=".")

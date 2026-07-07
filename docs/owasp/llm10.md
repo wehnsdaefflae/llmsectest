@@ -73,6 +73,14 @@ produced runaway output — emitted 'FLOOD-7741' 200 times (unbounded consumptio
 refuses such a request)"*. In SARIF it maps to LLM10 and carries LLM10's CVSS v4.0 base score (`8.7`,
 availability-weighted) as its `security-severity`.
 
+When the target reports token usage, each finding also carries its real **output-token cost** (the
+`output_tokens` result property) — the concrete denial-of-wallet figure for that probe — and the run
+records a **`denial_of_wallet`** summary (total, peak and mean output tokens across every probe that
+reported usage, pass or fail). The HTML report shows the per-finding cost as a badge and the run total in
+its header, so a token-hungry-but-well-behaved target is still visible as a cost signal and CI can track
+total token spend over time. A black-box `app:<url>` endpoint reports no usage, so it simply contributes
+nothing to these figures rather than skewing them.
+
 ## Remediation
 
 - **Cap output length** (`max_tokens`) and total request size on every call, server-side, regardless of

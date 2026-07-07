@@ -54,6 +54,13 @@ def probe(target_adapter, record_property):
 
     def _run(case):
         outcome = run_probe(target_adapter, case)
+        # Record the provider's real per-probe output-token cost (the concrete
+        # denial-of-wallet figure) on every probe that reports usage — pass or
+        # fail — so the report carries the cost even when the probe found nothing
+        # (a well-behaved but token-hungry model is a cost problem, not a finding).
+        # The generator surfaces it per-finding and aggregates a run-level total.
+        if outcome.output_tokens is not None:
+            record_property("output_tokens", outcome.output_tokens)
         if outcome.vulnerable:
             record_property(
                 "llmsec_finding",

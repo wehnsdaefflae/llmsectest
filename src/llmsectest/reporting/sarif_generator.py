@@ -21,6 +21,20 @@ from .constants import SARIF_SEVERITY_MAP, SEVERITY_SCORES
 from .cvss import cvss_for_category
 
 
+def _as_int(value: Any) -> int | None:
+    """Coerce a recorded ``output_tokens`` property to ``int``, else ``None``.
+
+    The value arrives from ``pytest`` ``user_properties`` (recorded by the probe
+    fixture) and is normally already an ``int``; guard against a stray ``None`` or
+    a non-numeric string so the cost plumbing never raises on a malformed record.
+    """
+    if isinstance(value, bool):  # bool is an int subclass — never a token count
+        return None
+    if isinstance(value, (int, float)):
+        return int(value)
+    return None
+
+
 class SARIFGenerator:
     """Generates SARIF v2.1.0 compliant reports."""
 
@@ -118,6 +132,25 @@ class SARIFGenerator:
                 "severity_impact": baseline_analysis.severity_impact,
                 "owasp_impact": baseline_analysis.owasp_impact,
                 "regression_severity": baseline_analysis.regression_severity
+            }
+
+        # Run-level denial-of-wallet cost: the real provider output-token spend
+        # across every probe that reported usage (pass or fail). This surfaces the
+        # LLM10 cost figure even when no LLM10 finding fired — a well-behaved but
+        # token-hungry target is a cost signal, not a security finding — and lets CI
+        # track total token spend of the scan over time. A black-box app endpoint
+        # reports no usage, so it simply contributes nothing here (no key present).
+        token_costs = [
+            tok
+            for r in results
+            if (tok := _as_int(r.properties.get("output_tokens"))) is not None
+        ]
+        if token_costs:
+            properties["denial_of_wallet"] = {
+                "probes_with_usage": len(token_costs),
+                "total_output_tokens": sum(token_costs),
+                "peak_output_tokens": max(token_costs),
+                "mean_output_tokens": round(sum(token_costs) / len(token_costs), 1),
             }
 
         # Add properties to run if any exist
@@ -303,6 +336,12 @@ class SARIFGenerator:
                 cwe_ids = get_cwe_tags(result.markers)
                 if cwe_ids:
                     sarif_result["properties"]["cwe_ids"] = cwe_ids
+
+                # Attach the finding's real provider output-token cost (its concrete
+                # denial-of-wallet figure), when the target reported usage.
+                output_tokens = _as_int(result.properties.get("output_tokens"))
+                if output_tokens is not None:
+                    sarif_result["properties"]["output_tokens"] = output_tokens
 
                 sarif_results.append(sarif_result)
 
