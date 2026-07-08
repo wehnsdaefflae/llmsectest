@@ -103,6 +103,27 @@ class Dependency:
     url: str = ""  # set when the dep is a direct VCS/URL install
 
 
+# An exact pin whose version is concrete: ==1.2.3 / ===1!2.0.post1, but not a
+# wildcard (==1.2.*) and not a multi-clause specifier (>=1,<2).
+_EXACT_PIN_RE = re.compile(r"^===?\s*([A-Za-z0-9!+.]*[A-Za-z0-9])$")
+
+
+def pinned_version(dep: Dependency) -> str | None:
+    """The concrete version a dependency is pinned to, or ``None``.
+
+    Returns the version only for a single exact pin (``==X.Y.Z`` / ``===X.Y.Z``
+    without a wildcard); any range, wildcard or multi-clause specifier yields
+    ``None`` because the installed version is not statically determined. This is
+    the single source of truth for "is this dependency pinned, and to what?" —
+    shared by the OSV known-CVE lookup (only exact pins are queryable) and the
+    CycloneDX SBOM export (an exact pin becomes a component ``version`` + PURL).
+    """
+    m = _EXACT_PIN_RE.match(dep.specifier.strip())
+    if not m or "*" in m.group(1):
+        return None
+    return m.group(1)
+
+
 @dataclass(frozen=True, repr=False)
 class SupplyChainFinding:
     """A supply-chain risk in a declared dependency or index directive."""

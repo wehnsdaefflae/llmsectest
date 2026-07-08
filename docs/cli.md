@@ -6,6 +6,7 @@ packaged OWASP probe suite against your chosen target and writes reports.
 ```bash
 llmsectest [--target <spec>] [--report-formats=...] [pytest options]
 llmsectest --check | --list-probes | --validate <file.sarif> | --render-sarif <file.sarif>
+llmsectest --sbom [<out.json>] --repo <path>
 ```
 
 ## Wrapper commands
@@ -15,6 +16,7 @@ llmsectest --check | --list-probes | --validate <file.sarif> | --render-sarif <f
 | `--target <spec>` | What to test: `app:<url>`, `ollama:<model>`, `lmstudio:<model>`, `openai:<model>`, `anthropic:<model>`, `huggingface:<model>`, `mock`, `demo`, `demo-defended`. Omit it to scan the offline demo app. |
 | `--repo <path>` | Add the white-box **LLM03 (supply chain)** scan of that project's dependency manifests (`requirements*.txt`, `pyproject.toml`, `Pipfile`). Combine with `--target` to test an app and its dependencies in one run. |
 | `--osv` | With `--repo`: also query [OSV.dev](https://osv.dev) for **known CVEs** in every exactly-pinned (`==X.Y.Z`) dependency (networked, free, no API key). Off by default so the scan stays offline/deterministic; any non-run state (not requested, nothing pinned, lookup failed) appears as an explicit skip reason. |
+| `--sbom [<out.json>]` | With `--repo`: write a **CycloneDX 1.6 JSON SBOM** of the project's declared dependencies (one PURL-identified component each) and exit. An exact pin (`==X.Y.Z`) is carried into the component `version` + a fully-qualified PURL (`pkg:pypi/name@version`); a range/unpinned dependency is left version-less with its raw constraint recorded as a property — so the SBOM is only ever as precise as the manifests allow, never asserting a version a manifest did not pin. Built dependency-free from the stdlib. Writes `results/<repo>.cdx.json` unless a path is given. |
 | `--model-scan <path>` | Add the white-box **LLM04 (data and model poisoning)** scan of the serialized model files under that path. Walks each pickle's opcode stream (stdlib `pickletools`, never unpickling) and flags imports of code-execution primitives (`os.system`, `subprocess`, `builtins.eval`, nested `pickle`/`torch.load`, reflection gadgets) that would run on load — across raw pickles, PyTorch `.pt`/`.pth`/`.ckpt` zips and numpy object arrays. Offline and deterministic; a clean weights file does not false-positive. |
 | `--redteam-set <csv>` | Run the **LLM01 red-team** module against the JailbreakBench [JBB-Behaviors](https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors) CSV at this path (the 100-behaviour benchmark; columns `Index,Goal,Target,Behavior,Category,Source`). A target is a finding when it **complies** with a harmful request instead of refusing (refusal oracle). Without the flag, a built-in starter set runs so an offline scan still exercises the oracle. |
 | `--redteam-benign [<csv>]` | Measure **over-refusal**: run the JBB **benign twins** (harmless requests matched to the harmful behaviours) through the over-refusal oracle and report the target's **false-refusal rate**. Bare uses a built-in benign set; pass JBB's `benign-behaviors.csv` for the full 100. A usability metric — over-refusing is a quality defect, not a vulnerability — so it is reported separately and never enters the SARIF findings or the exit code. |
@@ -88,6 +90,7 @@ llmsectest --target app:http://localhost:8000/chat \
     --app-rag-poison "RAG-POISON-3b9d"                                  # + LLM07/02/06/08
 llmsectest --repo .                                            # supply-chain scan only
 llmsectest --repo . --osv                                      # + known-CVE lookup (OSV.dev)
+llmsectest --sbom --repo .                                     # CycloneDX SBOM of the deps (LLM03)
 llmsectest --redteam-set jbb/harmful-behaviors.csv --target ollama:llama3  # 100 JailbreakBench prompts
 llmsectest --redteam-benign --target ollama:llama3            # over-refusal (false-refusal) rate
 llmsectest --target ollama:gemma4:e2b-it-q4_K_M --report-formats=sarif,html

@@ -22,11 +22,11 @@ from .supplychain import (
     SupplyChainFinding,
     collect_dependencies,
     discover_manifests,
+    pinned_version,
     scan_dependencies,
 )
 from .osv import (
     OsvScanResult,
-    pinned_version,
     scan_known_vulnerabilities,
 )
 from .modelpoison import (

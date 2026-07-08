@@ -55,6 +55,32 @@ llmsectest --target app:http://localhost:8000/chat --repo .   # app probes + sup
 Without `--repo`, LLM03 is reported as a **skipped** test (with the reason that it needs a repo) — never
 a silent pass.
 
+## Software Bill of Materials (`--sbom`)
+
+An SBOM inventories exactly what a project pulls in — the raw material for supply-chain risk assessment,
+increasingly a compliance requirement in its own right. `llmsectest --sbom --repo <path>` writes a
+[CycloneDX](https://cyclonedx.org) 1.6 JSON SBOM of the project's declared dependencies: one component per
+dependency, identified by [PURL](https://github.com/package-url/purl-spec)
+(`pkg:pypi/name@version`), ready for any CycloneDX-consuming tool (Dependency-Track, `grype`, `osv-scanner`,
+a GitHub dependency submission, …).
+
+The **pinned/unpinned grading is carried into the SBOM** through the same logic the structural scan uses to
+decide what to flag: an exactly-pinned dependency (`==X.Y.Z`) becomes a component with a concrete `version`
+and a fully-qualified PURL, while a range or unpinned dependency has no statically-resolvable version, so its
+component **omits `version`** and records the raw constraint in a `llmsectest:constraint` property. The SBOM
+is therefore only ever as precise as the manifests allow — it never asserts a version a manifest did not pin,
+and the same unpinned dependency the LLM03 scan flags as a risk shows up version-less in the SBOM.
+
+It is built dependency-free from the standard library (CycloneDX JSON is a stable, well-specified schema); the
+richer [`cyclonedx-python-lib`](https://github.com/CycloneDX/cyclonedx-python-lib) engine — XML/SPDX output,
+schema validation — is an optional follow-up, not a hard dependency, mirroring the LLM03 structural-scan / OSV
+split. The output defaults to `results/<repo>.cdx.json` (or pass an explicit path).
+
+```bash
+llmsectest --sbom --repo .                            # write results/<repo>.cdx.json
+llmsectest --sbom sbom.cdx.json --repo path/to/app    # explicit output path
+```
+
 ## Reading a finding
 
 A finding names the technique, the package, the manifest it came from, the evidence and a concrete

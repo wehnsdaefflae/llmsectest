@@ -10,6 +10,17 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
 ## [Unreleased]
 
 ### Added
+- **CycloneDX SBOM export (`--sbom`, OWASP LLM03 / supply chain).** `llmsectest --sbom --repo <path>`
+  inventories a project's declared dependencies as a **CycloneDX 1.6 JSON** Software Bill of Materials —
+  one component per dependency, identified by PURL (`pkg:pypi/name@version`). The pinned/unpinned grading is
+  carried straight into the SBOM through the same `pinned_version` the LLM03 scan uses: an exact pin
+  (`==X.Y.Z`) becomes a component with a concrete `version` + fully-qualified PURL, while a range/unpinned
+  dependency omits `version` and records its raw constraint as a property — so the SBOM is only ever as
+  precise as the manifests allow and never asserts a version a manifest did not pin. Built dependency-free
+  from the stdlib (the richer `cyclonedx-python-lib` engine — XML/SPDX, schema validation — is an optional
+  follow-up, not a hard dependency), matching the zero-dep-offline core. Writes `results/<repo>.cdx.json`
+  by default (or an explicit output path). Pulls the milestone-3 "SBOM / dependency scanning" deliverable
+  forward. (2026-07-08)
 - **Denial-of-wallet token cost surfaced in reports (OWASP LLM10).** Every probe that reports token usage
   now records its real provider `output_tokens`, and the report carries it two ways: each SARIF finding
   gains an `output_tokens` property (its concrete per-probe cost) and the run gains a `denial_of_wallet`

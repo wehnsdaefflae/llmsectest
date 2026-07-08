@@ -83,6 +83,7 @@ llmsectest --target app:http://localhost:8000/chat \
     --app-canary "INTERNAL-DOC-CANARY-7f2a" --app-rag-poison "RAG-POISON-3b9d"
                                              # deeper app scan: unlocks LLM07/LLM02/LLM06/LLM08
 llmsectest --repo . --osv                    # + known-CVE lookup for pinned deps via OSV.dev
+llmsectest --sbom --repo .                    # write a CycloneDX SBOM of the declared deps (LLM03)
 llmsectest --model-scan models/              # scan serialized model files for poisoning (LLM04)
 llmsectest --redteam-set jbb/harmful-behaviors.csv  # 100 JailbreakBench red-team prompts (LLM01)
 llmsectest --redteam-benign                  # + measure the over-refusal (false-refusal) rate
@@ -141,6 +142,12 @@ the target:
   (networked, free, no API key). Ranges aren't queried: a static scan can't know
   which version a range resolves to. Not requested, nothing pinned, or a failed
   lookup each surface as an explicit skip reason, never as "clean".
+- **`--sbom [<out.json>]`** (with `--repo`) writes a **CycloneDX 1.6 SBOM** of the
+  project's declared dependencies — one PURL-identified component each, exact pins
+  (`==X.Y.Z`) carried into the component `version`, ranges/unpinned deps left
+  version-less with their constraint recorded as a property (the SBOM is only ever as
+  precise as the manifests allow). Built dependency-free from the stdlib; defaults to
+  `results/<repo>.cdx.json`. Feeds any CycloneDX-consuming supply-chain tool.
 - **`--model-scan <path>`** adds the white-box **LLM04 (data and model poisoning)**
   scan: it walks the *opcode* stream of the project's serialized model files (pickle,
   PyTorch `.pt`/`.pth`/`.ckpt` zips, numpy object arrays) with the stdlib

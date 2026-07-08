@@ -15,6 +15,7 @@ Examples:
     python -m llmsectest --target app:http://localhost:8000 --repo .  # app + its deps
     python -m llmsectest --repo .                          # add the LLM03 supply-chain scan
     python -m llmsectest --repo . --osv                    # + known-CVE lookup via OSV.dev
+    python -m llmsectest --sbom --repo .                   # write a CycloneDX SBOM of the deps
     python -m llmsectest --model-scan models/              # add the LLM04 model-poisoning scan
     python -m llmsectest --redteam-set jbb/harmful-behaviors.csv  # 100 JailbreakBench prompts (LLM01)
     python -m llmsectest --redteam-benign                  # + measure over-refusal (built-in twins)
@@ -537,6 +538,46 @@ def _render_sarif(args: list) -> int:
     return 0
 
 
+def _sbom_slug(name: str) -> str:
+    """Filesystem-safe slug for the default SBOM filename."""
+    slug = re.sub(r"[^A-Za-z0-9]+", "-", name).strip("-").lower()
+    return slug or "project"
+
+
+def _generate_sbom(args: list) -> int:
+    """Emit a CycloneDX SBOM for a repo's declared dependencies (``--sbom``).
+
+    ``--sbom [<out.json>] --repo <path>`` parses every dependency manifest under
+    the repo (the same LLM03 parse pass as the supply-chain scan) and writes a
+    CycloneDX 1.6 JSON Software Bill of Materials — one component per dependency,
+    exactly-pinned versions carried into the PURL. Defaults the output to
+    ``results/<repo>.cdx.json``. Requires ``--repo`` (an SBOM is about a project's
+    own dependency tree, not a running endpoint).
+    """
+    from .probes.supplychain import collect_dependencies, pinned_version
+    from .reporting import write_sbom
+
+    rest, _present, out = _extract_opt_flag(args, "--sbom")
+    _rest, repo = _extract_opt(rest, "--repo")
+    if not repo:
+        print("error: --sbom requires --repo <path> (the project whose dependencies "
+              "to inventory)", file=sys.stderr)
+        return 2
+    if not Path(repo).is_dir():
+        print(f"error: --repo path not found or not a directory: {repo}", file=sys.stderr)
+        return 2
+
+    deps = collect_dependencies(repo)
+    subject = Path(repo).resolve().name or "project"
+    out_path = out or f"results/{_sbom_slug(subject)}.cdx.json"
+    written = write_sbom(deps, out_path, subject=subject)
+    pinned = sum(1 for d in deps if pinned_version(d))
+    print(f"CycloneDX SBOM written to {written}")
+    print(f"  {len(deps)} declared dependencies from {repo} "
+          f"({pinned} exactly pinned, {len(deps) - pinned} unpinned/range)")
+    return 0
+
+
 def run_preflight(target: str | None) -> int:
     """Health-check a target before scanning (``--preflight``).
 
@@ -600,6 +641,8 @@ def main():
         return 0
     if "--render-sarif" in args:
         return _render_sarif(args)
+    if "--sbom" in args:
+        return _generate_sbom(args)
 
     args, target = _extract_target(args)
     args, do_preflight = _extract_flag(args, "--preflight")

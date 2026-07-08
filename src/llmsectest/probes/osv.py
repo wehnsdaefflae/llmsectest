@@ -24,36 +24,26 @@ reason — never as a clean "no known CVEs".
 from __future__ import annotations
 
 import json
-import re
 import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from .supplychain import Dependency, SupplyChainFinding, collect_dependencies
+# ``pinned_version`` lives with the ``Dependency`` it describes (supplychain);
+# re-exported here because "which deps are queryable" is the OSV layer's own
+# vocabulary and existing importers reference ``osv.pinned_version``.
+from .supplychain import (
+    Dependency,
+    SupplyChainFinding,
+    collect_dependencies,
+    pinned_version,
+)
 
 OSV_QUERYBATCH_URL = "https://api.osv.dev/v1/querybatch"
 
 # OSV accepts up to 1000 queries per batch request; stay well inside the limit.
 _BATCH_SIZE = 500
 _TIMEOUT_SECONDS = 30.0
-
-# An exact pin whose version is concrete: ==1.2.3 / ===1!2.0.post1, but not a
-# wildcard (==1.2.*) and not a multi-clause specifier (>=1,<2).
-_EXACT_PIN_RE = re.compile(r"^===?\s*([A-Za-z0-9!+.]*[A-Za-z0-9])$")
-
-
-def pinned_version(dep: Dependency) -> str | None:
-    """The concrete version a dependency is pinned to, or ``None``.
-
-    Returns the version only for a single exact pin (``==X.Y.Z`` / ``===X.Y.Z``
-    without a wildcard); any range, wildcard or multi-clause specifier yields
-    ``None`` because the installed version is not statically determined.
-    """
-    m = _EXACT_PIN_RE.match(dep.specifier.strip())
-    if not m or "*" in m.group(1):
-        return None
-    return m.group(1)
 
 
 @dataclass(frozen=True)

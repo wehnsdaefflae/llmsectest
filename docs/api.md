@@ -104,3 +104,16 @@ only LLMSecTest's own output.
       members:
         - render_sarif_file
         - render_sarif_html
+
+## SBOM export
+
+Emit a [CycloneDX](https://cyclonedx.org) 1.6 SBOM of a project's declared
+dependencies (the `--sbom` CLI flag is a thin wrapper over these). Reuses the
+supply-chain parse pass; built dependency-free from the standard library.
+
+::: llmsectest.reporting.sbom
+    options:
+      members:
+        - build_cyclonedx
+        - render_sbom_json
+        - write_sbom
