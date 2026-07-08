@@ -1166,6 +1166,7 @@
 packaged OWASP probe suite against your chosen target and writes reports.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>llmsectest<span class="w"> </span><span class="o">[</span>--target<span class="w"> </span>&lt;spec&gt;<span class="o">]</span><span class="w"> </span><span class="o">[</span>--report-formats<span class="o">=</span>...<span class="o">]</span><span class="w"> </span><span class="o">[</span>pytest<span class="w"> </span>options<span class="o">]</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>llmsectest<span class="w"> </span>--check<span class="w"> </span><span class="p">|</span><span class="w"> </span>--list-probes<span class="w"> </span><span class="p">|</span><span class="w"> </span>--validate<span class="w"> </span>&lt;file.sarif&gt;<span class="w"> </span><span class="p">|</span><span class="w"> </span>--render-sarif<span class="w"> </span>&lt;file.sarif&gt;
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>llmsectest<span class="w"> </span>--sbom<span class="w"> </span><span class="o">[</span>&lt;out.json&gt;<span class="o">]</span><span class="w"> </span>--repo<span class="w"> </span>&lt;path&gt;
 </code></pre></div>
 <h2 id="wrapper-commands">Wrapper commands<a class="headerlink" href="#wrapper-commands" title="Permanent link">&para;</a></h2>
 <table>
@@ -1187,6 +1188,10 @@ packaged OWASP probe suite against your chosen target and writes reports.</p>
 <tr>
 <td><code>--osv</code></td>
 <td>With <code>--repo</code>: also query <a href="https://osv.dev">OSV.dev</a> for <strong>known CVEs</strong> in every exactly-pinned (<code>==X.Y.Z</code>) dependency (networked, free, no API key). Off by default so the scan stays offline/deterministic; any non-run state (not requested, nothing pinned, lookup failed) appears as an explicit skip reason.</td>
+</tr>
+<tr>
+<td><code>--sbom [&lt;out.json&gt;]</code></td>
+<td>With <code>--repo</code>: write a <strong>CycloneDX 1.6 JSON SBOM</strong> of the project's declared dependencies (one PURL-identified component each) and exit. An exact pin (<code>==X.Y.Z</code>) is carried into the component <code>version</code> + a fully-qualified PURL (<code>pkg:pypi/name@version</code>); a range/unpinned dependency is left version-less with its raw constraint recorded as a property — so the SBOM is only ever as precise as the manifests allow, never asserting a version a manifest did not pin. Built dependency-free from the stdlib. Writes <code>results/&lt;repo&gt;.cdx.json</code> unless a path is given.</td>
 </tr>
 <tr>
 <td><code>--model-scan &lt;path&gt;</code></td>
@@ -1336,11 +1341,12 @@ same map with each category's CVSS score.</p>
 <a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">    </span>--app-rag-poison<span class="w"> </span><span class="s2">&quot;RAG-POISON-3b9d&quot;</span><span class="w">                                  </span><span class="c1"># + LLM07/02/06/08</span>
 <a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>llmsectest<span class="w"> </span>--repo<span class="w"> </span>.<span class="w">                                            </span><span class="c1"># supply-chain scan only</span>
 <a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>llmsectest<span class="w"> </span>--repo<span class="w"> </span>.<span class="w"> </span>--osv<span class="w">                                      </span><span class="c1"># + known-CVE lookup (OSV.dev)</span>
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>llmsectest<span class="w"> </span>--redteam-set<span class="w"> </span>jbb/harmful-behaviors.csv<span class="w"> </span>--target<span class="w"> </span>ollama:llama3<span class="w">  </span><span class="c1"># 100 JailbreakBench prompts</span>
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>llmsectest<span class="w"> </span>--redteam-benign<span class="w"> </span>--target<span class="w"> </span>ollama:llama3<span class="w">            </span><span class="c1"># over-refusal (false-refusal) rate</span>
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>ollama:gemma4:e2b-it-q4_K_M<span class="w"> </span>--report-formats<span class="o">=</span>sarif,html
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat<span class="w"> </span>--compare-baseline<span class="w"> </span>--risk-threshold<span class="o">=</span>high
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>llmsectest<span class="w"> </span>--check
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>llmsectest<span class="w"> </span>--sbom<span class="w"> </span>--repo<span class="w"> </span>.<span class="w">                                     </span><span class="c1"># CycloneDX SBOM of the deps (LLM03)</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>llmsectest<span class="w"> </span>--redteam-set<span class="w"> </span>jbb/harmful-behaviors.csv<span class="w"> </span>--target<span class="w"> </span>ollama:llama3<span class="w">  </span><span class="c1"># 100 JailbreakBench prompts</span>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>llmsectest<span class="w"> </span>--redteam-benign<span class="w"> </span>--target<span class="w"> </span>ollama:llama3<span class="w">            </span><span class="c1"># over-refusal (false-refusal) rate</span>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>ollama:gemma4:e2b-it-q4_K_M<span class="w"> </span>--report-formats<span class="o">=</span>sarif,html
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat<span class="w"> </span>--compare-baseline<span class="w"> </span>--risk-threshold<span class="o">=</span>high
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>llmsectest<span class="w"> </span>--check
 </code></pre></div>
 
 

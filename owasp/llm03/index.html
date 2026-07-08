@@ -802,6 +802,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#software-bill-of-materials-sbom" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Software Bill of Materials (--sbom)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#reading-a-finding" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1081,6 +1092,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#software-bill-of-materials-sbom" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Software Bill of Materials (--sbom)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#reading-a-finding" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1169,6 +1191,26 @@ an explicit <strong>skip reason</strong>, never as "no known CVEs".</p>
 </code></pre></div>
 <p>Without <code>--repo</code>, LLM03 is reported as a <strong>skipped</strong> test (with the reason that it needs a repo) — never
 a silent pass.</p>
+<h2 id="software-bill-of-materials-sbom">Software Bill of Materials (<code>--sbom</code>)<a class="headerlink" href="#software-bill-of-materials-sbom" title="Permanent link">&para;</a></h2>
+<p>An SBOM inventories exactly what a project pulls in — the raw material for supply-chain risk assessment,
+increasingly a compliance requirement in its own right. <code>llmsectest --sbom --repo &lt;path&gt;</code> writes a
+<a href="https://cyclonedx.org">CycloneDX</a> 1.6 JSON SBOM of the project's declared dependencies: one component per
+dependency, identified by <a href="https://github.com/package-url/purl-spec">PURL</a>
+(<code>pkg:pypi/name@version</code>), ready for any CycloneDX-consuming tool (Dependency-Track, <code>grype</code>, <code>osv-scanner</code>,
+a GitHub dependency submission, …).</p>
+<p>The <strong>pinned/unpinned grading is carried into the SBOM</strong> through the same logic the structural scan uses to
+decide what to flag: an exactly-pinned dependency (<code>==X.Y.Z</code>) becomes a component with a concrete <code>version</code>
+and a fully-qualified PURL, while a range or unpinned dependency has no statically-resolvable version, so its
+component <strong>omits <code>version</code></strong> and records the raw constraint in a <code>llmsectest:constraint</code> property. The SBOM
+is therefore only ever as precise as the manifests allow — it never asserts a version a manifest did not pin,
+and the same unpinned dependency the LLM03 scan flags as a risk shows up version-less in the SBOM.</p>
+<p>It is built dependency-free from the standard library (CycloneDX JSON is a stable, well-specified schema); the
+richer <a href="https://github.com/CycloneDX/cyclonedx-python-lib"><code>cyclonedx-python-lib</code></a> engine — XML/SPDX output,
+schema validation — is an optional follow-up, not a hard dependency, mirroring the LLM03 structural-scan / OSV
+split. The output defaults to <code>results/&lt;repo&gt;.cdx.json</code> (or pass an explicit path).</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>llmsectest<span class="w"> </span>--sbom<span class="w"> </span>--repo<span class="w"> </span>.<span class="w">                            </span><span class="c1"># write results/&lt;repo&gt;.cdx.json</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>llmsectest<span class="w"> </span>--sbom<span class="w"> </span>sbom.cdx.json<span class="w"> </span>--repo<span class="w"> </span>path/to/app<span class="w">    </span><span class="c1"># explicit output path</span>
+</code></pre></div>
 <h2 id="reading-a-finding">Reading a finding<a class="headerlink" href="#reading-a-finding" title="Permanent link">&para;</a></h2>
 <p>A finding names the technique, the package, the manifest it came from, the evidence and a concrete
 remediation — for example <em>"[unpinned dependency floats to any future version] requests
