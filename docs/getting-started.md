@@ -2,15 +2,18 @@
 
 ## Install
 
+Pre-alpha: not yet on PyPI, so install from source (a `pip install llmsectest` follows the first
+PyPI release):
+
 ```bash
-pip install llmsectest
+pip install "git+https://github.com/wehnsdaefflae/llmsectest"
 ```
 
 LLMSecTest is a `pytest` plugin and a CLI. The core install is dependency-light (just `pytest`);
-provider SDKs are optional extras you install only if you target them:
+provider SDKs are optional extras you install only if you target them (append the extra to the URL):
 
 ```bash
-pip install "llmsectest[openai]"   # also: [anthropic], [huggingface], or [all]
+pip install "llmsectest[openai] @ git+https://github.com/wehnsdaefflae/llmsectest"   # also: [anthropic], [huggingface], or [all]
 ```
 
 A local model needs no extra and no API key — see [Test your running app](guides/target-app.md).

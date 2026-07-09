@@ -7,7 +7,8 @@ model) — not bare models — for the security risks in the OWASP Top 10 for LL
 **SARIF / HTML / JSON / Markdown** reports that drop straight into CI/CD.
 
 ```bash
-pip install llmsectest
+# pre-alpha: install from source (not yet on PyPI)
+pip install "git+https://github.com/wehnsdaefflae/llmsectest"
 
 # point it at your running app and test it black-box
 llmsectest --target app:http://localhost:8000/chat
@@ -36,9 +37,9 @@ target — run `llmsectest --check` to see the live map.
 | LLM05 | Improper Output Handling | black-box (or white-box) |
 | LLM06 | Excessive Agency | black-box (or white-box) |
 | LLM07 | System Prompt Leakage | **black-box** — prompt extraction |
-| LLM08 | Vector and Embedding Weaknesses | white-box — your RAG/vector store |
-| LLM09 | Misinformation | black-box — output verification |
-| LLM10 | Unbounded Consumption | white-box — rate/resource limits |
+| LLM08 | Vector and Embedding Weaknesses | **black-box** — your RAG app (`--app-canary` / `--app-rag-poison`) |
+| LLM09 | Misinformation | **black-box** — nonexistent-entity confabulation |
+| LLM10 | Unbounded Consumption | **black-box** — flood / output amplification |
 
 → **[Getting started](getting-started.md)** · **[Test your running app](guides/target-app.md)** ·
 **[OWASP coverage](owasp/index.md)** · **[API reference](api.md)**

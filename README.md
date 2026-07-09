@@ -64,7 +64,7 @@ llm = ScriptedAdapter(lambda req: "SECRET-LEAKED" if "key" in req.messages[-1].c
 
 ## Run the OWASP probe suite
 
-The packaged probe suite drives a curated red-team corpus (LLM01/02/05/06/07/10) through
+The packaged probe suite drives a curated red-team corpus (LLM01/02/05/06/07/09/10) through
 the adapter against a target you choose, and writes a SARIF report. A failing
 probe is a *finding*, so a non-zero exit means the target is vulnerable. LLM01 also
 runs a red-team jailbreak set (JailbreakBench/AdvBench) scored by a refusal oracle.
@@ -227,11 +227,14 @@ See [`examples/`](examples/) for one test module per OWASP category.
 
 ## Install
 
+Pre-alpha: not yet on PyPI — install from source (a `pip install llmsectest` will
+come with the first PyPI release). Substitute your extras in the `[...]`:
+
 ```bash
-pip install llmsectest                 # core
-pip install "llmsectest[anthropic]"    # + Anthropic SDK
-pip install "llmsectest[cvss]"         # + score custom CVSS vectors (core ships the OWASP-category scores)
-pip install "llmsectest[all]"          # all providers
+pip install "git+https://github.com/wehnsdaefflae/llmsectest"                             # core
+pip install "llmsectest[anthropic] @ git+https://github.com/wehnsdaefflae/llmsectest"     # + Anthropic SDK
+pip install "llmsectest[cvss] @ git+https://github.com/wehnsdaefflae/llmsectest"          # + score custom CVSS vectors (core ships the OWASP-category scores)
+pip install "llmsectest[all] @ git+https://github.com/wehnsdaefflae/llmsectest"           # all providers
 ```
 
 The ten OWASP-category CVSS v4.0 scores ship in the dependency-free core; the

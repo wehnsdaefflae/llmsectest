@@ -19,7 +19,7 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.11" }
 
-      - run: pip install llmsectest
+      - run: pip install "git+https://github.com/wehnsdaefflae/llmsectest"   # pre-alpha: not yet on PyPI
 
       # Start your app backed by a local/test model so there are no paid calls,
       # then test it. (Replace with however your app boots.)
