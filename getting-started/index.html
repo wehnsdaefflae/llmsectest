@@ -1141,11 +1141,13 @@
 
 <h1 id="getting-started">Getting started<a class="headerlink" href="#getting-started" title="Permanent link">&para;</a></h1>
 <h2 id="install">Install<a class="headerlink" href="#install" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>llmsectest
+<p>Pre-alpha: not yet on PyPI, so install from source (a <code>pip install llmsectest</code> follows the first
+PyPI release):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;git+https://github.com/wehnsdaefflae/llmsectest&quot;</span>
 </code></pre></div>
 <p>LLMSecTest is a <code>pytest</code> plugin and a CLI. The core install is dependency-light (just <code>pytest</code>);
-provider SDKs are optional extras you install only if you target them:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;llmsectest[openai]&quot;</span><span class="w">   </span><span class="c1"># also: [anthropic], [huggingface], or [all]</span>
+provider SDKs are optional extras you install only if you target them (append the extra to the URL):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;llmsectest[openai] @ git+https://github.com/wehnsdaefflae/llmsectest&quot;</span><span class="w">   </span><span class="c1"># also: [anthropic], [huggingface], or [all]</span>
 </code></pre></div>
 <p>A local model needs no extra and no API key — see <a href="../guides/target-app/">Test your running app</a>.</p>
 <h2 id="your-first-run-zero-config">Your first run (zero config)<a class="headerlink" href="#your-first-run-zero-config" title="Permanent link">&para;</a></h2>

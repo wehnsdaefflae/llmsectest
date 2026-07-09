@@ -1076,10 +1076,11 @@
 <p>LLMSecTest tests <strong>applications that use an LLM</strong> (a system prompt, guardrails, RAG, and tools around a
 model) — not bare models — for the security risks in the OWASP Top 10 for LLM Applications, and emits
 <strong>SARIF / HTML / JSON / Markdown</strong> reports that drop straight into CI/CD.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>llmsectest
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># point it at your running app and test it black-box</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># pre-alpha: install from source (not yet on PyPI)</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;git+https://github.com/wehnsdaefflae/llmsectest&quot;</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># point it at your running app and test it black-box</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat
 </code></pre></div>
 <p>A failing probe is a <strong>finding</strong>, so a non-zero exit fails your pipeline when your app is vulnerable.</p>
 <h2 id="why">Why<a class="headerlink" href="#why" title="Permanent link">&para;</a></h2>
@@ -1137,17 +1138,17 @@ target — run <code>llmsectest --check</code> to see the live map.</p>
 <tr>
 <td>LLM08</td>
 <td>Vector and Embedding Weaknesses</td>
-<td>white-box — your RAG/vector store</td>
+<td><strong>black-box</strong> — your RAG app (<code>--app-canary</code> / <code>--app-rag-poison</code>)</td>
 </tr>
 <tr>
 <td>LLM09</td>
 <td>Misinformation</td>
-<td>black-box — output verification</td>
+<td><strong>black-box</strong> — nonexistent-entity confabulation</td>
 </tr>
 <tr>
 <td>LLM10</td>
 <td>Unbounded Consumption</td>
-<td>white-box — rate/resource limits</td>
+<td><strong>black-box</strong> — flood / output amplification</td>
 </tr>
 </tbody>
 </table>
