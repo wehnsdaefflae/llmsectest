@@ -179,6 +179,9 @@ the target:
   benign query retrieves the poisoned doc and a vulnerable app obeys it, emitting the
   marker although the prompt never named it (the LLM08↔LLM01 bridge). Same inputs as
   the `run_app_scan` API. The footer always shows exactly what was and wasn't run.
+  `--app-timeout <seconds>` caps each request to the app (default 120 s): a request
+  that exceeds it is recorded as an **inconclusive** probe rather than left to hang the
+  scan, so one slow or runaway endpoint cannot discard every other result.
 
 Live providers import their SDK lazily and read the relevant API key from the
 environment. The corpus and detectors are importable, too:

@@ -50,6 +50,71 @@ def test_app_endpoint_requires_url():
         AppEndpointAdapter(endpoint="")
 
 
+# --- a slow / hung endpoint is a typed timeout, not a generic "unreachable" ---
+
+def _make_request(text="do it"):
+    from llmsectest.adapters.base import CompletionRequest, Message
+
+    return CompletionRequest(messages=[Message.user(text)])
+
+
+def test_app_endpoint_read_timeout_raises_adapter_timeout_error(monkeypatch):
+    import urllib.request
+
+    from llmsectest.adapters.base import AdapterTimeoutError
+
+    def _raise(*_a, **_k):
+        raise TimeoutError("read timed out")
+
+    monkeypatch.setattr(urllib.request, "urlopen", _raise)
+    adapter = AppEndpointAdapter(endpoint="http://localhost:9/chat", timeout=3)
+    with pytest.raises(AdapterTimeoutError) as exc:
+        adapter.complete(_make_request())
+    assert exc.value.timeout == 3
+    assert "did not respond within 3s" in str(exc.value)
+
+
+def test_app_endpoint_connect_timeout_is_a_timeout(monkeypatch):
+    import urllib.error
+    import urllib.request
+
+    from llmsectest.adapters.base import AdapterTimeoutError
+
+    # A connect-phase timeout surfaces as URLError(reason=timeout).
+    def _raise(*_a, **_k):
+        raise urllib.error.URLError(TimeoutError("connect timed out"))
+
+    monkeypatch.setattr(urllib.request, "urlopen", _raise)
+    adapter = AppEndpointAdapter(endpoint="http://localhost:9/chat", timeout=2)
+    with pytest.raises(AdapterTimeoutError):
+        adapter.complete(_make_request())
+
+
+def test_app_endpoint_unreachable_stays_a_plain_adapter_error(monkeypatch):
+    import urllib.error
+    import urllib.request
+
+    from llmsectest.adapters.base import AdapterTimeoutError
+
+    # Connection refused is a genuine unreachability, not a timeout — it must not
+    # be silently reclassified as a slow endpoint.
+    def _raise(*_a, **_k):
+        raise urllib.error.URLError(ConnectionRefusedError("refused"))
+
+    monkeypatch.setattr(urllib.request, "urlopen", _raise)
+    adapter = AppEndpointAdapter(endpoint="http://localhost:9/chat")
+    with pytest.raises(AdapterError) as exc:
+        adapter.complete(_make_request())
+    assert not isinstance(exc.value, AdapterTimeoutError)
+    assert "unreachable" in str(exc.value)
+
+
+def test_resolve_app_target_honors_app_timeout():
+    assert resolve_target("app:http://x/chat", app_timeout=7).timeout == 7
+    # unset falls back to the adapter's own default (not overridden to None)
+    assert resolve_target("app:http://x/chat").timeout == 120.0
+
+
 # --- persona proxy: test a real app's system prompt against a (mock) model ---
 
 _REAL_APP_PROMPT = (

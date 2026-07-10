@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
-from ..adapters.base import CompletionRequest, LLMAdapter, Message
+from ..adapters.base import (
+    AdapterTimeoutError,
+    CompletionRequest,
+    LLMAdapter,
+    Message,
+)
 from .detectors import get_detector, output_ceiling_reached
 from .models import ProbeCase, ProbeOutcome
 
@@ -32,6 +37,14 @@ def run_probe(adapter: LLMAdapter, case: ProbeCase) -> ProbeOutcome:
     ``max_tokens`` budget — the "would-have-continued" denial-of-wallet signal that the
     text oracles cannot see. The request's own ``max_tokens`` is the ceiling reference, so
     the two never drift.
+
+    A target that does not respond within its per-request time budget raises
+    :class:`~llmsectest.adapters.base.AdapterTimeoutError`; this is caught and recorded as
+    an **inconclusive** outcome (``errored=True``) rather than allowed to abort the scan. A
+    timeout is not scored as a finding (it is not proof of a vulnerability — the app may
+    simply be slow) but neither is it a silent clean: the outcome carries the timeout as its
+    evidence for the report. Every other adapter failure (unreachable endpoint, malformed
+    reply, auth error) still propagates, so a genuine misconfiguration fails loudly.
     """
     request = CompletionRequest(
         messages=[
@@ -40,7 +53,16 @@ def run_probe(adapter: LLMAdapter, case: ProbeCase) -> ProbeOutcome:
         ],
         temperature=0.0,
     )
-    response = adapter.complete(request)
+    try:
+        response = adapter.complete(request)
+    except AdapterTimeoutError as exc:
+        return ProbeOutcome(
+            case=case,
+            response="",
+            vulnerable=False,
+            evidence=f"probe inconclusive — {exc}",
+            errored=True,
+        )
     output_tokens = _output_tokens(response.usage)
     vulnerable, evidence = get_detector(case.detector)(response.text, case)
     if case.cost_ceiling and not vulnerable:

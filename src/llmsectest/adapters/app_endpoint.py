@@ -18,7 +18,14 @@ import json
 import urllib.error
 import urllib.request
 
-from .base import AdapterError, CompletionRequest, CompletionResponse, LLMAdapter, Role
+from .base import (
+    AdapterError,
+    AdapterTimeoutError,
+    CompletionRequest,
+    CompletionResponse,
+    LLMAdapter,
+    Role,
+)
 
 _AUTODETECT = ("reply", "response", "output", "message", "content", "text", "answer")
 
@@ -94,7 +101,14 @@ class AppEndpointAdapter(LLMAdapter):
         try:
             with urllib.request.urlopen(req, timeout=self.timeout) as resp:
                 payload = json.loads(resp.read().decode())
-        except (urllib.error.URLError, TimeoutError) as exc:  # pragma: no cover - network
+        except TimeoutError as exc:
+            raise self._timeout_error() from exc
+        except urllib.error.URLError as exc:  # pragma: no cover - network
+            # A connect-phase timeout surfaces as URLError(reason=timeout); keep it a
+            # timeout (not a generic "unreachable") so a slow endpoint is handled the
+            # same whether it stalls before or during the response.
+            if isinstance(exc.reason, TimeoutError):
+                raise self._timeout_error() from exc
             raise AdapterError(f"app endpoint {self.endpoint} unreachable: {exc}") from exc
         except json.JSONDecodeError as exc:
             raise AdapterError(f"app endpoint {self.endpoint} returned non-JSON: {exc}") from exc
@@ -103,4 +117,12 @@ class AppEndpointAdapter(LLMAdapter):
             model=self.model,
             provider=self.provider,
             raw=payload,
+        )
+
+    def _timeout_error(self) -> AdapterTimeoutError:
+        return AdapterTimeoutError(
+            f"app endpoint {self.endpoint} did not respond within "
+            f"{self.timeout:g}s — the app did not bound its per-request work "
+            "(raise --app-timeout if the app is legitimately slow)",
+            timeout=self.timeout,
         )

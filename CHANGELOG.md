@@ -10,6 +10,15 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
 ## [Unreleased]
 
 ### Added
+- **Per-request timeout for application targets (`--app-timeout <seconds>`).** Caps how long a single
+  request to an `app:<url>` target may take. A target that exceeds the budget raises a typed
+  `AdapterTimeoutError`, and the probe is recorded as **inconclusive** — neither a finding (a timeout is not
+  proof of a vulnerability) nor a silent clean: it surfaces as a warning in the pytest summary and a report
+  property. This makes a slow or runaway endpoint safe: `run_probe` catches the timeout and the scan
+  continues, so a report is always produced, where previously a single endpoint that would not stop
+  generating on one request could run the scan past its wall-clock cap and discard every other result. Every
+  non-timeout adapter failure (unreachable endpoint, malformed reply, auth error) still fails loudly.
+  (2026-07-10)
 - **CycloneDX SBOM export (`--sbom`, OWASP LLM03 / supply chain).** `llmsectest --sbom --repo <path>`
   inventories a project's declared dependencies as a **CycloneDX 1.6 JSON** Software Bill of Materials —
   one component per dependency, identified by PURL (`pkg:pypi/name@version`). The pinned/unpinned grading is

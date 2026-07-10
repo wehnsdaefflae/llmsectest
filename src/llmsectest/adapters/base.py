@@ -77,6 +77,23 @@ class AdapterError(RuntimeError):
     """Raised when an adapter cannot complete a request."""
 
 
+class AdapterTimeoutError(AdapterError):
+    """Raised when a target did not respond within the per-request time budget.
+
+    A subclass of :class:`AdapterError` so existing ``except AdapterError`` paths
+    still catch it, but distinguishable by callers that treat a *slow/hung* target
+    differently from an *unreachable or malformed* one. In particular, a probe run
+    can record a timeout as an inconclusive outcome (rather than aborting the whole
+    scan) — one endpoint that will not stop generating on a single request must not
+    take down every other probe's result. ``timeout`` is the budget (seconds) that
+    was exceeded.
+    """
+
+    def __init__(self, message: str, timeout: float | None = None):
+        super().__init__(message)
+        self.timeout = timeout
+
+
 class LLMAdapter(abc.ABC):
     """Provider-agnostic chat-completion interface.
 

@@ -19,6 +19,7 @@ CLI option → environment variable:
 ``--app-action <sig>``      :data:`APP_ACTIONS` (repeatable; joined)
 ``--app-canary <value>``    :data:`APP_CANARY`
 ``--app-rag-poison <mark>`` :data:`APP_RAG_POISON`
+``--app-timeout <seconds>`` :data:`APP_TIMEOUT`
 ==========================  ==========================
 """
 
@@ -36,6 +37,7 @@ APP_SECRET = "LLMSECTEST_APP_SECRET"
 APP_ACTIONS = "LLMSECTEST_APP_ACTIONS"
 APP_CANARY = "LLMSECTEST_APP_CANARY"
 APP_RAG_POISON = "LLMSECTEST_APP_RAG_POISON"
+APP_TIMEOUT = "LLMSECTEST_APP_TIMEOUT"
 
 # Joins the repeatable ``--app-action`` values into the single APP_ACTIONS
 # variable. The ASCII unit separator cannot appear in a tool/action signature,
@@ -61,3 +63,17 @@ def app_inputs_from_env() -> tuple[str, str | None, tuple[str, ...], str | None,
     canary = os.environ.get(APP_CANARY) or None
     poison = os.environ.get(APP_RAG_POISON) or None
     return prompt, secret, actions, canary, poison
+
+
+def app_timeout_from_env() -> float | None:
+    """The per-request timeout (seconds) for an ``app:<url>`` target, if set.
+
+    Returns ``None`` when unset or unparseable, so the app adapter falls back to
+    its own default rather than failing the scan on a malformed value.
+    """
+    raw = os.environ.get(APP_TIMEOUT, "")
+    try:
+        value = float(raw)
+    except (TypeError, ValueError):
+        return None
+    return value if value > 0 else None

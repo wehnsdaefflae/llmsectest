@@ -8,6 +8,8 @@ safe to keep in the default CI collection.
 
 from __future__ import annotations
 
+import pytest
+
 from llmsectest.adapters.base import CompletionResponse, LLMAdapter
 from llmsectest.adapters.mock import ScriptedAdapter
 from llmsectest.probes import (
@@ -204,6 +206,55 @@ def test_run_probe_records_provider_output_tokens():
     assert run_probe(_UsageAdapter({"output_tokens": 7}), case).output_tokens == 7
     assert run_probe(_UsageAdapter({}), case).output_tokens is None
     assert run_probe(ScriptedAdapter(lambda req: "hi"), case).output_tokens is None
+
+
+class _RaisingAdapter(LLMAdapter):
+    """A target whose ``complete`` raises a caller-supplied exception, to pin how
+    ``run_probe`` distinguishes a per-request timeout from a hard failure."""
+
+    provider = "mock"
+
+    def __init__(self, exc: Exception):
+        super().__init__("m")
+        self._exc = exc
+
+    def complete(self, request):
+        raise self._exc
+
+
+def test_run_probe_records_a_timeout_as_inconclusive():
+    """A per-request timeout is recorded as inconclusive (errored, not a finding) so one
+    hung endpoint never aborts the scan — but a genuine adapter failure still propagates."""
+    from llmsectest.adapters.base import AdapterError, AdapterTimeoutError
+    from llmsectest.probes.models import ProbeCase
+
+    case = ProbeCase(
+        id="T", owasp="owasp_llm06", title="t", severity="high", technique="t",
+        user_prompt="do it", system_prompt="", detector="injection_marker", forbidden=("X",),
+    )
+
+    outcome = run_probe(_RaisingAdapter(AdapterTimeoutError("app slow", timeout=5)), case)
+    assert outcome.errored is True
+    assert outcome.vulnerable is False  # a timeout is not proof of a vulnerability
+    assert "inconclusive" in outcome.evidence and "app slow" in outcome.evidence
+    assert outcome.output_tokens is None
+
+    # A non-timeout adapter failure (auth, unreachable, malformed) must NOT be swallowed.
+    with pytest.raises(AdapterError):
+        run_probe(_RaisingAdapter(AdapterError("endpoint unreachable")), case)
+
+
+def test_app_timeout_from_env_parses_positive_seconds(monkeypatch):
+    from llmsectest import envvars
+
+    monkeypatch.delenv(envvars.APP_TIMEOUT, raising=False)
+    assert envvars.app_timeout_from_env() is None  # unset → adapter default
+    monkeypatch.setenv(envvars.APP_TIMEOUT, "45")
+    assert envvars.app_timeout_from_env() == 45.0
+    monkeypatch.setenv(envvars.APP_TIMEOUT, "0")
+    assert envvars.app_timeout_from_env() is None  # non-positive → ignored
+    monkeypatch.setenv(envvars.APP_TIMEOUT, "not-a-number")
+    assert envvars.app_timeout_from_env() is None  # unparseable → ignored, not a crash
 
 
 def test_output_ceiling_reached_signal():

@@ -62,3 +62,9 @@ class ProbeOutcome:
     #: endpoint does not) — the precise per-probe cost figure. ``None`` when the
     #: target reports no usage.
     output_tokens: int | None = None
+    #: True when the probe could not be scored because the target did not respond
+    #: within its per-request time budget. Recorded as *inconclusive* — neither a
+    #: finding (a timeout is not proof of a vulnerability) nor a clean pass — so a
+    #: single hung endpoint never takes down the rest of the scan. ``evidence``
+    #: carries the timeout detail. See :func:`~llmsectest.probes.runner.run_probe`.
+    errored: bool = False

@@ -162,7 +162,7 @@ def defended_demo_adapter() -> LLMAdapter:
     return ScriptedAdapter(lambda _req: _DEFENDED_REPLY, model="demo-defended")
 
 
-def resolve_target(spec: str) -> LLMAdapter:
+def resolve_target(spec: str, *, app_timeout: float | None = None) -> LLMAdapter:
     """Resolve a target spec into an adapter.
 
     Accepts the demo keywords ``demo``/``demo-vulnerable``/``demo-defended``;
@@ -172,6 +172,10 @@ def resolve_target(spec: str) -> LLMAdapter:
     or ``ollama:gemma4:e2b-it-q4_K_M`` / ``lmstudio:<model>`` for a local model —
     no API key, no paid calls). Live providers import their SDK lazily and need
     the relevant API key in the environment.
+
+    ``app_timeout`` (seconds) caps how long a single request to an ``app:<url>``
+    target may take before it is treated as a timeout; it applies only to the app
+    adapter and falls back to that adapter's own default when ``None``.
     """
     spec = (spec or "").strip()
     if spec in ("", "demo", "demo-vulnerable"):
@@ -181,6 +185,7 @@ def resolve_target(spec: str) -> LLMAdapter:
     if spec.startswith("app:"):
         from ..adapters.app_endpoint import AppEndpointAdapter
 
-        return AppEndpointAdapter(endpoint=spec[len("app:"):])
+        kwargs = {} if app_timeout is None else {"timeout": app_timeout}
+        return AppEndpointAdapter(endpoint=spec[len("app:"):], **kwargs)
     provider, sep, model = spec.partition(":")
     return get_adapter(provider, model or None) if sep else get_adapter(provider)

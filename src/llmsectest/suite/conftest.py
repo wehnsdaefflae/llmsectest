@@ -7,6 +7,7 @@ produces a meaningful report.
 """
 
 import os
+import warnings
 
 import pytest
 
@@ -39,7 +40,7 @@ def _locate_finding_at_target(record_property):
 
 @pytest.fixture(scope="session")
 def target_adapter():
-    return resolve_target(_target_spec())
+    return resolve_target(_target_spec(), app_timeout=envvars.app_timeout_from_env())
 
 
 @pytest.fixture
@@ -61,6 +62,12 @@ def probe(target_adapter, record_property):
         # The generator surfaces it per-finding and aggregates a run-level total.
         if outcome.output_tokens is not None:
             record_property("output_tokens", outcome.output_tokens)
+        if outcome.errored:
+            # A timed-out probe is inconclusive, not clean: surface it as a warning
+            # (visible in the pytest summary the CLI prints) and record it as a
+            # property so the run is never silently short a probe.
+            record_property("llmsec_inconclusive", outcome.evidence)
+            warnings.warn(f"{case.id}: {outcome.evidence}", stacklevel=2)
         if outcome.vulnerable:
             record_property(
                 "llmsec_finding",

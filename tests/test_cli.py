@@ -270,6 +270,29 @@ def test_app_flags_require_a_target_at_all(monkeypatch, capsys):
     assert "offline demo" in capsys.readouterr().err
 
 
+def test_app_timeout_requires_an_app_target(monkeypatch, capsys):
+    monkeypatch.setattr(cli.sys, "argv",
+                        ["llmsectest", "--app-timeout", "60", "--target", "demo-defended"])
+    assert cli.main() == 2
+    assert "--target app:<url>" in capsys.readouterr().err
+
+
+def test_app_timeout_rejects_a_nonpositive_value(monkeypatch, capsys):
+    monkeypatch.setattr(cli.sys, "argv",
+                        ["llmsectest", "--app-timeout", "0", "--target", "app:http://x"])
+    assert cli.main() == 2
+    assert "must be a positive number" in capsys.readouterr().err
+
+
+def test_run_suite_sets_app_timeout_env_when_supplied(monkeypatch):
+    monkeypatch.setattr(cli.subprocess, "call", lambda cmd: 0)
+    monkeypatch.delenv(cli.envvars.APP_TIMEOUT, raising=False)
+    cli.run_suite([], "app:http://localhost:1")
+    assert cli.envvars.APP_TIMEOUT not in cli.os.environ
+    cli.run_suite([], "app:http://localhost:1", app_timeout="75")
+    assert cli.os.environ[cli.envvars.APP_TIMEOUT] == "75"
+
+
 def test_run_suite_sets_app_env_only_when_supplied(monkeypatch):
     monkeypatch.setattr(cli.subprocess, "call", lambda cmd: 0)
     for var in (cli.envvars.APP_PROMPT, cli.envvars.APP_SECRET, cli.envvars.APP_ACTIONS):
