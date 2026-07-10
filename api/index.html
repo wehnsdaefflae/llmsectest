@@ -2786,9 +2786,9 @@ installed.</p>
 
                   <details class="mkdocstrings-source">
                     <summary>Source code in <code>src/llmsectest/adapters/base.py</code></summary>
-                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-90">90</a></span>
-<span class="normal"><a href="#__codelineno-0-91">91</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-90" name="__codelineno-0-90"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-<a id="__codelineno-0-91" name="__codelineno-0-91"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-107">107</a></span>
+<span class="normal"><a href="#__codelineno-0-108">108</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-107" name="__codelineno-0-107"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<a id="__codelineno-0-108" name="__codelineno-0-108"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
 </code></pre></div></td></tr></table></div>
                   </details>
 
@@ -2827,11 +2827,11 @@ installed.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/llmsectest/adapters/base.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-93">93</a></span>
-<span class="normal"><a href="#__codelineno-0-94">94</a></span>
-<span class="normal"><a href="#__codelineno-0-95">95</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-93" name="__codelineno-0-93"></a><span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
-<a id="__codelineno-0-94" name="__codelineno-0-94"></a><span class="k">def</span><span class="w"> </span><span class="nf">complete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">:</span> <span class="n">CompletionRequest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CompletionResponse</span><span class="p">:</span>
-<a id="__codelineno-0-95" name="__codelineno-0-95"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Run one chat completion and return the assistant text.&quot;&quot;&quot;</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-110">110</a></span>
+<span class="normal"><a href="#__codelineno-0-111">111</a></span>
+<span class="normal"><a href="#__codelineno-0-112">112</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-110" name="__codelineno-0-110"></a><span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
+<a id="__codelineno-0-111" name="__codelineno-0-111"></a><span class="k">def</span><span class="w"> </span><span class="nf">complete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">:</span> <span class="n">CompletionRequest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CompletionResponse</span><span class="p">:</span>
+<a id="__codelineno-0-112" name="__codelineno-0-112"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Run one chat completion and return the assistant text.&quot;&quot;&quot;</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -2862,27 +2862,27 @@ down server / unloaded model fails fast instead of mid-suite.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/llmsectest/adapters/base.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-97"> 97</a></span>
-<span class="normal"><a href="#__codelineno-0-98"> 98</a></span>
-<span class="normal"><a href="#__codelineno-0-99"> 99</a></span>
-<span class="normal"><a href="#__codelineno-0-100">100</a></span>
-<span class="normal"><a href="#__codelineno-0-101">101</a></span>
-<span class="normal"><a href="#__codelineno-0-102">102</a></span>
-<span class="normal"><a href="#__codelineno-0-103">103</a></span>
-<span class="normal"><a href="#__codelineno-0-104">104</a></span>
-<span class="normal"><a href="#__codelineno-0-105">105</a></span>
-<span class="normal"><a href="#__codelineno-0-106">106</a></span>
-<span class="normal"><a href="#__codelineno-0-107">107</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-97" name="__codelineno-0-97"></a><span class="k">def</span><span class="w"> </span><span class="nf">preflight</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;PreflightResult | None&quot;</span><span class="p">:</span>
-<a id="__codelineno-0-98" name="__codelineno-0-98"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Best-effort health check before a scan.</span>
-<a id="__codelineno-0-99" name="__codelineno-0-99"></a>
-<a id="__codelineno-0-100" name="__codelineno-0-100"></a><span class="sd">    Returns ``None`` when the provider exposes no cheap health endpoint (the</span>
-<a id="__codelineno-0-101" name="__codelineno-0-101"></a><span class="sd">    scan then proceeds and surfaces any real error on its first request).</span>
-<a id="__codelineno-0-102" name="__codelineno-0-102"></a><span class="sd">    Local OpenAI-compatible runtimes override this to verify the server is</span>
-<a id="__codelineno-0-103" name="__codelineno-0-103"></a><span class="sd">    reachable and the requested model is loaded, raising</span>
-<a id="__codelineno-0-104" name="__codelineno-0-104"></a><span class="sd">    :class:`AdapterError` with an actionable message on failure — so a</span>
-<a id="__codelineno-0-105" name="__codelineno-0-105"></a><span class="sd">    down server / unloaded model fails fast instead of mid-suite.</span>
-<a id="__codelineno-0-106" name="__codelineno-0-106"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-107" name="__codelineno-0-107"></a>    <span class="k">return</span> <span class="kc">None</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-114">114</a></span>
+<span class="normal"><a href="#__codelineno-0-115">115</a></span>
+<span class="normal"><a href="#__codelineno-0-116">116</a></span>
+<span class="normal"><a href="#__codelineno-0-117">117</a></span>
+<span class="normal"><a href="#__codelineno-0-118">118</a></span>
+<span class="normal"><a href="#__codelineno-0-119">119</a></span>
+<span class="normal"><a href="#__codelineno-0-120">120</a></span>
+<span class="normal"><a href="#__codelineno-0-121">121</a></span>
+<span class="normal"><a href="#__codelineno-0-122">122</a></span>
+<span class="normal"><a href="#__codelineno-0-123">123</a></span>
+<span class="normal"><a href="#__codelineno-0-124">124</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-114" name="__codelineno-0-114"></a><span class="k">def</span><span class="w"> </span><span class="nf">preflight</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;PreflightResult | None&quot;</span><span class="p">:</span>
+<a id="__codelineno-0-115" name="__codelineno-0-115"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Best-effort health check before a scan.</span>
+<a id="__codelineno-0-116" name="__codelineno-0-116"></a>
+<a id="__codelineno-0-117" name="__codelineno-0-117"></a><span class="sd">    Returns ``None`` when the provider exposes no cheap health endpoint (the</span>
+<a id="__codelineno-0-118" name="__codelineno-0-118"></a><span class="sd">    scan then proceeds and surfaces any real error on its first request).</span>
+<a id="__codelineno-0-119" name="__codelineno-0-119"></a><span class="sd">    Local OpenAI-compatible runtimes override this to verify the server is</span>
+<a id="__codelineno-0-120" name="__codelineno-0-120"></a><span class="sd">    reachable and the requested model is loaded, raising</span>
+<a id="__codelineno-0-121" name="__codelineno-0-121"></a><span class="sd">    :class:`AdapterError` with an actionable message on failure — so a</span>
+<a id="__codelineno-0-122" name="__codelineno-0-122"></a><span class="sd">    down server / unloaded model fails fast instead of mid-suite.</span>
+<a id="__codelineno-0-123" name="__codelineno-0-123"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-124" name="__codelineno-0-124"></a>    <span class="k">return</span> <span class="kc">None</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -2909,19 +2909,19 @@ down server / unloaded model fails fast instead of mid-suite.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/llmsectest/adapters/base.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-109">109</a></span>
-<span class="normal"><a href="#__codelineno-0-110">110</a></span>
-<span class="normal"><a href="#__codelineno-0-111">111</a></span>
-<span class="normal"><a href="#__codelineno-0-112">112</a></span>
-<span class="normal"><a href="#__codelineno-0-113">113</a></span>
-<span class="normal"><a href="#__codelineno-0-114">114</a></span>
-<span class="normal"><a href="#__codelineno-0-115">115</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-109" name="__codelineno-0-109"></a><span class="k">def</span><span class="w"> </span><span class="nf">prompt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<a id="__codelineno-0-110" name="__codelineno-0-110"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Convenience: send a single user turn, return the response text.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-111" name="__codelineno-0-111"></a>    <span class="n">messages</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Message</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-<a id="__codelineno-0-112" name="__codelineno-0-112"></a>    <span class="k">if</span> <span class="n">system</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-113" name="__codelineno-0-113"></a>        <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Message</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">system</span><span class="p">))</span>
-<a id="__codelineno-0-114" name="__codelineno-0-114"></a>    <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Message</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="n">text</span><span class="p">))</span>
-<a id="__codelineno-0-115" name="__codelineno-0-115"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">complete</span><span class="p">(</span><span class="n">CompletionRequest</span><span class="p">(</span><span class="n">messages</span><span class="o">=</span><span class="n">messages</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span><span class="o">.</span><span class="n">text</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-126">126</a></span>
+<span class="normal"><a href="#__codelineno-0-127">127</a></span>
+<span class="normal"><a href="#__codelineno-0-128">128</a></span>
+<span class="normal"><a href="#__codelineno-0-129">129</a></span>
+<span class="normal"><a href="#__codelineno-0-130">130</a></span>
+<span class="normal"><a href="#__codelineno-0-131">131</a></span>
+<span class="normal"><a href="#__codelineno-0-132">132</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-126" name="__codelineno-0-126"></a><span class="k">def</span><span class="w"> </span><span class="nf">prompt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-0-127" name="__codelineno-0-127"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Convenience: send a single user turn, return the response text.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-128" name="__codelineno-0-128"></a>    <span class="n">messages</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Message</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+<a id="__codelineno-0-129" name="__codelineno-0-129"></a>    <span class="k">if</span> <span class="n">system</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-130" name="__codelineno-0-130"></a>        <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Message</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">system</span><span class="p">))</span>
+<a id="__codelineno-0-131" name="__codelineno-0-131"></a>    <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Message</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="n">text</span><span class="p">))</span>
+<a id="__codelineno-0-132" name="__codelineno-0-132"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">complete</span><span class="p">(</span><span class="n">CompletionRequest</span><span class="p">(</span><span class="n">messages</span><span class="o">=</span><span class="n">messages</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span><span class="o">.</span><span class="n">text</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -3333,14 +3333,7 @@ shapes (<code>reply</code>/<code>response</code>/<code>message</code>/<code>cont
 
                   <details class="mkdocstrings-source">
                     <summary>Source code in <code>src/llmsectest/adapters/app_endpoint.py</code></summary>
-                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-66">66</a></span>
-<span class="normal"><a href="#__codelineno-0-67">67</a></span>
-<span class="normal"><a href="#__codelineno-0-68">68</a></span>
-<span class="normal"><a href="#__codelineno-0-69">69</a></span>
-<span class="normal"><a href="#__codelineno-0-70">70</a></span>
-<span class="normal"><a href="#__codelineno-0-71">71</a></span>
-<span class="normal"><a href="#__codelineno-0-72">72</a></span>
-<span class="normal"><a href="#__codelineno-0-73">73</a></span>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-73">73</a></span>
 <span class="normal"><a href="#__codelineno-0-74">74</a></span>
 <span class="normal"><a href="#__codelineno-0-75">75</a></span>
 <span class="normal"><a href="#__codelineno-0-76">76</a></span>
@@ -3351,25 +3344,32 @@ shapes (<code>reply</code>/<code>response</code>/<code>message</code>/<code>cont
 <span class="normal"><a href="#__codelineno-0-81">81</a></span>
 <span class="normal"><a href="#__codelineno-0-82">82</a></span>
 <span class="normal"><a href="#__codelineno-0-83">83</a></span>
-<span class="normal"><a href="#__codelineno-0-84">84</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-66" name="__codelineno-0-66"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
-<a id="__codelineno-0-67" name="__codelineno-0-67"></a>    <span class="bp">self</span><span class="p">,</span>
-<a id="__codelineno-0-68" name="__codelineno-0-68"></a>    <span class="n">endpoint</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-<a id="__codelineno-0-69" name="__codelineno-0-69"></a>    <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-70" name="__codelineno-0-70"></a>    <span class="n">request_field</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;message&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-71" name="__codelineno-0-71"></a>    <span class="n">response_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-72" name="__codelineno-0-72"></a>    <span class="n">headers</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-73" name="__codelineno-0-73"></a>    <span class="n">extra_body</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-74" name="__codelineno-0-74"></a>    <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">120.0</span><span class="p">,</span>
-<a id="__codelineno-0-75" name="__codelineno-0-75"></a><span class="p">):</span>
-<a id="__codelineno-0-76" name="__codelineno-0-76"></a>    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">model</span> <span class="ow">or</span> <span class="n">endpoint</span><span class="p">)</span>
-<a id="__codelineno-0-77" name="__codelineno-0-77"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">endpoint</span><span class="p">:</span>
-<a id="__codelineno-0-78" name="__codelineno-0-78"></a>        <span class="k">raise</span> <span class="n">AdapterError</span><span class="p">(</span><span class="s2">&quot;AppEndpointAdapter needs the application&#39;s endpoint URL&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-79" name="__codelineno-0-79"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">endpoint</span> <span class="o">=</span> <span class="n">endpoint</span>
-<a id="__codelineno-0-80" name="__codelineno-0-80"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">request_field</span> <span class="o">=</span> <span class="n">request_field</span>
-<a id="__codelineno-0-81" name="__codelineno-0-81"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">response_path</span> <span class="o">=</span> <span class="n">response_path</span>
-<a id="__codelineno-0-82" name="__codelineno-0-82"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;Content-Type&quot;</span><span class="p">:</span> <span class="s2">&quot;application/json&quot;</span><span class="p">,</span> <span class="o">**</span><span class="p">(</span><span class="n">headers</span> <span class="ow">or</span> <span class="p">{})}</span>
-<a id="__codelineno-0-83" name="__codelineno-0-83"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">extra_body</span> <span class="o">=</span> <span class="n">extra_body</span> <span class="ow">or</span> <span class="p">{}</span>
-<a id="__codelineno-0-84" name="__codelineno-0-84"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span> <span class="o">=</span> <span class="n">timeout</span>
+<span class="normal"><a href="#__codelineno-0-84">84</a></span>
+<span class="normal"><a href="#__codelineno-0-85">85</a></span>
+<span class="normal"><a href="#__codelineno-0-86">86</a></span>
+<span class="normal"><a href="#__codelineno-0-87">87</a></span>
+<span class="normal"><a href="#__codelineno-0-88">88</a></span>
+<span class="normal"><a href="#__codelineno-0-89">89</a></span>
+<span class="normal"><a href="#__codelineno-0-90">90</a></span>
+<span class="normal"><a href="#__codelineno-0-91">91</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-73" name="__codelineno-0-73"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+<a id="__codelineno-0-74" name="__codelineno-0-74"></a>    <span class="bp">self</span><span class="p">,</span>
+<a id="__codelineno-0-75" name="__codelineno-0-75"></a>    <span class="n">endpoint</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<a id="__codelineno-0-76" name="__codelineno-0-76"></a>    <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-77" name="__codelineno-0-77"></a>    <span class="n">request_field</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;message&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-78" name="__codelineno-0-78"></a>    <span class="n">response_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-79" name="__codelineno-0-79"></a>    <span class="n">headers</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-80" name="__codelineno-0-80"></a>    <span class="n">extra_body</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-81" name="__codelineno-0-81"></a>    <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">120.0</span><span class="p">,</span>
+<a id="__codelineno-0-82" name="__codelineno-0-82"></a><span class="p">):</span>
+<a id="__codelineno-0-83" name="__codelineno-0-83"></a>    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">model</span> <span class="ow">or</span> <span class="n">endpoint</span><span class="p">)</span>
+<a id="__codelineno-0-84" name="__codelineno-0-84"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">endpoint</span><span class="p">:</span>
+<a id="__codelineno-0-85" name="__codelineno-0-85"></a>        <span class="k">raise</span> <span class="n">AdapterError</span><span class="p">(</span><span class="s2">&quot;AppEndpointAdapter needs the application&#39;s endpoint URL&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-86" name="__codelineno-0-86"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">endpoint</span> <span class="o">=</span> <span class="n">endpoint</span>
+<a id="__codelineno-0-87" name="__codelineno-0-87"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">request_field</span> <span class="o">=</span> <span class="n">request_field</span>
+<a id="__codelineno-0-88" name="__codelineno-0-88"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">response_path</span> <span class="o">=</span> <span class="n">response_path</span>
+<a id="__codelineno-0-89" name="__codelineno-0-89"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;Content-Type&quot;</span><span class="p">:</span> <span class="s2">&quot;application/json&quot;</span><span class="p">,</span> <span class="o">**</span><span class="p">(</span><span class="n">headers</span> <span class="ow">or</span> <span class="p">{})}</span>
+<a id="__codelineno-0-90" name="__codelineno-0-90"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">extra_body</span> <span class="o">=</span> <span class="n">extra_body</span> <span class="ow">or</span> <span class="p">{}</span>
+<a id="__codelineno-0-91" name="__codelineno-0-91"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span> <span class="o">=</span> <span class="n">timeout</span>
 </code></pre></div></td></tr></table></div>
                   </details>
 
@@ -3527,7 +3527,8 @@ handling), LLM06 (excessive agency), LLM07 (system prompt leakage), LLM09
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">vulnerable</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">evidence</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">output_tokens</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="p">)</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">errored</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="p">)</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -4128,7 +4129,9 @@ must surface that state instead of treating the empty <code>findings</code> as c
 
 
 <a href="#llmsectest.probes.resolve_target" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">resolve_target</span><span class="p">(</span><span class="n">spec</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LLMAdapter</span>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">resolve_target</span><span class="p">(</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">spec</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">app_timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LLMAdapter</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -4141,6 +4144,9 @@ provider (<code>mock</code>); or <code>provider:model</code> (e.g. <code>openai:
 or <code>ollama:gemma4:e2b-it-q4_K_M</code> / <code>lmstudio:&lt;model&gt;</code> for a local model —
 no API key, no paid calls). Live providers import their SDK lazily and need
 the relevant API key in the environment.</p>
+<p><code>app_timeout</code> (seconds) caps how long a single request to an <code>app:&lt;url&gt;</code>
+target may take before it is treated as a timeout; it applies only to the app
+adapter and falls back to that adapter's own default when <code>None</code>.</p>
 
 
             <details class="mkdocstrings-source">
@@ -4166,7 +4172,12 @@ the relevant API key in the environment.</p>
 <span class="normal"><a href="#__codelineno-0-183">183</a></span>
 <span class="normal"><a href="#__codelineno-0-184">184</a></span>
 <span class="normal"><a href="#__codelineno-0-185">185</a></span>
-<span class="normal"><a href="#__codelineno-0-186">186</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-165" name="__codelineno-0-165"></a><span class="k">def</span><span class="w"> </span><span class="nf">resolve_target</span><span class="p">(</span><span class="n">spec</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LLMAdapter</span><span class="p">:</span>
+<span class="normal"><a href="#__codelineno-0-186">186</a></span>
+<span class="normal"><a href="#__codelineno-0-187">187</a></span>
+<span class="normal"><a href="#__codelineno-0-188">188</a></span>
+<span class="normal"><a href="#__codelineno-0-189">189</a></span>
+<span class="normal"><a href="#__codelineno-0-190">190</a></span>
+<span class="normal"><a href="#__codelineno-0-191">191</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-165" name="__codelineno-0-165"></a><span class="k">def</span><span class="w"> </span><span class="nf">resolve_target</span><span class="p">(</span><span class="n">spec</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">app_timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LLMAdapter</span><span class="p">:</span>
 <a id="__codelineno-0-166" name="__codelineno-0-166"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Resolve a target spec into an adapter.</span>
 <a id="__codelineno-0-167" name="__codelineno-0-167"></a>
 <a id="__codelineno-0-168" name="__codelineno-0-168"></a><span class="sd">    Accepts the demo keywords ``demo``/``demo-vulnerable``/``demo-defended``;</span>
@@ -4176,18 +4187,23 @@ the relevant API key in the environment.</p>
 <a id="__codelineno-0-172" name="__codelineno-0-172"></a><span class="sd">    or ``ollama:gemma4:e2b-it-q4_K_M`` / ``lmstudio:&lt;model&gt;`` for a local model —</span>
 <a id="__codelineno-0-173" name="__codelineno-0-173"></a><span class="sd">    no API key, no paid calls). Live providers import their SDK lazily and need</span>
 <a id="__codelineno-0-174" name="__codelineno-0-174"></a><span class="sd">    the relevant API key in the environment.</span>
-<a id="__codelineno-0-175" name="__codelineno-0-175"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-176" name="__codelineno-0-176"></a>    <span class="n">spec</span> <span class="o">=</span> <span class="p">(</span><span class="n">spec</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-<a id="__codelineno-0-177" name="__codelineno-0-177"></a>    <span class="k">if</span> <span class="n">spec</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;demo&quot;</span><span class="p">,</span> <span class="s2">&quot;demo-vulnerable&quot;</span><span class="p">):</span>
-<a id="__codelineno-0-178" name="__codelineno-0-178"></a>        <span class="k">return</span> <span class="n">vulnerable_demo_adapter</span><span class="p">()</span>
-<a id="__codelineno-0-179" name="__codelineno-0-179"></a>    <span class="k">if</span> <span class="n">spec</span> <span class="o">==</span> <span class="s2">&quot;demo-defended&quot;</span><span class="p">:</span>
-<a id="__codelineno-0-180" name="__codelineno-0-180"></a>        <span class="k">return</span> <span class="n">defended_demo_adapter</span><span class="p">()</span>
-<a id="__codelineno-0-181" name="__codelineno-0-181"></a>    <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;app:&quot;</span><span class="p">):</span>
-<a id="__codelineno-0-182" name="__codelineno-0-182"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">..adapters.app_endpoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">AppEndpointAdapter</span>
-<a id="__codelineno-0-183" name="__codelineno-0-183"></a>
-<a id="__codelineno-0-184" name="__codelineno-0-184"></a>        <span class="k">return</span> <span class="n">AppEndpointAdapter</span><span class="p">(</span><span class="n">endpoint</span><span class="o">=</span><span class="n">spec</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="s2">&quot;app:&quot;</span><span class="p">):])</span>
-<a id="__codelineno-0-185" name="__codelineno-0-185"></a>    <span class="n">provider</span><span class="p">,</span> <span class="n">sep</span><span class="p">,</span> <span class="n">model</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-186" name="__codelineno-0-186"></a>    <span class="k">return</span> <span class="n">get_adapter</span><span class="p">(</span><span class="n">provider</span><span class="p">,</span> <span class="n">model</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">)</span> <span class="k">if</span> <span class="n">sep</span> <span class="k">else</span> <span class="n">get_adapter</span><span class="p">(</span><span class="n">provider</span><span class="p">)</span>
+<a id="__codelineno-0-175" name="__codelineno-0-175"></a>
+<a id="__codelineno-0-176" name="__codelineno-0-176"></a><span class="sd">    ``app_timeout`` (seconds) caps how long a single request to an ``app:&lt;url&gt;``</span>
+<a id="__codelineno-0-177" name="__codelineno-0-177"></a><span class="sd">    target may take before it is treated as a timeout; it applies only to the app</span>
+<a id="__codelineno-0-178" name="__codelineno-0-178"></a><span class="sd">    adapter and falls back to that adapter&#39;s own default when ``None``.</span>
+<a id="__codelineno-0-179" name="__codelineno-0-179"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-180" name="__codelineno-0-180"></a>    <span class="n">spec</span> <span class="o">=</span> <span class="p">(</span><span class="n">spec</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+<a id="__codelineno-0-181" name="__codelineno-0-181"></a>    <span class="k">if</span> <span class="n">spec</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;demo&quot;</span><span class="p">,</span> <span class="s2">&quot;demo-vulnerable&quot;</span><span class="p">):</span>
+<a id="__codelineno-0-182" name="__codelineno-0-182"></a>        <span class="k">return</span> <span class="n">vulnerable_demo_adapter</span><span class="p">()</span>
+<a id="__codelineno-0-183" name="__codelineno-0-183"></a>    <span class="k">if</span> <span class="n">spec</span> <span class="o">==</span> <span class="s2">&quot;demo-defended&quot;</span><span class="p">:</span>
+<a id="__codelineno-0-184" name="__codelineno-0-184"></a>        <span class="k">return</span> <span class="n">defended_demo_adapter</span><span class="p">()</span>
+<a id="__codelineno-0-185" name="__codelineno-0-185"></a>    <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;app:&quot;</span><span class="p">):</span>
+<a id="__codelineno-0-186" name="__codelineno-0-186"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">..adapters.app_endpoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">AppEndpointAdapter</span>
+<a id="__codelineno-0-187" name="__codelineno-0-187"></a>
+<a id="__codelineno-0-188" name="__codelineno-0-188"></a>        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">app_timeout</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{</span><span class="s2">&quot;timeout&quot;</span><span class="p">:</span> <span class="n">app_timeout</span><span class="p">}</span>
+<a id="__codelineno-0-189" name="__codelineno-0-189"></a>        <span class="k">return</span> <span class="n">AppEndpointAdapter</span><span class="p">(</span><span class="n">endpoint</span><span class="o">=</span><span class="n">spec</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="s2">&quot;app:&quot;</span><span class="p">):],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<a id="__codelineno-0-190" name="__codelineno-0-190"></a>    <span class="n">provider</span><span class="p">,</span> <span class="n">sep</span><span class="p">,</span> <span class="n">model</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-191" name="__codelineno-0-191"></a>    <span class="k">return</span> <span class="n">get_adapter</span><span class="p">(</span><span class="n">provider</span><span class="p">,</span> <span class="n">model</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">)</span> <span class="k">if</span> <span class="n">sep</span> <span class="k">else</span> <span class="n">get_adapter</span><span class="p">(</span><span class="n">provider</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -4220,16 +4236,18 @@ flagged (independently of its text detector) when the reply reached the request'
 <code>max_tokens</code> budget — the "would-have-continued" denial-of-wallet signal that the
 text oracles cannot see. The request's own <code>max_tokens</code> is the ceiling reference, so
 the two never drift.</p>
+<p>A target that does not respond within its per-request time budget raises
+:class:<code>~llmsectest.adapters.base.AdapterTimeoutError</code>; this is caught and recorded as
+an <strong>inconclusive</strong> outcome (<code>errored=True</code>) rather than allowed to abort the scan. A
+timeout is not scored as a finding (it is not proof of a vulnerability — the app may
+simply be slow) but neither is it a silent clean: the outcome carries the timeout as its
+evidence for the report. Every other adapter failure (unreachable endpoint, malformed
+reply, auth error) still propagates, so a genuine misconfiguration fails loudly.</p>
 
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/llmsectest/probes/runner.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-21">21</a></span>
-<span class="normal"><a href="#__codelineno-0-22">22</a></span>
-<span class="normal"><a href="#__codelineno-0-23">23</a></span>
-<span class="normal"><a href="#__codelineno-0-24">24</a></span>
-<span class="normal"><a href="#__codelineno-0-25">25</a></span>
-<span class="normal"><a href="#__codelineno-0-26">26</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-26">26</a></span>
 <span class="normal"><a href="#__codelineno-0-27">27</a></span>
 <span class="normal"><a href="#__codelineno-0-28">28</a></span>
 <span class="normal"><a href="#__codelineno-0-29">29</a></span>
@@ -4257,40 +4275,79 @@ the two never drift.</p>
 <span class="normal"><a href="#__codelineno-0-51">51</a></span>
 <span class="normal"><a href="#__codelineno-0-52">52</a></span>
 <span class="normal"><a href="#__codelineno-0-53">53</a></span>
-<span class="normal"><a href="#__codelineno-0-54">54</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-21" name="__codelineno-0-21"></a><span class="k">def</span><span class="w"> </span><span class="nf">run_probe</span><span class="p">(</span><span class="n">adapter</span><span class="p">:</span> <span class="n">LLMAdapter</span><span class="p">,</span> <span class="n">case</span><span class="p">:</span> <span class="n">ProbeCase</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ProbeOutcome</span><span class="p">:</span>
-<a id="__codelineno-0-22" name="__codelineno-0-22"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Send ``case`` to ``adapter``, score the reply, and record its output cost.</span>
-<a id="__codelineno-0-23" name="__codelineno-0-23"></a>
-<a id="__codelineno-0-24" name="__codelineno-0-24"></a><span class="sd">    Drives the target through :meth:`~llmsectest.adapters.base.LLMAdapter.complete`</span>
-<a id="__codelineno-0-25" name="__codelineno-0-25"></a><span class="sd">    (rather than the text-only ``prompt`` convenience) so the full response — including</span>
-<a id="__codelineno-0-26" name="__codelineno-0-26"></a><span class="sd">    the provider&#39;s usage block — is available: the per-probe output-token count is</span>
-<a id="__codelineno-0-27" name="__codelineno-0-27"></a><span class="sd">    captured on the outcome as the precise denial-of-wallet cost figure (``None`` for a</span>
-<a id="__codelineno-0-28" name="__codelineno-0-28"></a><span class="sd">    black-box endpoint that reports no usage).</span>
-<a id="__codelineno-0-29" name="__codelineno-0-29"></a>
-<a id="__codelineno-0-30" name="__codelineno-0-30"></a><span class="sd">    A case with :attr:`~llmsectest.probes.models.ProbeCase.cost_ceiling` set is *also*</span>
-<a id="__codelineno-0-31" name="__codelineno-0-31"></a><span class="sd">    flagged (independently of its text detector) when the reply reached the request&#39;s</span>
-<a id="__codelineno-0-32" name="__codelineno-0-32"></a><span class="sd">    ``max_tokens`` budget — the &quot;would-have-continued&quot; denial-of-wallet signal that the</span>
-<a id="__codelineno-0-33" name="__codelineno-0-33"></a><span class="sd">    text oracles cannot see. The request&#39;s own ``max_tokens`` is the ceiling reference, so</span>
-<a id="__codelineno-0-34" name="__codelineno-0-34"></a><span class="sd">    the two never drift.</span>
-<a id="__codelineno-0-35" name="__codelineno-0-35"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-36" name="__codelineno-0-36"></a>    <span class="n">request</span> <span class="o">=</span> <span class="n">CompletionRequest</span><span class="p">(</span>
-<a id="__codelineno-0-37" name="__codelineno-0-37"></a>        <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
-<a id="__codelineno-0-38" name="__codelineno-0-38"></a>            <span class="n">Message</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">case</span><span class="o">.</span><span class="n">system_prompt</span><span class="p">),</span>
-<a id="__codelineno-0-39" name="__codelineno-0-39"></a>            <span class="n">Message</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="n">case</span><span class="o">.</span><span class="n">user_prompt</span><span class="p">),</span>
-<a id="__codelineno-0-40" name="__codelineno-0-40"></a>        <span class="p">],</span>
-<a id="__codelineno-0-41" name="__codelineno-0-41"></a>        <span class="n">temperature</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
-<a id="__codelineno-0-42" name="__codelineno-0-42"></a>    <span class="p">)</span>
-<a id="__codelineno-0-43" name="__codelineno-0-43"></a>    <span class="n">response</span> <span class="o">=</span> <span class="n">adapter</span><span class="o">.</span><span class="n">complete</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
-<a id="__codelineno-0-44" name="__codelineno-0-44"></a>    <span class="n">output_tokens</span> <span class="o">=</span> <span class="n">_output_tokens</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">usage</span><span class="p">)</span>
-<a id="__codelineno-0-45" name="__codelineno-0-45"></a>    <span class="n">vulnerable</span><span class="p">,</span> <span class="n">evidence</span> <span class="o">=</span> <span class="n">get_detector</span><span class="p">(</span><span class="n">case</span><span class="o">.</span><span class="n">detector</span><span class="p">)(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">case</span><span class="p">)</span>
-<a id="__codelineno-0-46" name="__codelineno-0-46"></a>    <span class="k">if</span> <span class="n">case</span><span class="o">.</span><span class="n">cost_ceiling</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">vulnerable</span><span class="p">:</span>
-<a id="__codelineno-0-47" name="__codelineno-0-47"></a>        <span class="n">vulnerable</span><span class="p">,</span> <span class="n">evidence</span> <span class="o">=</span> <span class="n">output_ceiling_reached</span><span class="p">(</span><span class="n">output_tokens</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">max_tokens</span><span class="p">)</span>
-<a id="__codelineno-0-48" name="__codelineno-0-48"></a>    <span class="k">return</span> <span class="n">ProbeOutcome</span><span class="p">(</span>
-<a id="__codelineno-0-49" name="__codelineno-0-49"></a>        <span class="n">case</span><span class="o">=</span><span class="n">case</span><span class="p">,</span>
-<a id="__codelineno-0-50" name="__codelineno-0-50"></a>        <span class="n">response</span><span class="o">=</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
-<a id="__codelineno-0-51" name="__codelineno-0-51"></a>        <span class="n">vulnerable</span><span class="o">=</span><span class="n">vulnerable</span><span class="p">,</span>
-<a id="__codelineno-0-52" name="__codelineno-0-52"></a>        <span class="n">evidence</span><span class="o">=</span><span class="n">evidence</span><span class="p">,</span>
-<a id="__codelineno-0-53" name="__codelineno-0-53"></a>        <span class="n">output_tokens</span><span class="o">=</span><span class="n">output_tokens</span><span class="p">,</span>
-<a id="__codelineno-0-54" name="__codelineno-0-54"></a>    <span class="p">)</span>
+<span class="normal"><a href="#__codelineno-0-54">54</a></span>
+<span class="normal"><a href="#__codelineno-0-55">55</a></span>
+<span class="normal"><a href="#__codelineno-0-56">56</a></span>
+<span class="normal"><a href="#__codelineno-0-57">57</a></span>
+<span class="normal"><a href="#__codelineno-0-58">58</a></span>
+<span class="normal"><a href="#__codelineno-0-59">59</a></span>
+<span class="normal"><a href="#__codelineno-0-60">60</a></span>
+<span class="normal"><a href="#__codelineno-0-61">61</a></span>
+<span class="normal"><a href="#__codelineno-0-62">62</a></span>
+<span class="normal"><a href="#__codelineno-0-63">63</a></span>
+<span class="normal"><a href="#__codelineno-0-64">64</a></span>
+<span class="normal"><a href="#__codelineno-0-65">65</a></span>
+<span class="normal"><a href="#__codelineno-0-66">66</a></span>
+<span class="normal"><a href="#__codelineno-0-67">67</a></span>
+<span class="normal"><a href="#__codelineno-0-68">68</a></span>
+<span class="normal"><a href="#__codelineno-0-69">69</a></span>
+<span class="normal"><a href="#__codelineno-0-70">70</a></span>
+<span class="normal"><a href="#__codelineno-0-71">71</a></span>
+<span class="normal"><a href="#__codelineno-0-72">72</a></span>
+<span class="normal"><a href="#__codelineno-0-73">73</a></span>
+<span class="normal"><a href="#__codelineno-0-74">74</a></span>
+<span class="normal"><a href="#__codelineno-0-75">75</a></span>
+<span class="normal"><a href="#__codelineno-0-76">76</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-26" name="__codelineno-0-26"></a><span class="k">def</span><span class="w"> </span><span class="nf">run_probe</span><span class="p">(</span><span class="n">adapter</span><span class="p">:</span> <span class="n">LLMAdapter</span><span class="p">,</span> <span class="n">case</span><span class="p">:</span> <span class="n">ProbeCase</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ProbeOutcome</span><span class="p">:</span>
+<a id="__codelineno-0-27" name="__codelineno-0-27"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Send ``case`` to ``adapter``, score the reply, and record its output cost.</span>
+<a id="__codelineno-0-28" name="__codelineno-0-28"></a>
+<a id="__codelineno-0-29" name="__codelineno-0-29"></a><span class="sd">    Drives the target through :meth:`~llmsectest.adapters.base.LLMAdapter.complete`</span>
+<a id="__codelineno-0-30" name="__codelineno-0-30"></a><span class="sd">    (rather than the text-only ``prompt`` convenience) so the full response — including</span>
+<a id="__codelineno-0-31" name="__codelineno-0-31"></a><span class="sd">    the provider&#39;s usage block — is available: the per-probe output-token count is</span>
+<a id="__codelineno-0-32" name="__codelineno-0-32"></a><span class="sd">    captured on the outcome as the precise denial-of-wallet cost figure (``None`` for a</span>
+<a id="__codelineno-0-33" name="__codelineno-0-33"></a><span class="sd">    black-box endpoint that reports no usage).</span>
+<a id="__codelineno-0-34" name="__codelineno-0-34"></a>
+<a id="__codelineno-0-35" name="__codelineno-0-35"></a><span class="sd">    A case with :attr:`~llmsectest.probes.models.ProbeCase.cost_ceiling` set is *also*</span>
+<a id="__codelineno-0-36" name="__codelineno-0-36"></a><span class="sd">    flagged (independently of its text detector) when the reply reached the request&#39;s</span>
+<a id="__codelineno-0-37" name="__codelineno-0-37"></a><span class="sd">    ``max_tokens`` budget — the &quot;would-have-continued&quot; denial-of-wallet signal that the</span>
+<a id="__codelineno-0-38" name="__codelineno-0-38"></a><span class="sd">    text oracles cannot see. The request&#39;s own ``max_tokens`` is the ceiling reference, so</span>
+<a id="__codelineno-0-39" name="__codelineno-0-39"></a><span class="sd">    the two never drift.</span>
+<a id="__codelineno-0-40" name="__codelineno-0-40"></a>
+<a id="__codelineno-0-41" name="__codelineno-0-41"></a><span class="sd">    A target that does not respond within its per-request time budget raises</span>
+<a id="__codelineno-0-42" name="__codelineno-0-42"></a><span class="sd">    :class:`~llmsectest.adapters.base.AdapterTimeoutError`; this is caught and recorded as</span>
+<a id="__codelineno-0-43" name="__codelineno-0-43"></a><span class="sd">    an **inconclusive** outcome (``errored=True``) rather than allowed to abort the scan. A</span>
+<a id="__codelineno-0-44" name="__codelineno-0-44"></a><span class="sd">    timeout is not scored as a finding (it is not proof of a vulnerability — the app may</span>
+<a id="__codelineno-0-45" name="__codelineno-0-45"></a><span class="sd">    simply be slow) but neither is it a silent clean: the outcome carries the timeout as its</span>
+<a id="__codelineno-0-46" name="__codelineno-0-46"></a><span class="sd">    evidence for the report. Every other adapter failure (unreachable endpoint, malformed</span>
+<a id="__codelineno-0-47" name="__codelineno-0-47"></a><span class="sd">    reply, auth error) still propagates, so a genuine misconfiguration fails loudly.</span>
+<a id="__codelineno-0-48" name="__codelineno-0-48"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-49" name="__codelineno-0-49"></a>    <span class="n">request</span> <span class="o">=</span> <span class="n">CompletionRequest</span><span class="p">(</span>
+<a id="__codelineno-0-50" name="__codelineno-0-50"></a>        <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+<a id="__codelineno-0-51" name="__codelineno-0-51"></a>            <span class="n">Message</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">case</span><span class="o">.</span><span class="n">system_prompt</span><span class="p">),</span>
+<a id="__codelineno-0-52" name="__codelineno-0-52"></a>            <span class="n">Message</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="n">case</span><span class="o">.</span><span class="n">user_prompt</span><span class="p">),</span>
+<a id="__codelineno-0-53" name="__codelineno-0-53"></a>        <span class="p">],</span>
+<a id="__codelineno-0-54" name="__codelineno-0-54"></a>        <span class="n">temperature</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+<a id="__codelineno-0-55" name="__codelineno-0-55"></a>    <span class="p">)</span>
+<a id="__codelineno-0-56" name="__codelineno-0-56"></a>    <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-0-57" name="__codelineno-0-57"></a>        <span class="n">response</span> <span class="o">=</span> <span class="n">adapter</span><span class="o">.</span><span class="n">complete</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+<a id="__codelineno-0-58" name="__codelineno-0-58"></a>    <span class="k">except</span> <span class="n">AdapterTimeoutError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+<a id="__codelineno-0-59" name="__codelineno-0-59"></a>        <span class="k">return</span> <span class="n">ProbeOutcome</span><span class="p">(</span>
+<a id="__codelineno-0-60" name="__codelineno-0-60"></a>            <span class="n">case</span><span class="o">=</span><span class="n">case</span><span class="p">,</span>
+<a id="__codelineno-0-61" name="__codelineno-0-61"></a>            <span class="n">response</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-62" name="__codelineno-0-62"></a>            <span class="n">vulnerable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<a id="__codelineno-0-63" name="__codelineno-0-63"></a>            <span class="n">evidence</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;probe inconclusive — </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-64" name="__codelineno-0-64"></a>            <span class="n">errored</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<a id="__codelineno-0-65" name="__codelineno-0-65"></a>        <span class="p">)</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66"></a>    <span class="n">output_tokens</span> <span class="o">=</span> <span class="n">_output_tokens</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">usage</span><span class="p">)</span>
+<a id="__codelineno-0-67" name="__codelineno-0-67"></a>    <span class="n">vulnerable</span><span class="p">,</span> <span class="n">evidence</span> <span class="o">=</span> <span class="n">get_detector</span><span class="p">(</span><span class="n">case</span><span class="o">.</span><span class="n">detector</span><span class="p">)(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">case</span><span class="p">)</span>
+<a id="__codelineno-0-68" name="__codelineno-0-68"></a>    <span class="k">if</span> <span class="n">case</span><span class="o">.</span><span class="n">cost_ceiling</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">vulnerable</span><span class="p">:</span>
+<a id="__codelineno-0-69" name="__codelineno-0-69"></a>        <span class="n">vulnerable</span><span class="p">,</span> <span class="n">evidence</span> <span class="o">=</span> <span class="n">output_ceiling_reached</span><span class="p">(</span><span class="n">output_tokens</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">max_tokens</span><span class="p">)</span>
+<a id="__codelineno-0-70" name="__codelineno-0-70"></a>    <span class="k">return</span> <span class="n">ProbeOutcome</span><span class="p">(</span>
+<a id="__codelineno-0-71" name="__codelineno-0-71"></a>        <span class="n">case</span><span class="o">=</span><span class="n">case</span><span class="p">,</span>
+<a id="__codelineno-0-72" name="__codelineno-0-72"></a>        <span class="n">response</span><span class="o">=</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
+<a id="__codelineno-0-73" name="__codelineno-0-73"></a>        <span class="n">vulnerable</span><span class="o">=</span><span class="n">vulnerable</span><span class="p">,</span>
+<a id="__codelineno-0-74" name="__codelineno-0-74"></a>        <span class="n">evidence</span><span class="o">=</span><span class="n">evidence</span><span class="p">,</span>
+<a id="__codelineno-0-75" name="__codelineno-0-75"></a>        <span class="n">output_tokens</span><span class="o">=</span><span class="n">output_tokens</span><span class="p">,</span>
+<a id="__codelineno-0-76" name="__codelineno-0-76"></a>    <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>

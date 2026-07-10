@@ -1236,6 +1236,15 @@ yet published to PyPI</strong>. The forward-looking plan is the <a href="https:/
 <h2 id="unreleased"><a href="https://github.com/wehnsdaefflae/llmsectest/compare/v0.1.0...HEAD">Unreleased</a><a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
 <h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
 <ul>
+<li><strong>Per-request timeout for application targets (<code>--app-timeout &lt;seconds&gt;</code>).</strong> Caps how long a single
+  request to an <code>app:&lt;url&gt;</code> target may take. A target that exceeds the budget raises a typed
+  <code>AdapterTimeoutError</code>, and the probe is recorded as <strong>inconclusive</strong> — neither a finding (a timeout is not
+  proof of a vulnerability) nor a silent clean: it surfaces as a warning in the pytest summary and a report
+  property. This makes a slow or runaway endpoint safe: <code>run_probe</code> catches the timeout and the scan
+  continues, so a report is always produced, where previously a single endpoint that would not stop
+  generating on one request could run the scan past its wall-clock cap and discard every other result. Every
+  non-timeout adapter failure (unreachable endpoint, malformed reply, auth error) still fails loudly.
+  (2026-07-10)</li>
 <li><strong>CycloneDX SBOM export (<code>--sbom</code>, OWASP LLM03 / supply chain).</strong> <code>llmsectest --sbom --repo &lt;path&gt;</code>
   inventories a project's declared dependencies as a <strong>CycloneDX 1.6 JSON</strong> Software Bill of Materials —
   one component per dependency, identified by PURL (<code>pkg:pypi/name@version</code>). The pinned/unpinned grading is

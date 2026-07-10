@@ -1226,6 +1226,10 @@ packaged OWASP probe suite against your chosen target and writes reports.</p>
 <td>With <code>--target app:&lt;url&gt;</code>: the <strong>marker a poisoned document planted in the app's retrieved corpus instructs the model to emit</strong> — unlocks the <strong>LLM08</strong> indirect-injection probes (kb-directive, follow-retrieved, apply-policy). Each is a benign query that never names the marker; if the app retrieves the poisoned doc and emits it, the app obeyed an injected instruction from retrieved content. Categorized LLM08 (not LLM01) because the injection vector is the retrieval layer — the LLM08↔LLM01 bridge.</td>
 </tr>
 <tr>
+<td><code>--app-timeout &lt;seconds&gt;</code></td>
+<td>With <code>--target app:&lt;url&gt;</code>: the <strong>per-request time budget</strong> for a single call to the app (default 120 s). A request that exceeds it is recorded as an <strong>inconclusive</strong> probe — not a finding (a timeout is not proof of a vulnerability) and not a silent clean, but a warning in the summary — so one slow or runaway endpoint cannot hang the whole scan and lose every other result. Raise it for a legitimately slow app; lower it to keep a scan under a fixed wall-clock budget (e.g. in CI).</td>
+</tr>
+<tr>
 <td><code>--check</code></td>
 <td>Print the OWASP LLM Top 10 coverage map, each category's test modality and its CVSS v4.0 base score, then exit.</td>
 </tr>
