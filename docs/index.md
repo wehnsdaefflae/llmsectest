@@ -18,8 +18,8 @@ A failing probe is a **finding**, so a non-zero exit fails your pipeline when yo
 
 ## Why
 
-With LLMs in real products, users face new risks: in one study **86% of tested LLM applications were
-vulnerable to prompt injection**. Developers in finance and healthcare lack an open, CI-ready way to
+With LLMs in real products, users face new risks — prompt injection, sensitive-data disclosure and
+unsafe output handling are common, well-documented failure modes. Developers in finance and healthcare lack an open, CI-ready way to
 check their LLM apps against a recognized standard. LLMSecTest is that — MIT-licensed and fully
 open-source, built on `pytest` so it fits the tools developers already use.
 

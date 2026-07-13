@@ -56,11 +56,12 @@ Any other `pytest` option (e.g. `-k`, `-v`, `-x`) is passed straight through.
 
 ## Coverage footer (no silent gaps)
 
-All ten OWASP categories run on every invocation: the implemented ones execute real probes, and the
-not-yet-implemented ones are reported as **skipped tests** that say `not yet implemented` (skip reasons
-print by default). A run also ends with a footer listing **all ten** categories — which this run
-exercised and which it did not, with the reason — so a category is never silently left untested. A model/demo target
-exercises the implemented probe categories (LLM01/02/05/06/07/10); adding `--repo <path>` runs the white-box
+All ten OWASP categories run on every invocation: each ships a real probe or scanner, and any category
+that needs an input it wasn't given (a repo, a model path, an app marker) is reported as a **skipped test**
+naming the flag that would enable it (skip reasons print by default). A run also ends with a footer listing
+**all ten** categories — which this run exercised and which it did not, with the reason — so a category is
+never silently left untested. A model/demo target exercises the always-on black-box probe categories
+(LLM01/02/05/06/07/09/10); adding `--repo <path>` runs the white-box
 **LLM03 (supply chain)** scan as well. LLM01 also runs a **red-team jailbreak** set (built-in starter set,
 or the full JailbreakBench corpus with `--redteam-set <csv>`); the footer prints the LLM01 depth so the
 red-team coverage is never a silent gap. Adding `--redteam-benign` prints, *below* the security report, the
@@ -69,8 +70,8 @@ findings and the exit code. A real app endpoint (`--target app:<url>`) is
 black-box: LLM01, LLM05, LLM09 and LLM10 (a bounded repetition-flood probe) always run, and
 **LLM07/LLM02/LLM06/LLM08 join them when you pass
 `--app-prompt` / `--app-secret` / `--app-action` / `--app-canary` / `--app-rag-poison`** — each category
-whose input is missing is reported as skipped with the flag that would enable it (LLM04 is white-box and
-not yet implemented). LLM08 has two enabling markers: `--app-canary` (retrieval exposure) and
+whose input is missing is reported as skipped with the flag that would enable it (LLM04 is white-box,
+enabled by `--model-scan`). LLM08 has two enabling markers: `--app-canary` (retrieval exposure) and
 `--app-rag-poison` (indirect injection via a poisoned retrieved document). `llmsectest --check` prints the
 same map with each category's CVSS score.
 

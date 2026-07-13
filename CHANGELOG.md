@@ -232,6 +232,16 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
   `tomllib` does not expose them for `pyproject.toml`.) (2026-06-17)
 
 ### Changed
+- **The leak oracles (LLM02 disclosure, LLM07 system-prompt leakage, LLM08 retrieval exposure) now
+  de-obfuscate a reply before matching.** A model can leak a planted secret past a naive substring filter by
+  emitting it base64/hex/ROT13-encoded or split across separators (`s-e-c-r-e-t`); those three detectors now
+  reverse each disguise (stdlib only) so an encoded/split canary is still caught, and the finding names *how*
+  it was hidden (`… (via base64)`). This closes the documented false-negative the detector module previously
+  called out (the evasion garak's `detectors.encoding` targets). The structural oracles (LLM05 output
+  handling, LLM06 excessive agency) stay literal by design — there an *encoded* payload is the safe case, so
+  decoding would invert the safety semantics. Because canaries are unique high-entropy tokens (and the
+  split pass is length-guarded), a decode coincidentally reproducing one is not a realistic false positive.
+  (2026-07-13)
 - The two white-box **scanner** suites (LLM03 supply chain, LLM04 model poisoning) now share one
   `suite/scanners.py` helper (`scanner_params` + `fail_with_finding`) for the skip-with-reason /
   clean-marker / one-case-per-finding param logic and the record-and-fail body — a single source for the

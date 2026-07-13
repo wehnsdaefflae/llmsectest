@@ -36,9 +36,11 @@ See [Funding](#funding).
 > target's **over-refusal (false-refusal) rate** against the matched benign twins —
 > a usability signal kept separate from the security findings. Findings are scored
 > with **CVSS v4.0** base scores per OWASP category (reported as SARIF
-> `security-severity`). With LLM04 the suite now covers the **complete** OWASP LLM
-> Top 10 (2025); depth (white-box LLM08 dimensions, a classifier refusal oracle)
-> follows on the roadmap. The modules under [`examples/`](examples/) demonstrate the
+> `security-severity`). The leak oracles (LLM02 / LLM07 / LLM08) **de-obfuscate** a
+> reply before matching, so a secret leaked base64/hex/ROT13-encoded or split across
+> separators is still caught. Depth (more encodings, white-box LLM08 dimensions, a
+> classifier refusal oracle) follows on the roadmap. The modules under
+> [`examples/`](examples/) demonstrate the
 > reporting pipeline across all ten categories with deterministic mock fixtures.
 
 ## The unified adapter
@@ -117,7 +119,7 @@ categories were exercised and which were not, and why. What's reachable depends 
 the target:
 
 - **A model/demo target** exercises the implemented black-box categories
-  (LLM01/02/05/06/07/10); the rest need an oracle or app internals, and are reported as
+  (LLM01/02/05/06/07/09/10); the rest need an oracle or app internals, and are reported as
   not-exercised.
 - **`--redteam-set <csv>`** deepens **LLM01** with a red-team jailbreak set: point it
   at the MIT-licensed [JailbreakBench JBB-Behaviors](https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors)
