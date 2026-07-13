@@ -1315,11 +1315,12 @@ packaged OWASP probe suite against your chosen target and writes reports.</p>
 </table>
 <p>Any other <code>pytest</code> option (e.g. <code>-k</code>, <code>-v</code>, <code>-x</code>) is passed straight through.</p>
 <h2 id="coverage-footer-no-silent-gaps">Coverage footer (no silent gaps)<a class="headerlink" href="#coverage-footer-no-silent-gaps" title="Permanent link">&para;</a></h2>
-<p>All ten OWASP categories run on every invocation: the implemented ones execute real probes, and the
-not-yet-implemented ones are reported as <strong>skipped tests</strong> that say <code>not yet implemented</code> (skip reasons
-print by default). A run also ends with a footer listing <strong>all ten</strong> categories — which this run
-exercised and which it did not, with the reason — so a category is never silently left untested. A model/demo target
-exercises the implemented probe categories (LLM01/02/05/06/07/10); adding <code>--repo &lt;path&gt;</code> runs the white-box
+<p>All ten OWASP categories run on every invocation: each ships a real probe or scanner, and any category
+that needs an input it wasn't given (a repo, a model path, an app marker) is reported as a <strong>skipped test</strong>
+naming the flag that would enable it (skip reasons print by default). A run also ends with a footer listing
+<strong>all ten</strong> categories — which this run exercised and which it did not, with the reason — so a category is
+never silently left untested. A model/demo target exercises the always-on black-box probe categories
+(LLM01/02/05/06/07/09/10); adding <code>--repo &lt;path&gt;</code> runs the white-box
 <strong>LLM03 (supply chain)</strong> scan as well. LLM01 also runs a <strong>red-team jailbreak</strong> set (built-in starter set,
 or the full JailbreakBench corpus with <code>--redteam-set &lt;csv&gt;</code>); the footer prints the LLM01 depth so the
 red-team coverage is never a silent gap. Adding <code>--redteam-benign</code> prints, <em>below</em> the security report, the
@@ -1328,8 +1329,8 @@ findings and the exit code. A real app endpoint (<code>--target app:&lt;url&gt;<
 black-box: LLM01, LLM05, LLM09 and LLM10 (a bounded repetition-flood probe) always run, and
 <strong>LLM07/LLM02/LLM06/LLM08 join them when you pass
 <code>--app-prompt</code> / <code>--app-secret</code> / <code>--app-action</code> / <code>--app-canary</code> / <code>--app-rag-poison</code></strong> — each category
-whose input is missing is reported as skipped with the flag that would enable it (LLM04 is white-box and
-not yet implemented). LLM08 has two enabling markers: <code>--app-canary</code> (retrieval exposure) and
+whose input is missing is reported as skipped with the flag that would enable it (LLM04 is white-box,
+enabled by <code>--model-scan</code>). LLM08 has two enabling markers: <code>--app-canary</code> (retrieval exposure) and
 <code>--app-rag-poison</code> (indirect injection via a poisoned retrieved document). <code>llmsectest --check</code> prints the
 same map with each category's CVSS score.</p>
 <h2 id="exit-code">Exit code<a class="headerlink" href="#exit-code" title="Permanent link">&para;</a></h2>

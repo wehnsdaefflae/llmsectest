@@ -1460,6 +1460,16 @@ yet published to PyPI</strong>. The forward-looking plan is the <a href="https:/
 </ul>
 <h3 id="changed">Changed<a class="headerlink" href="#changed" title="Permanent link">&para;</a></h3>
 <ul>
+<li><strong>The leak oracles (LLM02 disclosure, LLM07 system-prompt leakage, LLM08 retrieval exposure) now
+  de-obfuscate a reply before matching.</strong> A model can leak a planted secret past a naive substring filter by
+  emitting it base64/hex/ROT13-encoded or split across separators (<code>s-e-c-r-e-t</code>); those three detectors now
+  reverse each disguise (stdlib only) so an encoded/split canary is still caught, and the finding names <em>how</em>
+  it was hidden (<code>… (via base64)</code>). This closes the documented false-negative the detector module previously
+  called out (the evasion garak's <code>detectors.encoding</code> targets). The structural oracles (LLM05 output
+  handling, LLM06 excessive agency) stay literal by design — there an <em>encoded</em> payload is the safe case, so
+  decoding would invert the safety semantics. Because canaries are unique high-entropy tokens (and the
+  split pass is length-guarded), a decode coincidentally reproducing one is not a realistic false positive.
+  (2026-07-13)</li>
 <li>The two white-box <strong>scanner</strong> suites (LLM03 supply chain, LLM04 model poisoning) now share one
   <code>suite/scanners.py</code> helper (<code>scanner_params</code> + <code>fail_with_finding</code>) for the skip-with-reason /
   clean-marker / one-case-per-finding param logic and the record-and-fail body — a single source for the
