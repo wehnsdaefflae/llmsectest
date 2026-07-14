@@ -1211,7 +1211,8 @@ attacks:</p>
 retrieval layer surfaced confidential indexed content to an unauthorized user. Because the canary is a
 unique random token, a refusal that merely <em>names</em> the corpus ("I won't share internal documents") cannot
 match — only an actual leak is a finding. The detector is <strong>de-obfuscating</strong>: a canary the app surfaces
-base64/hex/ROT13-encoded or split across separators is still flagged (and the finding names how it was
+base64/hex/base32/base85/ASCII85/ROT13/quoted-printable-encoded, Unicode-disguised (full-width or
+zero-width characters), or split across separators is still flagged (and the finding names how it was
 hidden), so a model cannot dodge the check by encoding the leak.</p>
 <h3 id="why-this-is-llm08-not-llm02-or-llm07">Why this is LLM08, not LLM02 or LLM07<a class="headerlink" href="#why-this-is-llm08-not-llm02-or-llm07" title="Permanent link">&para;</a></h3>
 <p>The distinction is <strong>where the secret lives and what the attack targets</strong>:</p>
