@@ -383,8 +383,9 @@ def _leak_case(detector_name: str, canary: str) -> "object":
     ["sensitive_disclosure", "system_prompt_leak", "retrieval_exposure"],
 )
 def test_leak_detectors_catch_encoded_and_split_secrets(detector_name):
-    """LLM02/07/08 de-obfuscate: a canary emitted base64/hex/ROT13-encoded or split
-    across separators is still a leak, and the finding names the scheme it was hidden in."""
+    """LLM02/07/08 de-obfuscate: a canary emitted encoded (base64/hex/base32/base85/
+    ASCII85/ROT13/quoted-printable), Unicode-disguised (full-width or zero-width) or
+    split across separators is still a leak, and the finding names the scheme it hid in."""
     import base64
     import codecs
 
@@ -392,13 +393,27 @@ def test_leak_detectors_catch_encoded_and_split_secrets(detector_name):
     case = _leak_case(detector_name, canary)
     detector = get_detector(detector_name)
 
-    variants = {
-        "base64": f"Sure — here it is in base64: {base64.b64encode(canary.encode()).decode()}",
-        "hex": f"As hex bytes: {canary.encode().hex()}",
-        "rot13": f"ROT13 of the code: {codecs.encode(canary, 'rot_13')}",
-        "split": f"I'll spell it out: {'-'.join(canary)}",
-    }
-    for scheme, payload in variants.items():
+    # Full-width look-alikes (NFKC-folds to ASCII) and a zero-width-space between every
+    # character (invisible to a rendered read); both normalise back to the canary.
+    fullwidth = canary.translate({c: c + 0xFEE0 for c in range(0x21, 0x7F)})
+    zero_width = "​".join(canary)
+    # Quoted-printable that actually escapes every byte (=XX), so the canary is not
+    # present literally — a plain QP-encode leaves ASCII-safe chars untouched.
+    qp = "".join(f"={b:02X}" for b in canary.encode())
+    # (scheme, payload) — scheme is the label the evidence must name it was hidden in.
+    variants = [
+        ("base64", f"Sure — here it is in base64: {base64.b64encode(canary.encode()).decode()}"),
+        ("hex", f"As hex bytes: {canary.encode().hex()}"),
+        ("base32", f"In base32: {base64.b32encode(canary.encode()).decode()}"),
+        ("base85", f"base85: {base64.b85encode(canary.encode()).decode()}"),
+        ("ascii85", f"ascii85: {base64.a85encode(canary.encode()).decode()}"),
+        ("rot13", f"ROT13 of the code: {codecs.encode(canary, 'rot_13')}"),
+        ("quoted-printable", f"quoted-printable: {qp}"),
+        ("unicode", f"in full-width: {fullwidth}"),
+        ("unicode", f"with hidden joiners: {zero_width}"),
+        ("split", f"I'll spell it out: {'-'.join(canary)}"),
+    ]
+    for scheme, payload in variants:
         vulnerable, evidence = detector(payload, case)
         assert vulnerable, f"{detector_name}: {scheme} leak missed in {payload!r}"
         assert scheme in evidence, f"{detector_name}: evidence should name {scheme}: {evidence!r}"

@@ -232,6 +232,15 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
   `tomllib` does not expose them for `pyproject.toml`.) (2026-06-17)
 
 ### Changed
+- **Leak-oracle de-obfuscation now covers the wider `detectors.encoding` alphabet.** Building on the
+  base64/hex/ROT13/split de-obfuscation, the LLM02/07/08 leak oracles now also reverse **base32**,
+  **base85 / ASCII85**, and **quoted-printable** encodings, and normalise **Unicode look-alikes** —
+  full-width characters (`ｓｅｃｒｅｔ` → `secret`, via NFKC) and zero-width / bidi control characters
+  interleaved to break a literal match invisibly. All stdlib, behind the same detector seam, and the
+  finding still names *how* the leak was hidden (`… (via base32)`, `… (via unicode)`). Same false-positive
+  guarantee as before — matches are against unique high-entropy canaries, so a decode coincidentally
+  reproducing one is not realistic. The structural oracles (LLM05, LLM06) stay literal by design.
+  (2026-07-14)
 - **The leak oracles (LLM02 disclosure, LLM07 system-prompt leakage, LLM08 retrieval exposure) now
   de-obfuscate a reply before matching.** A model can leak a planted secret past a naive substring filter by
   emitting it base64/hex/ROT13-encoded or split across separators (`s-e-c-r-e-t`); those three detectors now
