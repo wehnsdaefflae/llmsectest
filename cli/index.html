@@ -1227,7 +1227,7 @@ packaged OWASP probe suite against your chosen target and writes reports.</p>
 </tr>
 <tr>
 <td><code>--app-timeout &lt;seconds&gt;</code></td>
-<td>With <code>--target app:&lt;url&gt;</code>: the <strong>per-request time budget</strong> for a single call to the app (default 120 s). A request that exceeds it is recorded as an <strong>inconclusive</strong> probe — not a finding (a timeout is not proof of a vulnerability) and not a silent clean, but a warning in the summary — so one slow or runaway endpoint cannot hang the whole scan and lose every other result. Raise it for a legitimately slow app; lower it to keep a scan under a fixed wall-clock budget (e.g. in CI).</td>
+<td>With <code>--target app:&lt;url&gt;</code>: the <strong>per-request time budget</strong> for a single call to the app (default 120 s). A request that exceeds it is recorded as an <strong>inconclusive</strong> probe — not a finding (a timeout is not proof of a vulnerability) and not a silent clean, but a warning in the summary and a run-level <code>inconclusive</code> count in the SARIF/HTML report — so one slow or runaway endpoint cannot hang the whole scan and lose every other result, and a report never silently hides that some probes could not be concluded. Raise it for a legitimately slow app; lower it to keep a scan under a fixed wall-clock budget (e.g. in CI).</td>
 </tr>
 <tr>
 <td><code>--check</code></td>

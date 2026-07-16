@@ -1236,6 +1236,13 @@ yet published to PyPI</strong>. The forward-looking plan is the <a href="https:/
 <h2 id="unreleased"><a href="https://github.com/wehnsdaefflae/llmsectest/compare/v0.1.0...HEAD">Unreleased</a><a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
 <h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
 <ul>
+<li><strong>Run-level inconclusive-probe count in the SARIF and HTML report.</strong> A probe whose <code>app:&lt;url&gt;</code> target
+  exceeds <code>--app-timeout</code> is recorded <em>inconclusive</em> (errored) — it is not a finding, so it never appears in
+  the report's results, and previously the only trace was a pytest warning at scan time. The run now carries
+  a machine-readable <code>inconclusive</code> property (a count plus the reasons), and the HTML report shows
+  "<em>N probe(s) inconclusive</em>" in its header. So a clean-looking report can no longer silently hide that some
+  probes could not be concluded, and a regression check reading the report can tell a genuinely clean member
+  from one whose probes started hanging. (2026-07-16)</li>
 <li><strong>Per-request timeout for application targets (<code>--app-timeout &lt;seconds&gt;</code>).</strong> Caps how long a single
   request to an <code>app:&lt;url&gt;</code> target may take. A target that exceeds the budget raises a typed
   <code>AdapterTimeoutError</code>, and the probe is recorded as <strong>inconclusive</strong> — neither a finding (a timeout is not
