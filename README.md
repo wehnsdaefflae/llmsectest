@@ -229,7 +229,10 @@ A failed security test becomes a SARIF finding with OWASP metadata, CWE tags, a
 remediation guidance — ready for the GitHub Security tab. When the target reports
 token usage, each finding also carries its real **output-token cost** and the run
 records a **denial-of-wallet total** (the LLM10 cost figure, trackable over time).
-See [`examples/`](examples/) for one test module per OWASP category.
+If any probe went **inconclusive** (an `app:<url>` target exceeded `--app-timeout`),
+the run also records how many — so a clean-looking report never hides that some
+probes could not be concluded. See [`examples/`](examples/) for one test module per
+OWASP category.
 
 ## Install
 

@@ -153,6 +153,25 @@ class SARIFGenerator:
                 "mean_output_tokens": round(sum(token_costs) / len(token_costs), 1),
             }
 
+        # Run-level inconclusive-probe tally: a probe whose target exceeded the per-request
+        # --app-timeout is recorded errored (llmsec_inconclusive) — neither a finding nor a
+        # clean pass. Being errored, it never becomes a SARIF result, so without this
+        # run-level count the report (and any count-based regression check reading only the
+        # findings) would silently treat a timed-out probe as clean. Surfacing it keeps the
+        # run honest ("N probes could not be concluded") and lets a cohort baseline flag a
+        # member whose probes start hanging — a real perf/hang regression a finding-count
+        # band would hide. Parallels denial_of_wallet: an aggregate over all results.
+        inconclusive = [
+            str(r.properties["llmsec_inconclusive"])
+            for r in results
+            if r.properties.get("llmsec_inconclusive") is not None
+        ]
+        if inconclusive:
+            properties["inconclusive"] = {
+                "count": len(inconclusive),
+                "reasons": inconclusive[:20],
+            }
+
         # Add properties to run if any exist
         if properties:
             run["properties"] = properties

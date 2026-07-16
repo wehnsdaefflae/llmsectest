@@ -99,6 +99,17 @@ def test_renders_per_finding_output_token_cost():
     assert "640 output tokens (3 probes)" in html      # run-level total in the meta line
 
 
+def test_renders_inconclusive_probe_count():
+    """A run-level ``inconclusive`` tally (probes that exceeded --app-timeout) shows in the
+    header meta line, so a clean-looking report never hides that some probes under-ran."""
+    doc = _doc([_RESULT_LLM01], [_RULE_LLM01])
+    doc["runs"][0]["properties"] = {
+        "inconclusive": {"count": 5, "reasons": ["probe inconclusive — timeout"]}
+    }
+    html = render_sarif_html(doc)
+    assert "5 probe(s) inconclusive" in html            # run-level inconclusive tally
+
+
 def test_render_sarif_file_writes_html(tmp_path):
     src = tmp_path / "scan.sarif"
     src.write_text(json.dumps(_doc([_RESULT_LLM01], [_RULE_LLM01])), encoding="utf-8")

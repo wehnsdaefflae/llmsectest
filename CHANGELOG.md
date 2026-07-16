@@ -10,6 +10,13 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
 ## [Unreleased]
 
 ### Added
+- **Run-level inconclusive-probe count in the SARIF and HTML report.** A probe whose `app:<url>` target
+  exceeds `--app-timeout` is recorded *inconclusive* (errored) — it is not a finding, so it never appears in
+  the report's results, and previously the only trace was a pytest warning at scan time. The run now carries
+  a machine-readable `inconclusive` property (a count plus the reasons), and the HTML report shows
+  "*N probe(s) inconclusive*" in its header. So a clean-looking report can no longer silently hide that some
+  probes could not be concluded, and a regression check reading the report can tell a genuinely clean member
+  from one whose probes started hanging. (2026-07-16)
 - **Per-request timeout for application targets (`--app-timeout <seconds>`).** Caps how long a single
   request to an `app:<url>` target may take. A target that exceeds the budget raises a typed
   `AdapterTimeoutError`, and the probe is recorded as **inconclusive** — neither a finding (a timeout is not

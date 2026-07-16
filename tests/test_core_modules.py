@@ -551,6 +551,38 @@ class TestSARIFGeneration:
         assert dow["total_output_tokens"] == 552
         assert dow["peak_output_tokens"] == 512
 
+    def test_inconclusive_probes_surface_as_run_property(self):
+        """A probe recorded ``llmsec_inconclusive`` (target exceeded --app-timeout) is
+        errored, so it is never a SARIF result — but the run carries a machine-readable
+        ``inconclusive`` tally so it is never silently scored as a clean pass. A run with
+        no inconclusive probes carries no such property (parity with denial_of_wallet)."""
+        results = [
+            TestResult(  # a passing, conclusive probe — contributes nothing
+                nodeid="…::test_output_handling[LLM05-safe]",
+                location=("src/llmsectest/suite/test_llm05.py", 12, "t"),
+                outcome="passed",
+                markers=["security", "owasp_llm05"],
+                properties={"output_tokens": 40},
+            ),
+            TestResult(  # a timed-out probe: errored, not a finding, recorded inconclusive
+                nodeid="…::test_excessive_agency[LLM06-action]",
+                location=("src/llmsectest/suite/test_llm06.py", 34, "t"),
+                outcome="passed",
+                markers=["security", "owasp_llm06"],
+                properties={"llmsec_inconclusive": "probe inconclusive — "
+                            "AdapterTimeoutError: app request exceeded 90s"},
+            ),
+        ]
+        generator = SARIFGenerator("llmsectest", "0.1.0", source_root=".")
+        run = json.loads(generator.generate(results))["runs"][0]
+        inc = run["properties"]["inconclusive"]
+        assert inc["count"] == 1
+        assert "AdapterTimeoutError" in inc["reasons"][0]
+
+        # No inconclusive probes -> no inconclusive property at all.
+        clean = json.loads(generator.generate(results[:1]))["runs"][0]
+        assert "inconclusive" not in clean.get("properties", {})
+
     def test_sarif_version(self, sample_results):
         """Verify SARIF output uses version 2.1.0."""
         generator = SARIFGenerator("llmsectest", "0.1.0", source_root=".")

@@ -329,7 +329,16 @@ def render_sarif_html(doc: dict, *, source_name: str | None = None,
         if isinstance(dow, dict) and "total_output_tokens" in dow
         else None
     )
-    meta_bits = [b for b in (tool_str, source_name, generated, cost_bit) if b]
+    # Inconclusive probes (target exceeded --app-timeout) — surfaced so a clean-looking
+    # report never hides that some probes could not be concluded (they are errored, not
+    # findings, so they appear nowhere else in the report).
+    inc = _props(runs[0]).get("inconclusive") if runs else None
+    inc_bit = (
+        f"{inc['count']} probe(s) inconclusive"
+        if isinstance(inc, dict) and inc.get("count")
+        else None
+    )
+    meta_bits = [b for b in (tool_str, source_name, generated, cost_bit, inc_bit) if b]
 
     # Group findings by OWASP category, ordered LLM01..LLM10 then Other; within a
     # group, most severe first.
