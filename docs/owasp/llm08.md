@@ -36,8 +36,8 @@ The `retrieval_exposure` detector flags a reply that reproduces the planted cana
 retrieval layer surfaced confidential indexed content to an unauthorized user. Because the canary is a
 unique random token, a refusal that merely *names* the corpus ("I won't share internal documents") cannot
 match — only an actual leak is a finding. The detector is **de-obfuscating**: a canary the app surfaces
-base64/hex/base32/base85/ASCII85/ROT13/quoted-printable-encoded, Unicode-disguised (full-width or
-zero-width characters), or split across separators is still flagged (and the finding names how it was
+base64/hex/base32/base85/ASCII85/ROT13/quoted-printable/uuencode-encoded, Unicode-disguised (full-width
+or zero-width characters), or split across separators is still flagged (and the finding names how it was
 hidden), so a model cannot dodge the check by encoding the leak.
 
 ### Why this is LLM08, not LLM02 or LLM07

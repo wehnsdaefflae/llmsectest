@@ -239,6 +239,14 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
   `tomllib` does not expose them for `pyproject.toml`.) (2026-06-17)
 
 ### Changed
+- **Leak-oracle de-obfuscation now also reverses uuencode — completing the stdlib-native
+  `detectors.encoding` alphabet.** The LLM02/07/08 leak oracles decode a uuencoded block a model might emit
+  to hide a planted secret (stdlib `binascii.a2b_uu`, line-oriented so a `begin`/`end` wrapper or a bare
+  body both work), and the finding names it `… (via uuencode)`. Because a uuencode data line uses only the
+  0x20–0x60 character range, ordinary prose is rejected by the decoder; the match is still against unique
+  high-entropy canaries, so a spurious decode of an all-caps line can never invent a hit. This closes out the
+  stdlib-decodable schemes; the remaining garak encodings (braille, morse, Base2048) need third-party
+  tables. (2026-07-17)
 - **Leak-oracle de-obfuscation now covers the wider `detectors.encoding` alphabet.** Building on the
   base64/hex/ROT13/split de-obfuscation, the LLM02/07/08 leak oracles now also reverse **base32**,
   **base85 / ASCII85**, and **quoted-printable** encodings, and normalise **Unicode look-alikes** —

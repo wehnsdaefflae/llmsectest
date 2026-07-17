@@ -38,8 +38,8 @@ See [Funding](#funding).
 > with **CVSS v4.0** base scores per OWASP category (reported as SARIF
 > `security-severity`). The leak oracles (LLM02 / LLM07 / LLM08) **de-obfuscate** a
 > reply before matching, so a secret leaked base64/hex/base32/base85/ASCII85/ROT13/
-> quoted-printable-encoded, Unicode-disguised (full-width or zero-width characters), or
-> split across separators is still caught. Depth (white-box LLM08 dimensions, a
+> quoted-printable/uuencode-encoded, Unicode-disguised (full-width or zero-width characters),
+> or split across separators is still caught. Depth (white-box LLM08 dimensions, a
 > classifier refusal oracle) follows on the roadmap. The modules under
 > [`examples/`](examples/) demonstrate the
 > reporting pipeline across all ten categories with deterministic mock fixtures.
