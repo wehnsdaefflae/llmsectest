@@ -1467,6 +1467,14 @@ yet published to PyPI</strong>. The forward-looking plan is the <a href="https:/
 </ul>
 <h3 id="changed">Changed<a class="headerlink" href="#changed" title="Permanent link">&para;</a></h3>
 <ul>
+<li><strong>Leak-oracle de-obfuscation now also reverses uuencode — completing the stdlib-native
+  <code>detectors.encoding</code> alphabet.</strong> The LLM02/07/08 leak oracles decode a uuencoded block a model might emit
+  to hide a planted secret (stdlib <code>binascii.a2b_uu</code>, line-oriented so a <code>begin</code>/<code>end</code> wrapper or a bare
+  body both work), and the finding names it <code>… (via uuencode)</code>. Because a uuencode data line uses only the
+  0x20–0x60 character range, ordinary prose is rejected by the decoder; the match is still against unique
+  high-entropy canaries, so a spurious decode of an all-caps line can never invent a hit. This closes out the
+  stdlib-decodable schemes; the remaining garak encodings (braille, morse, Base2048) need third-party
+  tables. (2026-07-17)</li>
 <li><strong>Leak-oracle de-obfuscation now covers the wider <code>detectors.encoding</code> alphabet.</strong> Building on the
   base64/hex/ROT13/split de-obfuscation, the LLM02/07/08 leak oracles now also reverse <strong>base32</strong>,
   <strong>base85 / ASCII85</strong>, and <strong>quoted-printable</strong> encodings, and normalise <strong>Unicode look-alikes</strong> —
