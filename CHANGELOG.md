@@ -210,6 +210,14 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
   silent pass. (2026-06-10)
 
 ### Fixed
+- **`--render-sarif` no longer crashes on a malformed or foreign SARIF file.** The renderer promises to
+  display *any* tool's SARIF and let missing fields degrade gracefully, but a third-party (or hand-written /
+  truncated) file that put the wrong JSON type where the spec wants an object or array — e.g. a clean run
+  emitting `"results": null` instead of `[]`, a bare-string `message`, a single `cwe` as a string rather than
+  a list, or a non-object run/result — raised an unhandled `AttributeError`/`TypeError`/`KeyError` and lost
+  the whole report. Every field access is now type-guarded: a malformed field is skipped and the rest of the
+  report still renders (a bare-string CWE now shows intact instead of being split into single characters).
+  Output for well-formed SARIF is unchanged. (2026-07-21)
 - **App-mode coverage corrected for LLM10 (no more over-claim).** An `--target app:<url>` scan's coverage
   footer counted LLM10 as *exercised* while no suite module actually fired its probes against the endpoint.
   The model-mode LLM10 probes ("repeat 10,000×" / "continue forever") stay bounded by the adapter's

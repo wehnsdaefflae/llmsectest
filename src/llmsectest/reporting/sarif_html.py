@@ -36,6 +36,31 @@ def _esc(text: Any) -> str:
     return _html.escape(str(text), quote=True)
 
 
+# --- defensive coercions -------------------------------------------------------
+# This renderer promises to display *any* tool's SARIF, and a third-party (or
+# hand-written / truncated) file may put the wrong JSON type where the spec wants
+# an object/array. These coerce the wrong type into a harmless empty default so a
+# malformed field degrades gracefully instead of crashing the whole render.
+
+def _as_dict(obj: Any) -> dict:
+    return obj if isinstance(obj, dict) else {}
+
+
+def _as_list(obj: Any) -> list:
+    return obj if isinstance(obj, list) else []
+
+
+def _as_str_list(obj: Any) -> list[str]:
+    """Coerce a field that should be a list of strings (e.g. ``cwe``). A lone
+    scalar — some tools emit a single CWE as a bare string — becomes a one-item
+    list rather than being iterated character-by-character; a dict/None yields []."""
+    if isinstance(obj, list):
+        return [str(x) for x in obj if x not in (None, "")]
+    if isinstance(obj, (str, int, float)) and not isinstance(obj, bool) and obj != "":
+        return [str(obj)]
+    return []
+
+
 def _severity_from_score(score: float) -> str:
     """CVSS-band a numeric security-severity (GitHub code-scanning bands)."""
     if score >= 9.0:
@@ -75,7 +100,7 @@ def _severity_of(result: dict, rule: dict) -> str:
     if score is not None:
         return _severity_from_score(score)
     # No CVSS — fall back to the SARIF level (error/warning/note).
-    level = result.get("level") or rule.get("defaultConfiguration", {}).get("level", "")
+    level = result.get("level") or _as_dict(rule.get("defaultConfiguration")).get("level", "")
     return {"error": "high", "warning": "medium", "note": "low"}.get(level, "none")
 
 
@@ -88,27 +113,27 @@ def _owasp_of(result: dict, rule: dict) -> tuple[str, str]:
 
 
 def _location_of(result: dict) -> str:
-    for loc in result.get("locations", []):
-        phys = loc.get("physicalLocation", {})
-        uri = phys.get("artifactLocation", {}).get("uri")
+    for loc in _as_list(result.get("locations")):
+        phys = _as_dict(_as_dict(loc).get("physicalLocation"))
+        uri = _as_dict(phys.get("artifactLocation")).get("uri")
         if uri:
-            line = phys.get("region", {}).get("startLine")
+            line = _as_dict(phys.get("region")).get("startLine")
             return f"{uri}:{line}" if line else uri
     return ""
 
 
 def _fixes_of(result: dict) -> list[str]:
     out = []
-    for fix in result.get("fixes", []):
-        text = fix.get("description", {}).get("text")
+    for fix in _as_list(result.get("fixes")):
+        text = _as_dict(_as_dict(fix).get("description")).get("text")
         if text:
             out.append(text)
     return out
 
 
 def _rule_index(run: dict) -> dict[str, dict]:
-    driver = run.get("tool", {}).get("driver", {})
-    return {r.get("id"): r for r in driver.get("rules", []) if isinstance(r, dict)}
+    driver = _as_dict(_as_dict(run.get("tool")).get("driver"))
+    return {r.get("id"): r for r in _as_list(driver.get("rules")) if isinstance(r, dict)}
 
 
 # --- HTML pieces ---------------------------------------------------------------
@@ -126,9 +151,9 @@ def _finding_card(result: dict, rule: dict) -> str:
     score = _score_of(result, rule)
     title = (rule.get("name") or result.get("ruleId") or "finding")
     loc = _location_of(result)
-    msg = result.get("message", {}).get("text", "")
+    msg = _as_dict(result.get("message")).get("text", "")
     fixes = _fixes_of(result)
-    cwes = _props(rule).get("cwe") or _props(result).get("cwe_ids") or []
+    cwes = _as_str_list(_props(rule).get("cwe") or _props(result).get("cwe_ids"))
 
     parts = [f'<article class="finding sev-{sev}">']
     parts.append('<div class="f-head">')
@@ -216,9 +241,9 @@ def _rules_glossary(rules: dict[str, dict]) -> str:
         name = rp.get("owasp-name") or rule.get("name") or rule.get("id", "")
         cvss = rp.get("cvss_base_score")
         vector = rp.get("cvss_vector", "")
-        desc = rule.get("fullDescription", {}).get("text") or \
-            rule.get("shortDescription", {}).get("text", "")
-        help_text = rule.get("help", {}).get("text", "")
+        desc = _as_dict(rule.get("fullDescription")).get("text") or \
+            _as_dict(rule.get("shortDescription")).get("text", "")
+        help_text = _as_dict(rule.get("help")).get("text", "")
         cvss_str = f"CVSS {cvss} ({rp.get('cvss_base_severity', '')})" if cvss else ""
         rows += (
             '<details class="rule"><summary>'
@@ -305,25 +330,30 @@ footer { max-width:1000px; margin:0 auto; padding:0 22px 40px; color:var(--muted
 def render_sarif_html(doc: dict, *, source_name: str | None = None,
                       generated: str | None = None) -> str:
     """Render a parsed SARIF document into a standalone HTML page (string)."""
-    runs = doc.get("runs", []) if isinstance(doc, dict) else []
+    runs = _as_list(doc.get("runs")) if isinstance(doc, dict) else []
     # Tool identity from the first run.
-    driver = runs[0].get("tool", {}).get("driver", {}) if runs else {}
+    first_run = _as_dict(runs[0]) if runs else {}
+    driver = _as_dict(_as_dict(first_run.get("tool")).get("driver"))
     tool = driver.get("name", "unknown tool")
     version = driver.get("version", "")
     tool_str = f"{tool} {version}".strip()
 
-    # Collect (result, rule) across all runs.
+    # Collect (result, rule) across all runs. Every field access is type-guarded so
+    # a malformed third-party run/result (wrong JSON type) is skipped, not fatal.
     findings: list[tuple[dict, dict]] = []
     all_rules: dict[str, dict] = {}
     for run in runs:
+        run = _as_dict(run)
         rules = _rule_index(run)
         all_rules.update({k: v for k, v in rules.items() if k})
-        for result in run.get("results", []):
+        for result in _as_list(run.get("results")):
+            if not isinstance(result, dict):
+                continue  # a non-object result carries no renderable finding
             findings.append((result, rules.get(result.get("ruleId"), {})))
 
     generated = generated or datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     # Run-level denial-of-wallet cost (real provider output-token spend), when present.
-    dow = _props(runs[0]).get("denial_of_wallet") if runs else None
+    dow = _props(first_run).get("denial_of_wallet")
     cost_bit = (
         f"{dow['total_output_tokens']} output tokens ({dow['probes_with_usage']} probes)"
         if isinstance(dow, dict) and "total_output_tokens" in dow
@@ -332,7 +362,7 @@ def render_sarif_html(doc: dict, *, source_name: str | None = None,
     # Inconclusive probes (target exceeded --app-timeout) — surfaced so a clean-looking
     # report never hides that some probes could not be concluded (they are errored, not
     # findings, so they appear nowhere else in the report).
-    inc = _props(runs[0]).get("inconclusive") if runs else None
+    inc = _props(first_run).get("inconclusive")
     inc_bit = (
         f"{inc['count']} probe(s) inconclusive"
         if isinstance(inc, dict) and inc.get("count")

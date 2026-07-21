@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 
+import pytest
+
 from llmsectest.reporting import render_sarif_file, render_sarif_html
 
 
@@ -108,6 +110,79 @@ def test_renders_inconclusive_probe_count():
     }
     html = render_sarif_html(doc)
     assert "5 probe(s) inconclusive" in html            # run-level inconclusive tally
+
+
+# --- robustness on malformed / foreign SARIF ----------------------------------
+# The renderer's contract is to display *any* tool's SARIF and let missing fields
+# "degrade gracefully". A third-party (or hand-written / truncated) file can put
+# the wrong JSON type where the spec wants an object/array; none of these may crash
+# the whole render — the whole report would be lost for one malformed field.
+
+def _run(results, *, rules=None, driver=None):
+    d = driver if driver is not None else {"name": "some-scanner", "version": "9", "rules": rules or []}
+    return {"runs": [{"tool": {"driver": d}, "results": results}]}
+
+
+_MALFORMED_DOCS = {
+    "doc-not-a-dict": "not-a-sarif-doc",
+    "runs-not-a-list": {"runs": {"k": "v"}},
+    "run-not-a-dict": {"runs": ["a bare string where a run object belongs"]},
+    "tool-not-a-dict": {"runs": [{"tool": "x", "results": []}]},
+    "results-null": _run(None),                       # clean report emitting null, not []
+    "results-a-dict": _run({"0": "x"}),
+    "result-item-not-a-dict": _run(["stringresult", 5, None]),
+    "message-a-string": _run([{"ruleId": "r", "message": "flat string"}]),
+    "locations-not-a-list": _run([{"ruleId": "r", "locations": "x", "message": {"text": "m"}}]),
+    "location-item-not-a-dict": _run([{"ruleId": "r", "locations": ["x"], "message": {"text": "m"}}]),
+    "fixes-not-a-list": _run([{"ruleId": "r", "message": {"text": "m"}, "fixes": "x"}]),
+    "defaultConfiguration-a-string":
+        _run([{"ruleId": "r", "message": {"text": "m"}}],
+             rules=[{"id": "r", "defaultConfiguration": "warning"}]),
+    "rule-fields-wrong-type":
+        _run([{"ruleId": "r", "message": {"text": "m"}}],
+             rules=[{"id": "r", "fullDescription": "s", "help": [], "shortDescription": 3}]),
+}
+
+
+@pytest.mark.parametrize("name,doc", list(_MALFORMED_DOCS.items()), ids=list(_MALFORMED_DOCS))
+def test_malformed_sarif_shapes_render_without_crashing(name, doc):
+    html = render_sarif_html(doc, source_name=f"{name}.sarif")
+    assert html.startswith("<!DOCTYPE html>")          # a full, valid page …
+    assert html.rstrip().endswith("</html>")            # … not a partial / traceback
+
+
+def test_third_party_results_null_renders_clean_empty_state():
+    """A scanner that emits ``"results": null`` for a clean run (instead of ``[]``)
+    must render the clean empty state, not crash on iterating None."""
+    html = render_sarif_html(_run(None))
+    assert "No findings" in html
+    assert 'class="big">0</span>' in html
+
+
+def test_single_string_cwe_is_not_split_into_characters():
+    """A bare-string ``cwe`` (some tools emit one CWE, not a list) renders intact,
+    not iterated as 'C, W, E, -, 7, 7'."""
+    rule = {"id": "r", "name": "rule", "properties": {"cwe": "CWE-77"}}
+    html = render_sarif_html(_run([{"ruleId": "r", "message": {"text": "m"}}], rules=[rule]))
+    assert "CWE-77" in html
+    assert "C, W, E" not in html
+
+
+def test_string_message_degrades_but_finding_still_renders():
+    """A non-object ``message`` loses its text but the finding card still appears
+    (titled by its ruleId), rather than taking down the render."""
+    html = render_sarif_html(_run([{"ruleId": "flat-msg-rule", "message": "flat string"}]))
+    assert "flat-msg-rule" in html                      # finding still rendered
+    assert 'class="big">1</span>' in html               # counted as one finding
+
+
+def test_non_dict_results_are_skipped_not_ghost_findings():
+    """Only object results become findings; scalars/None in the results array are
+    dropped, never rendered as empty ghost cards or double-counted."""
+    doc = _run(["junk", 42, None, {"ruleId": "real", "message": {"text": "a real one"}}])
+    html = render_sarif_html(doc)
+    assert 'class="big">1</span>' in html               # exactly the one dict result
+    assert "a real one" in html
 
 
 def test_render_sarif_file_writes_html(tmp_path):
