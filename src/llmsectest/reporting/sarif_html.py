@@ -149,7 +149,10 @@ def _sev_badge(sev: str, score: float | None) -> str:
 def _finding_card(result: dict, rule: dict) -> str:
     sev = _severity_of(result, rule)
     score = _score_of(result, rule)
-    title = (rule.get("name") or result.get("ruleId") or "finding")
+    # Some tools (e.g. ruff) put the human-readable rule name under
+    # ``properties.name`` rather than the top-level ``name``; prefer it over the
+    # terse rule id ("unused-import" reads better than "F401") before falling back.
+    title = (rule.get("name") or _props(rule).get("name") or result.get("ruleId") or "finding")
     loc = _location_of(result)
     msg = _as_dict(result.get("message")).get("text", "")
     fixes = _fixes_of(result)
@@ -238,7 +241,7 @@ def _rules_glossary(rules: dict[str, dict]) -> str:
             continue
         seen.add(key)
         cat = rp.get("owasp-category", "")
-        name = rp.get("owasp-name") or rule.get("name") or rule.get("id", "")
+        name = rp.get("owasp-name") or rule.get("name") or rp.get("name") or rule.get("id", "")
         cvss = rp.get("cvss_base_score")
         vector = rp.get("cvss_vector", "")
         desc = _as_dict(rule.get("fullDescription")).get("text") or \

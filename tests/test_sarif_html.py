@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pytest
 
 from llmsectest.reporting import render_sarif_file, render_sarif_html
+
+_FIXTURES = Path(__file__).parent / "fixtures"
 
 
 def _doc(results, rules):
@@ -183,6 +186,55 @@ def test_non_dict_results_are_skipped_not_ghost_findings():
     html = render_sarif_html(doc)
     assert 'class="big">1</span>' in html               # exactly the one dict result
     assert "a real one" in html
+
+
+# --- interop against a genuine external tool's SARIF --------------------------
+# The malformed-shape tests above are synthetic. This one renders a *real* file
+# emitted by an external tool (ruff 0.15.15; see tests/fixtures/README.md), proving
+# the "render any tool's SARIF" claim against output whose shape we did not design:
+# no OWASP category, no CVSS security-severity, and the human rule name under
+# ``properties.name`` rather than the top-level ``name``.
+
+def test_renders_real_ruff_sarif_end_to_end():
+    doc = json.loads((_FIXTURES / "ruff-0.15.15.sarif").read_text(encoding="utf-8"))
+    html = render_sarif_html(doc, source_name="ruff-0.15.15.sarif")
+
+    # A full, valid page — not a partial render or a traceback.
+    assert html.startswith("<!DOCTYPE html>")
+    assert html.rstrip().endswith("</html>")
+
+    # The foreign tool identity is surfaced in the meta line.
+    assert "ruff" in html and "0.15.15" in html
+
+    # All four findings counted; no OWASP metadata -> grouped under "Other".
+    assert 'class="big">4</span>' in html
+    assert "Other" in html
+    assert "LLM0" not in html  # nothing miscategorised into an OWASP bucket
+
+    # ruff carries no security-severity, so severity falls back to the SARIF level
+    # (error -> high).
+    assert "sev-high" in html
+
+    # The human-readable rule name lives under properties.name for ruff; the renderer
+    # must prefer it over the terse rule id in both the finding card and the glossary.
+    assert "unused-import" in html      # F401 card title (not just "F401")
+    assert "none-comparison" in html    # E711 glossary entry (not just "E711")
+
+    # A real ruff fix description renders as remediation, and the normalized location
+    # (relative, machine-path-free) shows through.
+    assert "Remove unused import" in html
+    assert "sample_module.py:2" in html
+
+    # The committed fixture must never carry a local absolute path.
+    assert "/home/" not in html and "file://" not in html
+
+
+def test_render_sarif_file_on_real_ruff_fixture(tmp_path):
+    """The file entry point renders the real third-party fixture to disk too."""
+    out = render_sarif_file(_FIXTURES / "ruff-0.15.15.sarif", tmp_path / "ruff.html")
+    page = out.read_text(encoding="utf-8")
+    assert page.startswith("<!DOCTYPE html>")
+    assert "ruff" in page and "unused-import" in page
 
 
 def test_render_sarif_file_writes_html(tmp_path):

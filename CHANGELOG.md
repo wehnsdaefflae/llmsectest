@@ -247,6 +247,14 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
   `tomllib` does not expose them for `pyproject.toml`.) (2026-06-17)
 
 ### Changed
+- **`--render-sarif` shows human-readable rule names from a third-party tool, and is now proven against a
+  real one.** Some external tools (e.g. ruff) put the readable rule name under `properties.name` rather than
+  the top-level `name` a SARIF result/rule uses; the renderer now prefers it, so a foreign finding reads
+  "unused-import" instead of the terse code "F401" in both the finding card and the rule glossary (our own
+  reports carry a top-level `name`, so their output is byte-identical). The "render any tool's SARIF" claim is
+  now backed by an interop test that renders a genuine ruff 0.15.15 SARIF file end-to-end (a committed
+  fixture, no OWASP/CVSS metadata, level-based severity) — until now only synthetic and hand-written foreign
+  SARIF was tested. (2026-07-23)
 - **Leak-oracle de-obfuscation now also reverses uuencode — completing the stdlib-native
   `detectors.encoding` alphabet.** The LLM02/07/08 leak oracles decode a uuencoded block a model might emit
   to hide a planted secret (stdlib `binascii.a2b_uu`, line-oriented so a `begin`/`end` wrapper or a bare
