@@ -237,6 +237,70 @@ def test_render_sarif_file_on_real_ruff_fixture(tmp_path):
     assert "ruff" in page and "unused-import" in page
 
 
+# --- CWE from the GitHub tag convention --------------------------------------
+# Security scanners commonly encode CWE not in an explicit ``properties.cwe`` (as
+# we do) but as an ``external/cwe/cwe-NNN`` entry in ``properties.tags`` (the
+# GitHub code-scanning convention). The renderer surfaces both.
+
+def test_github_cwe_tag_convention_resolves():
+    """A CWE encoded only as an ``external/cwe/cwe-NNN`` tag is surfaced as CWE-NNN."""
+    rule = {"id": "r", "name": "sqli",
+            "properties": {"tags": ["security", "external/cwe/cwe-89"]}}
+    html = render_sarif_html(_run([{"ruleId": "r", "message": {"text": "m"}}], rules=[rule]))
+    assert "CWE-89" in html
+    # The raw tag string is not what shows up in the CWE line.
+    assert "external/cwe" not in html
+
+
+def test_non_cwe_tags_do_not_become_cwes():
+    """A finding with an explicit CWE plus unrelated semantic tags (as our own
+    reports carry) shows exactly that CWE — a tag like 'injection' is never
+    mistaken for one, so our own output is unchanged."""
+    rule = {"id": "r", "name": "rule", "properties": {
+        "cwe": ["CWE-77"], "tags": ["owasp_llm01", "injection", "jailbreak"]}}
+    html = render_sarif_html(_run([{"ruleId": "r", "message": {"text": "m"}}], rules=[rule]))
+    cwe_span = html.split('class="cwe">', 1)[1].split("</span>", 1)[0]
+    assert cwe_span == "CWE-77"
+
+
+# --- interop against a second genuine external tool (a real *security* scanner) -
+# ruff (above) is a linter with no CWE; Bandit is a security scanner whose SARIF
+# attaches CWE via the tag convention, not an explicit field. See fixtures/README.
+
+def test_renders_real_bandit_sarif_end_to_end():
+    doc = json.loads((_FIXTURES / "bandit-1.9.4.sarif").read_text(encoding="utf-8"))
+    html = render_sarif_html(doc, source_name="bandit-1.9.4.sarif")
+
+    # A full, valid page for a foreign security scanner.
+    assert html.startswith("<!DOCTYPE html>")
+    assert html.rstrip().endswith("</html>")
+    assert "Bandit" in html and "1.9.4" in html
+
+    # All five findings; no OWASP metadata -> grouped under "Other".
+    assert 'class="big">5</span>' in html
+    assert "Other" in html
+
+    # CWE resolved from the ``external/cwe/cwe-NNN`` tags Bandit emits, canonicalised.
+    assert "CWE-78" in html    # subprocess shell=True / eval
+    assert "CWE-259" in html   # hardcoded password
+    assert "CWE-327" in html   # weak MD5 hash
+    assert "external/cwe" not in html   # the raw tag never leaks into the page
+
+    # Severity falls back to the SARIF level Bandit sets (error -> high).
+    assert "sev-high" in html
+    # Normalized, machine-path-free location shows through.
+    assert "sample_vuln.py:10" in html
+    assert "/home/" not in html and "file://" not in html
+
+
+def test_render_sarif_file_on_real_bandit_fixture(tmp_path):
+    """The file entry point renders the real Bandit fixture to disk with its CWEs."""
+    out = render_sarif_file(_FIXTURES / "bandit-1.9.4.sarif", tmp_path / "bandit.html")
+    page = out.read_text(encoding="utf-8")
+    assert page.startswith("<!DOCTYPE html>")
+    assert "Bandit" in page and "CWE-327" in page
+
+
 def test_render_sarif_file_writes_html(tmp_path):
     src = tmp_path / "scan.sarif"
     src.write_text(json.dumps(_doc([_RESULT_LLM01], [_RULE_LLM01])), encoding="utf-8")

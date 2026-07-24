@@ -16,9 +16,15 @@ from __future__ import annotations
 
 import html as _html
 import json
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+# Matches a CWE id in any of the conventions a SARIF producer uses: our explicit
+# ``CWE-77``; the GitHub tag convention ``external/cwe/cwe-77`` (Bandit, CodeQL,
+# Semgrep, ...); a bare ``cwe_77``. The number is captured for canonicalisation.
+_CWE_RE = re.compile(r"cwe[-_ ]?(\d+)", re.IGNORECASE)
 
 # Severity → accent colour and rank (higher = more severe, sorts first).
 _SEVERITY = {
@@ -76,6 +82,43 @@ def _severity_from_score(score: float) -> str:
 
 def _props(obj: dict) -> dict:
     return obj.get("properties", {}) if isinstance(obj, dict) else {}
+
+
+def _cwes_of(result: dict, rule: dict) -> list[str]:
+    """Collect a finding's CWE ids across every SARIF convention a tool uses.
+
+    Not every scanner records CWE the way we do. Ours puts it in the explicit
+    ``properties.cwe`` / ``properties.cwe_ids`` field; many security scanners
+    instead follow the GitHub code-scanning tag convention and encode it as an
+    ``external/cwe/cwe-NNN`` entry in ``properties.tags`` (Bandit does exactly
+    this — see ``tests/fixtures/bandit-1.9.4.sarif``). Both are surfaced here.
+
+    Ids are canonicalised to ``CWE-NNN`` and de-duplicated, explicit ids first —
+    so our own reports (which carry only ``properties.cwe``) render byte-for-byte
+    as before, while a Bandit/CodeQL finding now shows its CWE instead of none.
+    """
+    out: list[str] = []
+    seen: set[str] = set()
+
+    def _add(canon: str, key: str) -> None:
+        if key not in seen:
+            seen.add(key)
+            out.append(canon)
+
+    # 1. Explicit CWE field (our own reports). A recognisable id is canonicalised;
+    #    an unrecognisable token is kept verbatim so nothing a tool emitted is lost.
+    for token in _as_str_list(_props(rule).get("cwe") or _props(result).get("cwe_ids")):
+        m = _CWE_RE.search(token)
+        if m:
+            _add(f"CWE-{int(m.group(1))}", m.group(1))
+        else:
+            _add(token, token.lower())
+    # 2. GitHub tag convention (``external/cwe/cwe-NNN``) on the rule or result.
+    for token in _as_str_list(_props(rule).get("tags")) + _as_str_list(_props(result).get("tags")):
+        m = _CWE_RE.search(token)
+        if m:
+            _add(f"CWE-{int(m.group(1))}", m.group(1))
+    return out
 
 
 def _score_of(result: dict, rule: dict) -> float | None:
@@ -156,7 +199,7 @@ def _finding_card(result: dict, rule: dict) -> str:
     loc = _location_of(result)
     msg = _as_dict(result.get("message")).get("text", "")
     fixes = _fixes_of(result)
-    cwes = _as_str_list(_props(rule).get("cwe") or _props(result).get("cwe_ids"))
+    cwes = _cwes_of(result, rule)
 
     parts = [f'<article class="finding sev-{sev}">']
     parts.append('<div class="f-head">')

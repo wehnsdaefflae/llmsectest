@@ -255,6 +255,14 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
   now backed by an interop test that renders a genuine ruff 0.15.15 SARIF file end-to-end (a committed
   fixture, no OWASP/CVSS metadata, level-based severity) — until now only synthetic and hand-written foreign
   SARIF was tested. (2026-07-23)
+- **`--render-sarif` now surfaces CWE from third-party security scanners, proven against a real Bandit
+  report.** Many scanners record CWE not in an explicit `properties.cwe` field (as we do) but as an
+  `external/cwe/cwe-NNN` entry in the rule's `properties.tags` — the GitHub code-scanning convention used by
+  Bandit, CodeQL and others. The renderer now reads that convention too, canonicalising ids to `CWE-NNN`, so a
+  Bandit finding shows "CWE-78" instead of no CWE at all (our own reports carry only `properties.cwe`, so their
+  output is byte-identical). Backed by a second interop test that renders a genuine Bandit 1.9.4 SARIF file
+  end-to-end (a committed fixture — a real *security* scanner, complementing the ruff linter fixture).
+  (2026-07-24)
 - **Leak-oracle de-obfuscation now also reverses uuencode — completing the stdlib-native
   `detectors.encoding` alphabet.** The LLM02/07/08 leak oracles decode a uuencoded block a model might emit
   to hide a planted secret (stdlib `binascii.a2b_uu`, line-oriented so a `begin`/`end` wrapper or a bare
