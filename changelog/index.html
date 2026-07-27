@@ -1437,6 +1437,27 @@ yet published to PyPI</strong>. The forward-looking plan is the <a href="https:/
 </ul>
 <h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Permanent link">&para;</a></h3>
 <ul>
+<li><strong>An incomplete OSV.dev batch response is now reported instead of quietly shrinking the scan
+  (<code>--osv</code>, OWASP LLM03).</strong> OSV answers one result per query, in order, and the scan paired the two by
+  position. A short response therefore left the tail of the dependency list unchecked while the run still
+  counted every package as queried — a security report over-claiming its own coverage, and silently, since
+  no error was raised. A length mismatch is now treated as a broken contract: the response is discarded and
+  surfaced as a scan error, so <code>--osv</code> either reports a result it can stand behind or says it could not.
+  (2026-07-27)</li>
+<li><strong>Lint is pinned to a rule set instead of a tool version.</strong> <code>pyproject.toml</code> declared no <code>select</code>, so
+  the linter's own defaults defined what "clean" meant; ruff 0.16.0 widened those defaults and turned CI red
+  on an unchanged tree. The rule set is now written out explicitly (with the two families a security tool has
+  to opt out of documented in place: <code>RUF001</code>–<code>RUF003</code> ambiguous-Unicode, because a tool that <em>detects</em>
+  homoglyph evasion necessarily contains homoglyphs), and the <code>dev</code> extra pins <code>ruff&gt;=0.16,&lt;0.17</code>.
+  (2026-07-27)</li>
+<li><strong><code>--render-sarif</code> no longer crashes on a malformed or foreign SARIF file.</strong> The renderer promises to
+  display <em>any</em> tool's SARIF and let missing fields degrade gracefully, but a third-party (or hand-written /
+  truncated) file that put the wrong JSON type where the spec wants an object or array — e.g. a clean run
+  emitting <code>"results": null</code> instead of <code>[]</code>, a bare-string <code>message</code>, a single <code>cwe</code> as a string rather than
+  a list, or a non-object run/result — raised an unhandled <code>AttributeError</code>/<code>TypeError</code>/<code>KeyError</code> and lost
+  the whole report. Every field access is now type-guarded: a malformed field is skipped and the rest of the
+  report still renders (a bare-string CWE now shows intact instead of being split into single characters).
+  Output for well-formed SARIF is unchanged. (2026-07-21)</li>
 <li><strong>App-mode coverage corrected for LLM10 (no more over-claim).</strong> An <code>--target app:&lt;url&gt;</code> scan's coverage
   footer counted LLM10 as <em>exercised</em> while no suite module actually fired its probes against the endpoint.
   The model-mode LLM10 probes ("repeat 10,000×" / "continue forever") stay bounded by the adapter's
@@ -1467,6 +1488,28 @@ yet published to PyPI</strong>. The forward-looking plan is the <a href="https:/
 </ul>
 <h3 id="changed">Changed<a class="headerlink" href="#changed" title="Permanent link">&para;</a></h3>
 <ul>
+<li><strong>Report timestamps are timezone-aware.</strong> The HTML, Markdown, JSON-summary, baseline and trend-history
+  generators stamped reports with a naive local <code>datetime.now()</code>, so the same scan run in two timezones
+  produced two unrelatable timestamps and a report could not be placed on a timeline without knowing where
+  it was generated. All five now use UTC — the machine-readable fields as an offset-qualified ISO 8601
+  string, the two human-readable headers suffixed <code>UTC</code> — matching the SBOM export, which was already
+  UTC. (2026-07-27)</li>
+<li><strong><code>--render-sarif</code> shows human-readable rule names from a third-party tool, and is now proven against a
+  real one.</strong> Some external tools (e.g. ruff) put the readable rule name under <code>properties.name</code> rather than
+  the top-level <code>name</code> a SARIF result/rule uses; the renderer now prefers it, so a foreign finding reads
+  "unused-import" instead of the terse code "F401" in both the finding card and the rule glossary (our own
+  reports carry a top-level <code>name</code>, so their output is byte-identical). The "render any tool's SARIF" claim is
+  now backed by an interop test that renders a genuine ruff 0.15.15 SARIF file end-to-end (a committed
+  fixture, no OWASP/CVSS metadata, level-based severity) — until now only synthetic and hand-written foreign
+  SARIF was tested. (2026-07-23)</li>
+<li><strong><code>--render-sarif</code> now surfaces CWE from third-party security scanners, proven against a real Bandit
+  report.</strong> Many scanners record CWE not in an explicit <code>properties.cwe</code> field (as we do) but as an
+  <code>external/cwe/cwe-NNN</code> entry in the rule's <code>properties.tags</code> — the GitHub code-scanning convention used by
+  Bandit, CodeQL and others. The renderer now reads that convention too, canonicalising ids to <code>CWE-NNN</code>, so a
+  Bandit finding shows "CWE-78" instead of no CWE at all (our own reports carry only <code>properties.cwe</code>, so their
+  output is byte-identical). Backed by a second interop test that renders a genuine Bandit 1.9.4 SARIF file
+  end-to-end (a committed fixture — a real <em>security</em> scanner, complementing the ruff linter fixture).
+  (2026-07-24)</li>
 <li><strong>Leak-oracle de-obfuscation now also reverses uuencode — completing the stdlib-native
   <code>detectors.encoding</code> alphabet.</strong> The LLM02/07/08 leak oracles decode a uuencoded block a model might emit
   to hide a planted secret (stdlib <code>binascii.a2b_uu</code>, line-oriented so a <code>begin</code>/<code>end</code> wrapper or a bare
