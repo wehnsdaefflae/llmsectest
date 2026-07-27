@@ -1,12 +1,12 @@
 """JSON summary report generator for pytest security test results."""
 
 import json
-from datetime import datetime
-from typing import List, Dict, Any, Optional
+from datetime import UTC, datetime
+from typing import Any
 
 from .models import TestResult
-from .owasp_metadata import get_owasp_category, get_owasp_markers_from_test, get_cwe_tags
-from .statistics import calculate_statistics, get_test_severity, get_coverage_gaps
+from .owasp_metadata import get_cwe_tags, get_owasp_category, get_owasp_markers_from_test
+from .statistics import calculate_statistics, get_coverage_gaps, get_test_severity
 
 
 class JSONSummaryGenerator:
@@ -18,8 +18,8 @@ class JSONSummaryGenerator:
 
     def generate(
         self,
-        results: List[TestResult],
-        trend_analytics: Optional[Dict] = None,
+        results: list[TestResult],
+        trend_analytics: dict | None = None,
         baseline_analysis=None,
         risk_score=None,
         policy_violations=None,
@@ -44,7 +44,7 @@ class JSONSummaryGenerator:
             "metadata": {
                 "tool": self.tool_name,
                 "version": self.tool_version,
-                "generated_at": datetime.now().isoformat(),
+                "generated_at": datetime.now(UTC).isoformat(),
                 "report_format": "json-summary-v2.0"
             },
             "summary": {
@@ -114,7 +114,7 @@ class JSONSummaryGenerator:
 
         return json.dumps(summary, indent=2, ensure_ascii=False)
 
-    def _generate_owasp_coverage(self, results: List[TestResult], stats: Dict) -> Dict[str, Any]:
+    def _generate_owasp_coverage(self, results: list[TestResult], stats: dict) -> dict[str, Any]:
         """Generate OWASP category coverage with metadata from pre-calculated stats."""
         owasp_coverage = {}
 
@@ -136,7 +136,7 @@ class JSONSummaryGenerator:
 
         return owasp_coverage
 
-    def _generate_test_results(self, results: List[TestResult]) -> List[Dict[str, Any]]:
+    def _generate_test_results(self, results: list[TestResult]) -> list[dict[str, Any]]:
         """Generate detailed test results."""
         test_results = []
 
@@ -170,7 +170,7 @@ class JSONSummaryGenerator:
 
         return test_results
 
-    def _generate_failures(self, results: List[TestResult]) -> List[Dict[str, Any]]:
+    def _generate_failures(self, results: list[TestResult]) -> list[dict[str, Any]]:
         """Generate detailed failure information."""
         failures = []
 

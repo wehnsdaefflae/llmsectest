@@ -72,7 +72,7 @@ class OpenAIAdapter(LLMAdapter):
                 temperature=request.temperature,
                 stop=request.stop,
             )
-        except Exception as exc:  # noqa: BLE001 - re-raised below unless transport-level
+        except Exception as exc:  # broad on purpose: re-raised below unless transport-level
             # Translate a transport failure (local server down, wrong port) into
             # a clear AdapterError instead of an opaque SDK traceback — the same
             # actionable message preflight gives, but on the live scan path where
@@ -141,7 +141,7 @@ class _LocalOpenAICompatibleAdapter(OpenAIAdapter):
         """
         try:
             listing = self._client.models.list()
-        except Exception as exc:  # noqa: BLE001 - wrapped into a clear AdapterError
+        except Exception as exc:  # broad on purpose: wrapped into a clear AdapterError
             raise AdapterError(
                 f"{self.provider} server not reachable at {self.base_url} "
                 f"({type(exc).__name__}: {exc}) — is the local server running?"

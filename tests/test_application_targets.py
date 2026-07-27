@@ -15,7 +15,6 @@ from llmsectest.probes import (
     run_app_scan,
 )
 
-
 # --- endpoint target: response extraction across common app shapes ---
 
 def test_extract_openai_compatible_shape():

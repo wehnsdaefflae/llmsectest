@@ -4,10 +4,10 @@ This module provides a flexible policy framework that allows organizations to de
 their security requirements, risk tolerance, and compliance needs.
 """
 
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Set
-from pathlib import Path
 import json
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any
 
 from .owasp_metadata import get_owasp_markers_from_test
 
@@ -32,7 +32,7 @@ class SecurityPolicy:
     version: str = "1.0.0"
 
     # Category-specific policies
-    category_policies: Dict[str, CategoryPolicy] = field(default_factory=dict)
+    category_policies: dict[str, CategoryPolicy] = field(default_factory=dict)
 
     # Global thresholds
     max_critical_failures: int = 0
@@ -50,11 +50,11 @@ class SecurityPolicy:
     max_flaky_tests: int = 3
 
     # Compliance frameworks
-    compliance_frameworks: List[str] = field(default_factory=list)
+    compliance_frameworks: list[str] = field(default_factory=list)
 
     # Test coverage requirements
     min_coverage_per_category: float = 0.8  # 80% of tests must pass
-    required_categories: Set[str] = field(default_factory=set)
+    required_categories: set[str] = field(default_factory=set)
 
     # Build control
     fail_on_policy_violation: bool = True
@@ -78,9 +78,9 @@ class PolicyValidator:
 
     def __init__(self, policy: SecurityPolicy):
         self.policy = policy
-        self.violations: List[PolicyViolation] = []
+        self.violations: list[PolicyViolation] = []
 
-    def validate(self, results: List, statistics: Dict) -> bool:
+    def validate(self, results: list, statistics: dict) -> bool:
         """Validate test results against policy.
 
         Args:
@@ -109,7 +109,7 @@ class PolicyValidator:
 
         return len(self.violations) == 0
 
-    def _check_severity_thresholds(self, statistics: Dict):
+    def _check_severity_thresholds(self, statistics: dict):
         """Check global severity thresholds."""
         severity_stats = statistics.get("by_severity", {})
 
@@ -146,7 +146,7 @@ class PolicyValidator:
                 recommendation="Improve overall security posture before release"
             ))
 
-    def _check_category_policies(self, results: List, statistics: Dict):
+    def _check_category_policies(self, results: list, statistics: dict):
         """Check category-specific policies."""
         category_failures = {}
         for result in results:
@@ -168,7 +168,7 @@ class PolicyValidator:
                     recommendation=f"Review {category} controls and remediation steps"
                 ))
 
-    def _check_risk_thresholds(self, statistics: Dict):
+    def _check_risk_thresholds(self, statistics: dict):
         """Check risk score thresholds."""
         risk_score = statistics.get("risk_score", 0.0)
 
@@ -182,7 +182,7 @@ class PolicyValidator:
                 recommendation="Reduce risk by addressing high-priority failures"
             ))
 
-    def _check_trend_requirements(self, statistics: Dict):
+    def _check_trend_requirements(self, statistics: dict):
         """Check trend-based requirements."""
         if not self.policy.require_trend_improvement:
             return
@@ -211,7 +211,7 @@ class PolicyValidator:
                 recommendation="Investigate and stabilize flaky security tests"
             ))
 
-    def _check_regression_policy(self, statistics: Dict):
+    def _check_regression_policy(self, statistics: dict):
         """Check regression policy."""
         if self.policy.allow_regressions:
             return
@@ -236,7 +236,7 @@ class PolicyLoader:
     @staticmethod
     def load_from_file(path: Path) -> SecurityPolicy:
         """Load policy from JSON file."""
-        with open(path, 'r') as f:
+        with open(path) as f:
             data = json.load(f)
 
         # Convert category policies

@@ -210,6 +210,19 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
   silent pass. (2026-06-10)
 
 ### Fixed
+- **An incomplete OSV.dev batch response is now reported instead of quietly shrinking the scan
+  (`--osv`, OWASP LLM03).** OSV answers one result per query, in order, and the scan paired the two by
+  position. A short response therefore left the tail of the dependency list unchecked while the run still
+  counted every package as queried — a security report over-claiming its own coverage, and silently, since
+  no error was raised. A length mismatch is now treated as a broken contract: the response is discarded and
+  surfaced as a scan error, so `--osv` either reports a result it can stand behind or says it could not.
+  (2026-07-27)
+- **Lint is pinned to a rule set instead of a tool version.** `pyproject.toml` declared no `select`, so
+  the linter's own defaults defined what "clean" meant; ruff 0.16.0 widened those defaults and turned CI red
+  on an unchanged tree. The rule set is now written out explicitly (with the two families a security tool has
+  to opt out of documented in place: `RUF001`–`RUF003` ambiguous-Unicode, because a tool that *detects*
+  homoglyph evasion necessarily contains homoglyphs), and the `dev` extra pins `ruff>=0.16,<0.17`.
+  (2026-07-27)
 - **`--render-sarif` no longer crashes on a malformed or foreign SARIF file.** The renderer promises to
   display *any* tool's SARIF and let missing fields degrade gracefully, but a third-party (or hand-written /
   truncated) file that put the wrong JSON type where the spec wants an object or array — e.g. a clean run
@@ -247,6 +260,12 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
   `tomllib` does not expose them for `pyproject.toml`.) (2026-06-17)
 
 ### Changed
+- **Report timestamps are timezone-aware.** The HTML, Markdown, JSON-summary, baseline and trend-history
+  generators stamped reports with a naive local `datetime.now()`, so the same scan run in two timezones
+  produced two unrelatable timestamps and a report could not be placed on a timeline without knowing where
+  it was generated. All five now use UTC — the machine-readable fields as an offset-qualified ISO 8601
+  string, the two human-readable headers suffixed `UTC` — matching the SBOM export, which was already
+  UTC. (2026-07-27)
 - **`--render-sarif` shows human-readable rule names from a third-party tool, and is now proven against a
   real one.** Some external tools (e.g. ruff) put the readable rule name under `properties.name` rather than
   the top-level `name` a SARIF result/rule uses; the renderer now prefers it, so a foreign finding reads

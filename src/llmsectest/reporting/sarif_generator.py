@@ -1,24 +1,24 @@
 """SARIF v2.1.0 report generator for pytest results."""
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Any
 
-from .models import TestResult
-from .owasp_metadata import (
-    get_owasp_category,
-    get_owasp_markers_from_test,
-    get_cwe_tags,
-    get_security_tags,
-)
 from .compliance_mapper import (
     get_compliance_mappings,
-    get_frameworks_covered,
     get_compliance_summary,
+    get_frameworks_covered,
 )
 from .constants import SARIF_SEVERITY_MAP, SEVERITY_SCORES
 from .cvss import cvss_for_category
+from .models import TestResult
+from .owasp_metadata import (
+    get_cwe_tags,
+    get_owasp_category,
+    get_owasp_markers_from_test,
+    get_security_tags,
+)
 
 
 def _as_int(value: Any) -> int | None:
@@ -46,7 +46,7 @@ class SARIFGenerator:
         self.tool_version = tool_version
         self.source_root = source_root
 
-    def generate(self, results: List[TestResult], baseline_analysis=None) -> str:
+    def generate(self, results: list[TestResult], baseline_analysis=None) -> str:
         """Generate SARIF JSON from test results.
 
         Args:
@@ -64,7 +64,7 @@ class SARIFGenerator:
 
         return json.dumps(sarif, indent=2, ensure_ascii=False)
 
-    def _create_run(self, results: List[TestResult], baseline_analysis=None) -> Dict[str, Any]:
+    def _create_run(self, results: list[TestResult], baseline_analysis=None) -> dict[str, Any]:
         """Create SARIF run object."""
         rules = self._generate_rules(results)
         sarif_results = self._generate_results(results, baseline_analysis)
@@ -85,7 +85,7 @@ class SARIFGenerator:
             "invocations": [
                 {
                     "executionSuccessful": True,
-                    "endTimeUtc": datetime.now(timezone.utc).isoformat()
+                    "endTimeUtc": datetime.now(UTC).isoformat()
                 }
             ]
         }
@@ -105,7 +105,7 @@ class SARIFGenerator:
             summary = get_compliance_summary(list(all_owasp_markers))
 
             properties["compliance_frameworks"] = {
-                "frameworks_covered": sorted(list(frameworks)),
+                "frameworks_covered": sorted(frameworks),
                 "framework_count": len(frameworks),
                 "framework_summary": {
                     framework: {
@@ -178,7 +178,7 @@ class SARIFGenerator:
 
         return run
 
-    def _generate_rules(self, results: List[TestResult]) -> List[Dict[str, Any]]:
+    def _generate_rules(self, results: list[TestResult]) -> list[dict[str, Any]]:
         """Generate SARIF rule definitions with OWASP metadata."""
         rules = {}
 
@@ -244,7 +244,7 @@ class SARIFGenerator:
                 if owasp_markers:
                     compliance_mappings = get_compliance_mappings(owasp_markers[0])
                     if compliance_mappings:
-                        frameworks = list(set(m.framework for m in compliance_mappings))
+                        frameworks = list({m.framework for m in compliance_mappings})
                         properties["compliance-frameworks"] = frameworks
                         properties["compliance-controls"] = [
                             {
@@ -266,7 +266,7 @@ class SARIFGenerator:
 
         return list(rules.values())
 
-    def _physical_location(self, result: TestResult) -> Dict[str, Any]:
+    def _physical_location(self, result: TestResult) -> dict[str, Any]:
         """Where the finding points.
 
         A white-box finding about the *tested* project (e.g. an LLM03 supply-chain
@@ -278,7 +278,7 @@ class SARIFGenerator:
         """
         artifact = result.properties.get("llmsec_artifact_uri")
         if artifact:
-            location: Dict[str, Any] = {"artifactLocation": {"uri": artifact}}
+            location: dict[str, Any] = {"artifactLocation": {"uri": artifact}}
             line = result.properties.get("llmsec_artifact_line")
             if line:
                 location["region"] = {"startLine": int(line), "startColumn": 1}
@@ -288,7 +288,7 @@ class SARIFGenerator:
             "region": {"startLine": result.line_number, "startColumn": 1},
         }
 
-    def _generate_results(self, results: List[TestResult], baseline_analysis=None) -> List[Dict[str, Any]]:
+    def _generate_results(self, results: list[TestResult], baseline_analysis=None) -> list[dict[str, Any]]:
         """Generate SARIF result objects for failed tests."""
         sarif_results = []
 
@@ -366,7 +366,7 @@ class SARIFGenerator:
 
         return sarif_results
 
-    def _generate_artifacts(self, results: List[TestResult]) -> List[Dict[str, Any]]:
+    def _generate_artifacts(self, results: list[TestResult]) -> list[dict[str, Any]]:
         """Generate SARIF artifact objects, consistent with each finding's location.
 
         A finding that points at a tested-project artifact (``llmsec_artifact_uri``,
@@ -408,7 +408,7 @@ class SARIFGenerator:
                 return SEVERITY_SCORES[marker]
         return "5.0"  # Default medium severity
 
-    def _generate_fixes(self, owasp_category) -> List[Dict[str, Any]]:
+    def _generate_fixes(self, owasp_category) -> list[dict[str, Any]]:
         """Generate SARIF fix objects from remediation steps.
 
         Args:

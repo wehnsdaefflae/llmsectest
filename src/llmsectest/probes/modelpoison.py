@@ -74,7 +74,7 @@ _PRUNE_DIRS = frozenset({
 # *is* a pickle is caught and a misnamed non-pickle is harmlessly ignored.
 _MODEL_EXTS = frozenset({
     ".pkl", ".pickle", ".pck", ".pcl", ".dump", ".bin", ".ckpt", ".pt", ".pth",
-    ".joblib", ".model", ".sav", ".dat", ".npy", ".npz", ".zip", ".pck",
+    ".joblib", ".model", ".sav", ".dat", ".npy", ".npz", ".zip",
 })
 
 # Extensions for code-free serialization formats — recorded so a scan can report
@@ -177,18 +177,18 @@ def _classify_global(module: str, name: str) -> tuple[str, str, str] | None:
     top = module.split(".", 1)[0]
     if top in _EXEC_MODULES:
         return ("critical", "code-execution import in serialized model",
-                f"unpickling imports '{module}.{name}' — module '{top}' executes "
-                "OS/process/network/interpreter code on load")
+                (f"unpickling imports '{module}.{name}' — module '{top}' executes "
+                 "OS/process/network/interpreter code on load"))
     exec_names = _EXEC_GLOBALS.get(module) or _EXEC_GLOBALS.get(top)
     if exec_names and name in exec_names:
         return ("critical", "code-execution import in serialized model",
-                f"unpickling imports '{module}.{name}', a code-execution / "
-                "nested-unpickle primitive")
+                (f"unpickling imports '{module}.{name}', a code-execution / "
+                 "nested-unpickle primitive"))
     gadget_names = _GADGET_GLOBALS.get(module) or _GADGET_GLOBALS.get(top)
     if gadget_names and name in gadget_names:
         return ("high", "pickle gadget primitive in serialized model",
-                f"unpickling imports '{module}.{name}', a reflection/partial-"
-                "application gadget used to build pickle exploit chains")
+                (f"unpickling imports '{module}.{name}', a reflection/partial-"
+                 "application gadget used to build pickle exploit chains"))
     return None
 
 
@@ -242,7 +242,7 @@ def _scan_pickle_bytes(data: bytes, model_file: str, member: str) -> list[ModelP
                                "format (safetensors) and load pickles only with "
                                "weights_only=True / a restricted Unpickler.",
             ))
-    except Exception:  # noqa: BLE001 — a non-pickle / truncated stream is simply not scannable
+    except Exception:
         return findings
     return findings
 
@@ -271,7 +271,7 @@ def _scan_npy(data: bytes, model_file: str, member: str) -> list[ModelPoisonFind
             hstart = 12
         header = data[hstart:hstart + hlen].decode("latin-1")
         meta = literal_eval(header.strip())
-    except Exception:  # noqa: BLE001 — malformed header: nothing to assert
+    except Exception:
         return findings
     descr = str(meta.get("descr", "")) if isinstance(meta, dict) else ""
     if "O" in descr:  # object dtype → pickled payload, requires allow_pickle on load
@@ -303,7 +303,7 @@ def _scan_zip(path: Path, rel: str) -> list[ModelPoisonFinding]:
                 try:
                     with zf.open(info) as fh:
                         blob = fh.read(_MAX_MEMBER_BYTES)
-                except Exception:  # noqa: BLE001 — unreadable member, skip
+                except Exception:
                     continue
                 if member_is_npy:
                     findings.extend(_scan_npy(blob, rel, info.filename))
@@ -322,7 +322,7 @@ def scan_model_file(path: str | Path, rel: str | None = None) -> list[ModelPoiso
         head = path.open("rb").read(8)
     except OSError:
         return []
-    if head.startswith(b"PK\x03\x04") or head.startswith(b"PK\x05\x06"):
+    if head.startswith((b"PK\x03\x04", b"PK\x05\x06")):
         return _scan_zip(path, rel)
     try:
         data = path.read_bytes()

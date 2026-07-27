@@ -1,10 +1,9 @@
 """Baseline comparison and regression detection for security tests."""
 
 import json
+from dataclasses import asdict, dataclass, field
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import List, Dict, Optional
-from datetime import datetime
-from dataclasses import dataclass, field, asdict
 
 from .models import TestResult
 from .owasp_metadata import get_owasp_markers_from_test
@@ -19,10 +18,10 @@ class BaselineSnapshot:
     total_tests: int
     passed_tests: int
     failed_tests: int
-    test_outcomes: Dict[str, str]  # nodeid -> outcome
-    test_severities: Dict[str, str]  # nodeid -> severity
-    test_owasp_categories: Dict[str, List[str]]  # nodeid -> OWASP categories
-    metadata: Dict[str, str] = field(default_factory=dict)
+    test_outcomes: dict[str, str]  # nodeid -> outcome
+    test_severities: dict[str, str]  # nodeid -> severity
+    test_owasp_categories: dict[str, list[str]]  # nodeid -> OWASP categories
+    metadata: dict[str, str] = field(default_factory=dict)
 
     def to_dict(self) -> dict:
         """Convert to dictionary for JSON serialization."""
@@ -34,7 +33,7 @@ class BaselineSnapshot:
         return cls(**data)
 
     @classmethod
-    def from_results(cls, results: List[TestResult], metadata: Optional[Dict[str, str]] = None) -> 'BaselineSnapshot':
+    def from_results(cls, results: list[TestResult], metadata: dict[str, str] | None = None) -> 'BaselineSnapshot':
         """Create baseline snapshot from test results."""
         test_outcomes = {}
         test_severities = {}
@@ -60,7 +59,7 @@ class BaselineSnapshot:
                 failed += 1
 
         return cls(
-            timestamp=datetime.now().isoformat(),
+            timestamp=datetime.now(UTC).isoformat(),
             total_tests=len(results),
             passed_tests=passed,
             failed_tests=failed,
@@ -75,13 +74,13 @@ class BaselineSnapshot:
 class RegressionAnalysis:
     """Analysis of test regressions and improvements."""
 
-    fixed_tests: List[str] = field(default_factory=list)   # Previously failing, now passing
-    regressed_tests: List[str] = field(default_factory=list)  # Previously passing, now failing
-    removed_tests: List[str] = field(default_factory=list)  # Tests in baseline but not current
-    added_tests: List[str] = field(default_factory=list)    # Tests in current but not baseline
+    fixed_tests: list[str] = field(default_factory=list)   # Previously failing, now passing
+    regressed_tests: list[str] = field(default_factory=list)  # Previously passing, now failing
+    removed_tests: list[str] = field(default_factory=list)  # Tests in baseline but not current
+    added_tests: list[str] = field(default_factory=list)    # Tests in current but not baseline
 
-    severity_impact: Dict[str, int] = field(default_factory=dict)  # severity -> regression count
-    owasp_impact: Dict[str, int] = field(default_factory=dict)     # OWASP category -> regression count
+    severity_impact: dict[str, int] = field(default_factory=dict)  # severity -> regression count
+    owasp_impact: dict[str, int] = field(default_factory=dict)     # OWASP category -> regression count
 
     baseline_pass_rate: float = 0.0
     current_pass_rate: float = 0.0
@@ -121,9 +120,9 @@ class BaselineManager:
             baseline_file: Path to baseline JSON file
         """
         self.baseline_file = Path(baseline_file)
-        self._baseline: Optional[BaselineSnapshot] = None
+        self._baseline: BaselineSnapshot | None = None
 
-    def save_baseline(self, results: List[TestResult], metadata: Optional[Dict[str, str]] = None) -> Path:
+    def save_baseline(self, results: list[TestResult], metadata: dict[str, str] | None = None) -> Path:
         """Save current test results as baseline.
 
         Args:
@@ -145,7 +144,7 @@ class BaselineManager:
         self._baseline = snapshot
         return self.baseline_file
 
-    def load_baseline(self) -> Optional[BaselineSnapshot]:
+    def load_baseline(self) -> BaselineSnapshot | None:
         """Load baseline snapshot from file.
 
         Returns:
@@ -155,14 +154,14 @@ class BaselineManager:
             return None
 
         try:
-            with open(self.baseline_file, 'r', encoding='utf-8') as f:
+            with open(self.baseline_file, encoding='utf-8') as f:
                 data = json.load(f)
             self._baseline = BaselineSnapshot.from_dict(data)
             return self._baseline
         except (json.JSONDecodeError, KeyError, TypeError):
             return None
 
-    def compare_with_baseline(self, current_results: List[TestResult]) -> Optional[RegressionAnalysis]:
+    def compare_with_baseline(self, current_results: list[TestResult]) -> RegressionAnalysis | None:
         """Compare current results with baseline.
 
         Args:
@@ -190,8 +189,8 @@ class BaselineManager:
         regressed_tests = []
         fixed_tests = []
 
-        severity_impact: Dict[str, int] = {}
-        owasp_impact: Dict[str, int] = {}
+        severity_impact: dict[str, int] = {}
+        owasp_impact: dict[str, int] = {}
 
         for test_id in common_tests:
             baseline_outcome = baseline.test_outcomes[test_id]

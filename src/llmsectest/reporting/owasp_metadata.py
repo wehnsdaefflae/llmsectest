@@ -1,6 +1,5 @@
 """OWASP Top 10 for LLM Applications metadata and mappings."""
 
-from typing import Dict, List, Optional
 from dataclasses import dataclass
 
 
@@ -13,17 +12,17 @@ class OWASPCategory:
     description: str
     full_description: str
     help_text: str
-    cwe_ids: List[str]
-    references: List[str]
-    tags: List[str]
-    remediation_steps: List[str]
-    compliance_frameworks: List[str]  # List of frameworks this category maps to
+    cwe_ids: list[str]
+    references: list[str]
+    tags: list[str]
+    remediation_steps: list[str]
+    compliance_frameworks: list[str]  # List of frameworks this category maps to
     # Representative CVSS:4.0 base vector for this vulnerability class (worst-case
     # for the category). Scored by :mod:`llmsectest.reporting.cvss`.
     cvss_vector: str = ""
 
 
-OWASP_LLM_CATEGORIES: Dict[str, OWASPCategory] = {
+OWASP_LLM_CATEGORIES: dict[str, OWASPCategory] = {
     "owasp_llm01": OWASPCategory(
         id="LLM01",
         name="Prompt Injection",
@@ -403,7 +402,7 @@ OWASP_LLM_CATEGORIES: Dict[str, OWASPCategory] = {
 # vulnerability class, kept in one auditable block and attached to each category
 # below. Scored by :mod:`llmsectest.reporting.cvss` (the baked scores there mirror
 # these vectors and are asserted equal to the cvss library in the test suite).
-_CVSS_VECTORS: Dict[str, str] = {
+_CVSS_VECTORS: dict[str, str] = {
     "owasp_llm01": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:L/VI:H/VA:N/SC:L/SI:H/SA:N",
     "owasp_llm02": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:N/VA:N/SC:H/SI:N/SA:N",
     "owasp_llm03": "CVSS:4.0/AV:N/AC:H/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H",
@@ -420,7 +419,7 @@ for _marker, _vector in _CVSS_VECTORS.items():
     OWASP_LLM_CATEGORIES[_marker].cvss_vector = _vector
 
 
-def get_owasp_category(marker: str) -> Optional[OWASPCategory]:
+def get_owasp_category(marker: str) -> OWASPCategory | None:
     """Get OWASP category metadata for a given marker.
 
     Args:
@@ -432,7 +431,7 @@ def get_owasp_category(marker: str) -> Optional[OWASPCategory]:
     return OWASP_LLM_CATEGORIES.get(marker)
 
 
-def get_owasp_markers_from_test(markers: List[str]) -> List[str]:
+def get_owasp_markers_from_test(markers: list[str]) -> list[str]:
     """Extract OWASP markers from test markers.
 
     Args:
@@ -444,7 +443,7 @@ def get_owasp_markers_from_test(markers: List[str]) -> List[str]:
     return [m for m in markers if m.startswith("owasp_llm")]
 
 
-def get_cwe_tags(markers: List[str]) -> List[str]:
+def get_cwe_tags(markers: list[str]) -> list[str]:
     """Get all CWE IDs associated with test markers.
 
     Args:
@@ -461,7 +460,7 @@ def get_cwe_tags(markers: List[str]) -> List[str]:
     return cwe_ids
 
 
-def get_security_tags(markers: List[str]) -> List[str]:
+def get_security_tags(markers: list[str]) -> list[str]:
     """Get all security tags associated with test markers.
 
     Args:

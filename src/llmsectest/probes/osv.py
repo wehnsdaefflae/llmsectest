@@ -126,8 +126,19 @@ def scan_known_vulnerabilities(repo: str | Path) -> OsvScanResult:
         return OsvScanResult(queried=len(ordered), unqueried=unqueried,
                              error=f"OSV.dev query failed: {exc}")
 
+    if len(results) != len(ordered):
+        # OSV answers one result per query, in order. If that contract is broken we
+        # cannot trust positional pairing: zipping anyway would silently drop the tail
+        # while `queried` still claimed every package had been checked — a security
+        # report over-claiming its own coverage. Report the gap instead.
+        return OsvScanResult(
+            queried=len(ordered), unqueried=unqueried,
+            error=(f"OSV.dev returned {len(results)} result(s) for {len(ordered)} "
+                   "queried package(s); response discarded as unreliable"),
+        )
+
     findings = []
-    for ((name, version), dep), result in zip(ordered, results):
+    for ((_name, version), dep), result in zip(ordered, results, strict=True):
         vuln_ids = [v["id"] for v in (result.get("vulns") or []) if v.get("id")]
         if vuln_ids:
             findings.append(_advisory_finding(dep, version, vuln_ids))

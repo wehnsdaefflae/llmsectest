@@ -3,9 +3,9 @@
 import pytest
 
 from llmsectest.reporting.cvss import (
+    _BAKED_SCORES,
     CVSS_VERSION,
     CVSSScore,
-    _BAKED_SCORES,
     cvss_for_category,
     library_available,
     score_vector,

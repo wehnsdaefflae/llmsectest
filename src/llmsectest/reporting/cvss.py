@@ -20,7 +20,6 @@ the library in the test-suite, so the two paths can never silently diverge.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Optional, Tuple
 
 try:  # optional dependency — see module docstring
     from cvss import CVSS4 as _CVSS4
@@ -36,7 +35,7 @@ CVSS_VERSION = "4.0"
 # Base scores baked from the canonical category vectors (cvss 3.6). The test
 # suite recomputes these with the library and fails if they drift, so this table
 # is a faithful offline mirror, not a hand-maintained guess.
-_BAKED_SCORES: Dict[str, Tuple[float, str]] = {
+_BAKED_SCORES: dict[str, tuple[float, str]] = {
     "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:L/VI:H/VA:N/SC:L/SI:H/SA:N": (9.2, "Critical"),
     "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:N/VA:N/SC:H/SI:N/SA:N": (9.2, "Critical"),
     "CVSS:4.0/AV:N/AC:H/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H": (9.5, "Critical"),
@@ -60,7 +59,7 @@ class CVSSScore:
     version: str = CVSS_VERSION
 
 
-def score_vector(vector: str) -> Optional[CVSSScore]:
+def score_vector(vector: str) -> CVSSScore | None:
     """Return the CVSS v4.0 base score for a vector, or ``None`` if it cannot
     be scored offline.
 
@@ -82,7 +81,7 @@ def score_vector(vector: str) -> Optional[CVSSScore]:
     return CVSSScore(vector=vector, base_score=baked[0], severity=baked[1])
 
 
-def cvss_for_category(marker: str) -> Optional[CVSSScore]:
+def cvss_for_category(marker: str) -> CVSSScore | None:
     """Return the canonical CVSS v4.0 base score for an OWASP marker
     (e.g. ``"owasp_llm01"``), or ``None`` if the category has no vector."""
     # Imported lazily to avoid a circular import at module load time.

@@ -28,7 +28,7 @@ from __future__ import annotations
 
 import json
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
@@ -50,7 +50,7 @@ def _tool_version() -> str | None:
 
 def _now_iso() -> str:
     """UTC timestamp in the CycloneDX (RFC 3339) form, e.g. ``2026-07-08T09:00:00Z``."""
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _purl(name: str, pinned: str | None) -> str:

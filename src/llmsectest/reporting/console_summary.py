@@ -4,12 +4,12 @@ Provides clean, actionable terminal output suitable for CI/CD pipelines,
 GitHub Actions, and automated security gates.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from .models import TestResult
-from .statistics import calculate_statistics, get_test_severity, get_coverage_gaps
-from .owasp_metadata import get_owasp_category
 from .constants import SEVERITY_ORDER
+from .models import TestResult
+from .owasp_metadata import get_owasp_category
+from .statistics import calculate_statistics, get_coverage_gaps, get_test_severity
 
 
 # ANSI color codes for terminal output
@@ -25,7 +25,7 @@ class Colors:
     RESET = "\033[0m"
 
 
-def _assess_security_posture(stats: Dict) -> str:
+def _assess_security_posture(stats: dict) -> str:
     """Assess overall security posture based on test results."""
     if stats["failed"] == 0:
         return "strong"
@@ -41,14 +41,14 @@ def _assess_security_posture(stats: Dict) -> str:
 
 
 def generate_console_summary(
-    results: List[TestResult],
-    risk_score: Optional[Any] = None,
+    results: list[TestResult],
+    risk_score: Any | None = None,
     show_colors: bool = True,
     verbose: bool = False,
-    trend_analytics: Optional[Dict] = None,
-    baseline_analysis: Optional[Any] = None,
-    policy_violations: Optional[List] = None,
-    sarif_path: Optional[str] = None,
+    trend_analytics: dict | None = None,
+    baseline_analysis: Any | None = None,
+    policy_violations: list | None = None,
+    sarif_path: str | None = None,
 ) -> str:
     """Generate a comprehensive console summary with all analytics.
 

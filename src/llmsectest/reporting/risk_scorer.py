@@ -5,7 +5,7 @@ OWASP categories, trends, and organizational priorities.
 """
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import ClassVar
 
 from .owasp_metadata import get_owasp_markers_from_test
 
@@ -15,23 +15,23 @@ class RiskScore:
     """Comprehensive risk assessment."""
 
     overall_score: float  # 0-100, higher = more risk
-    category_scores: Dict[str, float]
-    severity_scores: Dict[str, float]
+    category_scores: dict[str, float]
+    severity_scores: dict[str, float]
     trend_score: float
     baseline_score: float
 
     risk_level: str  # "critical", "high", "medium", "low", "minimal"
     confidence: float  # 0-1, how confident we are in the score
 
-    factors: Dict[str, float]  # Individual factor contributions
-    recommendations: List[str]
+    factors: dict[str, float]  # Individual factor contributions
+    recommendations: list[str]
 
 
 class RiskScoringEngine:
     """Calculates risk scores for security test results."""
 
     # Severity weights for risk calculation
-    SEVERITY_WEIGHTS = {
+    SEVERITY_WEIGHTS: ClassVar[dict[str, float]] = {
         "critical": 10.0,
         "high": 7.0,
         "medium": 4.0,
@@ -40,7 +40,7 @@ class RiskScoringEngine:
     }
 
     # OWASP LLM Top 10 category risk multipliers (based on real-world impact)
-    CATEGORY_MULTIPLIERS = {
+    CATEGORY_MULTIPLIERS: ClassVar[dict[str, float]] = {
         "owasp_llm01": 1.5,  # Prompt Injection
         "owasp_llm02": 1.4,  # Sensitive Information Disclosure
         "owasp_llm03": 1.3,  # Supply Chain
@@ -55,10 +55,10 @@ class RiskScoringEngine:
 
     def calculate_risk(
         self,
-        results: List,
-        statistics: Dict,
-        trend_data: Optional[Dict] = None,
-        baseline_analysis: Optional[Dict] = None,
+        results: list,
+        statistics: dict,
+        trend_data: dict | None = None,
+        baseline_analysis: dict | None = None,
     ) -> RiskScore:
         """Calculate comprehensive risk score.
 
@@ -132,7 +132,7 @@ class RiskScoringEngine:
             recommendations=recommendations,
         )
 
-    def _calculate_failure_score(self, statistics: Dict) -> float:
+    def _calculate_failure_score(self, statistics: dict) -> float:
         """Calculate score based on failure rate (0-100)."""
         total = statistics.get("total", 0)
         if total == 0:
@@ -144,7 +144,7 @@ class RiskScoringEngine:
         # Exponential penalty for high failure rates
         return min(100.0, failure_rate * 100 * (1 + failure_rate))
 
-    def _calculate_severity_score(self, statistics: Dict) -> float:
+    def _calculate_severity_score(self, statistics: dict) -> float:
         """Calculate weighted severity score (0-100)."""
         severity_stats = statistics.get("by_severity", {})
         if not severity_stats:
@@ -167,8 +167,8 @@ class RiskScoringEngine:
         return min(100.0, (total_weighted_failures / max_possible_weight) * 100)
 
     def _calculate_category_scores(
-        self, results: List, statistics: Dict
-    ) -> Dict[str, float]:
+        self, results: list, statistics: dict
+    ) -> dict[str, float]:
         """Calculate risk score for each OWASP category."""
         category_data = {}
         for result in results:
@@ -193,7 +193,7 @@ class RiskScoringEngine:
 
         return category_scores
 
-    def _calculate_trend_score(self, trend_data: Dict) -> float:
+    def _calculate_trend_score(self, trend_data: dict) -> float:
         """Calculate risk based on trends (0-100)."""
         if not trend_data:
             return 0.0
@@ -216,7 +216,7 @@ class RiskScoringEngine:
 
         return min(100.0, score)
 
-    def _calculate_baseline_score(self, baseline_analysis: Dict) -> float:
+    def _calculate_baseline_score(self, baseline_analysis: dict) -> float:
         """Calculate risk from regressions (0-100)."""
         if not baseline_analysis:
             return 0.0
@@ -273,10 +273,10 @@ class RiskScoringEngine:
     def _generate_recommendations(
         self,
         overall_score: float,
-        factors: Dict[str, float],
-        category_scores: Dict[str, float],
-        statistics: Dict,
-    ) -> List[str]:
+        factors: dict[str, float],
+        category_scores: dict[str, float],
+        statistics: dict,
+    ) -> list[str]:
         """Generate actionable recommendations."""
         recommendations = []
 
@@ -328,7 +328,7 @@ class RiskScoringEngine:
 
         return recommendations
 
-    def _calculate_severity_breakdown(self, statistics: Dict) -> Dict[str, float]:
+    def _calculate_severity_breakdown(self, statistics: dict) -> dict[str, float]:
         """Calculate individual severity scores."""
         severity_stats = statistics.get("by_severity", {})
         scores = {}

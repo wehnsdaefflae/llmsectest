@@ -1,18 +1,18 @@
 """Pytest plugin for SARIF report generation."""
 
-import pytest
 from pathlib import Path
-from typing import List, Optional
 
-from .reporting.models import TestResult
-from .reporting.report_manager import ReportManager
-from .reporting.trend_tracker import TrendTracker
+import pytest
+
 from .reporting.baseline_manager import BaselineManager
+from .reporting.console_summary import generate_console_summary
+from .reporting.models import TestResult
+from .reporting.owasp_metadata import OWASP_LLM_CATEGORIES
 from .reporting.policy_config import PolicyLoader, PolicyValidator
+from .reporting.report_manager import ReportManager
 from .reporting.risk_scorer import RiskScoringEngine
 from .reporting.statistics import calculate_statistics, get_coverage_gaps
-from .reporting.console_summary import generate_console_summary
-from .reporting.owasp_metadata import OWASP_LLM_CATEGORIES
+from .reporting.trend_tracker import TrendTracker
 
 
 class SARIFPlugin:
@@ -20,9 +20,9 @@ class SARIFPlugin:
 
     def __init__(self, config):
         self.config = config
-        self.results: List[TestResult] = []
-        self.sarif_output: Optional[Path] = None
-        self.report_formats: List[str] = []
+        self.results: list[TestResult] = []
+        self.sarif_output: Path | None = None
+        self.report_formats: list[str] = []
         self.report_dir: Path = Path("results")
         self.enable_trends: bool = True
 
@@ -214,8 +214,9 @@ class SARIFPlugin:
                 session.exitstatus = 1
 
             # Exit with error if policy violations and enforcement is enabled
-            if self.enable_policy and policy_violations:
-                if self.security_policy.fail_on_policy_violation and not self.security_policy.warning_only:
+            if (self.enable_policy and policy_violations
+                    and self.security_policy.fail_on_policy_violation
+                    and not self.security_policy.warning_only):
                     print("\n" + "=" * 70)
                     print("❌ BUILD FAILED: Security policy violations detected")
                     print("=" * 70)

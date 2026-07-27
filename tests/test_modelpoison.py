@@ -38,7 +38,7 @@ def _craft_stack_global_pickle(module: str, name: str) -> bytes:
 
 def _make_npy(descr: str, trailer: bytes = b"") -> bytes:
     """A minimal valid .npy v1 file with the given dtype ``descr`` + optional trailer."""
-    header = "{'descr': %r, 'fortran_order': False, 'shape': (1,), }" % descr
+    header = f"{{'descr': {descr!r}, 'fortran_order': False, 'shape': (1,), }}"
     hb = header.encode("latin-1")
     pad = (64 - (10 + len(hb) + 1) % 64) % 64
     hb = hb + b" " * pad + b"\n"

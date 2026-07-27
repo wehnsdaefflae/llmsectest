@@ -1,15 +1,14 @@
 """HTML report generator for pytest security test results."""
 
 import html as html_mod
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import List, Dict, Optional
 
+from .compliance_mapper import get_compliance_summary, get_frameworks_covered
+from .constants import RISK_LEVEL_EMOJI, SEVERITY_COLORS_HEX, SEVERITY_ORDER
 from .models import TestResult
 from .owasp_metadata import get_owasp_category, get_owasp_markers_from_test
-from .compliance_mapper import get_frameworks_covered, get_compliance_summary
-from .statistics import calculate_statistics, get_test_severity, get_owasp_markers
-from .constants import SEVERITY_ORDER, SEVERITY_COLORS_HEX, RISK_LEVEL_EMOJI
+from .statistics import calculate_statistics, get_owasp_markers, get_test_severity
 
 # CSS is loaded from external file for maintainability
 _CSS_PATH = Path(__file__).parent / "static" / "report.css"
@@ -24,8 +23,8 @@ class HTMLReportGenerator:
 
     def generate(
         self,
-        results: List[TestResult],
-        trend_analytics: Optional[Dict] = None,
+        results: list[TestResult],
+        trend_analytics: dict | None = None,
         baseline_analysis=None,
         risk_score=None,
         policy_violations=None,
@@ -85,7 +84,7 @@ class HTMLReportGenerator:
             <h1>Security Test Report</h1>
             <div class="metadata">
                 <span><strong>Tool:</strong> {self.tool_name} v{self.tool_version}</span>
-                <span><strong>Generated:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</span>
+                <span><strong>Generated:</strong> {datetime.now(UTC).strftime('%Y-%m-%d %H:%M:%S UTC')}</span>
             </div>
         </header>
 
@@ -109,7 +108,7 @@ class HTMLReportGenerator:
 
         return html
 
-    def _generate_summary_section(self, stats: Dict) -> str:
+    def _generate_summary_section(self, stats: dict) -> str:
         """Generate summary statistics section."""
         return f"""
         <section class="summary">
@@ -134,7 +133,7 @@ class HTMLReportGenerator:
             </div>
         </section>"""
 
-    def _generate_severity_section(self, stats: Dict) -> str:
+    def _generate_severity_section(self, stats: dict) -> str:
         """Generate severity distribution section."""
         severity_html = '<div class="severity-bars">'
 
@@ -164,7 +163,7 @@ class HTMLReportGenerator:
             {severity_html}
         </section>"""
 
-    def _generate_owasp_section(self, stats: Dict, results: List[TestResult]) -> str:
+    def _generate_owasp_section(self, stats: dict, results: list[TestResult]) -> str:
         """Generate OWASP category breakdown section."""
         owasp_html = '<div class="owasp-grid">'
 
@@ -213,7 +212,7 @@ class HTMLReportGenerator:
             {owasp_html}
         </section>"""
 
-    def _generate_failed_tests_section(self, results: List[TestResult]) -> str:
+    def _generate_failed_tests_section(self, results: list[TestResult]) -> str:
         """Generate failed tests detail section."""
         failed_results = [r for r in results if r.outcome == "failed"]
 
@@ -271,7 +270,7 @@ class HTMLReportGenerator:
             </div>
         </section>"""
 
-    def _generate_all_tests_section(self, results: List[TestResult]) -> str:
+    def _generate_all_tests_section(self, results: list[TestResult]) -> str:
         """Generate all tests section with collapsible details."""
         tests_html = ""
 
@@ -308,7 +307,7 @@ class HTMLReportGenerator:
             </div>
         </section>"""
 
-    def _generate_trend_section(self, trend_analytics: Dict) -> str:
+    def _generate_trend_section(self, trend_analytics: dict) -> str:
         """Generate trend analytics section with visualizations."""
         comparison = trend_analytics.get("comparison", {})
         flakiness = trend_analytics.get("flakiness", {})
@@ -663,7 +662,7 @@ class HTMLReportGenerator:
             {violations_html}
         </section>"""
 
-    def _generate_compliance_section(self, results: List[TestResult]) -> str:
+    def _generate_compliance_section(self, results: list[TestResult]) -> str:
         """Generate compliance framework coverage section."""
         all_owasp_markers = get_owasp_markers(results)
 

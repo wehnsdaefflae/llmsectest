@@ -1,15 +1,14 @@
 """Report manager for generating multiple report formats."""
 
-from pathlib import Path
-from typing import Any, List, Optional
 import logging
+from pathlib import Path
+from typing import Any
 
-from .models import TestResult
-from .sarif_generator import SARIFGenerator
 from .html_generator import HTMLReportGenerator
 from .json_summary_generator import JSONSummaryGenerator
 from .markdown_generator import MarkdownReportGenerator
-
+from .models import TestResult
+from .sarif_generator import SARIFGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -45,14 +44,14 @@ class ReportManager:
 
     def generate_reports(
         self,
-        results: List[TestResult],
-        formats: List[str] = None,
-        custom_paths: dict = None,
-        trend_analytics: Optional[dict] = None,
-        baseline_analysis: Optional[Any] = None,
-        risk_score: Optional[Any] = None,
-        policy_violations: Optional[List] = None,
-        security_policy: Optional[Any] = None
+        results: list[TestResult],
+        formats: list[str] | None = None,
+        custom_paths: dict | None = None,
+        trend_analytics: dict | None = None,
+        baseline_analysis: Any | None = None,
+        risk_score: Any | None = None,
+        policy_violations: list | None = None,
+        security_policy: Any | None = None
     ) -> dict:
         """Generate reports in specified formats.
 

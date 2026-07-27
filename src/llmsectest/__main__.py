@@ -96,8 +96,8 @@ _TESTABILITY = {
     "owasp_llm05": ("black-box", None),
     "owasp_llm06": ("black-box", None),
     "owasp_llm07": ("black-box", None),
-    "owasp_llm08": ("black-box", "requires --target app:<url> + --app-canary (RAG retrieval canary) "
-                                 "and/or --app-rag-poison (poisoned-document marker)"),
+    "owasp_llm08": ("black-box", ("requires --target app:<url> + --app-canary (RAG retrieval canary) "
+                                  "and/or --app-rag-poison (poisoned-document marker)")),
     "owasp_llm09": ("black-box", None),
     "owasp_llm10": ("black-box", None),
 }
@@ -363,15 +363,15 @@ def _print_coverage_footer(target: str | None) -> None:
                 if m in SCANNER_CATEGORIES and not os.environ.get(scanner_env):
                     skipped.append((m, scanner_hint))
                 elif m in APP_ONLY_CATEGORIES:
-                    skipped.append((m, "needs a RAG application target — "
-                                       "--target app:<url> with --app-canary "
-                                       "and/or --app-rag-poison"))
+                    skipped.append((m, ("needs a RAG application target — "
+                                        "--target app:<url> with --app-canary "
+                                        "and/or --app-rag-poison")))
                 else:
                     exercised.append(m)
             else:
                 skipped.append(
-                    (m, f"not yet implemented ({_TESTABILITY[m][0]} — "
-                        f"{_TESTABILITY[m][1] or 'planned'})")
+                    (m, (f"not yet implemented ({_TESTABILITY[m][0]} — "
+                         f"{_TESTABILITY[m][1] or 'planned'})"))
                 )
         print(f"Coverage this run — {len(exercised)}/10 OWASP categories exercised. "
               "No silent gaps:")

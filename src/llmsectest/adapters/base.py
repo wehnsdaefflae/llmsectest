@@ -24,15 +24,15 @@ class Message:
     content: str
 
     @staticmethod
-    def system(content: str) -> "Message":
+    def system(content: str) -> Message:
         return Message(Role.SYSTEM, content)
 
     @staticmethod
-    def user(content: str) -> "Message":
+    def user(content: str) -> Message:
         return Message(Role.USER, content)
 
     @staticmethod
-    def assistant(content: str) -> "Message":
+    def assistant(content: str) -> Message:
         return Message(Role.ASSISTANT, content)
 
 
@@ -111,7 +111,7 @@ class LLMAdapter(abc.ABC):
     def complete(self, request: CompletionRequest) -> CompletionResponse:
         """Run one chat completion and return the assistant text."""
 
-    def preflight(self) -> "PreflightResult | None":
+    def preflight(self) -> PreflightResult | None:
         """Best-effort health check before a scan.
 
         Returns ``None`` when the provider exposes no cheap health endpoint (the

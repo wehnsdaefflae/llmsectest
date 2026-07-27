@@ -4,7 +4,7 @@ Maps OWASP Top 10 for LLM Applications to major security and AI governance frame
 including NIST AI RMF, ISO/IEC 42001, EU AI Act, NIST CSF 2.0, SOC 2, and ISO 27001.
 """
 
-from typing import Dict, List, Set, NamedTuple
+from typing import NamedTuple
 
 
 class ComplianceMapping(NamedTuple):
@@ -23,7 +23,7 @@ def _m(fw: str, cid: str, name: str, cat: str, desc: str) -> ComplianceMapping:
 
 # Compliance framework mappings for each OWASP LLM category
 # Format: (framework, control_id, control_name, category, description)
-COMPLIANCE_MAPPINGS: Dict[str, List[ComplianceMapping]] = {
+COMPLIANCE_MAPPINGS: dict[str, list[ComplianceMapping]] = {
     "owasp_llm01": [  # Prompt Injection
         _m("NIST AI RMF", "GOVERN-1.2", "Risk Management", "Govern", "Risks and benefits of AI systems are identified, assessed, and managed"),
         _m("NIST AI RMF", "MAP-3.3", "AI System Capabilities", "Map", "Potential adverse impacts from AI systems are identified and assessed"),
@@ -120,7 +120,7 @@ COMPLIANCE_MAPPINGS: Dict[str, List[ComplianceMapping]] = {
 }
 
 
-def get_compliance_mappings(owasp_marker: str) -> List[ComplianceMapping]:
+def get_compliance_mappings(owasp_marker: str) -> list[ComplianceMapping]:
     """Get all compliance framework mappings for an OWASP category.
 
     Args:
@@ -132,7 +132,7 @@ def get_compliance_mappings(owasp_marker: str) -> List[ComplianceMapping]:
     return COMPLIANCE_MAPPINGS.get(owasp_marker, [])
 
 
-def get_frameworks_covered(owasp_markers: List[str]) -> Set[str]:
+def get_frameworks_covered(owasp_markers: list[str]) -> set[str]:
     """Get unique set of compliance frameworks covered by test results.
 
     Args:
@@ -149,7 +149,7 @@ def get_frameworks_covered(owasp_markers: List[str]) -> Set[str]:
     return frameworks
 
 
-def get_compliance_summary(owasp_markers: List[str]) -> Dict[str, Dict[str, int]]:
+def get_compliance_summary(owasp_markers: list[str]) -> dict[str, dict[str, int]]:
     """Generate summary of compliance coverage across frameworks.
 
     Args:
@@ -167,11 +167,11 @@ def get_compliance_summary(owasp_markers: List[str]) -> Dict[str, Dict[str, int]
             mappings = get_compliance_mappings(marker)
             coverage.extend(m for m in mappings if m.framework == framework)
 
-        unique_controls = set((m.control_id, m.control_name) for m in coverage)
+        unique_controls = {(m.control_id, m.control_name) for m in coverage}
 
         summary[framework] = {
             "total_controls": len(unique_controls),
-            "categories_covered": len(set(m.category for m in coverage)),
+            "categories_covered": len({m.category for m in coverage}),
             "owasp_mapped": len(set(owasp_markers)),
         }
 

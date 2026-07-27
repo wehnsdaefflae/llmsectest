@@ -21,7 +21,6 @@ from pathlib import Path
 import pytest
 
 from llmsectest import envvars
-
 from llmsectest.probes.osv import scan_known_vulnerabilities
 from llmsectest.probes.supplychain import discover_manifests, scan_dependencies
 from llmsectest.suite.scanners import fail_with_finding, scanner_params

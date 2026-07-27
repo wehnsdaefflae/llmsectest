@@ -5,29 +5,34 @@ These tests validate the plugin's internal logic independent of pytest hooks.
 """
 
 import json
+
 import pytest
+
+from llmsectest.reporting.baseline_manager import (
+    BaselineManager,
+    BaselineSnapshot,
+    RegressionAnalysis,
+)
+from llmsectest.reporting.console_summary import generate_console_summary
+from llmsectest.reporting.constants import (
+    RISK_LEVEL_EMOJI,
+    SARIF_SEVERITY_MAP,
+    SEVERITY_BADGE_COLORS,
+    SEVERITY_COLORS_HEX,
+    SEVERITY_EMOJI,
+    SEVERITY_ORDER,
+    SEVERITY_SCORES,
+)
 from llmsectest.reporting.models import TestResult
+from llmsectest.reporting.policy_config import CategoryPolicy, PolicyValidator, SecurityPolicy
+from llmsectest.reporting.risk_scorer import RiskScoringEngine
+from llmsectest.reporting.sarif_generator import SARIFGenerator
 from llmsectest.reporting.statistics import (
     calculate_statistics,
-    get_test_severity,
-    get_owasp_markers,
     get_coverage_gaps,
+    get_owasp_markers,
+    get_test_severity,
 )
-from llmsectest.reporting.constants import (
-    SEVERITY_ORDER,
-    SARIF_SEVERITY_MAP,
-    SEVERITY_SCORES,
-    SEVERITY_EMOJI,
-    SEVERITY_COLORS_HEX,
-    SEVERITY_BADGE_COLORS,
-    RISK_LEVEL_EMOJI,
-)
-from llmsectest.reporting.sarif_generator import SARIFGenerator
-from llmsectest.reporting.console_summary import generate_console_summary
-from llmsectest.reporting.risk_scorer import RiskScoringEngine
-from llmsectest.reporting.baseline_manager import BaselineManager, BaselineSnapshot, RegressionAnalysis
-from llmsectest.reporting.policy_config import PolicyValidator, SecurityPolicy, CategoryPolicy
-
 
 # =============================================================================
 # TestResult Model Tests
@@ -1052,7 +1057,8 @@ class TestBaselineManager:
         manager = BaselineManager(baseline_path)
         manager.save_baseline(baseline_results)
 
-        current = baseline_results + [
+        current = [
+            *baseline_results,
             TestResult(
                 nodeid="test::test_new",
                 location=("test.py", 30, "test_new"),

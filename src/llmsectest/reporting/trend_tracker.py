@@ -1,10 +1,10 @@
 """Historical trend tracking for pytest security test results."""
 
 import json
-from pathlib import Path
-from datetime import datetime
-from typing import List, Dict, Any, Optional
 from collections import defaultdict
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any
 
 from .models import TestResult
 from .statistics import calculate_statistics
@@ -23,7 +23,9 @@ class TrendTracker:
         self.history_file = history_file
         self.history_file.parent.mkdir(parents=True, exist_ok=True)
 
-    def save_test_run(self, results: List[TestResult], metadata: Dict[str, Any] = None) -> None:
+    def save_test_run(
+        self, results: list[TestResult], metadata: dict[str, Any] | None = None
+    ) -> None:
         """
         Save current test run results to history.
 
@@ -34,7 +36,7 @@ class TrendTracker:
         history = self._load_history()
 
         run_data = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "metadata": metadata or {},
             "summary": self._generate_run_summary(results),
             "tests": [self._serialize_test_result(r) for r in results]
@@ -48,7 +50,7 @@ class TrendTracker:
 
         self._save_history(history)
 
-    def get_trend_analytics(self, results: List[TestResult]) -> Dict[str, Any]:
+    def get_trend_analytics(self, results: list[TestResult]) -> dict[str, Any]:
         """
         Generate trend analytics comparing current run with historical data.
 
@@ -82,23 +84,23 @@ class TrendTracker:
 
         return analytics
 
-    def _load_history(self) -> Dict[str, Any]:
+    def _load_history(self) -> dict[str, Any]:
         """Load historical test data from file."""
         if not self.history_file.exists():
             return {"runs": [], "version": "1.0"}
 
         try:
-            with open(self.history_file, 'r') as f:
+            with open(self.history_file) as f:
                 return json.load(f)
-        except (json.JSONDecodeError, IOError):
+        except (OSError, json.JSONDecodeError):
             return {"runs": [], "version": "1.0"}
 
-    def _save_history(self, history: Dict[str, Any]) -> None:
+    def _save_history(self, history: dict[str, Any]) -> None:
         """Save historical test data to file."""
         with open(self.history_file, 'w') as f:
             json.dump(history, f, indent=2)
 
-    def _generate_run_summary(self, results: List[TestResult]) -> Dict[str, Any]:
+    def _generate_run_summary(self, results: list[TestResult]) -> dict[str, Any]:
         """Generate summary statistics for a test run using centralized statistics."""
         stats = calculate_statistics(results)
 
@@ -113,7 +115,7 @@ class TrendTracker:
             "owasp_categories": {k: dict(v) for k, v in stats["owasp_categories"].items()}
         }
 
-    def _serialize_test_result(self, result: TestResult) -> Dict[str, Any]:
+    def _serialize_test_result(self, result: TestResult) -> dict[str, Any]:
         """Serialize a test result for storage."""
         return {
             "name": result.test_name,
@@ -123,7 +125,7 @@ class TrendTracker:
             "markers": result.markers
         }
 
-    def _compare_with_previous(self, current: Dict, previous: Dict) -> Dict[str, Any]:
+    def _compare_with_previous(self, current: dict, previous: dict) -> dict[str, Any]:
         """Compare current run with previous run."""
         return {
             "pass_rate_change": round(current["pass_rate"] - previous["pass_rate"], 2),
@@ -143,7 +145,7 @@ class TrendTracker:
         else:
             return "stable"
 
-    def _calculate_trends(self, runs: List[Dict]) -> Dict[str, Any]:
+    def _calculate_trends(self, runs: list[dict]) -> dict[str, Any]:
         """Calculate trends over multiple runs."""
         if len(runs) < 2:
             return {"status": "insufficient_data"}
@@ -167,7 +169,7 @@ class TrendTracker:
             }
         }
 
-    def _calculate_linear_trend(self, values: List[float]) -> str:
+    def _calculate_linear_trend(self, values: list[float]) -> str:
         """Calculate linear trend direction (simple slope-based)."""
         if len(values) < 2:
             return "stable"
@@ -185,7 +187,7 @@ class TrendTracker:
         else:
             return "stable"
 
-    def _detect_flaky_tests(self, runs: List[Dict]) -> Dict[str, Any]:
+    def _detect_flaky_tests(self, runs: list[dict]) -> dict[str, Any]:
         """Detect potentially flaky tests (tests that alternate between pass/fail)."""
         if len(runs) < 3:
             return {"flaky_tests": [], "message": "Need at least 3 runs to detect flakiness"}
@@ -218,7 +220,7 @@ class TrendTracker:
         }
 
 
-    def _calculate_improvement_rate(self, runs: List[Dict]) -> Optional[Dict[str, Any]]:
+    def _calculate_improvement_rate(self, runs: list[dict]) -> dict[str, Any] | None:
         """Calculate the rate of improvement over recent runs."""
         if len(runs) < 2:
             return None
@@ -242,7 +244,7 @@ class TrendTracker:
             "status": "improving" if improvement > 2 else ("degrading" if improvement < -2 else "stable")
         }
 
-    def _calculate_owasp_trends(self, runs: List[Dict]) -> Dict[str, Any]:
+    def _calculate_owasp_trends(self, runs: list[dict]) -> dict[str, Any]:
         """Calculate trends for each OWASP category."""
         if len(runs) < 2:
             return {}

@@ -31,7 +31,7 @@ huggingface = ["huggingface_hub>=0.25"]
 # dependency, never vendored into this MIT tree.
 cvss = ["cvss>=3.0"]
 all = ["openai>=1.0", "anthropic>=0.39", "huggingface_hub>=0.25", "cvss>=3.0"]
-dev = ["pytest>=7.4.0", "pytest-cov", "ruff", "mypy", "cvss>=3.0"]
+dev = ["pytest>=7.4.0", "pytest-cov", "ruff>=0.16,<0.17", "mypy", "cvss>=3.0"]
 # mkdocs is pinned <2: the upstream "MkDocs 2.0" is a backward-incompatible, currently
 # unlicensed rewrite (TOML config, plugin/theme system removed, no migration path); the
 # maintained line is Material for MkDocs on mkdocs 1.x. Pinning keeps `mkdocs gh-deploy`
@@ -58,3 +58,36 @@ testpaths = ["tests"]
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+
+# The rule set is declared explicitly on purpose. Ruff's *default* selection changes
+# between releases (0.16.0 widened it), so an unpinned linter silently redefines what
+# "clean" means and turns a green branch red without a single line of code changing.
+# Config decides the rules; the `ruff>=0.16,<0.17` pin in the dev extra decides the tool.
+[tool.ruff.lint]
+select = [
+    "E4", "E7", "E9",  # pycodestyle errors (E501 line length is left to the formatter)
+    "F",               # pyflakes
+    "I",               # import sorting
+    "UP",              # pyupgrade — we require Python >= 3.11
+    "B",               # bugbear
+    "C4",              # comprehensions
+    "SIM",             # simplify
+    "ISC",             # implicit string concatenation (the missing-comma footgun)
+    "PIE",
+    "PLE",             # pylint errors only
+    "RUF",
+    "DTZ",             # timezone-aware datetimes
+]
+ignore = [
+    # A tool that *detects* Unicode-confusable evasion necessarily contains confusables:
+    # the fullwidth/homoglyph characters in `probes/detectors.py` and the typographic
+    # apostrophe in its refusal phrases are detection data, not typos.
+    "RUF001", "RUF002", "RUF003",
+    # `Role` is public API. `class Role(str, Enum)` and `enum.StrEnum` differ in what
+    # `str(Role.USER)` returns, so switching base classes would change observable
+    # behaviour for consumers to gain nothing they can use.
+    "UP042",
+]
+# Blind `except Exception` is deliberate where we isolate a failure: one broken report
+# format, optional dependency, or provider SDK must not abort a scan. BLE001 is therefore
+# not selected rather than papered over with per-line noqa.

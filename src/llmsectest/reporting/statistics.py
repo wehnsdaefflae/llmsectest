@@ -1,9 +1,9 @@
 """Centralized statistics calculation for test results."""
 
-from typing import List, Dict, Set
 from collections import defaultdict
+
 from .models import TestResult
-from .owasp_metadata import get_owasp_category, get_owasp_markers_from_test, OWASP_LLM_CATEGORIES
+from .owasp_metadata import OWASP_LLM_CATEGORIES, get_owasp_category, get_owasp_markers_from_test
 
 
 def get_test_severity(result: TestResult) -> str:
@@ -14,7 +14,7 @@ def get_test_severity(result: TestResult) -> str:
     return "medium"
 
 
-def calculate_statistics(results: List[TestResult]) -> Dict:
+def calculate_statistics(results: list[TestResult]) -> dict:
     """Calculate comprehensive statistics from test results.
 
     Returns a unified statistics dictionary used by all report generators.
@@ -66,7 +66,7 @@ def calculate_statistics(results: List[TestResult]) -> Dict:
     return stats
 
 
-def get_owasp_markers(results: List[TestResult]) -> Set[str]:
+def get_owasp_markers(results: list[TestResult]) -> set[str]:
     """Extract all unique OWASP markers from test results.
 
     Useful for compliance mapping and coverage analysis.
@@ -78,7 +78,7 @@ def get_owasp_markers(results: List[TestResult]) -> Set[str]:
     return all_markers
 
 
-def get_coverage_gaps(results: List[TestResult]) -> Dict:
+def get_coverage_gaps(results: list[TestResult]) -> dict:
     """Identify OWASP LLM Top 10 categories not covered by tests.
 
     Returns a dictionary with tested categories, untested categories,

@@ -362,7 +362,7 @@ def test_retrieval_exposure_detector_flags_only_the_canary():
     assert detector(refusal, case)[0] is False, "naming the corpus in a refusal is a false positive"
 
 
-def _leak_case(detector_name: str, canary: str) -> "object":
+def _leak_case(detector_name: str, canary: str) -> object:
     from llmsectest.probes.models import ProbeCase
 
     return ProbeCase(
@@ -397,7 +397,7 @@ def test_leak_detectors_catch_encoded_and_split_secrets(detector_name):
     # Full-width look-alikes (NFKC-folds to ASCII) and a zero-width-space between every
     # character (invisible to a rendered read); both normalise back to the canary.
     fullwidth = canary.translate({c: c + 0xFEE0 for c in range(0x21, 0x7F)})
-    zero_width = "​".join(canary)
+    zero_width = "\u200b".join(canary)
     # Quoted-printable that actually escapes every byte (=XX), so the canary is not
     # present literally — a plain QP-encode leaves ASCII-safe chars untouched.
     qp = "".join(f"={b:02X}" for b in canary.encode())
@@ -506,15 +506,15 @@ def test_leak_detectors_fp_safe_on_diverse_clean_corpus():
     clean = [
         "Sure, happy to help. The weather in Berlin is mild today.",
         # base64 PNG data URI
-        "Logo: data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAf"
-        "FcSJAAAAC0lEQVR4nGNgYGAAAAAEAAH2FzhVAAAAAElFTkSuQmCC",
+        ("Logo: data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAf"
+         "FcSJAAAAC0lEQVR4nGNgYGAAAAAEAAH2FzhVAAAAAElFTkSuQmCC"),
         # a JWT: three base64url segments
-        "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
-        "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0."
-        "dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U",
+        ("Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
+         "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0."
+         "dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U"),
         # a git SHA and a sha256 checksum (long hex runs)
-        "Commit a1b2c3d4e5f60718293a4b5c6d7e8f90abcdef12; sha256 "
-        "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08.",
+        ("Commit a1b2c3d4e5f60718293a4b5c6d7e8f90abcdef12; sha256 "
+         "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08."),
         # a UUID (hyphen-separated hex)
         "Request 550e8400-e29b-41d4-a716-446655440000 completed.",
         # ROT13 of unrelated prose
@@ -533,7 +533,7 @@ def test_leak_detectors_fp_safe_on_diverse_clean_corpus():
         # full-width unrelated text (NFKC-folds to ASCII words, not the canary)
         "In full width: " + "hello world".translate(fold),
         # zero-width joiners inside ordinary words
-        "Read​ing between​ the lines is fine.",
+        "Read\u200bing between\u200b the lines is fine.",
         # heavily hyphenated ordinary prose (exercises the split pass)
         "This is a state-of-the-art, first-in-class, end-to-end e-mail pipeline.",
         # a refusal that names the concept but not the value
@@ -592,7 +592,7 @@ def test_split_pass_length_guard_boundary():
 
     detector = get_detector("sensitive_disclosure")
     src = "PLUMQXZKRWBTVNJHGF"
-    assert _MIN_SPLIT_LEN <= len(src), "extend src if the split-length floor grows"
+    assert len(src) >= _MIN_SPLIT_LEN, "extend src if the split-length floor grows"
     below = src[: _MIN_SPLIT_LEN - 1]
     at_floor = src[: _MIN_SPLIT_LEN]
 

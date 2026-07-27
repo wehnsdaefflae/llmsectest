@@ -17,7 +17,7 @@ from __future__ import annotations
 import html as _html
 import json
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -397,7 +397,7 @@ def render_sarif_html(doc: dict, *, source_name: str | None = None,
                 continue  # a non-object result carries no renderable finding
             findings.append((result, rules.get(result.get("ruleId"), {})))
 
-    generated = generated or datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    generated = generated or datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")
     # Run-level denial-of-wallet cost (real provider output-token spend), when present.
     dow = _props(first_run).get("denial_of_wallet")
     cost_bit = (

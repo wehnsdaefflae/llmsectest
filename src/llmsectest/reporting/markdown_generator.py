@@ -1,12 +1,11 @@
 """Markdown report generator for pytest security test results."""
 
-from datetime import datetime
-from typing import List, Dict
+from datetime import UTC, datetime
 
+from .constants import SEVERITY_BADGE_COLORS, SEVERITY_EMOJI, SEVERITY_ORDER
 from .models import TestResult
 from .owasp_metadata import get_owasp_category, get_owasp_markers_from_test
 from .statistics import calculate_statistics, get_test_severity
-from .constants import SEVERITY_ORDER, SEVERITY_EMOJI, SEVERITY_BADGE_COLORS
 
 
 class MarkdownReportGenerator:
@@ -16,7 +15,7 @@ class MarkdownReportGenerator:
         self.tool_name = tool_name
         self.tool_version = tool_version
 
-    def generate(self, results: List[TestResult], baseline_analysis=None) -> str:
+    def generate(self, results: list[TestResult], baseline_analysis=None) -> str:
         """Generate Markdown report from test results.
 
         Args:
@@ -36,7 +35,7 @@ class MarkdownReportGenerator:
         report = f"""# Security Test Report
 
 **Tool:** {self.tool_name} v{self.tool_version}
-**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+**Generated:** {datetime.now(UTC).strftime('%Y-%m-%d %H:%M:%S UTC')}
 
 ---
 
@@ -57,7 +56,7 @@ class MarkdownReportGenerator:
 
         return report
 
-    def _generate_summary_section(self, stats: Dict) -> str:
+    def _generate_summary_section(self, stats: dict) -> str:
         """Generate summary statistics section."""
         return f"""## Summary
 
@@ -70,7 +69,7 @@ class MarkdownReportGenerator:
 | Pass Rate | {stats["pass_rate"]:.1f}% |
 """
 
-    def _generate_severity_section(self, stats: Dict) -> str:
+    def _generate_severity_section(self, stats: dict) -> str:
         """Generate severity distribution section."""
         severity_table = """## Severity Distribution
 
@@ -87,7 +86,7 @@ class MarkdownReportGenerator:
 
         return severity_table
 
-    def _generate_owasp_section(self, stats: Dict, results: List[TestResult]) -> str:
+    def _generate_owasp_section(self, stats: dict, results: list[TestResult]) -> str:
         """Generate OWASP category breakdown section."""
         owasp_section = """## OWASP LLM Top 10 Coverage
 
@@ -149,7 +148,7 @@ class MarkdownReportGenerator:
 
         return owasp_section
 
-    def _generate_failures_section(self, results: List[TestResult]) -> str:
+    def _generate_failures_section(self, results: list[TestResult]) -> str:
         """Generate failed tests section."""
         failed_results = [r for r in results if r.outcome == "failed"]
 

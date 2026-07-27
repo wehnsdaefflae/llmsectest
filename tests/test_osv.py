@@ -133,6 +133,26 @@ def test_scan_surfaces_network_failure_as_error(tmp_path, monkeypatch):
     assert "network unreachable" in result.error
 
 
+def test_scan_rejects_a_short_batch_response_instead_of_silently_dropping_packages(
+    tmp_path, monkeypatch
+):
+    """A truncated OSV response must not be zipped by position.
+
+    OSV answers one result per query, in order. If it returns fewer, positional
+    pairing would quietly leave the tail unchecked while ``queried`` still counted
+    every package — the report would claim coverage it does not have.
+    """
+    _write(tmp_path, "requirements.txt", "requests==2.19.1\nflask==0.12.2\njinja2==2.4.1\n")
+
+    # Three pinned deps queried, two results returned.
+    monkeypatch.setattr(osv, "_post_json", lambda url, payload: {"results": [{}, {}]})
+    result = scan_known_vulnerabilities(tmp_path)
+
+    assert result.findings == []
+    assert result.queried == 3
+    assert "2 result(s) for 3 queried package(s)" in result.error
+
+
 def test_scan_with_no_exact_pins_queries_nothing(tmp_path, monkeypatch):
     _write(tmp_path, "requirements.txt", "flask>=2\npyyaml\n")
 
