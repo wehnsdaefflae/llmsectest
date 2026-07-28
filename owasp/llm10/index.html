@@ -900,6 +900,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="How LLMSecTest tests it">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#when-the-app-never-answers-at-all" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When the app never answers at all
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1056,6 +1073,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="How LLMSecTest tests it">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#when-the-app-never-answers-at-all" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When the app never answers at all
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1150,6 +1184,25 @@ refuses. So LLM10 is exercised black-box against an app across both dimensions, 
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>ollama:llama3<span class="w">                     </span><span class="c1"># unbounded probes (model target; max_tokens caps them)</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat<span class="w">    </span><span class="c1"># bounded flood + output-amplification probes (real app)</span>
 </code></pre></div>
+<h3 id="when-the-app-never-answers-at-all">When the app never answers at all<a class="headerlink" href="#when-the-app-never-answers-at-all" title="Permanent link">&para;</a></h3>
+<p>Because both app probes are bounded, <em>no reply</em> is a result too. An app that burns its whole
+<code>--app-timeout</code> budget on a request it could satisfy in one short reply has been made to do
+disproportionate work — which is the vulnerability, not a missing measurement. Recording that as merely
+"inconclusive" quietly under-reported exactly the apps that consume the most.</p>
+<p>A timeout is only read that way when the same app has <strong>demonstrated</strong> it answers quickly:</p>
+<ul>
+<li>at least three other probes in the run completed inside the same budget, and</li>
+<li>their <strong>median</strong> latency sits under half the budget (the median, so one slow outlier does not veto the
+  signal; the headroom, so an app that habitually finishes just under the wire is never called responsive).</li>
+</ul>
+<p>Fail either test — a uniformly slow app, a scan too short to establish a pattern, an unquantified budget —
+and the probe stays <strong>inconclusive</strong>, exactly as before. The finding quotes the evidence it relied on:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>bounded request exhausted the 90s per-request budget while 21 other probe(s) completed inside the same
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>budget (median 6.4s, slowest 38.1s) — a finite, self-terminating request that consumes the caller&#39;s entire
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>time budget is unbounded resource consumption, not ordinary slowness
+</code></pre></div>
+<p>Only the two bounded LLM10 app probes opt into this. Every other category's timeout stays inconclusive: a
+prompt-injection probe that times out tells you nothing about injection.</p>
 <div class="admonition note">
 <p class="admonition-title">Two complementary oracles</p>
 <p><code>unbounded_consumption</code> is a deterministic <strong>repetition</strong> oracle — it catches a runaway <em>repetitive</em>
