@@ -19,30 +19,40 @@ Funded by the German Federal Ministry of Research, Technology and Space (BMFTR)
 via the [Prototype Fund](https://prototypefund.de) (FKZ 16IS26S10). MIT-licensed.
 See [Funding](#funding).
 
-> **Status: pre-alpha (active grant development).** In place: the unified LLM adapter; the
-> pytest plugin + reporting layer (SARIF v2.1.0 / HTML / JSON / Markdown, OWASP
-> metadata, risk scoring, baselines, policy gates); the real, adapter-driven probe
-> suite covering **OWASP LLM01 (prompt injection), LLM02 (sensitive information
-> disclosure), LLM05 (improper output handling), LLM06 (excessive agency), LLM07
-> (system prompt leakage), LLM09 (misinformation) and LLM10 (unbounded
-> consumption)**; white-box scanners for **LLM03 (supply chain)** (dependency
-> manifests) and **LLM04 (data and model poisoning)** (serialized model files); and
-> black-box **LLM08 (vector and embedding weaknesses)** probes for RAG apps — both
-> *retrieval exposure* and *indirect prompt injection via a poisoned retrieved
-> document* — **all 10** OWASP LLM Top 10 (2025) categories. LLM01 also runs a
-> **red-team jailbreak set** scored by a refusal oracle (the MIT
-> [JailbreakBench](https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors) /
-> AdvBench corpus via `--redteam-set`), and `--redteam-benign` measures the
-> target's **over-refusal (false-refusal) rate** against the matched benign twins —
-> a usability signal kept separate from the security findings. Findings are scored
-> with **CVSS v4.0** base scores per OWASP category (reported as SARIF
-> `security-severity`). The leak oracles (LLM02 / LLM07 / LLM08) **de-obfuscate** a
-> reply before matching, so a secret leaked base64/hex/base32/base85/ASCII85/ROT13/
-> quoted-printable/uuencode-encoded, Unicode-disguised (full-width or zero-width characters),
-> or split across separators is still caught. Depth (white-box LLM08 dimensions, a
-> classifier refusal oracle) follows on the roadmap. The modules under
-> [`examples/`](examples/) demonstrate the
-> reporting pipeline across all ten categories with deterministic mock fixtures.
+> **Status: pre-alpha (active grant development).** All **10** OWASP LLM Top 10 (2025)
+> categories ship a real probe or scanner — none is a placeholder, and a scan that cannot
+> reach one says so instead of passing it silently.
+
+### What is covered
+
+| OWASP category | How it is tested | Mode |
+|---|---|---|
+| LLM01 prompt injection | marker-injection corpus + a **red-team jailbreak set** ([JailbreakBench](https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors) / AdvBench, `--redteam-set`) scored by a refusal oracle | black-box |
+| LLM02 sensitive information disclosure | attacks for a named secret the app holds | black-box |
+| LLM03 supply chain | dependency-manifest scanner (`--repo`), optional OSV.dev CVE lookup, CycloneDX SBOM | white-box |
+| LLM04 data and model poisoning | serialized-model scanner over the pickle opcode stream (`--model-scan`), never unpickling | white-box |
+| LLM05 improper output handling | asks the app to emit active payloads; a raw echo is the finding | black-box |
+| LLM06 excessive agency | attempts to invoke privileged actions the dev names | black-box |
+| LLM07 system prompt leakage | extraction attacks against the app's own prompt | black-box |
+| LLM08 vector and embedding weaknesses | for RAG apps: *retrieval exposure* + *indirect injection via a poisoned retrieved document* | black-box |
+| LLM09 misinformation | asks about entities that provably do not exist; confabulation is the finding | black-box |
+| LLM10 unbounded consumption | repetition-flood and output-amplification probes, with an output-token cost figure | black-box |
+
+### Beyond the category map
+
+- **Reporting.** A pytest plugin and reporting layer: SARIF v2.1.0 / HTML / JSON / Markdown, OWASP
+  metadata, risk scoring, baselines and policy gates. Every finding carries a **CVSS v4.0** base score
+  for its category, reported as SARIF `security-severity`.
+- **Encoded leaks still count.** The LLM02 / LLM07 / LLM08 leak oracles **de-obfuscate** a reply before
+  matching, so a secret returned base64/hex/base32/base85/ASCII85/ROT13/quoted-printable/uuencode-encoded,
+  Unicode-disguised (full-width or zero-width characters), or split across separators is caught.
+- **Over-refusal is measured too.** `--redteam-benign` runs the matched benign twins and reports the
+  target's **false-refusal rate** — a usability signal, kept out of the security findings and the exit code.
+- **One adapter for every target.** OpenAI, Anthropic, HuggingFace, and local Ollama / LM Studio, plus a
+  running application at its own HTTP endpoint (`--target app:<url>`).
+- **Next.** Depth, not breadth: the white-box LLM08 dimensions and a classifier refusal oracle. The
+  modules under [`examples/`](examples/) demonstrate the reporting pipeline across all ten categories with
+  deterministic mock fixtures.
 
 ## The unified adapter
 
@@ -184,7 +194,10 @@ the target:
   the `run_app_scan` API. The footer always shows exactly what was and wasn't run.
   `--app-timeout <seconds>` caps each request to the app (default 120 s): a request
   that exceeds it is recorded as an **inconclusive** probe rather than left to hang the
-  scan, so one slow or runaway endpoint cannot discard every other result.
+  scan, so one slow or runaway endpoint cannot discard every other result. The exception
+  is the two *bounded* LLM10 probes — an app that burns the whole budget on a request it
+  could answer in one short reply, while answering its other probes well inside that same
+  budget, is flagged for unbounded consumption rather than recorded as unmeasured.
 
 Live providers import their SDK lazily and read the relevant API key from the
 environment. The corpus and detectors are importable, too:

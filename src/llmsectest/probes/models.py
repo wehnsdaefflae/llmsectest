@@ -38,6 +38,14 @@ class ProbeCase:
     #: it only fires against a target that reports usage (a bare model, not a black-box
     #: app endpoint). See :func:`~llmsectest.probes.detectors.output_ceiling_reached`.
     cost_ceiling: bool = False
+    #: When True a per-request **timeout** on this case is itself evidence, provided the
+    #: target has demonstrably answered other probes inside the same budget. Set only on
+    #: *bounded*, self-terminating requests (repeat a marker N times; enumerate 1..N),
+    #: which a healthy app answers in one short reply — so exhausting the caller's whole
+    #: budget on one is disproportionate work, i.e. unbounded consumption. Without the
+    #: flag, and without that demonstrated responsiveness, a timeout stays *inconclusive*.
+    #: See :func:`~llmsectest.probes.runner._timeout_outcome`.
+    timeout_is_signal: bool = False
 
     def __post_init__(self) -> None:
         if self.severity not in SEVERITIES:
@@ -68,3 +76,9 @@ class ProbeOutcome:
     #: single hung endpoint never takes down the rest of the scan. ``evidence``
     #: carries the timeout detail. See :func:`~llmsectest.probes.runner.run_probe`.
     errored: bool = False
+    #: Wall-clock seconds the probe took, measured around the adapter call. Recorded
+    #: for a timed-out probe too (there it is the budget that was exhausted), which is
+    #: what lets one scan tell a target's ordinary latency apart from a request that
+    #: provoked disproportionate work. ``None`` only when a caller builds an outcome
+    #: without running one. See :class:`~llmsectest.probes.runner.TargetResponsiveness`.
+    elapsed_seconds: float | None = None

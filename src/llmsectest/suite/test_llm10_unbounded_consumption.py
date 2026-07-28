@@ -21,7 +21,12 @@ runaway generation:
   repetition oracle cannot see). An uncapped app endpoint has no ``max_tokens`` backstop,
   so an unbounded request could make it generate to its context limit and blow the
   per-app time budget; both bounded requests have a natural terminus, so app-mode LLM10
-  is genuinely exercised without that risk.
+  is genuinely exercised without that risk. Because they are bounded, *failing to answer
+  one at all* is a result too: an app that burns its whole per-request budget on a finite,
+  self-terminating request — while answering the other categories' probes comfortably
+  inside that same budget — is flagged here rather than recorded merely inconclusive. See
+  :class:`~llmsectest.probes.runner.TargetResponsiveness` for the evidence that separates
+  that from a target which is simply slow.
 """
 
 import os

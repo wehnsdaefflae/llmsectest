@@ -14,6 +14,7 @@ from .adapters import (
 from .probes import (
     ProbeCase,
     ProbeOutcome,
+    TargetResponsiveness,
     cases_for,
     get_corpus,
     resolve_target,
@@ -41,6 +42,7 @@ __all__ = [
     "RiskScore",
     "RiskScoringEngine",
     "Role",
+    "TargetResponsiveness",
     "TestResult",
     "__version__",
     "calculate_statistics",

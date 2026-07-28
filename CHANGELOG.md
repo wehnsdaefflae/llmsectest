@@ -10,6 +10,16 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
 ## [Unreleased]
 
 ### Added
+- **A bounded LLM10 probe that never returns is now a finding, not an unmeasured gap.** The two app-mode
+  LLM10 probes ask for explicitly finite output (repeat a marker N times; enumerate `1..250`), so a healthy
+  app answers either in one short reply. An app that instead burns the entire `--app-timeout` budget on one
+  was recorded merely *inconclusive* — which under-reported precisely the apps that consume the most. Such a
+  timeout is now scored as unbounded consumption, but only against the evidence that separates it from a
+  slow app: the new `TargetResponsiveness` record (shared by every probe of a scan) must show at least three
+  other probes completing inside the same budget with a **median** latency under half of it. Fail any part of
+  that — a uniformly slow target, too few completed probes, an unquantified budget, or any other category's
+  probe timing out — and the outcome stays inconclusive exactly as before. The finding quotes the
+  differential it relied on. Every `ProbeOutcome` now also carries `elapsed_seconds`. (2026-07-28)
 - **Run-level inconclusive-probe count in the SARIF and HTML report.** A probe whose `app:<url>` target
   exceeds `--app-timeout` is recorded *inconclusive* (errored) — it is not a finding, so it never appears in
   the report's results, and previously the only trace was a pytest warning at scan time. The run now carries

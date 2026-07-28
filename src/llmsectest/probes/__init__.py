@@ -59,7 +59,7 @@ from .redteam import (
     measure_false_refusal,
     redteam_cases,
 )
-from .runner import run_probe
+from .runner import TargetResponsiveness, run_probe
 from .supplychain import (
     Dependency,
     SupplyChainFinding,
@@ -84,6 +84,7 @@ __all__ = [
     "ProbeOutcome",
     "RedTeamBehavior",
     "SupplyChainFinding",
+    "TargetResponsiveness",
     "app_cases",
     "app_coverage",
     "app_name_from_endpoint",

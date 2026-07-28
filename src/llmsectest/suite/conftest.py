@@ -13,7 +13,7 @@ import pytest
 
 from llmsectest import envvars
 from llmsectest.probes import resolve_target
-from llmsectest.probes.runner import run_probe
+from llmsectest.probes.runner import TargetResponsiveness, run_probe
 
 
 def _target_spec() -> str:
@@ -43,8 +43,19 @@ def target_adapter():
     return resolve_target(_target_spec(), app_timeout=envvars.app_timeout_from_env())
 
 
+@pytest.fixture(scope="session")
+def target_responsiveness():
+    """One latency record shared by every probe of the scan against this target.
+
+    A per-request timeout is ambiguous on its own; what disambiguates it is how the
+    *same* target answered everything else. Session scope so one record spans every
+    category of the scan rather than restarting per test.
+    """
+    return TargetResponsiveness()
+
+
 @pytest.fixture
-def probe(target_adapter, record_property):
+def probe(target_adapter, target_responsiveness, record_property):
     """Return a callable that runs a probe case against the resolved target.
 
     When the case is a finding, record a **clean finding message** — the attack
@@ -54,7 +65,7 @@ def probe(target_adapter, record_property):
     """
 
     def _run(case):
-        outcome = run_probe(target_adapter, case)
+        outcome = run_probe(target_adapter, case, target_responsiveness)
         # Record the provider's real per-probe output-token cost (the concrete
         # denial-of-wallet figure) on every probe that reports usage — pass or
         # fail — so the report carries the cost even when the probe found nothing
