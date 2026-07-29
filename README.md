@@ -5,9 +5,22 @@
 [![license: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 A pytest-native security testing framework for LLM applications, mapped to the
-[OWASP LLM Top 10](https://owasp.org/www-project-top-10-for-large-language-model-applications/).
-Write security tests as ordinary pytest tests; get SARIF / HTML / JSON / Markdown
-reports with CVSS v4.0- and risk-scored findings.
+[OWASP LLM Top 10 (2025)](https://owasp.org/www-project-top-10-for-large-language-model-applications/).
+
+**Why:** putting a language model in your app adds failure modes your existing test suite
+cannot see. A user can talk the model into ignoring its instructions, into repeating a secret
+it was told to keep, or into acting on an instruction hidden in a document it retrieved.
+**What:** LLMSecTest attacks your running app the way an adversary would and reports what got
+through. **How:** point it at an endpoint and read the report.
+
+```bash
+# pre-alpha: install from source, not yet on PyPI
+pip install "git+https://github.com/wehnsdaefflae/llmsectest"
+llmsectest --target app:http://localhost:8000/chat --app-secret "your-canary"
+```
+
+Write your own checks as ordinary pytest tests; get SARIF / HTML / JSON / Markdown reports
+with CVSS v4.0- and risk-scored findings.
 
 📖 **Documentation: [docs.llmsec.dev](https://docs.llmsec.dev)** — getting started, testing your
 running app, the OWASP coverage map, CLI and API reference. Build locally with
@@ -29,7 +42,7 @@ See [Funding](#funding).
 |---|---|---|
 | LLM01 prompt injection | marker-injection corpus + a **red-team jailbreak set** ([JailbreakBench](https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors) / AdvBench, `--redteam-set`) scored by a refusal oracle | black-box |
 | LLM02 sensitive information disclosure | attacks for a named secret the app holds | black-box |
-| LLM03 supply chain | dependency-manifest scanner (`--repo`), optional OSV.dev CVE lookup, CycloneDX SBOM | white-box |
+| LLM03 supply chain | reads your dependency manifests (`requirements*.txt`, `pyproject.toml` incl. Poetry, `Pipfile`) via `--repo`, flags unpinned deps and insecure package indexes, optionally checks exact pins against OSV.dev for known CVEs, emits a CycloneDX SBOM | white-box |
 | LLM04 data and model poisoning | serialized-model scanner over the pickle opcode stream (`--model-scan`), never unpickling | white-box |
 | LLM05 improper output handling | asks the app to emit active payloads; a raw echo is the finding | black-box |
 | LLM06 excessive agency | attempts to invoke privileged actions the dev names | black-box |

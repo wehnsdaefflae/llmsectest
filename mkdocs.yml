@@ -55,6 +55,7 @@ nav:
       - Test your running app: guides/target-app.md
       - Author your own tests: guides/authoring.md
       - CI/CD integration: guides/ci.md
+      - Development: guides/development.md
   - OWASP LLM Top 10:
       - Coverage map: owasp/index.md
       - LLM01 Prompt Injection: owasp/llm01.md

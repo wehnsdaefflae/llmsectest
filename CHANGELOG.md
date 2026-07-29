@@ -10,6 +10,33 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
 ## [Unreleased]
 
 ### Added
+- **Test coverage is measured, gated in CI, and documented — and the first measurement found real gaps.**
+  The project shipped a coverage dependency but had never once measured itself. It does now:
+  `[tool.coverage.run]`/`[tool.coverage.report]` config (branch coverage, a `fail_under` floor that
+  ratchets upward), a CI step on every push, and a new
+  [Development guide](https://docs.llmsec.dev/guides/development/).
+  The measurement immediately surfaced that three of the four advertised report formats had **no unit
+  test at all** — HTML at 13% line coverage, Markdown 14%, the JSON summary 22%, and `ReportManager`,
+  which writes all four, at 19%. That mattered because `ReportManager` deliberately isolates each format
+  behind its own `except Exception`, so a broken generator produces no file *and no error*. 20 new tests
+  now cover the content contract of each format, the HTML escaping of attacker-influenced model output,
+  and the isolation behaviour itself. Coverage 72% → 78% (402 tests). (2026-07-29)
+- **`--repo` LLM03 documentation now names the manifests it actually reads** (`requirements*.txt`,
+  `pyproject.toml` including Poetry, `Pipfile`) instead of describing the category abstractly, and the
+  README and website state that the category numbering is the **2025** edition. Prompted by a
+  supply-chain security engineer who read an older edition's numbering, concluded LLM03 was about model
+  provenance rather than dependency pins, and ruled himself out as a user of exactly the feature he
+  specialises in. (2026-07-29)
+
+### Changed
+- **`pytest-cov` replaced by `coverage` in the `dev` extra, and the dev toolchain pinned.** `pytest --cov`
+  cannot measure this package correctly: `llmsectest` registers a `pytest11` entry point, so pytest
+  imports it while loading plugins — before pytest-cov starts — and every module-level statement on that
+  path is recorded as never executed. Measured on the same green suite: 48% via `pytest --cov` versus 72%
+  via `coverage run -m pytest`. Shipping the plugin would only invite the wrong number. `mypy` and the
+  coverage tool are now pinned to major ranges for the same reason `ruff` was on 2026-07-27 — and doing so
+  cleared the last two **high**-severity unpinned-dependency findings our own LLM03 scanner reports against
+  this repository (8 findings → 6, high 2 → 0). (2026-07-29)
 - **A bounded LLM10 probe that never returns is now a finding, not an unmeasured gap.** The two app-mode
   LLM10 probes ask for explicitly finite output (repeat a marker N times; enumerate `1..250`), so a healthy
   app answers either in one short reply. An app that instead burns the entire `--app-timeout` budget on one

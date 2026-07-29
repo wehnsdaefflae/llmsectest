@@ -25,7 +25,12 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - run: pip install -e ".[dev,cvss]"
       - run: ruff check src tests
-      - run: pytest -q
+      # `coverage run -m pytest`, not `pytest --cov`: this package is a pytest11
+      # plugin, so pytest imports it before pytest-cov starts measuring and the
+      # --cov number comes out ~24 points low. See the note in pyproject.toml.
+      # The floor lives in [tool.coverage.report] fail_under.
+      - run: coverage run -m pytest -q
+      - run: coverage report
 
   # The tool must actually run, not just pass unit tests: scan the offline
   # hardened demo (exit 0, no findings) and validate the SARIF it emits.

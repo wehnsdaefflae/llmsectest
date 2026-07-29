@@ -31,7 +31,23 @@ huggingface = ["huggingface_hub>=0.25"]
 # dependency, never vendored into this MIT tree.
 cvss = ["cvss>=3.0"]
 all = ["openai>=1.0", "anthropic>=0.39", "huggingface_hub>=0.25", "cvss>=3.0"]
-dev = ["pytest>=7.4.0", "pytest-cov", "ruff>=0.16,<0.17", "mypy", "cvss>=3.0"]
+# The dev toolchain is pinned to major ranges on purpose. An unpinned linter or
+# coverage tool redefines what "clean" and "covered" mean between releases without a
+# commit of ours (ruff 0.16.0 did exactly that on 2026-07-24), and our own LLM03
+# scanner flags every unpinned dependency here as a finding against this repo.
+#
+# `coverage` replaces `pytest-cov` here (2026-07-29). pytest-cov's only entry point is
+# `pytest --cov`, which cannot measure this package correctly — pytest imports our
+# pytest11 plugin before pytest-cov starts, so the number lands ~24 points low. Shipping
+# the plugin would only invite that wrong measurement; `coverage run -m pytest` is both
+# correct and one dependency lighter.
+dev = [
+    "pytest>=7.4.0",
+    "coverage>=7.6,<8",
+    "ruff>=0.16,<0.17",
+    "mypy>=1.11,<2",
+    "cvss>=3.0",
+]
 # mkdocs is pinned <2: the upstream "MkDocs 2.0" is a backward-incompatible, currently
 # unlicensed rewrite (TOML config, plugin/theme system removed, no migration path); the
 # maintained line is Material for MkDocs on mkdocs 1.x. Pinning keeps `mkdocs gh-deploy`
@@ -54,6 +70,41 @@ packages = ["src/llmsectest"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+# Measure coverage with `coverage run -m pytest`, NOT `pytest --cov`.
+#
+# This package registers a pytest11 entry point, so pytest imports `llmsectest`
+# while loading plugins — before pytest-cov starts measuring. Every module reached
+# on that path (the package __init__, plugin.py, and their imports) then has its
+# module-level statements recorded as never executed. Measured 2026-07-29: the same
+# green suite reports 48% via `pytest --cov` and 72% via `coverage run -m pytest`.
+# The lower number is an artifact of import order, not untested code, so the
+# canonical invocation is the one below, which starts coverage before pytest loads.
+#
+#   coverage run -m pytest && coverage report
+#
+[tool.coverage.run]
+source = ["llmsectest"]
+branch = true
+
+[tool.coverage.report]
+# The floor ratchets: raise it when a run legitimately lifts coverage, never lower it
+# to make a red build green. It exists to stop a slow slide, not to chase 100%.
+fail_under = 75
+show_missing = true
+exclude_also = [
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "@(abc\\.)?abstractmethod",
+]
+omit = [
+    # The packaged probe suite only executes against a live target (a model or an
+    # app endpoint), so a unit run can never enter it — it is exercised end-to-end
+    # by the integration cohort instead. Counting it here would measure how much of
+    # the product needs a GPU, not how much of it is untested.
+    "*/llmsectest/suite/*",
+]
 
 [tool.ruff]
 line-length = 100
