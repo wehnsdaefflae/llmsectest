@@ -9,6 +9,29 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
 
 ## [Unreleased]
 
+### Fixed
+- **`--app-timeout` now bounds the whole request, so a *streaming* app can no longer run past it.** The
+  budget was handed to `urllib`, whose `timeout` bounds a single socket **operation**, not the request. An
+  app that stalls tripped it; an app that keeps trickling output never did. Measured against a server
+  emitting five bytes a second, a client with `timeout=3` was still reading after twelve. Since a streaming
+  LLM endpoint that never terminates is the most realistic unbounded-consumption target there is, the one
+  case the budget exists for was the one it missed, and such a target would run until some outer limit
+  killed the scan and discarded every other probe's result. The budget is now a real **wall-clock
+  deadline**: the response body is read incrementally, the remaining time is re-checked before every read,
+  and the socket's own timeout is tightened to the time actually left so a target that goes quiet mid-body
+  cannot claim a second full budget on top of what it has already spent. The buffered body is also capped at
+  32 MiB, because a tool that reports unbounded consumption must not be unbounded itself: a fast stream moves
+  a lot of data even inside a short budget, and hitting that ceiling is reported as the same finding as
+  running out of clock. (2026-07-30)
+
+### Changed
+- **A scored LLM10 timeout now says how much output the app produced while failing to terminate**, e.g.
+  *"…having produced 412308 byte(s) of output without terminating…"*. An app that goes quiet and an app
+  that streams forever both exceed the budget, but only the second is measured resource consumption, and a
+  report that cannot tell them apart cannot say how serious the finding is. `AdapterTimeoutError` carries
+  the byte count (`bytes_received`); an app that sent nothing is reported as such, and an adapter that
+  cannot measure the volume stays silent rather than implying a number. (2026-07-30)
+
 ### Added
 - **Test coverage is measured, gated in CI, and documented — and the first measurement found real gaps.**
   The project shipped a coverage dependency but had never once measured itself. It does now:

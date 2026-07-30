@@ -2,6 +2,8 @@
 system-prompt persona proxy. Both let LLMSecTest test an *application*, not a
 bare model."""
 
+import json
+
 import pytest
 
 from llmsectest.adapters.app_endpoint import AppEndpointAdapter, _extract
@@ -112,6 +114,228 @@ def test_resolve_app_target_honors_app_timeout():
     assert resolve_target("app:http://x/chat", app_timeout=7).timeout == 7
     # unset falls back to the adapter's own default (not overridden to None)
     assert resolve_target("app:http://x/chat").timeout == 120.0
+
+
+# --- the budget is a wall-clock deadline, not a per-socket-operation timeout ---
+#
+# A socket timeout only fires on *inactivity*, so an app that keeps trickling output
+# never trips it and runs unbounded (measured before the fix: a client with timeout=3
+# was still reading a dripped body after 12 s). These tests drive a real localhost
+# server, because the defect lived entirely in the socket semantics — a stubbed
+# response object cannot reproduce it.
+
+def _serve(handler_body, host="127.0.0.1"):
+    """Run a one-route JSON POST endpoint whose body is written by ``handler_body``.
+
+    Threaded with daemon threads so a handler that is deliberately still sleeping (the
+    stall cases) cannot hold up ``shutdown()`` and stretch the test to the app's own
+    fake latency instead of the budget under test.
+    """
+    import http.server
+    import threading
+
+    class _Handler(http.server.BaseHTTPRequestHandler):
+        protocol_version = "HTTP/1.0"
+
+        def do_POST(self):
+            self.rfile.read(int(self.headers.get("Content-Length", 0)))
+            handler_body(self)
+
+        def log_message(self, *_a):
+            pass
+
+    server = http.server.ThreadingHTTPServer((host, 0), _Handler)
+    server.daemon_threads = True
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    return server, f"http://{host}:{server.server_address[1]}/chat"
+
+
+def _drip(payload: bytes, chunk: int, pause: float):
+    """A handler that streams ``payload`` ``chunk`` bytes at a time, pausing between
+    writes — slowly enough that finishing it would take far longer than the budget."""
+    import time as _time
+
+    def _write(handler):
+        handler.send_response(200)
+        handler.send_header("Content-Type", "application/json")
+        handler.send_header("Content-Length", str(len(payload)))
+        handler.end_headers()
+        for i in range(0, len(payload), chunk):
+            try:
+                handler.wfile.write(payload[i:i + chunk])
+                handler.wfile.flush()
+            except OSError:  # the client hung up at its deadline — expected
+                return
+            _time.sleep(pause)
+
+    return _write
+
+
+def _stall_after(prefix: bytes, silence: float, drip_for: float = 0.0):
+    """A handler that emits ``prefix`` (optionally spread over ``drip_for`` seconds) and
+    then goes silent for ``silence`` seconds without closing the connection."""
+    import time as _time
+
+    def _write(handler):
+        handler.send_response(200)
+        handler.send_header("Content-Type", "application/json")
+        handler.send_header("Content-Length", str(len(prefix) + 64))
+        handler.end_headers()
+        chunks = max(1, len(prefix) // 20)
+        pause = (drip_for / chunks) if drip_for else 0.0
+        for i in range(0, len(prefix), 20):
+            try:
+                handler.wfile.write(prefix[i:i + 20])
+                handler.wfile.flush()
+            except OSError:
+                return
+            _time.sleep(pause)
+        _time.sleep(silence)
+
+    return _write
+
+
+def test_a_dripping_app_trips_the_wall_clock_budget():
+    import time as _time
+
+    from llmsectest.adapters.base import AdapterTimeoutError
+
+    payload = json.dumps({"reply": "x" * 4000}).encode()
+    # 20 bytes per 50 ms would need ~10 s to finish: far past the 1 s budget, while
+    # never pausing long enough for a socket timeout to fire.
+    server, url = _serve(_drip(payload, chunk=20, pause=0.05))
+    try:
+        adapter = AppEndpointAdapter(endpoint=url, timeout=1.0)
+        started = _time.monotonic()
+        with pytest.raises(AdapterTimeoutError) as exc:
+            adapter.complete(_make_request())
+        elapsed = _time.monotonic() - started
+    finally:
+        server.shutdown()
+        server.server_close()
+    assert exc.value.timeout == 1.0
+    # cut at the deadline, not at some multiple of it
+    assert elapsed < 3.0, f"budget of 1s was not enforced (took {elapsed:.1f}s)"
+    # and the finding is quantified: the app *produced* output and did not terminate
+    assert exc.value.bytes_received and exc.value.bytes_received < len(payload)
+    assert "byte(s) of response in that time" in str(exc.value)
+
+
+def test_a_chunked_but_prompt_app_still_completes():
+    # Positive control for the incremental read: a body delivered in several writes
+    # must be reassembled intact and must not be mistaken for a runaway app.
+    payload = json.dumps({"reply": "assembled from many chunks"}).encode()
+    server, url = _serve(_drip(payload, chunk=7, pause=0.0))
+    try:
+        adapter = AppEndpointAdapter(endpoint=url, timeout=10.0)
+        response = adapter.complete(_make_request())
+    finally:
+        server.shutdown()
+        server.server_close()
+    assert response.text == "assembled from many chunks"
+
+
+def test_a_chunked_transfer_encoded_reply_is_reassembled():
+    """No Content-Length, body delivered as HTTP chunks — the mode a streaming app is
+    most likely to use, and therefore the one the new incremental read must not break."""
+    payload = json.dumps({"reply": "sent as http chunks"}).encode()
+
+    def _chunked(handler):
+        handler.protocol_version = "HTTP/1.1"
+        handler.send_response(200)
+        handler.send_header("Content-Type", "application/json")
+        handler.send_header("Transfer-Encoding", "chunked")
+        handler.end_headers()
+        for i in range(0, len(payload), 9):
+            part = payload[i:i + 9]
+            handler.wfile.write(f"{len(part):X}\r\n".encode() + part + b"\r\n")
+        handler.wfile.write(b"0\r\n\r\n")
+        handler.wfile.flush()
+
+    server, url = _serve(_chunked)
+    try:
+        response = AppEndpointAdapter(endpoint=url, timeout=10.0).complete(_make_request())
+    finally:
+        server.shutdown()
+        server.server_close()
+    assert response.text == "sent as http chunks"
+
+
+def test_a_stalling_app_is_reported_as_having_produced_nothing():
+    from llmsectest.adapters.base import AdapterTimeoutError
+
+    server, url = _serve(_stall_after(b"", 3.0))
+    try:
+        adapter = AppEndpointAdapter(endpoint=url, timeout=0.5)
+        with pytest.raises(AdapterTimeoutError) as exc:
+            adapter.complete(_make_request())
+    finally:
+        server.shutdown()
+        server.server_close()
+    # A stall and a drip are both timeouts, but only one is measured consumption.
+    assert exc.value.bytes_received == 0
+    assert "no response body at all" in str(exc.value)
+
+
+def test_a_drip_that_turns_into_a_stall_does_not_win_a_second_full_budget():
+    """The socket timeout is re-tightened to the time actually left. Without that, an app
+    could trickle output for most of the budget and *then* go quiet, and the read already
+    in flight would be allowed a fresh full timeout on top — spending nearly twice what
+    the caller asked for, per request, across a whole cohort."""
+    import time as _time
+
+    from llmsectest.adapters.base import AdapterTimeoutError
+
+    budget = 1.5
+    # Emits output for the first half of the budget, then goes silent well past it.
+    server, url = _serve(_stall_after(b'{"reply": "' + b"x" * 400, 5.0, drip_for=budget / 2))
+    try:
+        adapter = AppEndpointAdapter(endpoint=url, timeout=budget)
+        started = _time.monotonic()
+        with pytest.raises(AdapterTimeoutError) as exc:
+            adapter.complete(_make_request())
+        elapsed = _time.monotonic() - started
+    finally:
+        server.shutdown()
+        server.server_close()
+    assert exc.value.bytes_received  # it did produce output before going quiet
+    # Untightened, the read in flight at the deadline would run to budget + budget.
+    assert elapsed < budget * 1.3, f"the stall got a fresh budget (took {elapsed:.2f}s)"
+
+
+def test_a_flood_is_cut_off_by_volume_before_it_exhausts_our_own_memory(monkeypatch):
+    """A tool that reports unbounded consumption must not be unbounded itself. A fast
+    stream can move a lot of data inside even a short budget, so the buffered body has a
+    ceiling; hitting it is reported as the same finding as running out of clock."""
+    from llmsectest.adapters import app_endpoint
+    from llmsectest.adapters.base import AdapterTimeoutError
+
+    # A tiny ceiling stands in for the real 32 MiB one: the behaviour under test is the
+    # cut-off, and a genuine 32 MiB flood would make the test slow for no extra evidence.
+    monkeypatch.setattr(app_endpoint, "_MAX_BODY_BYTES", 4096)
+    payload = json.dumps({"reply": "y" * 60_000}).encode()
+    server, url = _serve(_drip(payload, chunk=1024, pause=0.0))
+    try:
+        # A budget far larger than the run needs, so only the volume cap can fire.
+        adapter = AppEndpointAdapter(endpoint=url, timeout=30.0)
+        with pytest.raises(AdapterTimeoutError) as exc:
+            adapter.complete(_make_request())
+    finally:
+        server.shutdown()
+        server.server_close()
+    assert exc.value.bytes_received and exc.value.bytes_received > 4096
+    assert "had still not terminated" in str(exc.value)
+    assert "protect this process" in str(exc.value)
+
+
+def test_timeout_before_the_body_reports_no_byte_count():
+    # The connect-phase path cannot know what the app would have produced, so it must
+    # not imply a measurement it does not have.
+    adapter = AppEndpointAdapter(endpoint="http://localhost:9/chat", timeout=4)
+    err = adapter._timeout_error()
+    assert err.bytes_received is None
+    assert "byte(s)" not in str(err)
+    assert "did not bound its per-request work" in str(err)
 
 
 # --- persona proxy: test a real app's system prompt against a (mock) model ---

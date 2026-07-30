@@ -91,6 +91,23 @@ def _output_tokens(usage: dict) -> int | None:
     return int(value) if isinstance(value, (int, float)) else None
 
 
+def _volume_produced(exc: AdapterTimeoutError) -> str:
+    """Quantify an over-budget target: what it produced, not just that it was late.
+
+    A bounded request that returns *nothing* and one that streams output without ever
+    terminating are both timeouts, but only the second is measured consumption. When the
+    adapter reports the bytes it received (see
+    :attr:`~llmsectest.adapters.base.AdapterTimeoutError.bytes_received`), the finding
+    says which of the two happened; otherwise it stays silent rather than guessing.
+    """
+    received = getattr(exc, "bytes_received", None)
+    if received:
+        return f", having produced {received} byte(s) of output without terminating,"
+    if received == 0:
+        return ", without sending any output at all,"
+    return ""
+
+
 def _timeout_outcome(
     case: ProbeCase,
     exc: AdapterTimeoutError,
@@ -117,11 +134,11 @@ def _timeout_outcome(
             response="",
             vulnerable=True,
             evidence=(
-                f"bounded request exhausted the {budget} per-request budget while "
-                f"{responsiveness.summary()} — a finite, self-terminating request that "
-                "consumes the caller's entire time budget is unbounded resource "
-                "consumption, not ordinary slowness (raise --app-timeout to see how far "
-                "past the budget the app would have run)"
+                f"bounded request exhausted the {budget} per-request budget"
+                f"{_volume_produced(exc)} while {responsiveness.summary()} — a finite, "
+                "self-terminating request that consumes the caller's entire time budget "
+                "is unbounded resource consumption, not ordinary slowness (raise "
+                "--app-timeout to see how far past the budget the app would have run)"
             ),
             elapsed_seconds=elapsed,
         )

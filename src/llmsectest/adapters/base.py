@@ -87,11 +87,24 @@ class AdapterTimeoutError(AdapterError):
     scan) — one endpoint that will not stop generating on a single request must not
     take down every other probe's result. ``timeout`` is the budget (seconds) that
     was exceeded.
+
+    ``bytes_received`` is how much of the response body had arrived when the budget
+    ran out, when the adapter can tell. It distinguishes the two shapes of an
+    over-budget target, which matters for OWASP LLM10: ``0`` is a target that went
+    quiet (a *stall*), while a large count is a target that kept producing output
+    without terminating (a *drip*) — the second is measured resource consumption,
+    not merely an absent answer. ``None`` means the adapter cannot report it.
     """
 
-    def __init__(self, message: str, timeout: float | None = None):
+    def __init__(
+        self,
+        message: str,
+        timeout: float | None = None,
+        bytes_received: int | None = None,
+    ):
         super().__init__(message)
         self.timeout = timeout
+        self.bytes_received = bytes_received
 
 
 class LLMAdapter(abc.ABC):

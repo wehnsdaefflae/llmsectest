@@ -69,13 +69,33 @@ A timeout is only read that way when the same app has **demonstrated** it answer
   signal; the headroom, so an app that habitually finishes just under the wire is never called responsive).
 
 Fail either test — a uniformly slow app, a scan too short to establish a pattern, an unquantified budget —
-and the probe stays **inconclusive**, exactly as before. The finding quotes the evidence it relied on:
+and the probe stays **inconclusive**, exactly as before. The finding quotes the evidence it relied on, and
+says how much output the app produced while failing to terminate:
 
 ```text
-bounded request exhausted the 90s per-request budget while 21 other probe(s) completed inside the same
-budget (median 6.4s, slowest 38.1s) — a finite, self-terminating request that consumes the caller's entire
-time budget is unbounded resource consumption, not ordinary slowness
+bounded request exhausted the 90s per-request budget, having produced 412308 byte(s) of output without
+terminating, while 21 other probe(s) completed inside the same budget (median 6.4s, slowest 38.1s) — a
+finite, self-terminating request that consumes the caller's entire time budget is unbounded resource
+consumption, not ordinary slowness
 ```
+
+That volume is the difference between an app that went **quiet** and one that kept **producing**. Both
+exceed the budget; only the second is measured consumption, and a report that cannot tell them apart cannot
+say how bad the finding is. An app that sent nothing at all is reported as such, and a target whose adapter
+cannot measure the volume says nothing rather than guessing.
+
+!!! note "The budget is a wall-clock deadline, not a socket timeout"
+
+    This distinction decides whether a streaming app is caught at all. Handing the budget to the HTTP
+    client bounds a single socket *operation*, so an app that keeps trickling bytes never trips it.
+    Measured against a server emitting five bytes a second, a client with a 3-second timeout was still
+    reading after twelve. Since that describes the most realistic unbounded-consumption target there is,
+    `--app-timeout` is enforced as a deadline over the whole request: the body is read incrementally, the
+    remaining time is re-checked at every chunk, and the socket's own timeout is tightened to what is
+    actually left so a target that goes quiet mid-answer cannot claim a second full budget. The buffered body
+    is capped at 32 MiB as well, since a tool that reports unbounded consumption must not be unbounded
+    itself; a fast stream moves a lot of data even inside a short budget, and hitting the ceiling is reported
+    as the same finding as running out of clock.
 
 Only the two bounded LLM10 app probes opt into this. Every other category's timeout stays inconclusive: a
 prompt-injection probe that times out tells you nothing about injection.

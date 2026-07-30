@@ -320,6 +320,38 @@ def test_a_timeout_stays_inconclusive_without_the_full_differential(record, case
     assert "inconclusive" in outcome.evidence
 
 
+def test_a_scored_timeout_quantifies_what_the_app_produced():
+    """A bounded request the app answers with *nothing* and one it answers with an endless
+    stream are both timeouts. When the adapter measured the volume, the finding says which
+    happened — the difference between "did not answer" and "consumed resources"."""
+    from llmsectest.adapters.base import AdapterTimeoutError
+
+    dripped = run_probe(
+        _RaisingAdapter(AdapterTimeoutError("no reply in 90s", timeout=90, bytes_received=41231)),
+        _timeout_case(),
+        _responsive(),
+    )
+    assert dripped.vulnerable is True
+    assert "41231 byte(s) of output without terminating" in dripped.evidence
+
+    stalled = run_probe(
+        _RaisingAdapter(AdapterTimeoutError("no reply in 90s", timeout=90, bytes_received=0)),
+        _timeout_case(),
+        _responsive(),
+    )
+    assert stalled.vulnerable is True
+    assert "without sending any output at all" in stalled.evidence
+
+    # An adapter that cannot measure the volume must not have one invented for it.
+    unmeasured = run_probe(
+        _RaisingAdapter(AdapterTimeoutError("no reply in 90s", timeout=90)),
+        _timeout_case(),
+        _responsive(),
+    )
+    assert unmeasured.vulnerable is True
+    assert "byte(s)" not in unmeasured.evidence
+
+
 def test_run_probe_omitting_the_responsiveness_record_never_scores_a_timeout():
     """The record is optional: a caller that passes none gets the historical behaviour
     (every timeout inconclusive), so no existing integration changes meaning silently."""
