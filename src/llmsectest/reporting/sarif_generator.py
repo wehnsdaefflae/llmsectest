@@ -19,6 +19,7 @@ from .owasp_metadata import (
     get_owasp_markers_from_test,
     get_security_tags,
 )
+from .statistics import attack_tally
 
 
 def _as_int(value: Any) -> int | None:
@@ -171,6 +172,13 @@ class SARIFGenerator:
                 "count": len(inconclusive),
                 "reasons": inconclusive[:20],
             }
+
+        # Run-level "what did the target withstand" tally — the positive half of the
+        # run, so an empty findings list is evidence rather than silence. Rationale and
+        # counting rules in :func:`~llmsectest.reporting.statistics.attack_tally`.
+        withstood = attack_tally(results)
+        if withstood:
+            properties["attacks_withstood"] = withstood
 
         # Add properties to run if any exist
         if properties:

@@ -9,7 +9,12 @@ from typing import Any
 from .constants import SEVERITY_ORDER
 from .models import TestResult
 from .owasp_metadata import get_owasp_category
-from .statistics import calculate_statistics, get_coverage_gaps, get_test_severity
+from .statistics import (
+    attack_tally,
+    calculate_statistics,
+    get_coverage_gaps,
+    get_test_severity,
+)
 
 
 # ANSI color codes for terminal output
@@ -107,6 +112,20 @@ def generate_console_summary(
     lines.append(f"    Skipped: {stats['skipped']}")
     lines.append(f"    Rate:    {stats['pass_rate']:.1f}%")
     lines.append("")
+
+    # Attacks actually delivered to the target, as opposed to tests executed (which
+    # also counts coverage assertions and static scanners). This is the line a
+    # defender reads: a clean run says how much it withstood, not merely that
+    # nothing was found.
+    attacks = attack_tally(results)
+    if attacks:
+        lines.append(f"  {c.CYAN}Attacks Delivered:{c.RESET}")
+        lines.append(f"    Total:     {attacks['attempted']}")
+        lines.append(f"    Withstood: {c.GREEN}{attacks['withstood']}{c.RESET}")
+        lines.append(f"    Findings:  {c.RED if attacks['findings'] else ''}{attacks['findings']}{c.RESET}")
+        if attacks["inconclusive"]:
+            lines.append(f"    {c.YELLOW}Inconclusive: {attacks['inconclusive']}{c.RESET}")
+        lines.append("")
 
     # Baseline comparison
     if baseline_analysis:

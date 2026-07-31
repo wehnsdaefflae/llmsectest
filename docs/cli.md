@@ -41,6 +41,12 @@ llmsectest --sbom [<out.json>] --repo <path>
 | `--report-dir=<dir>` | Where to write reports (default: `results/`). |
 | `--sarif-output=<path>` | Explicit SARIF path (otherwise `results/<target-slug>.sarif`). |
 
+Every report also carries a run-level **`attacks_withstood`** tally: how many probes were
+actually delivered to the target and how many it held off, broken down by OWASP category,
+so a clean scan is evidence rather than an empty page. Only delivered probes count (a
+coverage assertion or a static scanner never inflates it) and an inconclusive probe is
+neither withstood nor a finding. See [Red-team your defense](guides/red-team-your-defense.md).
+
 ## Gating, baselines and policy
 
 | Flag | Description |

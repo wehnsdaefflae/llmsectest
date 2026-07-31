@@ -13,13 +13,14 @@ from .models import TestResult
 from .risk_scorer import RiskScore, RiskScoringEngine
 from .sarif_html import render_sarif_file, render_sarif_html
 from .sbom import build_cyclonedx, render_sbom_json, write_sbom
-from .statistics import calculate_statistics, get_coverage_gaps
+from .statistics import attack_tally, calculate_statistics, get_coverage_gaps
 
 __all__ = [
     "CVSSScore",
     "RiskScore",
     "RiskScoringEngine",
     "TestResult",
+    "attack_tally",
     "build_cyclonedx",
     "calculate_statistics",
     "cvss_for_category",

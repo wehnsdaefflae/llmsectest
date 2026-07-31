@@ -8,7 +8,12 @@ from .compliance_mapper import get_compliance_summary, get_frameworks_covered
 from .constants import RISK_LEVEL_EMOJI, SEVERITY_COLORS_HEX, SEVERITY_ORDER
 from .models import TestResult
 from .owasp_metadata import get_owasp_category, get_owasp_markers_from_test
-from .statistics import calculate_statistics, get_owasp_markers, get_test_severity
+from .statistics import (
+    attack_tally,
+    calculate_statistics,
+    get_owasp_markers,
+    get_test_severity,
+)
 
 # CSS is loaded from external file for maintainability
 _CSS_PATH = Path(__file__).parent / "static" / "report.css"
@@ -44,6 +49,7 @@ class HTMLReportGenerator:
             HTML formatted report
         """
         stats = calculate_statistics(results)
+        attacks = attack_tally(results)
 
         # Generate baseline section HTML if analysis available
         baseline_section = ""
@@ -93,7 +99,7 @@ class HTMLReportGenerator:
         {risk_section}
         {policy_section}
         {compliance_section}
-        {self._generate_summary_section(stats)}
+        {self._generate_summary_section(stats, attacks)}
         {self._generate_severity_section(stats)}
         {self._generate_owasp_section(stats, results)}
         {self._generate_failed_tests_section(results)}
@@ -108,12 +114,25 @@ class HTMLReportGenerator:
 
         return html
 
-    def _generate_summary_section(self, stats: dict) -> str:
-        """Generate summary statistics section."""
+    def _generate_summary_section(self, stats: dict, attacks: dict | None = None) -> str:
+        """Generate summary statistics section.
+
+        ``attacks`` is the delivered-attack tally, when the run delivered any. It sits
+        beside the test counts rather than replacing them because they answer different
+        questions: how much of the suite ran, versus how much of what was thrown at the
+        target it withstood.
+        """
+        withstood_card = ""
+        if attacks:
+            withstood_card = f"""
+                <div class="stat-card passed">
+                    <div class="stat-value">{attacks["withstood"]}/{attacks["attempted"]}</div>
+                    <div class="stat-label">Attacks Withstood</div>
+                </div>"""
         return f"""
         <section class="summary">
             <h2>Summary</h2>
-            <div class="stats-grid">
+            <div class="stats-grid">{withstood_card}
                 <div class="stat-card total">
                     <div class="stat-value">{stats["total"]}</div>
                     <div class="stat-label">Total Tests</div>

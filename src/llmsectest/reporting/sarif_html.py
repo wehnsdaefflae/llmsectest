@@ -331,6 +331,7 @@ main { max-width:1000px; margin:0 auto; padding:26px 22px 60px; }
 .card .dot { width:11px; height:11px; border-radius:50%; }
 .card .n { font-weight:800; font-size:17px; }
 .card .k { color:var(--muted); text-transform:capitalize; font-size:13px; }
+.withstood .big { color:#1f7a52; }
 .cat-table { width:100%; border-collapse:collapse; margin-top:6px; }
 .cat-table th, .cat-table td { text-align:left; padding:7px 8px; border-bottom:1px solid var(--line); }
 .cat-table th { color:var(--muted); font-weight:600; font-size:12px; text-transform:uppercase;
@@ -371,6 +372,51 @@ h2.cat .cnt { color:var(--muted); font-weight:500; font-size:14px; }
   text-align:center; color:#1f7a52; font-weight:600; }
 footer { max-width:1000px; margin:0 auto; padding:0 22px 40px; color:var(--muted); font-size:12.5px; }
 """
+
+
+def _withstood_section(tally: object) -> str:
+    """Render the run-level "attacks withstood" block, or "" if the run has none.
+
+    The positive half of the report. A defender who has hardened a target reads this
+    first: an empty findings list means something only once you can see how many
+    attacks were actually delivered and held. Inconclusive probes get their own
+    column rather than being folded into either side, because an attack the target
+    never answered is evidence of neither.
+    """
+    if not isinstance(tally, dict) or not tally.get("attempted"):
+        return ""
+    by_cat = tally.get("by_category")
+    rows = ""
+    if isinstance(by_cat, dict):
+        for cat, counts in sorted(by_cat.items(), key=lambda kv: _OWASP_ORDER.get(kv[0], 99)):
+            if not isinstance(counts, dict):
+                continue
+            label = f"{cat} {counts.get('name', '')}".strip()
+            inconclusive = counts.get("inconclusive", 0)
+            rows += (
+                f'<tr><td>{_esc(label)}</td>'
+                f'<td class="num">{_esc(counts.get("attempted", 0))}</td>'
+                f'<td class="num">{_esc(counts.get("withstood", 0))}</td>'
+                f'<td class="num">{_esc(counts.get("findings", 0))}</td>'
+                f'<td class="num">{_esc(inconclusive) if inconclusive else ""}</td></tr>'
+            )
+    table = (
+        '<table class="cat-table"><thead><tr><th>OWASP category</th>'
+        '<th class="num">attacks</th><th class="num">withstood</th>'
+        '<th class="num">findings</th><th class="num">inconclusive</th></tr></thead>'
+        f"<tbody>{rows}</tbody></table>"
+        if rows else ""
+    )
+    # Escaped and defaulted like every other foreign field here: this renderer promises
+    # to display any tool's SARIF, so a missing or non-numeric count must degrade, never
+    # crash and never inject markup.
+    held, sent = tally.get("withstood", 0), tally.get("attempted", 0)
+    return (
+        '<section class="summary withstood">'
+        f'<div class="total"><span class="big">{_esc(held)}</span> of '
+        f'{_esc(sent)} delivered attack{"s" if sent != 1 else ""} withstood</div>'
+        f"{table}</section>"
+    )
 
 
 def render_sarif_html(doc: dict, *, source_name: str | None = None,
@@ -414,7 +460,15 @@ def render_sarif_html(doc: dict, *, source_name: str | None = None,
         if isinstance(inc, dict) and inc.get("count")
         else None
     )
-    meta_bits = [b for b in (tool_str, source_name, generated, cost_bit, inc_bit) if b]
+    # Attacks the target withstood — the positive evidence that turns an empty
+    # findings list from silence into a result.
+    tally = _props(first_run).get("attacks_withstood")
+    held_bit = (
+        f"{tally.get('withstood', 0)}/{tally['attempted']} attacks withstood"
+        if isinstance(tally, dict) and tally.get("attempted")
+        else None
+    )
+    meta_bits = [b for b in (tool_str, source_name, generated, held_bit, cost_bit, inc_bit) if b]
 
     # Group findings by OWASP category, ordered LLM01..LLM10 then Other; within a
     # group, most severe first.
@@ -424,7 +478,14 @@ def render_sarif_html(doc: dict, *, source_name: str | None = None,
 
     body = [_summary(findings)]
     if not findings:
-        body.append('<div class="empty">✓ No findings in this report — the scan was clean.</div>')
+        body.append(
+            '<div class="empty">✓ No findings in this report — '
+            + (f"the target withstood {_esc(tally.get('withstood', 0))} of "
+               f"{_esc(tally['attempted'])} delivered attacks."
+               if held_bit else "the scan was clean.")
+            + "</div>"
+        )
+    body.append(_withstood_section(tally))
     for (cat, name), items in sorted(groups.items(), key=lambda kv: _OWASP_ORDER.get(kv[0][0], 99)):
         items.sort(key=lambda rr: _SEVERITY.get(_severity_of(*rr), (None, 0))[1], reverse=True)
         label = f"{cat} {name}".strip()

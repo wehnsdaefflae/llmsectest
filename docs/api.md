@@ -105,6 +105,15 @@ only LLMSecTest's own output.
         - render_sarif_file
         - render_sarif_html
 
+A scan also reports the attacks the target *withstood*, not only those it failed
+(see [Red-team your defense](guides/red-team-your-defense.md)). The tally the
+report carries is computed here, so a caller can build its own gate on it.
+
+::: llmsectest.reporting.statistics
+    options:
+      members:
+        - attack_tally
+
 ## SBOM export
 
 Emit a [CycloneDX](https://cyclonedx.org) 1.6 SBOM of a project's declared

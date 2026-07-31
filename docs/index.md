@@ -42,7 +42,8 @@ target — run `llmsectest --check` to see the live map.
 | LLM10 | Unbounded Consumption | **black-box** — flood / output amplification |
 
 → **[Getting started](getting-started.md)** · **[Test your running app](guides/target-app.md)** ·
-**[OWASP coverage](owasp/index.md)** · **[API reference](api.md)**
+**[Red-team your defense](guides/red-team-your-defense.md)** · **[OWASP coverage](owasp/index.md)** ·
+**[API reference](api.md)**
 
 !!! note "Status"
     Pre-alpha (active grant development). All **10/10** OWASP LLM Top 10 (2025) categories ship today:

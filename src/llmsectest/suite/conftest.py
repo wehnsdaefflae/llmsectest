@@ -66,6 +66,10 @@ def probe(target_adapter, target_responsiveness, record_property):
 
     def _run(case):
         outcome = run_probe(target_adapter, case, target_responsiveness)
+        # Mark this result as a real attack that was actually delivered to the target.
+        # Only the probe path records it, so the run-level tally never counts a
+        # coverage assertion or a static scanner as an attack the target withstood.
+        record_property("llmsec_probe", case.owasp)
         # Record the provider's real per-probe output-token cost (the concrete
         # denial-of-wallet figure) on every probe that reports usage — pass or
         # fail — so the report carries the cost even when the probe found nothing

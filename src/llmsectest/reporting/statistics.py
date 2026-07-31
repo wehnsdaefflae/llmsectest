@@ -14,6 +14,56 @@ def get_test_severity(result: TestResult) -> str:
     return "medium"
 
 
+def attack_tally(results: list[TestResult]) -> dict | None:
+    """Tally the attacks actually delivered to the target: withstood / found / open.
+
+    The positive half of a scan. Without it an empty findings list is silence — the
+    report of a well-defended target is byte-for-byte as empty as the report of a
+    scan that attacked nothing — so a defender hardening an app cannot tell that the
+    hardening worked, and a *regression* in a defense ("18 withstood" becoming "14")
+    is invisible.
+
+    Counted only over real probes, which mark themselves with ``llmsec_probe`` at
+    delivery, so a coverage assertion or a static scanner is never miscounted as an
+    attack the target survived. An inconclusive probe (the target exceeded
+    ``--app-timeout``) is neither withstood nor a finding and gets its own column:
+    counting an attack the target never answered as one it resisted is the
+    flattering error, and this tool does not make it.
+
+    Returns ``None`` when no probe was delivered (a pure static scan, or every
+    category skipped) — an all-zero block would read as "nothing held" rather than
+    "nothing was attacked". ``by_category`` is keyed by OWASP id and carries the
+    category name, so a consumer that has no access to our metadata tables (the
+    SARIF renderer reads the file, not our code) can still label the rows.
+    """
+    by_category: dict[str, dict] = {}
+    for result in results:
+        marker = result.properties.get("llmsec_probe")
+        if not marker:
+            continue  # not a delivered attack (coverage assertion, scanner, ...)
+        category = get_owasp_category(str(marker))
+        key = category.id if category else "other"
+        tally = by_category.setdefault(
+            key,
+            {"name": category.name if category else "",
+             "attempted": 0, "withstood": 0, "findings": 0, "inconclusive": 0},
+        )
+        tally["attempted"] += 1
+        if result.outcome == "failed":
+            tally["findings"] += 1
+        elif result.properties.get("llmsec_inconclusive") is not None:
+            tally["inconclusive"] += 1
+        else:
+            tally["withstood"] += 1
+    if not by_category:
+        return None
+    totals = {
+        field: sum(t[field] for t in by_category.values())
+        for field in ("attempted", "withstood", "findings", "inconclusive")
+    }
+    return {**totals, "by_category": dict(sorted(by_category.items()))}
+
+
 def calculate_statistics(results: list[TestResult]) -> dict:
     """Calculate comprehensive statistics from test results.
 

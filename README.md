@@ -125,6 +125,15 @@ Each run writes to a per-target path (`results/<target-slug>.sarif`), so scannin
 several targets in a row never overwrites an earlier report; pass `--sarif-output`
 to choose your own. `--validate` with no path checks the current target's report.
 
+**A clean run says what it withstood.** Every scan reports the attacks it actually
+delivered and how many the target held off, per OWASP category: in the console, in the
+HTML report and as an `attacks_withstood` property in the SARIF. Without it an empty
+findings list is silence: the report of a well-defended app looks exactly like the report
+of a scan that attacked nothing. Only real probes count (a coverage assertion or a static
+scanner never inflates the number), and a probe that ran out of `--app-timeout` is neither
+withstood nor a finding, because a target that stops answering must not look like one that
+resisted. See [Red-team your defense](https://wehnsdaefflae.github.io/llmsectest/guides/red-team-your-defense/).
+
 **Browse a report as HTML.** `--render-sarif <file.sarif>` turns any SARIF v2.1.0
 report — one of ours, or any other tool's — into a single self-contained HTML page
 (`results/<target>.html` by default, or `-o <path>`): findings grouped by OWASP

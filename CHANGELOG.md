@@ -9,6 +9,20 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
 
 ## [Unreleased]
 
+### Added
+- **Every run now reports what the target *withstood*, not only what it failed.** A clean scan used to
+  produce a report indistinguishable from a scan that attacked nothing (no findings, and no way to tell
+  the difference), which made LLMSecTest useless to the person it should serve most: someone who has built
+  a defense and wants to know whether it works. Runs now carry an `attacks_withstood` tally, per OWASP
+  category, in the SARIF run properties, on the rendered HTML page, in the in-run HTML report and in the
+  console summary. Three rules keep the number honest: only probes actually delivered to the target are
+  counted (a coverage assertion or a static scanner never inflates it), a probe that exhausted
+  `--app-timeout` is neither withstood nor a finding but keeps its own column, and a run that delivered no
+  probe at all omits the property rather than claiming zero of zero. A defense regression is now legible as
+  a number going down, even when the finding count stays inside the variance of a sampled model. New guide:
+  [Red-team your defense](https://wehnsdaefflae.github.io/llmsectest/guides/red-team-your-defense/).
+  (2026-07-31)
+
 ### Fixed
 - **`--app-timeout` now bounds the whole request, so a *streaming* app can no longer run past it.** The
   budget was handed to `urllib`, whose `timeout` bounds a single socket **operation**, not the request. An
