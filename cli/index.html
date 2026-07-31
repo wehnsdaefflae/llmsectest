@@ -544,6 +544,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../guides/red-team-your-defense/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Red-team your defense
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../guides/authoring/" class="md-nav__link">
         
   
@@ -1306,6 +1334,11 @@ packaged OWASP probe suite against your chosen target and writes reports.</p>
 </tr>
 </tbody>
 </table>
+<p>Every report also carries a run-level <strong><code>attacks_withstood</code></strong> tally: how many probes were
+actually delivered to the target and how many it held off, broken down by OWASP category,
+so a clean scan is evidence rather than an empty page. Only delivered probes count (a
+coverage assertion or a static scanner never inflates it) and an inconclusive probe is
+neither withstood nor a finding. See <a href="../guides/red-team-your-defense/">Red-team your defense</a>.</p>
 <h2 id="gating-baselines-and-policy">Gating, baselines and policy<a class="headerlink" href="#gating-baselines-and-policy" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
