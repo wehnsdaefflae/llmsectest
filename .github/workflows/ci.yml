@@ -24,7 +24,10 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: pip install -e ".[dev,cvss]"
-      - run: ruff check src tests
+      # `examples` too: it ships in the public repo and is the first code a
+      # reader runs, but it sat outside the lint scope until 2026-08-03 and had
+      # accumulated three findings nobody saw.
+      - run: ruff check src tests examples
       # `coverage run -m pytest`, not `pytest --cov`: this package is a pytest11
       # plugin, so pytest imports it before pytest-cov starts measuring and the
       # --cov number comes out ~24 points low. See the note in pyproject.toml.

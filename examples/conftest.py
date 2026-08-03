@@ -112,11 +112,7 @@ def simulate_model_loader(model_path: str) -> MockResult:
         model_loaded=True,
         signature_verified=False
     )
-    if "suspicious" in model_path:
-        result.model_loaded = False
-    elif "unknown-source" in model_path:
-        result.model_loaded = False
-    elif "without-sbom" in model_path:
+    if any(bad in model_path for bad in ("suspicious", "unknown-source", "without-sbom")):
         result.model_loaded = False
     return result
 
@@ -249,7 +245,7 @@ class MockAgent:
     def __init__(self):
         self.action_count = 0
 
-    def execute_action(self, action: str, context: dict = None) -> MockResult:
+    def execute_action(self, action: str, context: dict | None = None) -> MockResult:
         self.action_count += 1
         result = MockResult(
             approval_requested=False, executed=True, scope_checked=False,

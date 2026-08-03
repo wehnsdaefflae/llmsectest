@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from llmsectest.reporting import render_sarif_file, render_sarif_html
+from llmsectest.reporting.sarif_html import _title_of
 
 _FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -310,3 +311,73 @@ def test_render_sarif_file_writes_html(tmp_path):
 
     explicit = render_sarif_file(src, tmp_path / "sub" / "report.html")
     assert explicit.exists()  # parent dir created
+
+
+# --- interop against a third genuine external tool, and the CWE convention it uses -
+# ruff carries no CWE at all; Bandit uses the GitHub ``external/cwe/cwe-NNN`` tag.
+# Semgrep is a third convention again: a *descriptive* tag whose text begins with the
+# id, e.g. "CWE-95: Improper Neutralization of Directives ...". It also settles a
+# question the backlog carried since 2026-07-24 — whether the SARIF
+# ``run.taxonomies`` / ``result.taxa`` path is how scanners attach CWE in practice.
+# Semgrep OSS 1.172.0 emits neither key, so that path stays unimplemented rather than
+# written from the spec. See fixtures/README.md for the exact regeneration command.
+
+def _semgrep_doc() -> dict:
+    return json.loads((_FIXTURES / "semgrep-1.172.0.sarif").read_text(encoding="utf-8"))
+
+
+def test_renders_real_semgrep_sarif_end_to_end():
+    html = render_sarif_html(_semgrep_doc(), source_name="semgrep-1.172.0.sarif")
+
+    assert html.startswith("<!DOCTYPE html>")
+    assert html.rstrip().endswith("</html>")
+    assert "Semgrep OSS" in html and "1.172.0" in html
+
+    # Three findings, no OWASP metadata -> grouped under "Other".
+    assert 'class="big">3</span>' in html
+    assert "Other" in html
+
+    # CWE read out of Semgrep's descriptive tag, canonicalised to the bare id.
+    assert "CWE-78" in html    # subprocess shell=True
+    assert "CWE-95" in html    # eval
+    assert "CWE-798" in html and "CWE-259" in html  # both ids on one rule
+    # The descriptive remainder of the tag is not smuggled into the CWE chip.
+    assert "Improper Neutralization" not in html.split('class="cwe">', 1)[1][:200]
+
+    # Severity from the SARIF level Semgrep sets (error -> high, warning -> medium).
+    assert "sev-high" in html and "sev-medium" in html
+    assert "semgrep_sample_vuln.py:" in html
+    assert "/home/" not in html and "file://" not in html
+
+
+def test_semgrep_fixture_carries_no_taxonomies():
+    """Guards the claim above: if a future regeneration starts emitting taxa, this
+    fails and the renderer owes that path an implementation."""
+    run = _semgrep_doc()["runs"][0]
+    assert "taxonomies" not in run
+    assert all("taxa" not in r for r in run["results"])
+
+
+def test_namespaced_rule_id_is_titled_by_its_last_segment():
+    """Semgrep names a rule after its id, and the id is namespaced by the config it
+    came from, so the raw heading read 'tests.fixtures.python-eval-of-request-data'."""
+    html = render_sarif_html(_semgrep_doc())
+    assert 'class="f-title">python-eval-of-request-data<' in html
+    assert "tests.fixtures.python-eval" not in html
+
+
+def test_a_rule_name_that_differs_from_the_id_is_never_shortened():
+    """Only ids are shortened. A name the tool wrote for humans may contain a dot and
+    must survive whole, or Bandit-style names would silently lose their first half."""
+    assert _title_of({}, {"id": "R1", "name": "Use of eval. Avoid it."}) == "Use of eval. Avoid it."
+    assert _title_of({}, {"id": "a.b.c", "name": "a.b.c"}) == "c"
+    assert _title_of({"ruleId": "x.y"}, {}) == "y"
+    assert _title_of({}, {}) == "finding"
+
+
+def test_render_sarif_file_on_real_semgrep_fixture(tmp_path):
+    """The file entry point renders the real Semgrep fixture to disk with its CWEs."""
+    out = render_sarif_file(_FIXTURES / "semgrep-1.172.0.sarif", tmp_path / "semgrep.html")
+    page = out.read_text(encoding="utf-8")
+    assert page.startswith("<!DOCTYPE html>")
+    assert "Semgrep OSS" in page and "CWE-95" in page

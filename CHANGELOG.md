@@ -9,6 +9,21 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
 
 ## [Unreleased]
 
+### Changed
+- **`--render-sarif` is now proven against a third real scanner, and reads a rule id that is a
+  namespace.** Semgrep OSS 1.172.0 output joins the committed ruff and Bandit fixtures, which gives the
+  renderer one genuine example of each CWE convention in the wild: ruff carries none, Bandit uses the
+  GitHub `external/cwe/cwe-NNN` tag, and Semgrep writes a descriptive tag that merely *starts* with the id
+  (`"CWE-95: Improper Neutralization of Directives ..."`). The descriptive remainder no longer risks
+  leaking into the CWE chip. Semgrep also names each rule after its id, and its ids are namespaced by the
+  config they were loaded from, so findings were headed `tests.fixtures.python-eval-of-request-data`
+  (registry rules read worse: `python.lang.security.audit.eval-detected`). A dotted **id** is now titled by
+  its last segment, in the finding cards and the rule glossary alike; a **name** a tool wrote for humans is
+  never shortened, so a name containing a dot survives whole. Settled by the same fixture, with evidence
+  instead of from the specification: Semgrep emits no `run.taxonomies` and no `result.taxa`, so that path
+  stays unimplemented rather than guessed, and a test fails if a future regeneration starts using it.
+  (2026-08-03)
+
 ### Added
 - **Every run now reports what the target *withstood*, not only what it failed.** A clean scan used to
   produce a report indistinguishable from a scan that attacked nothing (no findings, and no way to tell

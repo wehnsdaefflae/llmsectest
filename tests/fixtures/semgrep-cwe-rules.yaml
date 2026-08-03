@@ -1,0 +1,31 @@
+rules:
+  - id: python-os-command-injection
+    languages: [python]
+    severity: ERROR
+    message: Command built from untrusted input and run through a shell.
+    metadata:
+      cwe:
+        - "CWE-78: Improper Neutralization of Special Elements used in an OS Command ('OS Command Injection')"
+      owasp:
+        - "A03:2021 - Injection"
+      confidence: HIGH
+    pattern: subprocess.run(..., shell=True, ...)
+
+  - id: python-eval-of-request-data
+    languages: [python]
+    severity: ERROR
+    message: eval() on caller-controlled data allows arbitrary code execution.
+    metadata:
+      cwe:
+        - "CWE-95: Improper Neutralization of Directives in Dynamically Evaluated Code ('Eval Injection')"
+    pattern: eval(...)
+
+  - id: python-hardcoded-credential
+    languages: [python]
+    severity: WARNING
+    message: Credential embedded in source.
+    metadata:
+      cwe:
+        - "CWE-798: Use of Hard-coded Credentials"
+        - "CWE-259: Use of Hard-coded Password"
+    pattern-regex: (?i)(password|secret|api_key)\s*=\s*["'][^"']+["']

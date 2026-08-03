@@ -189,13 +189,35 @@ def _sev_badge(sev: str, score: float | None) -> str:
     return f'<span class="badge" style="background:{colour}">{_esc(label)}</span>'
 
 
+def _title_of(result: dict, rule: dict) -> str:
+    """The most readable name a producer gave this rule.
+
+    Some tools (e.g. ruff) put the human-readable rule name under
+    ``properties.name`` rather than the top-level ``name``; prefer it over the
+    terse rule id ("unused-import" reads better than "F401").
+
+    Semgrep sets ``name`` to the rule id verbatim, and its ids are namespaced by
+    the config they were loaded from, so the heading came out as
+    ``tests.fixtures.python-eval-of-request-data`` (registry rules are worse:
+    ``python.lang.security.audit.eval-detected``). The leading segments locate the
+    rule, they do not describe the finding, so a dotted id is shown by its last
+    segment. Only ids are shortened, never a name the tool wrote for humans: a
+    genuine name containing a dot ("Use of eval. Avoid.") must survive intact.
+    """
+    for candidate in (rule.get("name"), _props(rule).get("name")):
+        if isinstance(candidate, str) and candidate and candidate != rule.get("id"):
+            return candidate
+    ident = rule.get("id") or result.get("ruleId") or ""
+    if not isinstance(ident, str) or not ident:
+        return "finding"
+    tail = ident.rsplit(".", 1)[-1]
+    return tail or ident
+
+
 def _finding_card(result: dict, rule: dict) -> str:
     sev = _severity_of(result, rule)
     score = _score_of(result, rule)
-    # Some tools (e.g. ruff) put the human-readable rule name under
-    # ``properties.name`` rather than the top-level ``name``; prefer it over the
-    # terse rule id ("unused-import" reads better than "F401") before falling back.
-    title = (rule.get("name") or _props(rule).get("name") or result.get("ruleId") or "finding")
+    title = _title_of(result, rule)
     loc = _location_of(result)
     msg = _as_dict(result.get("message")).get("text", "")
     fixes = _fixes_of(result)
@@ -284,7 +306,10 @@ def _rules_glossary(rules: dict[str, dict]) -> str:
             continue
         seen.add(key)
         cat = rp.get("owasp-category", "")
-        name = rp.get("owasp-name") or rule.get("name") or rp.get("name") or rule.get("id", "")
+        # Same title resolution as the finding cards, so a rule reads identically in
+        # the glossary and above it (a namespaced Semgrep id was shortened in one
+        # place and left raw in the other).
+        name = rp.get("owasp-name") or _title_of({}, rule)
         cvss = rp.get("cvss_base_score")
         vector = rp.get("cvss_vector", "")
         desc = _as_dict(rule.get("fullDescription")).get("text") or \

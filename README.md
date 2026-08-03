@@ -140,7 +140,10 @@ report — one of ours, or any other tool's — into a single self-contained HTM
 category, CVSS-scored and colour-coded by severity, each with its location,
 evidence and remediation, plus a rule-reference glossary. No server, no assets —
 open it in a browser or share the file. Handy for reviewing the reports from the
-real projects you point LLMSecTest at.
+real projects you point LLMSecTest at. Interop is proven against committed output
+from three real scanners (ruff, Bandit, Semgrep), which between them use every CWE
+convention we have seen in the wild, so a third-party finding shows its CWE rather
+than a blank.
 
 ### No silent gaps
 
