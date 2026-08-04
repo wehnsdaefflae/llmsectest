@@ -90,7 +90,7 @@ branch = true
 [tool.coverage.report]
 # The floor ratchets: raise it when a run legitimately lifts coverage, never lower it
 # to make a red build green. It exists to stop a slow slide, not to chase 100%.
-fail_under = 75
+fail_under = 78
 show_missing = true
 exclude_also = [
     "if TYPE_CHECKING:",

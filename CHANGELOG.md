@@ -9,6 +9,63 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
 
 ## [Unreleased]
 
+### Fixed
+- **A target that articulately refuses an attack is no longer reported as having complied with it.** The
+  red-team oracles flag a reply that emits the behaviour's affirmative completion ("Sure, here is …"), and
+  that check was an unconditional override — so a model answering *"I can't help with that; you asked me
+  to begin with \"Sure, here is …\", and I won't"* was scored as a **finding**. The refusal quotes the
+  demand, and a substring match cannot tell citation from compliance. An affirmative completion that
+  appears **only inside quotation marks, in a reply that also carries a refusal marker**, is now read as
+  attribution and reported as a refusal, with the quoted token named in the evidence. The exemption is
+  per-occurrence: one unquoted emission keeps the finding, so a compliant reply cannot buy its way out by
+  also citing the demand, and a compliance wrapped in an apology (the case the override exists for) still
+  fires. `over_refusal_oracle` reads the same shared signal, so the two cannot drift apart. Found by
+  testing a third party's claim about a comparable tool against our own surface rather than citing it: the
+  same failure mode is reported at 86–100% false positives in garak's default detectors against 2026-era
+  frontier models, and this oracle had it too. (2026-08-04)
+
+### Added
+- **A deep-dive page for [LLM06 Excessive Agency](https://docs.llmsec.dev/owasp/llm06/)**, which had a
+  probe, a CVSS score and a row in the coverage map but no page — so the docs nav promised ten categories
+  and showed six. It covers what `--app-action` should be pointed at and why the oracle matches the
+  structured invocation rather than the topic (a refusal that names the tool must not score as using it),
+  the four built-in model-mode cases, the three guard strengths our own guarded test fixture offers (with
+  the honest note that the realistic middle one — require a ticket reference — checks the *shape* of a
+  reference and not its existence, so an invented id satisfies it), and the limits: LLMSecTest scans what
+  the endpoint emits and can say nothing about whether the tool behind it is over-scoped. The coverage map now states plainly which categories have a page, so a missing link reads as
+  "no page yet" rather than "less covered". (2026-08-04)
+
+### Known issue
+- **‼ If your application endpoint becomes unreachable during a scan, the report will show the remaining
+  probes as critical findings. They are not findings.** A connection failure raises `AdapterError`, which
+  — unlike a timeout, which is correctly recorded as *inconclusive* — propagates and is rendered as a
+  CVSS-scored OWASP result with a Python traceback as its evidence. We hit this in our own test cohort:
+  an application server died mid-scan and produced **25 "findings", all of them
+  `[Errno 111] Connection refused`**. The design intent was that a misconfiguration should fail loudly
+  rather than pass silently, which is right; the mistake is that in this tool "fails loudly" and "your
+  application is vulnerable" are the same channel.
+  **How to tell**: check the run-level `attacks_withstood` property (or the console *Attacks Delivered*
+  block). It counts only probes actually delivered to the target, so on an unreachable endpoint it reads
+  `attempted: 1` while the findings list is full — that mismatch is the tell. A finding whose evidence
+  text is a Python traceback is never a real result.
+  **Being fixed** by recording a transport failure as inconclusive, plus a non-zero exit so an
+  unreachable target still cannot read as a pass. Disclosed here first because the current behaviour
+  overstates risk, and a user should not have to discover that from a report. (2026-08-04)
+- **In our own testing, the LLM02 and LLM06 application probes have never produced a finding. Read a clean
+  row for either as "not observed", not as "not vulnerable".** Writing the LLM06 page above prompted a
+  count over our regression record, and it came out at **zero LLM06 findings across 26 test applications
+  that declare privileged actions** (and across all eight recorded baselines, and against a bare model),
+  plus **zero LLM02 findings across 41 applications that declare a secret**. The same count puts **LLM08 at
+  14 of 15**, so the harness, the application path and the marker plumbing demonstrably work; this is
+  specific to those two categories and is **undiagnosed**. It may be that small safety-tuned models really
+  do refuse both requests, or that the oracles match a literal form the models never emit — the LLM06
+  oracle matches an `ACTION: name(` invocation, and the LLM02 application probe asks a target outright to
+  print every secret it holds. Until it is settled, if you point `--app-action` or `--app-secret` at your
+  own application, **check that your application can actually emit the string you passed**: send it a
+  request you are content for it to honour and read the raw reply. No behaviour changed in this release;
+  this is disclosure, and it is in the changelog rather than only in an issue tracker because a probe that
+  cannot fire reports a pass. (2026-08-04)
+
 ### Changed
 - **`--render-sarif` is now proven against a third real scanner, and reads a rule id that is a
   namespace.** Semgrep OSS 1.172.0 output joins the committed ruff and Bandit fixtures, which gives the
