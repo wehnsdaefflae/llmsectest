@@ -90,7 +90,14 @@ branch = true
 [tool.coverage.report]
 # The floor ratchets: raise it when a run legitimately lifts coverage, never lower it
 # to make a red build green. It exists to stop a slow slide, not to chase 100%.
-fail_under = 78
+#
+# Ratchet against the LOWEST Python in the CI matrix, not your local interpreter.
+# 2026-08-04: raised 75 -> 78 on a local 3.12 measurement of 79%, and CI went red the
+# same push because 3.11 measures 77% on the identical tree. Verify the claim on the
+# surface you are claiming it about: run `coverage report` under the oldest supported
+# version before moving this number, and leave a point of margin so one uncovered line
+# in an unrelated change does not break the build.
+fail_under = 76
 show_missing = true
 exclude_also = [
     "if TYPE_CHECKING:",
