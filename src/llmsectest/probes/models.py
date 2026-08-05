@@ -70,12 +70,21 @@ class ProbeOutcome:
     #: endpoint does not) — the precise per-probe cost figure. ``None`` when the
     #: target reports no usage.
     output_tokens: int | None = None
-    #: True when the probe could not be scored because the target did not respond
-    #: within its per-request time budget. Recorded as *inconclusive* — neither a
-    #: finding (a timeout is not proof of a vulnerability) nor a clean pass — so a
-    #: single hung endpoint never takes down the rest of the scan. ``evidence``
-    #: carries the timeout detail. See :func:`~llmsectest.probes.runner.run_probe`.
+    #: True when the probe could not be scored: the target did not respond within its
+    #: per-request time budget, or the adapter could not reach it at all (see
+    #: :attr:`undelivered`). Recorded as *inconclusive* — neither a finding (failing to
+    #: get an answer is not proof of a vulnerability) nor a clean pass — so a single
+    #: hung or dead endpoint never takes down the rest of the scan. ``evidence``
+    #: carries the detail. See :func:`~llmsectest.probes.runner.run_probe`.
     errored: bool = False
+    #: True when the attack never reached the target, or reached it and came back
+    #: unusable: an unreachable endpoint, a malformed reply, an auth failure. Always
+    #: implies :attr:`errored`; the extra bit is *why*, and it matters because a
+    #: timeout is the target refusing to finish while this is the scan never getting
+    #: an answer to score. A run holding any of these exits non-zero (see
+    #: :meth:`~llmsectest.plugin.SARIFPlugin.pytest_sessionfinish`), because
+    #: "0 findings, 25 undelivered" is not a pass.
+    undelivered: bool = False
     #: Wall-clock seconds the probe took, measured around the adapter call. Recorded
     #: for a timed-out probe too (there it is the budget that was exhausted), which is
     #: what lets one scan tell a target's ordinary latency apart from a request that

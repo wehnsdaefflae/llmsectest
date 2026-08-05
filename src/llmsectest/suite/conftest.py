@@ -78,10 +78,16 @@ def probe(target_adapter, target_responsiveness, record_property):
         if outcome.output_tokens is not None:
             record_property("output_tokens", outcome.output_tokens)
         if outcome.errored:
-            # A timed-out probe is inconclusive, not clean: surface it as a warning
-            # (visible in the pytest summary the CLI prints) and record it as a
-            # property so the run is never silently short a probe.
+            # A probe that timed out or never reached the target is inconclusive, not
+            # clean: surface it as a warning (visible in the pytest summary the CLI
+            # prints) and record it as a property so the run is never silently short a
+            # probe.
             record_property("llmsec_inconclusive", outcome.evidence)
+            if outcome.undelivered:
+                # A transport failure is the subset that also fails the whole run, so
+                # a scan of a dead endpoint cannot exit 0. Recorded separately from
+                # llmsec_inconclusive, which stays the superset the drift check reads.
+                record_property("llmsec_undelivered", outcome.evidence)
             warnings.warn(f"{case.id}: {outcome.evidence}", stacklevel=2)
         if outcome.vulnerable:
             record_property(

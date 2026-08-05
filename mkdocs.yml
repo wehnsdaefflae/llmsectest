@@ -60,6 +60,7 @@ nav:
   - OWASP LLM Top 10:
       - Coverage map: owasp/index.md
       - LLM01 Prompt Injection: owasp/llm01.md
+      - LLM02 Sensitive Information Disclosure: owasp/llm02.md
       - LLM03 Supply Chain: owasp/llm03.md
       - LLM04 Data and Model Poisoning: owasp/llm04.md
       - LLM06 Excessive Agency: owasp/llm06.md

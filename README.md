@@ -134,6 +134,13 @@ scanner never inflates the number), and a probe that ran out of `--app-timeout` 
 withstood nor a finding, because a target that stops answering must not look like one that
 resisted. See [Red-team your defense](https://wehnsdaefflae.github.io/llmsectest/guides/red-team-your-defense/).
 
+**A target we could not reach is never reported as a vulnerable one.** If your endpoint is
+unreachable, replies with something that isn't JSON, or dies partway through, those probes are
+recorded **inconclusive** and the run **exits non-zero** — both halves, because an empty findings
+list from a scan that reached nothing would otherwise pass CI as a clean bill of health. The count
+appears as a banner on the HTML page, an `undelivered` property in the SARIF, and a line in the
+console summary. A slow app is a different case: it was reached, so raise `--app-timeout` instead.
+
 **Browse a report as HTML.** `--render-sarif <file.sarif>` turns any SARIF v2.1.0
 report — one of ours, or any other tool's — into a single self-contained HTML page
 (`results/<target>.html` by default, or `-o <path>`): findings grouped by OWASP
@@ -273,10 +280,10 @@ A failed security test becomes a SARIF finding with OWASP metadata, CWE tags, a
 remediation guidance — ready for the GitHub Security tab. When the target reports
 token usage, each finding also carries its real **output-token cost** and the run
 records a **denial-of-wallet total** (the LLM10 cost figure, trackable over time).
-If any probe went **inconclusive** (an `app:<url>` target exceeded `--app-timeout`),
-the run also records how many — so a clean-looking report never hides that some
-probes could not be concluded. See [`examples/`](examples/) for one test module per
-OWASP category.
+If any probe went **inconclusive** — an `app:<url>` target exceeded `--app-timeout`, or
+could not be reached at all — the run also records how many, and how many of those never
+reached the target, so a clean-looking report never hides that some probes could not be
+concluded. See [`examples/`](examples/) for one test module per OWASP category.
 
 ## Install
 

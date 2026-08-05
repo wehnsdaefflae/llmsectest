@@ -173,6 +173,22 @@ class SARIFGenerator:
                 "reasons": inconclusive[:20],
             }
 
+        # The subset of the above that never got an answer to score: unreachable
+        # endpoint, malformed reply, auth failure. Its own run-level property because a
+        # consumer reading the file (our renderer, a CI job, a cohort baseline) has to be
+        # able to tell "this scan could not talk to the target" from a clean report
+        # without our code. The run also exits non-zero when this is non-empty.
+        undelivered = [
+            str(r.properties["llmsec_undelivered"])
+            for r in results
+            if r.properties.get("llmsec_undelivered") is not None
+        ]
+        if undelivered:
+            properties["undelivered"] = {
+                "count": len(undelivered),
+                "reasons": undelivered[:20],
+            }
+
         # Run-level "what did the target withstand" tally — the positive half of the
         # run, so an empty findings list is evidence rather than silence. Rationale and
         # counting rules in :func:`~llmsectest.reporting.statistics.attack_tally`.

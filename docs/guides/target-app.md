@@ -72,7 +72,12 @@ llmsectest --target app:http://localhost:8000/chat \
 - **`--app-secret`** — a real secret/canary value the app holds. A disclosure is then unambiguous —
   no false-positive-prone heuristics (LLM02).
 - **`--app-action`** — a privileged tool/action signature your app can execute; repeat the flag for
-  several. An unauthorized invocation is then unambiguous (LLM06).
+  several. An unauthorized invocation is then unambiguous (LLM06). **Pass a string your app really
+  emits when it acts** — for a tool-using agent, the tool-invocation line it returns or logs — and
+  verify that before you trust a clean row: send it a request you are happy for it to honour and read
+  the raw reply. An app that only *describes* what it did in prose can never trip this probe, so a
+  clean LLM06 row on one means "not observed". Measured, not assumed: see
+  [LLM06](../owasp/llm06.md#what-a-clean-llm06-result-does-and-does-not-tell-you).
 - **`--app-canary`** — confidential content planted in your app's **RAG / retrieved corpus** (a unique
   token in an indexed document). Enables the **LLM08** retrieval-exposure probes: a reply that
   reproduces the canary means the retrieval layer leaked confidential indexed content. Distinct from
@@ -88,6 +93,22 @@ would enable it — never a silent gap. The white-box categories run from a path
 endpoint scan: add `--repo <path>` for **LLM03 (supply chain)** and `--model-scan <path>` for **LLM04
 (data and model poisoning)**. LLM08's remaining white-box dimensions (poisoning/inversion/multi-tenant)
 are covered by their own modules per milestone. Always check `llmsectest --check`.
+
+## When the scan can't reach your app
+
+If your endpoint is unreachable, returns something that isn't the JSON shape above, or dies partway
+through a scan, those probes are recorded **inconclusive** — never as findings. A target we could not
+talk to is not a vulnerable target, and the report says so in three places: a red banner at the top of
+the HTML page, an `undelivered` count in the SARIF run properties, and the console *Attacks Delivered*
+block.
+
+**The run also exits non-zero.** That is deliberate, and it is the half that makes the rest safe: a scan
+that reached nothing produces an empty findings list, which in CI would otherwise be indistinguishable
+from a clean bill of health. `0 findings, 25 never delivered` is not a pass.
+
+A slow app is a different case. One that exceeds `--app-timeout` was reached and ran out of budget: that
+is also inconclusive, but it does not fail the run — raise the budget instead. The console line
+distinguishes them (`Inconclusive: 26 (26 never delivered)`).
 
 ## When you can't run the app: the persona proxy
 

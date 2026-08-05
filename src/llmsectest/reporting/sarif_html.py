@@ -395,8 +395,42 @@ h2.cat .cnt { color:var(--muted); font-weight:500; font-size:14px; }
 .rule .vec code { background:#eef1f5; padding:2px 6px; border-radius:5px; font-size:12px; }
 .empty { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:34px;
   text-align:center; color:#1f7a52; font-weight:600; }
+.void { background:#fff4f6; border:1px solid #f0b8c4; border-left:5px solid #b3123a;
+  border-radius:10px; padding:16px 18px; margin-bottom:22px; color:#7a0c28; }
+.void .h { font-weight:800; font-size:14.5px; margin-bottom:6px; }
+.void p { margin:0 0 8px; font-size:13.5px; line-height:1.5; color:#7a0c28; }
+.void ul { margin:0; padding-left:20px; font-size:12.5px; }
+.void li { margin:2px 0; word-break:break-word; }
 footer { max-width:1000px; margin:0 auto; padding:0 22px 40px; color:var(--muted); font-size:12.5px; }
 """
+
+
+def _undelivered_banner(undelivered: object) -> str:
+    """Warn, above everything else, that this report does not describe a target.
+
+    When probes never reached the target the page below is not a clean bill of health,
+    it is a scan of nothing — and the failure is silent by nature, since an undelivered
+    probe is inconclusive and therefore appears in no findings list. The banner leads
+    the page for that reason. Type-guarded like every other foreign field here: this
+    renderer displays any tool's SARIF, so a malformed property must degrade to "".
+    """
+    if not isinstance(undelivered, dict):
+        return ""
+    count = undelivered.get("count")
+    if not isinstance(count, int) or count < 1:
+        return ""
+    reasons = [str(r) for r in _as_list(undelivered.get("reasons"))][:5]
+    items = "".join(f"<li>{_esc(r)}</li>" for r in reasons)
+    detail = f"<ul>{items}</ul>" if items else ""
+    return (
+        '<section class="void">'
+        f'<div class="h">⚠ Scan incomplete — {_esc(count)} probe(s) never reached the target</div>'
+        "<p>These attacks were never answered, so they are counted as inconclusive rather "
+        "than as findings. A quiet report below is therefore not evidence that the target "
+        "is secure. Check that the endpoint URL is right and the application was running "
+        "for the whole scan, then run it again.</p>"
+        f"{detail}</section>"
+    )
 
 
 def _withstood_section(tally: object) -> str:
@@ -485,6 +519,10 @@ def render_sarif_html(doc: dict, *, source_name: str | None = None,
         if isinstance(inc, dict) and inc.get("count")
         else None
     )
+    # The subset of those that never reached the target at all. It leads the page rather
+    # than sitting in the meta line, because it invalidates everything below it.
+    undelivered = _props(first_run).get("undelivered")
+    banner = _undelivered_banner(undelivered)
     # Attacks the target withstood — the positive evidence that turns an empty
     # findings list from silence into a result.
     tally = _props(first_run).get("attacks_withstood")
@@ -501,8 +539,10 @@ def render_sarif_html(doc: dict, *, source_name: str | None = None,
     for result, rule in findings:
         groups.setdefault(_owasp_of(result, rule), []).append((result, rule))
 
-    body = [_summary(findings)]
-    if not findings:
+    body = [banner, _summary(findings)]
+    if not findings and not banner:
+        # Suppressed under the banner: "no findings" plus "we never reached the target"
+        # is the exact pair of statements that must not be read together as a pass.
         body.append(
             '<div class="empty">✓ No findings in this report — '
             + (f"the target withstood {_esc(tally.get('withstood', 0))} of "

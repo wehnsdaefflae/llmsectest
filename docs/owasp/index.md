@@ -11,15 +11,15 @@ a given target — the live, authoritative map is `llmsectest --check`.
 Each category also carries a representative **CVSS v4.0 base score** (worst-case for the class),
 reported as the SARIF `security-severity` of its findings.
 
-All ten categories ship a probe or scanner and are described below. Seven have a **deep-dive page**
-(linked in the table); the remaining three — LLM02, LLM05 and LLM07 — are covered here and in the
+All ten categories ship a probe or scanner and are described below. Eight have a **deep-dive page**
+(linked in the table); the remaining two — LLM05 and LLM07 — are covered here and in the
 [CLI reference](../cli.md), and get their own pages as the depth work reaches them. A missing link
 means "no page yet", never "less covered".
 
 | Category | Modality | CVSS v4.0 | Status today |
 |---|---|---|---|
 | [LLM01 Prompt Injection](llm01.md) | black-box | 9.2 Critical | ✅ probes |
-| LLM02 Sensitive Information Disclosure | black-box / white-box | 9.2 Critical | ✅ probes |
+| [LLM02 Sensitive Information Disclosure](llm02.md) | black-box / white-box | 9.2 Critical | ✅ probes |
 | [LLM03 Supply Chain](llm03.md) | white-box — requires `--repo` | 9.5 Critical | ✅ scan |
 | [LLM04 Data and Model Poisoning](llm04.md) | white-box — requires `--model-scan` | 7.1 High | ✅ scan |
 | LLM05 Improper Output Handling | black-box / white-box | 9.9 Critical | ✅ probes |

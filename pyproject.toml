@@ -97,7 +97,13 @@ branch = true
 # surface you are claiming it about: run `coverage report` under the oldest supported
 # version before moving this number, and leave a point of margin so one uncovered line
 # in an unrelated change does not break the build.
-fail_under = 76
+#
+# 2026-08-05: 76 -> 78, and this time measured the documented way rather than locally.
+# A throwaway 3.11 venv built with CI's own command (`pip install -e ".[dev,cvss]"`)
+# reports 79% on this tree, against 80% on local 3.12 — so the gap the 08-04 break was
+# made of is real and still about one point. 78 keeps the point of margin the note above
+# asks for. The undelivered-probe tests are what lifted it.
+fail_under = 78
 show_missing = true
 exclude_also = [
     "if TYPE_CHECKING:",

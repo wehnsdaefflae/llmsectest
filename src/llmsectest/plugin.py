@@ -189,6 +189,28 @@ class SARIFPlugin:
                     print(f"  {format_name.upper():12s} {file_path}")
                 print("=" * 70)
 
+            # Fail the run when probes never reached the target. Undelivered probes are
+            # recorded inconclusive rather than as findings (a dead endpoint is not a
+            # vulnerability), which on its own would let a scan of a mistyped URL exit 0
+            # with an empty, clean-looking report. That is the same dishonesty as the
+            # bug this replaced, pointing the other way, so the loudness moves here.
+            undelivered = [
+                r for r in self.results
+                if r.properties.get("llmsec_undelivered") is not None
+            ]
+            if undelivered:
+                print("\n" + "=" * 70)
+                print(
+                    f"❌ SCAN INCOMPLETE: {len(undelivered)} probe(s) were never delivered "
+                    "to the target — the results below do not describe its security"
+                )
+                for result in undelivered[:5]:
+                    print(f"  {result.properties['llmsec_undelivered']}")
+                if len(undelivered) > 5:
+                    print(f"  ... and {len(undelivered) - 5} more")
+                print("=" * 70)
+                session.exitstatus = 1
+
             # Check OWASP coverage threshold
             if self.min_coverage is not None:
                 coverage = get_coverage_gaps(self.results)

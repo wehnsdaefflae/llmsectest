@@ -26,9 +26,16 @@ def attack_tally(results: list[TestResult]) -> dict | None:
     Counted only over real probes, which mark themselves with ``llmsec_probe`` at
     delivery, so a coverage assertion or a static scanner is never miscounted as an
     attack the target survived. An inconclusive probe (the target exceeded
-    ``--app-timeout``) is neither withstood nor a finding and gets its own column:
-    counting an attack the target never answered as one it resisted is the
-    flattering error, and this tool does not make it.
+    ``--app-timeout``, or could not be reached at all) is neither withstood nor a
+    finding and gets its own column: counting an attack the target never answered as
+    one it resisted is the flattering error, and this tool does not make it.
+
+    ``undelivered`` is the **subset of ``inconclusive``** that never got an answer to
+    score — an unreachable endpoint, a malformed reply, an auth failure — as opposed to
+    a target that was reached and ran out of time. Deliberately a subset rather than a
+    fourth disjoint column, so ``inconclusive`` keeps meaning "every probe not scored"
+    for the cohort drift check that reads it as a ceiling. The distinction earns its
+    place because the two have different remedies: raise the budget, or fix the URL.
 
     Returns ``None`` when no probe was delivered (a pure static scan, or every
     category skipped) — an all-zero block would read as "nothing held" rather than
@@ -46,20 +53,23 @@ def attack_tally(results: list[TestResult]) -> dict | None:
         tally = by_category.setdefault(
             key,
             {"name": category.name if category else "",
-             "attempted": 0, "withstood": 0, "findings": 0, "inconclusive": 0},
+             "attempted": 0, "withstood": 0, "findings": 0, "inconclusive": 0,
+             "undelivered": 0},
         )
         tally["attempted"] += 1
         if result.outcome == "failed":
             tally["findings"] += 1
         elif result.properties.get("llmsec_inconclusive") is not None:
             tally["inconclusive"] += 1
+            if result.properties.get("llmsec_undelivered") is not None:
+                tally["undelivered"] += 1
         else:
             tally["withstood"] += 1
     if not by_category:
         return None
     totals = {
         field: sum(t[field] for t in by_category.values())
-        for field in ("attempted", "withstood", "findings", "inconclusive")
+        for field in ("attempted", "withstood", "findings", "inconclusive", "undelivered")
     }
     return {**totals, "by_category": dict(sorted(by_category.items()))}
 

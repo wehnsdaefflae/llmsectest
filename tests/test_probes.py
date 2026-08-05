@@ -224,7 +224,13 @@ class _RaisingAdapter(LLMAdapter):
 
 def test_run_probe_records_a_timeout_as_inconclusive():
     """A per-request timeout is recorded as inconclusive (errored, not a finding) so one
-    hung endpoint never aborts the scan — but a genuine adapter failure still propagates."""
+    hung endpoint never aborts the scan.
+
+    A non-timeout adapter failure lands in the same channel but is additionally marked
+    ``undelivered`` — it used to propagate, which turned it into a failing test and so
+    into a published finding (see :func:`llmsectest.probes.runner._undelivered_outcome`
+    and ``tests/test_undelivered_probes.py`` for the full chain).
+    """
     from llmsectest.adapters.base import AdapterError, AdapterTimeoutError
     from llmsectest.probes.models import ProbeCase
 
@@ -236,12 +242,14 @@ def test_run_probe_records_a_timeout_as_inconclusive():
     outcome = run_probe(_RaisingAdapter(AdapterTimeoutError("app slow", timeout=5)), case)
     assert outcome.errored is True
     assert outcome.vulnerable is False  # a timeout is not proof of a vulnerability
+    assert outcome.undelivered is False  # the target was reached; it ran out of time
     assert "inconclusive" in outcome.evidence and "app slow" in outcome.evidence
     assert outcome.output_tokens is None
 
-    # A non-timeout adapter failure (auth, unreachable, malformed) must NOT be swallowed.
-    with pytest.raises(AdapterError):
-        run_probe(_RaisingAdapter(AdapterError("endpoint unreachable")), case)
+    undelivered = run_probe(_RaisingAdapter(AdapterError("endpoint unreachable")), case)
+    assert undelivered.errored is True
+    assert undelivered.undelivered is True
+    assert undelivered.vulnerable is False
 
 
 def _timeout_case(**over):

@@ -124,7 +124,14 @@ def generate_console_summary(
         lines.append(f"    Withstood: {c.GREEN}{attacks['withstood']}{c.RESET}")
         lines.append(f"    Findings:  {c.RED if attacks['findings'] else ''}{attacks['findings']}{c.RESET}")
         if attacks["inconclusive"]:
-            lines.append(f"    {c.YELLOW}Inconclusive: {attacks['inconclusive']}{c.RESET}")
+            # Name the undelivered subset: "the target ran out of time" and "we never
+            # reached the target" have different fixes, and only the second means the
+            # whole report is about nothing.
+            undelivered = attacks.get("undelivered", 0)
+            detail = f" ({undelivered} never delivered)" if undelivered else ""
+            lines.append(
+                f"    {c.YELLOW}Inconclusive: {attacks['inconclusive']}{detail}{c.RESET}"
+            )
         lines.append("")
 
     # Baseline comparison

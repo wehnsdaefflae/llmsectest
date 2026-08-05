@@ -7,6 +7,7 @@ import time
 from dataclasses import dataclass, field
 
 from ..adapters.base import (
+    AdapterError,
     AdapterTimeoutError,
     CompletionRequest,
     LLMAdapter,
@@ -152,6 +153,38 @@ def _timeout_outcome(
     )
 
 
+def _undelivered_outcome(case: ProbeCase, exc: AdapterError, elapsed: float) -> ProbeOutcome:
+    """Score a transport failure: inconclusive, never a finding.
+
+    An unreachable endpoint, a malformed reply or an auth failure means the attack was
+    never answered, so there is nothing to score. Until 2026-08-05 these propagated out
+    of :func:`run_probe` on the premise that a genuine misconfiguration should fail
+    loudly — but in this suite an exception *is* a failing test, and a failing security
+    test is rendered as a CVSS-scored OWASP finding. So the loud failure and "your
+    application is vulnerable" were the same channel, and a scan of an app that died
+    mid-run (or of a mistyped URL) reported a full set of critical vulnerabilities with
+    the Python traceback as the evidence text. Found in our own cohort on 2026-08-04:
+    ``langchain-dbabot``'s server died on the light pass and all 25 remaining probes
+    were published as findings.
+
+    The intent behind the old behaviour was right and is preserved — it just moved to a
+    channel that cannot be mistaken for a result. The outcome is inconclusive here, and
+    the *run* exits non-zero when any probe went undelivered
+    (:meth:`~llmsectest.plugin.SARIFPlugin.pytest_sessionfinish`), because "0
+    findings, 25 undelivered" must not read as a pass either. Both halves, or the fix
+    would trade one dishonest report for another.
+    """
+    return ProbeOutcome(
+        case=case,
+        response="",
+        vulnerable=False,
+        evidence=f"probe not delivered — {exc}",
+        errored=True,
+        undelivered=True,
+        elapsed_seconds=elapsed,
+    )
+
+
 def run_probe(
     adapter: LLMAdapter,
     case: ProbeCase,
@@ -178,9 +211,12 @@ def run_probe(
     (``errored=True``) — a timeout is not by itself proof of a vulnerability. The single
     exception is a ``timeout_is_signal`` case on a target proven responsive by the optional
     ``responsiveness`` record, which scores as an LLM10 finding (see
-    :func:`_timeout_outcome`); pass no record and every timeout stays inconclusive. Every
-    other adapter failure (unreachable endpoint, malformed reply, auth error) still
-    propagates, so a genuine misconfiguration fails loudly.
+    :func:`_timeout_outcome`); pass no record and every timeout stays inconclusive.
+
+    Every other adapter failure (unreachable endpoint, malformed reply, auth error) is
+    caught the same way and recorded **undelivered** — inconclusive, never a finding (see
+    :func:`_undelivered_outcome`). A misconfiguration still fails loudly, on the run's
+    exit code rather than in the findings list.
     """
     request = CompletionRequest(
         messages=[
@@ -193,9 +229,13 @@ def run_probe(
     try:
         response = adapter.complete(request)
     except AdapterTimeoutError as exc:
+        # Before AdapterError below: AdapterTimeoutError is a subclass of it, and a
+        # timeout carries its own scoring rule.
         if responsiveness is not None:
             responsiveness.record_timeout()
         return _timeout_outcome(case, exc, time.monotonic() - started, responsiveness)
+    except AdapterError as exc:
+        return _undelivered_outcome(case, exc, time.monotonic() - started)
     elapsed = time.monotonic() - started
     if responsiveness is not None:
         responsiveness.record_completion(elapsed)
