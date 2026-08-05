@@ -631,6 +631,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#when-the-scan-cant-reach-your-app" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When the scan can't reach your app
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#when-you-cant-run-the-app-the-persona-proxy" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -864,6 +875,34 @@
     
   
     LLM01 Prompt Injection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../owasp/llm02/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM02 Sensitive Information Disclosure
   
 
     
@@ -1210,6 +1249,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#when-the-scan-cant-reach-your-app" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When the scan can't reach your app
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#when-you-cant-run-the-app-the-persona-proxy" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1297,7 +1347,12 @@ only you, the app's developer, know:</p>
 <li><strong><code>--app-secret</code></strong> — a real secret/canary value the app holds. A disclosure is then unambiguous —
   no false-positive-prone heuristics (LLM02).</li>
 <li><strong><code>--app-action</code></strong> — a privileged tool/action signature your app can execute; repeat the flag for
-  several. An unauthorized invocation is then unambiguous (LLM06).</li>
+  several. An unauthorized invocation is then unambiguous (LLM06). <strong>Pass a string your app really
+  emits when it acts</strong> — for a tool-using agent, the tool-invocation line it returns or logs — and
+  verify that before you trust a clean row: send it a request you are happy for it to honour and read
+  the raw reply. An app that only <em>describes</em> what it did in prose can never trip this probe, so a
+  clean LLM06 row on one means "not observed". Measured, not assumed: see
+  <a href="../../owasp/llm06/#what-a-clean-llm06-result-does-and-does-not-tell-you">LLM06</a>.</li>
 <li><strong><code>--app-canary</code></strong> — confidential content planted in your app's <strong>RAG / retrieved corpus</strong> (a unique
   token in an indexed document). Enables the <strong>LLM08</strong> retrieval-exposure probes: a reply that
   reproduces the canary means the retrieval layer leaked confidential indexed content. Distinct from
@@ -1313,6 +1368,18 @@ would enable it — never a silent gap. The white-box categories run from a path
 endpoint scan: add <code>--repo &lt;path&gt;</code> for <strong>LLM03 (supply chain)</strong> and <code>--model-scan &lt;path&gt;</code> for <strong>LLM04
 (data and model poisoning)</strong>. LLM08's remaining white-box dimensions (poisoning/inversion/multi-tenant)
 are covered by their own modules per milestone. Always check <code>llmsectest --check</code>.</p>
+<h2 id="when-the-scan-cant-reach-your-app">When the scan can't reach your app<a class="headerlink" href="#when-the-scan-cant-reach-your-app" title="Permanent link">&para;</a></h2>
+<p>If your endpoint is unreachable, returns something that isn't the JSON shape above, or dies partway
+through a scan, those probes are recorded <strong>inconclusive</strong> — never as findings. A target we could not
+talk to is not a vulnerable target, and the report says so in three places: a red banner at the top of
+the HTML page, an <code>undelivered</code> count in the SARIF run properties, and the console <em>Attacks Delivered</em>
+block.</p>
+<p><strong>The run also exits non-zero.</strong> That is deliberate, and it is the half that makes the rest safe: a scan
+that reached nothing produces an empty findings list, which in CI would otherwise be indistinguishable
+from a clean bill of health. <code>0 findings, 25 never delivered</code> is not a pass.</p>
+<p>A slow app is a different case. One that exceeds <code>--app-timeout</code> was reached and ran out of budget: that
+is also inconclusive, but it does not fail the run — raise the budget instead. The console line
+distinguishes them (<code>Inconclusive: 26 (26 never delivered)</code>).</p>
 <h2 id="when-you-cant-run-the-app-the-persona-proxy">When you can't run the app: the persona proxy<a class="headerlink" href="#when-you-cant-run-the-app-the-persona-proxy" title="Permanent link">&para;</a></h2>
 <p>If you only have the app's system prompt (not a running instance), load it onto a model and test that
 as a proxy. Lower fidelity (no guardrail/RAG/tool code), but useful:</p>

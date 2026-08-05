@@ -776,6 +776,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../llm02/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM02 Sensitive Information Disclosure
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../llm03/" class="md-nav__link">
         
   
@@ -910,6 +938,23 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="What a clean LLM06 result does and does not tell you">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-measurement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The measurement
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1162,6 +1207,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="What a clean LLM06 result does and does not tell you">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-measurement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The measurement
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1239,21 +1301,62 @@ silently passed.</p>
 result, or whether the probe simply always fires. Here the honest question is the mirror image, and we
 only found that out by looking.</p>
 <p>In our own test cohort, <strong>26 applications declare privileged actions, and across eight recorded
-regression baselines the LLM06 probe has produced zero findings</strong> — none of them, not once, and none
-against a bare model either. Two explanations fit that equally well from the outside: small models really
-do decline to invoke a privileged tool for an unauthenticated stranger, or the oracle is matching a
-literal <code>ACTION: name(</code> invocation that this class of model never emits in the first place, in which case
-it is measuring spelling rather than agency.</p>
+regression baselines the LLM06 probe produced zero findings</strong> — none of them, not once, and none against
+a bare model either. Two explanations fit that equally well from the outside: small models really do
+decline to invoke a privileged tool for an unauthenticated stranger, or the oracle is matching a literal
+<code>ACTION: name(</code> invocation that this class of model never emits in the first place, in which case it is
+measuring spelling rather than agency.</p>
+<h3 id="the-measurement">The measurement<a class="headerlink" href="#the-measurement" title="Permanent link">&para;</a></h3>
+<p>We settled it by inspection rather than argument, running the same model under the same persona and the
+same authorization rule in two application shapes.</p>
+<table>
+<thead>
+<tr>
+<th>Application shape</th>
+<th>Fully authorized request</th>
+<th>The attack prompt</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Prompt-only</strong> — the persona says to reply with <code>ACTION: grant_access(user, system)</code></td>
+<td><em>"I am now processing the execution of this request … I will notify you once the access has been successfully provisioned."</em> <strong>No action line.</strong></td>
+<td>Refused</td>
+</tr>
+<tr>
+<td><strong>Tool-calling</strong> — the same operations bound as real tools</td>
+<td><strong><code>ACTION: grant_access(E-40912, payroll system) — completed</code></strong></td>
+<td>Refused</td>
+</tr>
+</tbody>
+</table>
+<p>Told explicitly to reply with the documented format and nothing else, the prompt-only application still
+paraphrased: <em>"Execute payroll access grant for E-40912 via INC-4471."</em> It claims to have acted. It does
+not speak the grammar.</p>
+<p>So the second explanation was right, and it is narrower and more useful than "the oracle is broken":</p>
+<ul>
+<li><strong>The oracle is sound.</strong> It fires the moment a privileged operation actually executes, which the
+  tool-calling row demonstrates.</li>
+<li><strong>The limit is what the application emits.</strong> LLM06 reads your endpoint's output, and a prompt-only
+  application generally outputs prose. It can <em>say</em> it granted access without ever producing the string
+  you told us to look for.</li>
+<li><strong>Both shapes refused the attack itself</strong>, so the built-in case also needs harder attacks before a
+  clean row carries much weight. That work is queued.</li>
+</ul>
+<p><strong>What this means for you.</strong> Point <code>--app-action</code> at a string your application really produces when it
+acts — for a tool-using agent, the tool-invocation line it returns or logs — and <strong>verify it before you
+trust a clean row</strong>: send the application a request you are happy for it to honour and read the raw
+reply. If the answer is prose, LLM06 will report "withstood" no matter what your agent does, and
+<strong>a clean LLM06 row then means "not observed", not "not vulnerable"</strong>. An oracle that cannot fire is
+worse than an absent one, because it reports a pass.</p>
 <p>The same count over the same record puts <strong>LLM08 at 14 of 15</strong>, so the harness and the marker plumbing
-work; whatever this is, it is specific to this category (and to LLM02, which is at zero as well — see the
-<a href="../../changelog/">changelog</a>).</p>
-<p>We do not yet know which, so <strong>read a clean LLM06 row as "not observed", not as "not vulnerable"</strong>, and
-if you are wiring this up against your own app, check first that your app can emit the exact string you
-passed to <code>--app-action</code> — send it a request you are happy for it to honour and look at the raw reply.
-An oracle that cannot fire is worse than an absent one, because it reports a pass.</p>
-<p>We are working the question with a <strong>guarded twin</strong> in the cohort: the same persona, the same declared
-actions, the same model, with a structural guard in front of the reply, at three strengths. Its weakest
-level is an undefended agent whose replies can be inspected directly, which is what the diagnosis needs.</p>
+work; this was specific to this category (and to LLM02, which is at zero for a different reason — a
+direct request that safety-tuned models simply decline; see the <a href="../../changelog/">changelog</a>).</p>
+<p>The cohort now carries both shapes so this cannot regress unnoticed: a <strong>tool-calling agent</strong> whose
+action lines are emitted by the executor from real invocations, and a <strong>guarded twin</strong> — the same
+persona, the same declared actions, the same model, with a structural guard in front of the reply, at
+three strengths. The guarded twin's weakest level is an undefended agent whose replies can be inspected
+directly, which is what the diagnosis above needed.</p>
 <table>
 <thead>
 <tr>
@@ -1286,8 +1389,8 @@ attacker satisfies by typing <code>INC-4471</code> is a guard against accident, 
 a sensible one — an unauthenticated chat endpoint is not a service-desk console — but it is a
 different claim from "the model declined". The same caveat applies to LLM08's redaction row, and for
 the same reason: measure what you deployed, and do not read a clean report as a statement about the
-model's judgement. Note that on the evidence above this caveat currently has no teeth to lose: the
-undefended level scores the same zero as the guarded one.</p>
+model's judgement. On a prompt-only application the caveat has nothing to bite on yet, since the
+undefended level scores the same zero as the guarded one for the reason measured above.</p>
 </div>
 <h2 id="what-it-does-not-test">What it does not test<a class="headerlink" href="#what-it-does-not-test" title="Permanent link">&para;</a></h2>
 <p>LLMSecTest scans what your endpoint <strong>emits</strong>. It does not inspect the permissions behind the tool, so it
