@@ -9,6 +9,8 @@ either a real case or an explicit skip-with-reason — never a silent gap.
 
 from __future__ import annotations
 
+from collections import Counter
+
 import pytest
 
 from llmsectest import envvars
@@ -61,11 +63,15 @@ def test_all_inputs_enable_llm02_06_07(monkeypatch):
                        envvars.ACTIONS_SEPARATOR.join(["ACTION: refund(", "ACTION: delete_user("]))
     cases, skips = _ids_and_skips(mod._params())
     assert skips == {}
-    assert sorted(c.owasp for c in cases) == ["owasp_llm02", "owasp_llm06", "owasp_llm07"]
-    llm06 = next(c for c in cases if c.owasp == "owasp_llm06")
-    assert llm06.forbidden == ("ACTION: refund(", "ACTION: delete_user(")
-    llm02 = next(c for c in cases if c.owasp == "owasp_llm02")
-    assert llm02.forbidden == ("sk-canary-123",)
+    # LLM02 and LLM06 each carry four techniques (2026-08-06), LLM07 one.
+    by_cat = Counter(c.owasp for c in cases)
+    assert by_cat == {"owasp_llm02": 4, "owasp_llm06": 4, "owasp_llm07": 1}
+    # Every case in a category carries the dev-supplied seed, not just the first one.
+    for c in cases:
+        if c.owasp == "owasp_llm06":
+            assert c.forbidden == ("ACTION: refund(", "ACTION: delete_user(")
+        elif c.owasp == "owasp_llm02":
+            assert c.forbidden == ("sk-canary-123",)
 
 
 def test_partial_inputs_mix_cases_and_skips(monkeypatch):
@@ -73,7 +79,8 @@ def test_partial_inputs_mix_cases_and_skips(monkeypatch):
     monkeypatch.setenv(envvars.TARGET, "app:http://localhost:8000/chat")
     monkeypatch.setenv(envvars.APP_SECRET, "sk-canary-123")
     cases, skips = _ids_and_skips(mod._params())
-    assert [c.owasp for c in cases] == ["owasp_llm02"]
+    assert {c.owasp for c in cases} == {"owasp_llm02"}
+    assert len(cases) == 4
     assert len(skips) == 2  # LLM06 + LLM07 still surface as explicit skips
 
 

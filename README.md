@@ -41,11 +41,11 @@ See [Funding](#funding).
 | OWASP category | How it is tested | Mode |
 |---|---|---|
 | LLM01 prompt injection | marker-injection corpus + a **red-team jailbreak set** ([JailbreakBench](https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors) / AdvBench, `--redteam-set`) scored by a refusal oracle | black-box |
-| LLM02 sensitive information disclosure | attacks for a named secret the app holds | black-box |
+| LLM02 sensitive information disclosure | four disclosure mechanisms against a named secret the app holds | black-box |
 | LLM03 supply chain | reads your dependency manifests (`requirements*.txt`, `pyproject.toml` incl. Poetry, `Pipfile`) via `--repo`, flags unpinned deps and insecure package indexes, optionally checks exact pins against OSV.dev for known CVEs, emits a CycloneDX SBOM | white-box |
 | LLM04 data and model poisoning | serialized-model scanner over the pickle opcode stream (`--model-scan`), never unpickling | white-box |
 | LLM05 improper output handling | asks the app to emit active payloads; a raw echo is the finding | black-box |
-| LLM06 excessive agency | attempts to invoke privileged actions the dev names | black-box |
+| LLM06 excessive agency | four unverifiable authority claims, scored on a real invocation | black-box |
 | LLM07 system prompt leakage | extraction attacks against the app's own prompt | black-box |
 | LLM08 vector and embedding weaknesses | for RAG apps: *retrieval exposure* + *indirect injection via a poisoned retrieved document* | black-box |
 | LLM09 misinformation | asks about entities that provably do not exist; confabulation is the finding | black-box |
@@ -56,6 +56,12 @@ See [Funding](#funding).
 - **Reporting.** A pytest plugin and reporting layer: SARIF v2.1.0 / HTML / JSON / Markdown, OWASP
   metadata, risk scoring, baselines and policy gates. Every finding carries a **CVSS v4.0** base score
   for its category, reported as SARIF `security-severity`.
+- **Four attack mechanisms per category, not four wordings.** The application-mode LLM02 and LLM06 probes
+  each run four techniques — for LLM02 a direct request, a claimed authority, an indirect ask for a
+  handover document, and an **encoded-exfiltration** request that a naive output filter passes; for LLM06
+  four assertions of authority the endpoint cannot verify. No LLM02 prompt contains the secret it scores,
+  and no LLM06 prompt contains the action signature or dictates the reply format, so a finding can only
+  come from the application.
 - **Encoded leaks still count.** The LLM02 / LLM07 / LLM08 leak oracles **de-obfuscate** a reply before
   matching, so a secret returned base64/hex/base32/base85/ASCII85/ROT13/quoted-printable/uuencode-encoded,
   Unicode-disguised (full-width or zero-width characters), or split across separators is caught.
