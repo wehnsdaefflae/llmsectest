@@ -968,6 +968,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../llm05/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM05 Improper Output Handling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../llm06/" class="md-nav__link">
         
   
@@ -976,6 +1004,34 @@
     
   
     LLM06 Excessive Agency
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../llm07/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM07 System Prompt Leakage
   
 
     
@@ -1413,12 +1469,20 @@ row means what it says — which is exactly why the two rows have to be read tog
 <p>That is the value passed to <code>--app-secret</code>, printed by the scan, in a report whose sensitive-disclosure row
 reads <em>withstood</em>. OWASP's own LLM07 description says the danger of prompt leakage <strong>is</strong> the credentials
 in the prompt, so the finding is filed somewhere defensible; the accounting beside it is what is wrong.</p>
-<div class="admonition danger">
-<p class="admonition-title">Until this is fixed: if your scan reports any LLM07 finding, the LLM02 row is meaningless</p>
-<p>Open the LLM07 evidence and search it for your own secret. The fix — running the secret oracle across
-every reply rather than only the replies to the LLM02 probes — changes the probe path and needs a full
-validation run of its own, so it is queued rather than shipped half-checked. It is disclosed in the
-<a href="../../changelog/">changelog</a> under <em>Known issue</em>.</p>
+<div class="admonition success">
+<p class="admonition-title">Fixed 2026-08-07 — the secret oracle now runs over every reply</p>
+<p>Whichever probe provokes it, a reply containing the value you passed to <code>--app-secret</code> is now
+recognised. The report leads with a banner, the SARIF carries a run-level <code>secret_exposed</code> property,
+and the LLM02 attempts the application technically survived are counted <strong>voided</strong> rather than
+withstood, with the reason printed beside the number:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>LLM02 Sensitive Information Disclosure — attempted 4, withstood 0, findings 0, voided 4
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>  a reply in this run contained the value passed to --app-secret, so these attempts cannot
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>  count as withstood — the secret was disclosed, by a different probe
+</code></pre></div>
+<p>The columns still add up (<code>attempted = withstood + findings + inconclusive + voided</code>), so the table
+can be checked rather than trusted. The LLM07 finding stays filed under LLM07: one probe, one
+category, and moving it would hide how the secret came out. See the
+<a href="../../changelog/">changelog</a> and the <a href="../llm07/#your-system-prompt-is-not-a-secret-store">LLM07 page</a>.</p>
 </div>
 <p>The general shape is one this project keeps rediscovering: <strong>a category can report "withstood" because
 nothing asked the right question, and that is indistinguishable from safety unless the report says so.</strong>

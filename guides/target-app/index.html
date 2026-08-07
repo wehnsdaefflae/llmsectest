@@ -979,6 +979,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../owasp/llm05/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM05 Improper Output Handling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../owasp/llm06/" class="md-nav__link">
         
   
@@ -987,6 +1015,34 @@
     
   
     LLM06 Excessive Agency
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../owasp/llm07/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM07 System Prompt Leakage
   
 
     
@@ -1366,8 +1422,9 @@ only you, the app's developer, know:</p>
 <p>Each category whose input you don't supply shows up as an <strong>explicit skip naming the flag</strong> that
 would enable it — never a silent gap. The white-box categories run from a path you provide alongside the
 endpoint scan: add <code>--repo &lt;path&gt;</code> for <strong>LLM03 (supply chain)</strong> and <code>--model-scan &lt;path&gt;</code> for <strong>LLM04
-(data and model poisoning)</strong>. LLM08's remaining white-box dimensions (poisoning/inversion/multi-tenant)
-are covered by their own modules per milestone. Always check <code>llmsectest --check</code>.</p>
+(data and model poisoning)</strong>. LLM08's two black-box dimensions ship today; its white-box ones
+(poisoning, inversion, multi-tenant isolation) are not implemented yet and are reported as
+not-exercised rather than passed. Always check <code>llmsectest --check</code>.</p>
 <h2 id="when-the-scan-cant-reach-your-app">When the scan can't reach your app<a class="headerlink" href="#when-the-scan-cant-reach-your-app" title="Permanent link">&para;</a></h2>
 <p>If your endpoint is unreachable, returns something that isn't the JSON shape above, or dies partway
 through a scan, those probes are recorded <strong>inconclusive</strong> — never as findings. A target we could not

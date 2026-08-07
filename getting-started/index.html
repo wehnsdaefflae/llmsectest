@@ -957,6 +957,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../owasp/llm05/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM05 Improper Output Handling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../owasp/llm06/" class="md-nav__link">
         
   
@@ -965,6 +993,34 @@
     
   
     LLM06 Excessive Agency
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../owasp/llm07/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM07 System Prompt Leakage
   
 
     
@@ -1307,7 +1363,8 @@ failures, the process exits non-zero when the target is vulnerable — exactly w
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>llmsectest<span class="w"> </span>--list-probes<span class="w">    </span><span class="c1"># the red-team corpus that ships today</span>
 </code></pre></div>
 <p><code>--check</code> is the source of truth for coverage — it shows which categories are black-box (testable
-against your endpoint now) and which are white-box (need app internals and land per milestone).</p>
+against your endpoint now) and which are white-box (LLM03 via <code>--repo</code>, LLM04 via <code>--model-scan</code>,
+both shipping today).</p>
 <h2 id="next">Next<a class="headerlink" href="#next" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong><a href="../guides/target-app/">Test your running app</a></strong> — the real workflow.</li>

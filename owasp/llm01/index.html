@@ -962,6 +962,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../llm05/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM05 Improper Output Handling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../llm06/" class="md-nav__link">
         
   
@@ -970,6 +998,34 @@
     
   
     LLM06 Excessive Agency
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../llm07/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM07 System Prompt Leakage
   
 
     
@@ -1335,8 +1391,8 @@ as its <code>security-severity</code>.</p>
 <li>Treat <strong>all</strong> model input as untrusted — including tool outputs, retrieved documents, and prior turns.</li>
 <li>Keep privileged instructions out of reach of user content; don't concatenate user text into the
   system prompt.</li>
-<li>Constrain outputs and <strong>validate them</strong> before acting (see <a href="../">LLM05</a>); require explicit,
-  out-of-band authorization for state-changing actions (see <a href="../">LLM06</a>).</li>
+<li>Constrain outputs and <strong>validate them</strong> before acting (see <a href="../llm05/">LLM05</a>); require explicit,
+  out-of-band authorization for state-changing actions (see <a href="../llm06/">LLM06</a>).</li>
 <li>Add a guardrail/classifier layer and re-run LLMSecTest to confirm it closes the finding.</li>
 </ul>
 <p>See the <a href="https://genai.owasp.org/llmrisk/llm01-prompt-injection/">OWASP LLM01 entry</a> for the full
