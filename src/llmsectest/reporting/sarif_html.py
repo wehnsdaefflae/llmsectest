@@ -400,6 +400,7 @@ h2.cat .cnt { color:var(--muted); font-weight:500; font-size:14px; }
 .void .h { font-weight:800; font-size:14.5px; margin-bottom:6px; }
 .void p { margin:0 0 8px; font-size:13.5px; line-height:1.5; color:#7a0c28; }
 .void ul { margin:0; padding-left:20px; font-size:12.5px; }
+.voided-note { margin:10px 0 0; font-size:12.5px; line-height:1.5; color:#7a0c28; }
 .void li { margin:2px 0; word-break:break-word; }
 footer { max-width:1000px; margin:0 auto; padding:0 22px 40px; color:var(--muted); font-size:12.5px; }
 """
@@ -433,6 +434,37 @@ def _undelivered_banner(undelivered: object) -> str:
     )
 
 
+def _secret_exposed_banner(exposed: object) -> str:
+    """Say, above everything else, that this scan got the developer's secret out.
+
+    It leads the page for the same reason the undelivered banner does: it changes what
+    everything below it means. A reader who scrolls to a sensitive-disclosure row reading
+    "withstood" and stops there has been told the opposite of what happened — which is
+    exactly what our own reports did until 2026-08-07, on 20 of 41 test applications.
+    Type-guarded like every other foreign field here: this renderer displays any tool's
+    SARIF, so a malformed property must degrade to "".
+    """
+    if not isinstance(exposed, dict):
+        return ""
+    count = exposed.get("count")
+    if not isinstance(count, int) or count < 1:
+        return ""
+    reasons = [str(r) for r in _as_list(exposed.get("reasons"))][:5]
+    items = "".join(f"<li>{_esc(r)}</li>" for r in reasons)
+    detail = f"<ul>{items}</ul>" if items else ""
+    return (
+        '<section class="void">'
+        f'<div class="h">⚠ The value you passed to --app-secret came back out of this '
+        f'application, in {_esc(count)} repl{"y" if count == 1 else "ies"}</div>'
+        "<p>It does not matter which probe asked. Treat the secret as disclosed: rotate it, "
+        "and take it out of any text the model can be talked into repeating. Sensitive-"
+        "disclosure attempts that the application technically survived are shown below as "
+        "<strong>voided</strong> rather than withstood, because a run that printed the value "
+        "cannot also report that the value was protected.</p>"
+        f"{detail}</section>"
+    )
+
+
 def _withstood_section(tally: object) -> str:
     """Render the run-level "attacks withstood" block, or "" if the run has none.
 
@@ -452,20 +484,28 @@ def _withstood_section(tally: object) -> str:
                 continue
             label = f"{cat} {counts.get('name', '')}".strip()
             inconclusive = counts.get("inconclusive", 0)
+            voided = counts.get("voided", 0)
             rows += (
                 f'<tr><td>{_esc(label)}</td>'
                 f'<td class="num">{_esc(counts.get("attempted", 0))}</td>'
                 f'<td class="num">{_esc(counts.get("withstood", 0))}</td>'
                 f'<td class="num">{_esc(counts.get("findings", 0))}</td>'
-                f'<td class="num">{_esc(inconclusive) if inconclusive else ""}</td></tr>'
+                f'<td class="num">{_esc(inconclusive) if inconclusive else ""}</td>'
+                f'<td class="num">{_esc(voided) if voided else ""}</td></tr>'
             )
     table = (
         '<table class="cat-table"><thead><tr><th>OWASP category</th>'
         '<th class="num">attacks</th><th class="num">withstood</th>'
-        '<th class="num">findings</th><th class="num">inconclusive</th></tr></thead>'
+        '<th class="num">findings</th><th class="num">inconclusive</th>'
+        '<th class="num">voided</th></tr></thead>'
         f"<tbody>{rows}</tbody></table>"
         if rows else ""
     )
+    # The reason travels with the number: a column of unexplained zeroes where withstands
+    # used to be would read as a scan that stopped working.
+    reason = tally.get("voided_reason")
+    note = (f'<p class="voided-note">{_esc(reason)}</p>'
+            if tally.get("voided") and isinstance(reason, str) else "")
     # Escaped and defaulted like every other foreign field here: this renderer promises
     # to display any tool's SARIF, so a missing or non-numeric count must degrade, never
     # crash and never inject markup.
@@ -474,7 +514,7 @@ def _withstood_section(tally: object) -> str:
         '<section class="summary withstood">'
         f'<div class="total"><span class="big">{_esc(held)}</span> of '
         f'{_esc(sent)} delivered attack{"s" if sent != 1 else ""} withstood</div>'
-        f"{table}</section>"
+        f"{table}{note}</section>"
     )
 
 
@@ -522,7 +562,8 @@ def render_sarif_html(doc: dict, *, source_name: str | None = None,
     # The subset of those that never reached the target at all. It leads the page rather
     # than sitting in the meta line, because it invalidates everything below it.
     undelivered = _props(first_run).get("undelivered")
-    banner = _undelivered_banner(undelivered)
+    banner = (_undelivered_banner(undelivered)
+              + _secret_exposed_banner(_props(first_run).get("secret_exposed")))
     # Attacks the target withstood — the positive evidence that turns an empty
     # findings list from silence into a result.
     tally = _props(first_run).get("attacks_withstood")

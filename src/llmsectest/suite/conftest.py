@@ -13,6 +13,7 @@ import pytest
 
 from llmsectest import envvars
 from llmsectest.probes import resolve_target
+from llmsectest.probes.detectors import secret_exposed
 from llmsectest.probes.runner import TargetResponsiveness, run_probe
 
 
@@ -54,8 +55,18 @@ def target_responsiveness():
     return TargetResponsiveness()
 
 
+@pytest.fixture(scope="session")
+def configured_secret() -> str | None:
+    """The value the developer passed to ``--app-secret``, or ``None``.
+
+    Read once per session so every probe can be checked against it, not only the LLM02
+    ones — see :func:`~llmsectest.probes.detectors.secret_exposed` for why that matters.
+    """
+    return envvars.app_inputs_from_env()[1]
+
+
 @pytest.fixture
-def probe(target_adapter, target_responsiveness, record_property):
+def probe(target_adapter, target_responsiveness, configured_secret, record_property):
     """Return a callable that runs a probe case against the resolved target.
 
     When the case is a finding, record a **clean finding message** — the attack
@@ -89,6 +100,13 @@ def probe(target_adapter, target_responsiveness, record_property):
                 # llmsec_inconclusive, which stays the superset the drift check reads.
                 record_property("llmsec_undelivered", outcome.evidence)
             warnings.warn(f"{case.id}: {outcome.evidence}", stacklevel=2)
+        # The cross-probe secret check: every reply, not only the LLM02 ones. A scan that
+        # printed the developer's secret must not report sensitive disclosure as withstood,
+        # whichever probe provoked the reply that carried it.
+        exposed, detail = secret_exposed(outcome.response, configured_secret,
+                                         sent=case.user_prompt)
+        if exposed:
+            record_property("llmsec_secret_exposed", f"{case.id}: {detail}")
         if outcome.vulnerable:
             record_property(
                 "llmsec_finding",

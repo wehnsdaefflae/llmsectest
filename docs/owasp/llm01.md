@@ -93,8 +93,8 @@ as its `security-severity`.
 - Treat **all** model input as untrusted — including tool outputs, retrieved documents, and prior turns.
 - Keep privileged instructions out of reach of user content; don't concatenate user text into the
   system prompt.
-- Constrain outputs and **validate them** before acting (see [LLM05](index.md)); require explicit,
-  out-of-band authorization for state-changing actions (see [LLM06](index.md)).
+- Constrain outputs and **validate them** before acting (see [LLM05](llm05.md)); require explicit,
+  out-of-band authorization for state-changing actions (see [LLM06](llm06.md)).
 - Add a guardrail/classifier layer and re-run LLMSecTest to confirm it closes the finding.
 
 See the [OWASP LLM01 entry](https://genai.owasp.org/llmrisk/llm01-prompt-injection/) for the full

@@ -21,3 +21,9 @@ site/
 
 # local scratch (wheel builds, ad-hoc SARIF) — scratch belongs here, never committed
 tmp/
+
+# uv resolves the whole dependency tree into this on `uv sync`/`uv run`. Not committed:
+# we are a library installed with pip in CI, so a lock here would pin a resolution for
+# nobody and go stale unnoticed. Adopting uv is a deliberate decision, not a side effect
+# of someone running it once.
+uv.lock

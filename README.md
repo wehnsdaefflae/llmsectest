@@ -35,6 +35,12 @@ See [Funding](#funding).
 > **Status: pre-alpha (active grant development).** All **10** OWASP LLM Top 10 (2025)
 > categories ship a real probe or scanner — none is a placeholder, and a scan that cannot
 > reach one says so instead of passing it silently.
+>
+> **Known limitations** live in the [changelog](CHANGELOG.md#known-issue) and are named on the
+> category's own page as they are found. One is open today:
+> [LLM06](https://docs.llmsec.dev/owasp/llm06/) reports only what your application emits, so on an
+> application that describes an action in prose rather than emitting the signature you passed, a
+> clean LLM06 row means *not observed*, not *not vulnerable*.
 
 ### What is covered
 
@@ -138,7 +144,7 @@ findings list is silence: the report of a well-defended app looks exactly like t
 of a scan that attacked nothing. Only real probes count (a coverage assertion or a static
 scanner never inflates the number), and a probe that ran out of `--app-timeout` is neither
 withstood nor a finding, because a target that stops answering must not look like one that
-resisted. See [Red-team your defense](https://wehnsdaefflae.github.io/llmsectest/guides/red-team-your-defense/).
+resisted. See [Red-team your defense](https://docs.llmsec.dev/guides/red-team-your-defense/).
 
 **A target we could not reach is never reported as a vulnerable one.** If your endpoint is
 unreachable, replies with something that isn't JSON, or dies partway through, those probes are

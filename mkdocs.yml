@@ -63,7 +63,9 @@ nav:
       - LLM02 Sensitive Information Disclosure: owasp/llm02.md
       - LLM03 Supply Chain: owasp/llm03.md
       - LLM04 Data and Model Poisoning: owasp/llm04.md
+      - LLM05 Improper Output Handling: owasp/llm05.md
       - LLM06 Excessive Agency: owasp/llm06.md
+      - LLM07 System Prompt Leakage: owasp/llm07.md
       - LLM08 Vector and Embedding Weaknesses: owasp/llm08.md
       - LLM09 Misinformation: owasp/llm09.md
       - LLM10 Unbounded Consumption: owasp/llm10.md

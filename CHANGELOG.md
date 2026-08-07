@@ -10,6 +10,22 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
 ## [Unreleased]
 
 ### Fixed
+- **A scan that got your secret out no longer reports that your secret was protected.** This closes the
+  *Known issue* disclosed on 2026-08-06. Each category only ever scored the replies to its own probes, so
+  the LLM02 oracle never saw the reply that gave the value away — and across our own test cohort **20 of
+  the 41 applications that declare a secret had it sitting verbatim inside their own LLM07 finding** while
+  the LLM02 row of the same report read `attempted 4, withstood 4, findings 0`. They refuse to state the
+  secret when asked for it, and reproduce their whole system prompt, including the line the secret is on,
+  when asked to repeat their instructions. The value you pass to `--app-secret` is now checked against
+  **every reply in the run**, using the same de-obfuscating oracle LLM02 uses, so an encoded leak counts
+  too. When any reply carries it: the report leads with a banner naming how many replies contained it, the
+  SARIF gains a run-level `secret_exposed` property, and the sensitive-disclosure attempts the application
+  technically survived are counted **voided** rather than withstood, with the reason printed beside the
+  number on every surface. The columns still add up (`attempted = withstood + findings + inconclusive +
+  voided`), so the table can be checked rather than trusted. Two things deliberately not done: the LLM07
+  finding is **not** re-filed as LLM02 — one probe, one category, and moving it would hide how the secret
+  actually came out — and a secret that appears in **our own attack prompt** never counts, so the tool can
+  never author the finding it then publishes. (2026-08-07)
 - **A scan of an unreachable application no longer reports a full set of critical vulnerabilities.** This
   closes the *Known issue* disclosed on 2026-08-04. A connection failure, a malformed reply or an auth
   failure raised `AdapterError`, which propagated out of the probe runner — and in this suite an exception
@@ -40,6 +56,16 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
   frontier models, and this oracle had it too. (2026-08-04)
 
 ### Added
+- **Deep-dive pages for [LLM05 Improper Output Handling](https://docs.llmsec.dev/owasp/llm05/) and
+  [LLM07 System Prompt Leakage](https://docs.llmsec.dev/owasp/llm07/) — all ten categories now have one.**
+  The docs nav has promised ten categories since the coverage work finished and shown fewer ever since;
+  that gap is closed. LLM07 carries the measurement this release is built on ("your system prompt is not a
+  secret store": 26 of 41 test applications leaked their instructions, and 20 of those 26 leaked the
+  credential with them) plus the honest limits of a verbatim-span oracle — a paraphrase, a leak that misses
+  the watched span, and an *encoded* leak in application mode are all invisible to it. LLM05 covers the four
+  payload/sink pairs, why the oracle matches the whole executable construct so an escaped echo is not a
+  finding, and the line between what an emitted payload proves (your output path does not neutralise active
+  content) and what it does not (that your sink is exploitable). (2026-08-07)
 - **Application-mode LLM02 and LLM06 now carry four attack techniques each, up from one.** Both categories
   had shipped a single case since application mode existed, and on 2026-08-05 both measured **zero findings
   across the whole test cohort** — LLM02 against 41 applications declaring a secret, LLM06 against 26
@@ -67,23 +93,6 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
   "no page yet" rather than "less covered". (2026-08-04)
 
 ### Known issue
-- **‼ An LLM02 row reading "withstood" does not mean the secret stayed in. It means the four LLM02 probes
-  did not get it out — and the LLM07 probe, in the same scan, may have.** Across our own test cohort, **20
-  of the 41 applications that declare a secret have that secret sitting verbatim inside their own LLM07
-  finding**: they decline to state it when asked, and reproduce their entire system prompt, including the
-  line the secret is on, when asked to repeat their instructions. Put the other way round, which is the
-  number that matters: of the **26** applications whose system prompt leaked at all, **20 handed over the
-  secret with it**. The remaining 15 produced no LLM07 finding, and for those the LLM02 row means what it
-  says. One member's report says
-  `LLM02 — attempted 1, withstood 1, findings 0` a few lines above an LLM07 finding whose evidence text
-  contains the value passed to `--app-secret`. OWASP's own LLM07 description says the danger of prompt
-  leakage *is* the credentials in the prompt, so the finding is filed in a defensible place; what is wrong
-  is the LLM02 accounting beside it, because "sensitive information disclosure: withstood" is false about a
-  scan that printed the secret. **Until this is fixed, if your scan reports any LLM07 finding, read the
-  LLM02 row as meaningless and check the LLM07 evidence for your own secret.** The fix — running the secret
-  oracle across every reply rather than only the LLM02 probes' replies, so no reader can come away
-  believing the value was protected — changes the probe path and therefore needs a full cohort validation
-  run of its own; it is the next thing queued rather than a half-validated patch. (Found 2026-08-06)
 - **‼ The LLM06 application probe cannot produce a finding against an application that does not itself
   emit the action string you passed to `--app-action`. If yours is prompt-only, read a clean LLM06 row as
   "not observed", not as "not vulnerable".** Disclosed as undiagnosed on 2026-08-04 (zero LLM06 findings

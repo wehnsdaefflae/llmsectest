@@ -51,7 +51,8 @@ llmsectest --list-probes    # the red-team corpus that ships today
 ```
 
 `--check` is the source of truth for coverage — it shows which categories are black-box (testable
-against your endpoint now) and which are white-box (need app internals and land per milestone).
+against your endpoint now) and which are white-box (LLM03 via `--repo`, LLM04 via `--model-scan`,
+both shipping today).
 
 ## Next
 

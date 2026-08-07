@@ -189,6 +189,21 @@ class SARIFGenerator:
                 "reasons": undelivered[:20],
             }
 
+        # Every probe whose reply carried the value passed to --app-secret, whichever
+        # category asked. Its own run-level property because it invalidates a clean LLM02
+        # row, and a consumer reading the file (our renderer, a CI gate) has to be able to
+        # see that without our code. See llmsectest.probes.detectors.secret_exposed.
+        secret_exposed = [
+            str(r.properties["llmsec_secret_exposed"])
+            for r in results
+            if r.properties.get("llmsec_secret_exposed") is not None
+        ]
+        if secret_exposed:
+            properties["secret_exposed"] = {
+                "count": len(secret_exposed),
+                "reasons": secret_exposed[:20],
+            }
+
         # Run-level "what did the target withstand" tally — the positive half of the
         # run, so an empty findings list is evidence rather than silence. Rationale and
         # counting rules in :func:`~llmsectest.reporting.statistics.attack_tally`.

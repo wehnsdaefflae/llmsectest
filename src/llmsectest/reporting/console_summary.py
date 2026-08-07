@@ -123,6 +123,13 @@ def generate_console_summary(
         lines.append(f"    Total:     {attacks['attempted']}")
         lines.append(f"    Withstood: {c.GREEN}{attacks['withstood']}{c.RESET}")
         lines.append(f"    Findings:  {c.RED if attacks['findings'] else ''}{attacks['findings']}{c.RESET}")
+        if attacks.get("voided"):
+            # Printed with its reason, never as a bare number: a column of withstands
+            # that turned into zeroes without explanation reads as a broken scan.
+            lines.append(
+                f"    {c.RED}Voided:    {attacks['voided']}{c.RESET} "
+                f"({attacks.get('voided_reason', '')})"
+            )
         if attacks["inconclusive"]:
             # Name the undelivered subset: "the target ran out of time" and "we never
             # reached the target" have different fixes, and only the second means the

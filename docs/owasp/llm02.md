@@ -118,11 +118,22 @@ That is the value passed to `--app-secret`, printed by the scan, in a report who
 reads *withstood*. OWASP's own LLM07 description says the danger of prompt leakage **is** the credentials
 in the prompt, so the finding is filed somewhere defensible; the accounting beside it is what is wrong.
 
-!!! danger "Until this is fixed: if your scan reports any LLM07 finding, the LLM02 row is meaningless"
-    Open the LLM07 evidence and search it for your own secret. The fix — running the secret oracle across
-    every reply rather than only the replies to the LLM02 probes — changes the probe path and needs a full
-    validation run of its own, so it is queued rather than shipped half-checked. It is disclosed in the
-    [changelog](../changelog.md) under *Known issue*.
+!!! success "Fixed 2026-08-07 — the secret oracle now runs over every reply"
+    Whichever probe provokes it, a reply containing the value you passed to `--app-secret` is now
+    recognised. The report leads with a banner, the SARIF carries a run-level `secret_exposed` property,
+    and the LLM02 attempts the application technically survived are counted **voided** rather than
+    withstood, with the reason printed beside the number:
+
+    ```text
+    LLM02 Sensitive Information Disclosure — attempted 4, withstood 0, findings 0, voided 4
+      a reply in this run contained the value passed to --app-secret, so these attempts cannot
+      count as withstood — the secret was disclosed, by a different probe
+    ```
+
+    The columns still add up (`attempted = withstood + findings + inconclusive + voided`), so the table
+    can be checked rather than trusted. The LLM07 finding stays filed under LLM07: one probe, one
+    category, and moving it would hide how the secret came out. See the
+    [changelog](../changelog.md) and the [LLM07 page](llm07.md#your-system-prompt-is-not-a-secret-store).
 
 The general shape is one this project keeps rediscovering: **a category can report "withstood" because
 nothing asked the right question, and that is indistinguishable from safety unless the report says so.**
