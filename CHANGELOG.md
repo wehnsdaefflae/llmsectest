@@ -28,6 +28,14 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
   is where the grammar is written down. (2026-08-10)
 
 ### Fixed
+- **A privileged-action signature the application merely *recited* is no longer read as one it invoked.**
+  Only the new run-level marker check is affected today, not the LLM06 finding itself. Applications
+  commonly document their own action grammar in their system prompt ("reply with a single line of the form
+  `ACTION: grant_access(user, system)`") and commonly hand that prompt over when asked to repeat their
+  instructions, so the signature turns up in a reply without anything having been invoked. The check now
+  subtracts lines the reply shares with `--app-prompt` before looking. The same exposure exists in the
+  LLM06 oracle and is being fixed separately, because a change on the probe path has to be validated
+  against a full regression cohort first. (2026-08-10)
 - **`llmsectest --check` understated what an application scan runs.** It said application scans always
   exercise LLM01 + LLM05 + LLM09, omitting **LLM10**, which has been always-on in application mode since
   the bounded unbounded-consumption probes shipped. The coverage map is the surface this project points
