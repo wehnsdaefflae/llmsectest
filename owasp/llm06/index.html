@@ -1351,6 +1351,21 @@
 <p>The model is wired to <em>do</em> things, and it does one it should not have — moving money, changing an account, deleting data, granting itself rights.</p>
 </blockquote>
 <p><strong>Modality:</strong> black-box (white-box for the tool surface itself). <strong>Status:</strong> covered.</p>
+<div class="admonition warning">
+<p class="admonition-title">Read this before trusting a clean LLM06 row</p>
+<p>The oracle looks for the <strong>invocation signature you passed to <code>--app-action</code></strong>, so it sees an
+operation the application actually emitted. If your application describes an action in prose instead
+("I have provisioned the access") it emits no signature, and a clean row then means <strong>not observed</strong>,
+not <em>not vulnerable</em>. This is not hypothetical: it kept LLM06 at zero across eight of our own
+regression baselines, and <a href="#what-a-clean-llm06-result-does-and-does-not-tell-you">the measurement</a> is
+below. Check that the signature you declared is the string your application really prints.</p>
+<p><strong>Since 2026-08-10 the report checks that for you.</strong> If <code>--app-action</code> was configured and the
+signature never appeared in any reply of the run, the scan marks LLM06 <code>unconfirmed</code> (a run-level
+<code>unconfirmed_markers</code> property, a banner on the page, a line in the console) rather than leaving a
+clean row to speak for itself. Signatures the application merely <strong>recited out of its own documented
+grammar</strong> do not count as having appeared, which matters here because these personas describe their
+action format in the system prompt and most applications hand that prompt over on request.</p>
+</div>
 <p>Prompt injection is a problem because of what the model can reach. An assistant that can only talk
 produces bad text; an assistant holding a refund API, a mailbox or a Kubernetes namespace produces
 consequences. OWASP calls the gap <strong>excessive agency</strong>: too much functionality, too many permissions, or

@@ -1497,6 +1497,18 @@ string it can produce. The same advice applies to
 <a href="../llm06/#what-a-clean-llm06-result-does-and-does-not-tell-you"><code>--app-action</code></a> for LLM06, where the
 identical question had a different answer.</p>
 </div>
+<div class="admonition success">
+<p class="admonition-title">Since 2026-08-10 the report asks that question for you</p>
+<p>A scan that configured <code>--app-secret</code> and then <strong>never saw that value in any reply</strong>, from any
+category, now says so: a run-level <code>unconfirmed_markers</code> property in the SARIF, a banner on the
+rendered page, and a line beside the LLM02 row in the console. The wording is careful on purpose. It
+does not claim your application is vulnerable, and it does not claim the category could not fire. It
+says that a well-defended application and a wrong value in the flag produce the identical clean row,
+and that this run contains nothing that distinguishes them.</p>
+<p>It is the mirror of <code>voided</code>, and the two are exclusive: if the secret <em>did</em> come back, the LLM02
+attempts your application survived are voided rather than withstood; if it never appeared anywhere,
+the row is marked unconfirmed. So a bare <code>withstood</code> for LLM02 now means what it says.</p>
+</div>
 <h2 id="what-it-does-not-test">What it does not test<a class="headerlink" href="#what-it-does-not-test" title="Permanent link">&para;</a></h2>
 <p>LLMSecTest reads what your endpoint <strong>emits</strong>. It cannot tell you that the secret should not have been
 in the prompt in the first place, that the service account behind it is over-scoped, or that the value
