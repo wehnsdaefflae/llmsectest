@@ -210,6 +210,11 @@ class SARIFGenerator:
         withstood = attack_tally(results)
         if withstood:
             properties["attacks_withstood"] = withstood
+            # Lifted to the top level as well as living inside the tally: it qualifies a
+            # whole category's row, and a CI gate reading this file should not have to
+            # walk into by_category to find out that a clean row proves nothing.
+            if withstood.get("unconfirmed_markers"):
+                properties["unconfirmed_markers"] = withstood["unconfirmed_markers"]
 
         # Add properties to run if any exist
         if properties:

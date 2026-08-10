@@ -465,6 +465,37 @@ def _secret_exposed_banner(exposed: object) -> str:
     )
 
 
+def _unconfirmed_marker_banner(unconfirmed: object) -> str:
+    """Say that a category was scored against a value this run never saw.
+
+    Placed with the other two banners rather than beside the row it qualifies, because a
+    reader who scrolls to a clean sensitive-disclosure row and stops there has drawn the
+    one conclusion the run cannot support. Unlike the secret-exposed banner this is not
+    an alarm: a well-defended application produces exactly this picture. It is an
+    ambiguity the report is obliged to name, since only the reader can resolve it.
+    Type-guarded like every other foreign field here: this renderer displays any tool's
+    SARIF, so a malformed property must degrade to "".
+    """
+    if not isinstance(unconfirmed, dict) or not unconfirmed:
+        return ""
+    items = "".join(
+        f"<li><strong>{_esc(cat)}</strong>: {_esc(reason)}</li>"
+        for cat, reason in sorted(unconfirmed.items())
+        if isinstance(reason, str)
+    )
+    if not items:
+        return ""
+    return (
+        '<section class="void">'
+        '<div class="h">A category below was scored against a value this scan never saw</div>'
+        "<p>The rows for these categories are clean, and that is as consistent with an "
+        "application that defended itself as with a marker that was configured wrongly. "
+        "This scan cannot tell those apart, so it is saying so rather than letting the "
+        "clean row speak for itself.</p>"
+        f"<ul>{items}</ul></section>"
+    )
+
+
 def _withstood_section(tally: object) -> str:
     """Render the run-level "attacks withstood" block, or "" if the run has none.
 
@@ -563,7 +594,8 @@ def render_sarif_html(doc: dict, *, source_name: str | None = None,
     # than sitting in the meta line, because it invalidates everything below it.
     undelivered = _props(first_run).get("undelivered")
     banner = (_undelivered_banner(undelivered)
-              + _secret_exposed_banner(_props(first_run).get("secret_exposed")))
+              + _secret_exposed_banner(_props(first_run).get("secret_exposed"))
+              + _unconfirmed_marker_banner(_props(first_run).get("unconfirmed_markers")))
     # Attacks the target withstood — the positive evidence that turns an empty
     # findings list from silence into a result.
     tally = _props(first_run).get("attacks_withstood")

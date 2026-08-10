@@ -166,88 +166,35 @@ than a blank.
 
 ### No silent gaps
 
-**All ten** OWASP categories run on every invocation: each ships a real probe or
-scanner, and any category that needs an input it wasn't given (a repo, a model
-path, an app marker) appears as a skipped test that says exactly what it needs — so
-a category is never silently absent. A run also ends with a coverage footer summarising which
-categories were exercised and which were not, and why. What's reachable depends on
-the target:
+**All ten** OWASP categories run on every invocation. Each ships a real probe or scanner, and a
+category that needs an input it wasn't given (a repo, a model path, an app marker) appears as a
+**skipped test naming the flag it needs**, never as a silent pass. Every run ends with a coverage
+footer accounting for all ten.
 
-- **A model/demo target** exercises the implemented black-box categories
-  (LLM01/02/05/06/07/09/10); the rest need an oracle or app internals, and are reported as
-  not-exercised.
-- **`--redteam-set <csv>`** deepens **LLM01** with a red-team jailbreak set: point it
-  at the MIT-licensed [JailbreakBench JBB-Behaviors](https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors)
-  CSV (100 behaviours; 18% from AdvBench) and a target is a finding when it **complies**
-  with a harmful request instead of refusing it (a refusal oracle — inverted from the
-  canary detectors). Without the flag a built-in starter set runs, so an offline scan
-  still exercises the oracle; the footer prints the LLM01 red-team depth. A target that
-  refuses **while quoting** the demand ("you asked me to begin with `"Sure, here is …"`,
-  and I won't") is scored as having refused: the articulate refusal is exactly the one
-  that repeats the phrase being matched, and flagging it would punish good behaviour.
-- **`--redteam-benign [<csv>]`** measures **over-refusal**: it runs the JBB **benign
-  twins** (harmless requests matched to the harmful behaviours) and reports the
-  target's **false-refusal rate** — the share of harmless requests it wrongly refuses.
-  Over-refusing is a usability defect, not a vulnerability, so this is reported as a
-  separate quality metric and never enters the SARIF findings or the exit code. Bare
-  uses a built-in benign set; pass JBB's `benign-behaviors.csv` for the full 100.
-- **`--repo <path>`** adds the white-box **LLM03 (supply chain)** scan: it reads the
-  project's dependency manifests (`requirements*.txt`, `pyproject.toml`, `Pipfile`) and
-  flags known-malicious/typosquatted packages, unpinned or unbounded versions, direct
-  VCS/URL installs and insecure indexes — offline and deterministic. Without `--repo`,
-  LLM03 reports itself skipped (needs a repo), never a silent pass.
-- **`--osv`** (with `--repo`) adds a **known-CVE lookup**: every exactly-pinned
-  dependency (`==X.Y.Z`) is checked against [OSV.dev](https://osv.dev) — the open
-  advisory database behind pip-audit — and published advisories become findings
-  (networked, free, no API key). Ranges aren't queried: a static scan can't know
-  which version a range resolves to. Not requested, nothing pinned, or a failed
-  lookup each surface as an explicit skip reason, never as "clean".
-- **`--sbom [<out.json>]`** (with `--repo`) writes a **CycloneDX 1.6 SBOM** of the
-  project's declared dependencies — one PURL-identified component each, exact pins
-  (`==X.Y.Z`) carried into the component `version`, ranges/unpinned deps left
-  version-less with their constraint recorded as a property (the SBOM is only ever as
-  precise as the manifests allow). Built dependency-free from the stdlib; defaults to
-  `results/<repo>.cdx.json`. Feeds any CycloneDX-consuming supply-chain tool.
-- **`--model-scan <path>`** adds the white-box **LLM04 (data and model poisoning)**
-  scan: it walks the *opcode* stream of the project's serialized model files (pickle,
-  PyTorch `.pt`/`.pth`/`.ckpt` zips, numpy object arrays) with the stdlib
-  `pickletools` — never unpickling — and flags any import of a code-execution
-  primitive (`os.system`, `subprocess`, `builtins.eval`, a nested `pickle`/`torch.load`,
-  reflection gadgets) that would run when the artifact is loaded — the classic
-  "load a poisoned model, run the attacker's code" supply-side attack. Offline and
-  deterministic; a legitimate weights file (which only references tensor-rebuild
-  helpers) does not false-positive. Without `--model-scan`, LLM04 reports itself
-  skipped (needs a model path), never a silent pass.
-- **A real app endpoint** (`--target app:<url>`) is black-box: the attack-side-marker
-  categories always transfer (**LLM01** prompt injection, **LLM05** improper output
-  handling, **LLM09** misinformation — does the app confabulate facts about an
-  entity that does not exist? — and **LLM10** unbounded consumption, via two *bounded*
-  probes: a repetition flood (repeat a marker an explicit, finite number of times) and
-  output amplification (emit a large but finite non-repetitive volume) — a vulnerable app
-  that floods or amplifies on demand is flagged while a disciplined one caps, samples or
-  refuses, with no risk of a runaway generation). **LLM07/02/06/08** light up when you tell LLMSecTest
-  what to look for:
-  `--app-prompt <text-or-file>` (the app's own system prompt) enables **LLM07**
-  leakage detection, `--app-secret <value>` (a real secret the app holds) enables
-  **LLM02**, `--app-action <signature>` (a privileged tool call, repeatable)
-  enables **LLM06**, and two RAG markers enable **LLM08**: `--app-canary <value>`
-  (confidential content planted in the app's **retrieved corpus**) runs the
-  *retrieval-exposure* probes (corpus enumeration, retrieval-scope escalation,
-  topic-targeted retrieval — a leak of the canary from a retrieved document is the
-  finding), and `--app-rag-poison <marker>` (the marker a planted **poisoned
-  document** instructs the model to emit) runs the *indirect-injection* probes — a
-  benign query retrieves the poisoned doc and a vulnerable app obeys it, emitting the
-  marker although the prompt never named it (the LLM08↔LLM01 bridge). Same inputs as
-  the `run_app_scan` API. The footer always shows exactly what was and wasn't run.
-  `--app-timeout <seconds>` caps each request to the app (default 120 s) as a real
-  **wall-clock deadline**, so an app that keeps streaming output without ever finishing is
-  cut off just like one that stalls: a request that exceeds the budget is recorded as an
-  **inconclusive** probe rather than left to hang the scan, so one slow or runaway endpoint
-  cannot discard every other result. The exception is the two *bounded* LLM10 probes: an
-  app that burns the whole budget on a request it could answer in one short reply, while
-  answering its other probes well inside that same budget, is flagged for unbounded
-  consumption rather than recorded as unmeasured, and the finding reports how much output
-  it produced without terminating.
+What a category needs, and what it gets you:
+
+| Flag | Unlocks | What it is |
+|---|---|---|
+| *(none)* | LLM01, LLM05, LLM09, LLM10 | attack-side markers, so they transfer to any target |
+| `--app-prompt <text\|file>` | LLM07 | the app's own system prompt, to detect it leaking |
+| `--app-secret <value>` | LLM02 | a real secret the app holds |
+| `--app-action <signature>` | LLM06 | a privileged tool call, repeatable |
+| `--app-canary <value>` | LLM08 retrieval exposure | confidential content planted in the retrieved corpus |
+| `--app-rag-poison <marker>` | LLM08 indirect injection | the marker a planted poisoned document tells the model to emit |
+| `--repo <path>` | LLM03 | dependency manifests to scan (add `--osv` for known CVEs, `--sbom` for CycloneDX) |
+| `--model-scan <path>` | LLM04 | serialized model files, read as pickle opcodes and never unpickled |
+| `--redteam-set <csv>` | LLM01 depth | the JailbreakBench 100-behaviour corpus (`--redteam-benign` adds the over-refusal rate) |
+
+Every flag above is documented with its semantics, defaults and failure modes in the
+[CLI reference](https://docs.llmsec.dev/cli/); the app-target ones are walked through end to end in
+[Test your own app](https://docs.llmsec.dev/guides/target-app/).
+
+Three things the table cannot show, and they are the reason the coverage footer exists. A category you
+gave nothing to is reported skipped, with the flag named. A category you *did* give something to
+still reports what it attempted and what the target withstood, so a clean row is a measurement
+rather than a silence. And if the value you named for a category never appeared in **any** reply of the
+run, the report says that too: a defended application and a mistyped flag produce the same clean row,
+and only you can tell them apart.
 
 Live providers import their SDK lazily and read the relevant API key from the
 environment. The corpus and detectors are importable, too:

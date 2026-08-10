@@ -13,7 +13,7 @@ import pytest
 
 from llmsectest import envvars
 from llmsectest.probes import resolve_target
-from llmsectest.probes.detectors import secret_exposed
+from llmsectest.probes.detectors import action_signatures_emitted, secret_exposed
 from llmsectest.probes.runner import TargetResponsiveness, run_probe
 
 
@@ -65,8 +65,30 @@ def configured_secret() -> str | None:
     return envvars.app_inputs_from_env()[1]
 
 
+@pytest.fixture(scope="session")
+def configured_prompt() -> str:
+    """The app's own system prompt as passed to ``--app-prompt`` (``""`` if unknown).
+
+    Needed by the marker check to tell an invocation from the application quoting its
+    own documented action grammar back at us.
+    """
+    return envvars.app_inputs_from_env()[0]
+
+
+@pytest.fixture(scope="session")
+def configured_actions() -> tuple[str, ...]:
+    """The signatures the developer passed to ``--app-action``, or ``()``.
+
+    Read once per session for the same reason as :func:`configured_secret`: the question
+    "did this marker ever appear at all" is a question about the whole run, not about the
+    probes of one category.
+    """
+    return envvars.app_inputs_from_env()[2]
+
+
 @pytest.fixture
-def probe(target_adapter, target_responsiveness, configured_secret, record_property):
+def probe(target_adapter, target_responsiveness, configured_secret, configured_actions,
+          configured_prompt, record_property):
     """Return a callable that runs a probe case against the resolved target.
 
     When the case is a finding, record a **clean finding message** — the attack
@@ -107,6 +129,23 @@ def probe(target_adapter, target_responsiveness, configured_secret, record_prope
                                          sent=case.user_prompt)
         if exposed:
             record_property("llmsec_secret_exposed", f"{case.id}: {detail}")
+        # Was the marker ever *live* in this run? Recorded for the same reason and read
+        # the other way round: a configured value that never turns up anywhere leaves a
+        # clean row that a defended application and a mistyped flag both produce. The
+        # "configured" flags say a doubt is possible at all; the "observed" ones resolve
+        # it. See llmsectest.reporting.statistics.MARKER_CATEGORIES.
+        if configured_secret:
+            record_property("llmsec_secret_configured", configured_secret[:8] + "…")
+        if configured_actions:
+            record_property("llmsec_action_configured", len(configured_actions))
+            # Discounting signatures the app merely recited out of its own documented
+            # grammar: measured on 2026-08-10, that is the only place most members ever
+            # produce one, and counting it would report the marker as live in a run where
+            # nothing was invoked. See detectors.action_signatures_emitted.
+            seen = action_signatures_emitted(outcome.response, configured_actions,
+                                             configured_prompt)
+            if seen:
+                record_property("llmsec_action_observed", f"{case.id}: {', '.join(seen)}")
         if outcome.vulnerable:
             record_property(
                 "llmsec_finding",

@@ -27,8 +27,8 @@ Examples:
         --app-rag-poison "RAG-POISON-MARKER-3b9d"
                           # deeper app scan: the dev-supplied inputs unlock LLM07/02/06/08
 
-Application scans (``--target app:<url>``) always exercise LLM01 + LLM05 + LLM09
-black-box. Optional inputs unlock the remaining black-box categories:
+Application scans (``--target app:<url>``) always exercise LLM01 + LLM05 + LLM09 +
+LLM10 black-box. Optional inputs unlock the remaining black-box categories:
 ``--app-prompt`` (the app's own system prompt — inline text or a file path)
 enables LLM07, ``--app-secret`` (a real secret the app holds) enables LLM02,
 ``--app-action`` (a privileged tool/action signature; repeatable) enables LLM06,
@@ -137,7 +137,7 @@ def check_coverage():
     print(f"SARIF security-severity. cvss library installed: {library_available()} "
           "(baked scores used otherwise).")
     print("Black-box categories test your running app via  --target app:<url> .")
-    print("App scans always exercise LLM01+LLM05+LLM09; add --app-prompt / --app-secret /")
+    print("App scans always exercise LLM01+LLM05+LLM09+LLM10; add --app-prompt / --app-secret /")
     print("--app-action (repeatable) / --app-canary / --app-rag-poison to unlock")
     print("LLM07 / LLM02 / LLM06 / LLM08 (retrieval exposure + RAG indirect injection).")
     print("--app-timeout <seconds> caps each app request (a slow endpoint is recorded")

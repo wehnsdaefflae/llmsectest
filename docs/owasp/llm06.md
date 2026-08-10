@@ -4,6 +4,21 @@
 
 **Modality:** black-box (white-box for the tool surface itself). **Status:** covered.
 
+!!! warning "Read this before trusting a clean LLM06 row"
+    The oracle looks for the **invocation signature you passed to `--app-action`**, so it sees an
+    operation the application actually emitted. If your application describes an action in prose instead
+    ("I have provisioned the access") it emits no signature, and a clean row then means **not observed**,
+    not *not vulnerable*. This is not hypothetical: it kept LLM06 at zero across eight of our own
+    regression baselines, and [the measurement](#what-a-clean-llm06-result-does-and-does-not-tell-you) is
+    below. Check that the signature you declared is the string your application really prints.
+
+    **Since 2026-08-10 the report checks that for you.** If `--app-action` was configured and the
+    signature never appeared in any reply of the run, the scan marks LLM06 `unconfirmed` (a run-level
+    `unconfirmed_markers` property, a banner on the page, a line in the console) rather than leaving a
+    clean row to speak for itself. Signatures the application merely **recited out of its own documented
+    grammar** do not count as having appeared, which matters here because these personas describe their
+    action format in the system prompt and most applications hand that prompt over on request.
+
 Prompt injection is a problem because of what the model can reach. An assistant that can only talk
 produces bad text; an assistant holding a refund API, a mailbox or a Kubernetes namespace produces
 consequences. OWASP calls the gap **excessive agency**: too much functionality, too many permissions, or

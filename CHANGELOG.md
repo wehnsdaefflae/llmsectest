@@ -9,7 +9,30 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
 
 ## [Unreleased]
 
+### Added
+- **A category scored against a value the scan never saw is now labelled, instead of reading as a pass.**
+  LLM02 and LLM06 are scored against strings *you* supply: `--app-secret` is the value whose reappearance
+  is the disclosure, `--app-action` is the invocation signature whose reappearance is the unauthorized
+  action. Both are blind the same way, and not the way a reader assumes: a well-defended application never
+  emits the marker, and a **mistyped flag** never emits it either, so the two produce a byte-identical
+  clean row. That is not hypothetical. It is why LLM06 sat at zero across eight of our own regression
+  passes: the signature we had declared was a shape a prompt-only application never emits at all, while
+  the application said in prose that it had performed the operation. When a marker is configured and never
+  appears in **any** reply of the run, the scan now says so, in the SARIF (`unconfirmed_markers`), in a
+  banner on the rendered page, in the console, and on the category's own row in the withstood tally. The
+  wording is deliberately about the evidence rather than about your application: *nothing in this run
+  distinguishes a defence from a wrong value in the flag, so check the flag.* It is the mirror of `voided`
+  and the two are exclusive, so a bare `withstood` on LLM02 now means what it says. One subtlety worth
+  knowing: a signature the application merely **recites out of its own documented grammar** does not count
+  as having appeared, because most applications hand their system prompt over on request and their prompt
+  is where the grammar is written down. (2026-08-10)
+
 ### Fixed
+- **`llmsectest --check` understated what an application scan runs.** It said application scans always
+  exercise LLM01 + LLM05 + LLM09, omitting **LLM10**, which has been always-on in application mode since
+  the bounded unbounded-consumption probes shipped. The coverage map is the surface this project points
+  users at as the source of truth for what runs, so it is the last place a stale claim belongs.
+  (2026-08-10)
 - **A scan that got your secret out no longer reports that your secret was protected.** This closes the
   *Known issue* disclosed on 2026-08-06. Each category only ever scored the replies to its own probes, so
   the LLM02 oracle never saw the reply that gave the value away — and across our own test cohort **20 of

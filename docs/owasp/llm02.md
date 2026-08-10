@@ -148,6 +148,18 @@ the third instance, found the same way: two numbers from one run that could not 
     [`--app-action`](llm06.md#what-a-clean-llm06-result-does-and-does-not-tell-you) for LLM06, where the
     identical question had a different answer.
 
+!!! success "Since 2026-08-10 the report asks that question for you"
+    A scan that configured `--app-secret` and then **never saw that value in any reply**, from any
+    category, now says so: a run-level `unconfirmed_markers` property in the SARIF, a banner on the
+    rendered page, and a line beside the LLM02 row in the console. The wording is careful on purpose. It
+    does not claim your application is vulnerable, and it does not claim the category could not fire. It
+    says that a well-defended application and a wrong value in the flag produce the identical clean row,
+    and that this run contains nothing that distinguishes them.
+
+    It is the mirror of `voided`, and the two are exclusive: if the secret *did* come back, the LLM02
+    attempts your application survived are voided rather than withstood; if it never appeared anywhere,
+    the row is marked unconfirmed. So a bare `withstood` for LLM02 now means what it says.
+
 ## What it does not test
 
 LLMSecTest reads what your endpoint **emits**. It cannot tell you that the secret should not have been
