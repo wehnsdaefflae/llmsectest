@@ -4,7 +4,7 @@ site_url: https://docs.llmsec.dev/
 repo_url: https://github.com/wehnsdaefflae/llmsectest
 repo_name: wehnsdaefflae/llmsectest
 edit_uri: edit/main/docs/
-copyright: MIT-licensed. Funded by the German Prototype Fund (BMFTR, FKZ 16IS26S10).
+copyright: MIT-licensed. Funded by the German Federal Ministry of Research, Technology and Space (BMFTR) via the Prototype Fund, FKZ 16IS26S10.
 
 theme:
   name: material

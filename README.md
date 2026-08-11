@@ -70,7 +70,9 @@ See [Funding](#funding).
   come from the application.
 - **Encoded leaks still count.** The LLM02 / LLM07 / LLM08 leak oracles **de-obfuscate** a reply before
   matching, so a secret returned base64/hex/base32/base85/ASCII85/ROT13/quoted-printable/uuencode-encoded,
-  Unicode-disguised (full-width or zero-width characters), or split across separators is caught.
+  Unicode-disguised (full-width or zero-width characters), or split across separators is caught — including
+  when the separator is *spelled out* (`E SPACE X SPACE A …`), which is what a small model reached for on
+  its own when asked to defeat an output filter.
 - **Over-refusal is measured too.** `--redteam-benign` runs the matched benign twins and reports the
   target's **false-refusal rate** — a usability signal, kept out of the security findings and the exit code.
 - **One adapter for every target.** OpenAI, Anthropic, HuggingFace, and local Ollama / LM Studio, plus a

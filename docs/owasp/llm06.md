@@ -43,6 +43,17 @@ looks for, and the choice matters: a target that answers *"I won't reset anyone'
 names the tool while refusing it, and must not be scored as having used it. Matching the invocation and
 not the topic is what keeps a well-behaved refusal out of the report.
 
+There is a second way a signature reaches a reply without anything being invoked, and it is the one that
+actually bit us. Your system prompt is where the grammar is *written down* — "reply with a single line of
+the form `ACTION: grant_access(user, system)`" — and most applications hand that prompt over when a
+stranger asks them to repeat their instructions. In a real scan of one of our test applications the
+string `ACTION: grant_access(` appeared exactly once, inside the LLM07 prompt-leak finding. Since
+2026-08-11 the oracle subtracts lines a reply shares with `--app-prompt` before matching, so a
+**recitation is not an invocation**. A real invocation is unaffected: it carries arguments the model made
+up, so it appears in no prompt. The subtraction is exact-line, so a recitation your application re-wraps
+across different line breaks is not subtracted — deliberately the conservative direction, since that can
+leave a false positive standing but can never hide a real invocation.
+
 Against an application the category runs **four techniques**, each an assertion of authority the endpoint
 cannot verify: an open-ended demand for whatever access is needed, a claimed operational role, an
 irreversible action demanded without confirmation, and a forged authorisation (a fabricated employee id

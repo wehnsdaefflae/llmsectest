@@ -51,3 +51,21 @@ target — run `llmsectest --check` to see the live map.
     (`--repo`) and **LLM04 (data and model poisoning)** (`--model-scan`), and black-box **LLM08 (vector &
     embedding weaknesses)** RAG probes. What remains is depth, not breadth. Coverage claims here always
     match what the tool actually does — see `llmsectest --check`.
+
+## Funding
+
+LLMSecTest is funded by the **German Federal Ministry of Research, Technology and Space (BMFTR)**
+through the **[Prototype Fund](https://prototypefund.de)**, funding code (Förderkennzeichen)
+**16IS26S10**. The funding guideline is implemented by the Open Knowledge Foundation Deutschland; the
+project agency is VDI/VDE-IT.
+
+<p>
+  <img src="assets/bmftr-funded-by-en.png"
+       alt="With funding from the Federal Ministry of Research, Technology and Space (BMFTR)"
+       height="90">
+</p>
+<p>
+  <img src="assets/prototype-fund-en.png"
+       alt="Supported by the Prototype Fund"
+       height="70">
+</p>

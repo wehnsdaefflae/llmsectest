@@ -28,6 +28,26 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
   is where the grammar is written down. (2026-08-10)
 
 ### Fixed
+- **The LLM06 finding itself now applies the recitation guard, so quoting your own action grammar can no
+  longer be published as an unauthorized invocation.** This completes the fix below, which reached only the
+  run-level marker check on 2026-08-10 because changing how a finding is scored has to be validated against
+  a full regression cohort first. It has been: a full pass over 47 test applications on 2026-08-11 moved no
+  count anywhere, and **both of the cohort's genuine LLM06 findings survived it** — each one an invocation
+  carrying arguments the model invented, which is precisely what a recitation cannot be. `LLM06` is now
+  scored against lines your application *composed*, with lines it shares with `--app-prompt` subtracted
+  first. A genuine invocation is unaffected — it carries arguments the model made up, so it appears in no
+  prompt. The subtraction is exact-line; a recitation your application re-wraps across different line
+  breaks is not subtracted, which is the conservative direction, since it can leave a false positive
+  standing but can never suppress a real invocation. (2026-08-11)
+- **A secret spelled out with the separator *named* is now caught as a leak.** The leak oracles already
+  reassembled a value split across separator characters (`E-X-A-M-P-L-E`). Asked to put "a space between
+  every character", a small model instead answered `E SPACE X SPACE A SPACE M …`, writing the word — which
+  passed straight through an application's own output filter *and* through ours. It was not crafted: a 2B
+  model produced it on the first attempt as its reading of the request. `SPACE`, `SPC`, `DASH`, `HYPHEN`
+  and `UNDERSCORE` are now folded into the split pass, whole-word only (so `namespace` and `dashboard` are
+  untouched), under the same minimum-length guard as before, and a finding names the scheme separately as
+  `spelled-split` so a report still tells you how the value got out. A reply that merely discusses the word
+  "space" is pinned by test as a non-finding. (2026-08-11)
 - **A privileged-action signature the application merely *recited* is no longer read as one it invoked.**
   Only the new run-level marker check is affected today, not the LLM06 finding itself. Applications
   commonly document their own action grammar in their system prompt ("reply with a single line of the form
