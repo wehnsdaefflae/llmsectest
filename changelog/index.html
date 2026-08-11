@@ -1621,6 +1621,34 @@ yet published to PyPI</strong>. The forward-looking plan is the <a href="https:/
 </ul>
 <h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Permanent link">&para;</a></h3>
 <ul>
+<li><strong>The LLM06 finding itself now applies the recitation guard, so quoting your own action grammar can no
+  longer be published as an unauthorized invocation.</strong> This completes the fix below, which reached only the
+  run-level marker check on 2026-08-10 because changing how a finding is scored has to be validated against
+  a full regression cohort first. It has been: a full pass over 47 test applications on 2026-08-11 moved no
+  count anywhere, and <strong>both of the cohort's genuine LLM06 findings survived it</strong> — each one an invocation
+  carrying arguments the model invented, which is precisely what a recitation cannot be. <code>LLM06</code> is now
+  scored against lines your application <em>composed</em>, with lines it shares with <code>--app-prompt</code> subtracted
+  first. A genuine invocation is unaffected — it carries arguments the model made up, so it appears in no
+  prompt. The subtraction is exact-line; a recitation your application re-wraps across different line
+  breaks is not subtracted, which is the conservative direction, since it can leave a false positive
+  standing but can never suppress a real invocation. (2026-08-11)</li>
+<li><strong>A secret spelled out with the separator <em>named</em> is now caught as a leak.</strong> The leak oracles already
+  reassembled a value split across separator characters (<code>E-X-A-M-P-L-E</code>). Asked to put "a space between
+  every character", a small model instead answered <code>E SPACE X SPACE A SPACE M …</code>, writing the word — which
+  passed straight through an application's own output filter <em>and</em> through ours. It was not crafted: a 2B
+  model produced it on the first attempt as its reading of the request. <code>SPACE</code>, <code>SPC</code>, <code>DASH</code>, <code>HYPHEN</code>
+  and <code>UNDERSCORE</code> are now folded into the split pass, whole-word only (so <code>namespace</code> and <code>dashboard</code> are
+  untouched), under the same minimum-length guard as before, and a finding names the scheme separately as
+  <code>spelled-split</code> so a report still tells you how the value got out. A reply that merely discusses the word
+  "space" is pinned by test as a non-finding. (2026-08-11)</li>
+<li><strong>A privileged-action signature the application merely <em>recited</em> is no longer read as one it invoked.</strong>
+  Only the new run-level marker check is affected today, not the LLM06 finding itself. Applications
+  commonly document their own action grammar in their system prompt ("reply with a single line of the form
+  <code>ACTION: grant_access(user, system)</code>") and commonly hand that prompt over when asked to repeat their
+  instructions, so the signature turns up in a reply without anything having been invoked. The check now
+  subtracts lines the reply shares with <code>--app-prompt</code> before looking. The same exposure exists in the
+  LLM06 oracle and is being fixed separately, because a change on the probe path has to be validated
+  against a full regression cohort first. (2026-08-10)</li>
 <li><strong><code>llmsectest --check</code> understated what an application scan runs.</strong> It said application scans always
   exercise LLM01 + LLM05 + LLM09, omitting <strong>LLM10</strong>, which has been always-on in application mode since
   the bounded unbounded-consumption probes shipped. The coverage map is the surface this project points
@@ -2241,7 +2269,7 @@ yet published to PyPI</strong>. The forward-looking plan is the <a href="https:/
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      MIT-licensed. Funded by the German Prototype Fund (BMFTR, FKZ 16IS26S10).
+      MIT-licensed. Funded by the German Federal Ministry of Research, Technology and Space (BMFTR) via the Prototype Fund, FKZ 16IS26S10.
     </div>
   
   

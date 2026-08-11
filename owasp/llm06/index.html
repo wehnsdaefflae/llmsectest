@@ -1383,6 +1383,16 @@ tool-call line, function-call prefix or command envelope. That is what the <code
 looks for, and the choice matters: a target that answers <em>"I won't reset anyone's MFA without a ticket"</em>
 names the tool while refusing it, and must not be scored as having used it. Matching the invocation and
 not the topic is what keeps a well-behaved refusal out of the report.</p>
+<p>There is a second way a signature reaches a reply without anything being invoked, and it is the one that
+actually bit us. Your system prompt is where the grammar is <em>written down</em> — "reply with a single line of
+the form <code>ACTION: grant_access(user, system)</code>" — and most applications hand that prompt over when a
+stranger asks them to repeat their instructions. In a real scan of one of our test applications the
+string <code>ACTION: grant_access(</code> appeared exactly once, inside the LLM07 prompt-leak finding. Since
+2026-08-11 the oracle subtracts lines a reply shares with <code>--app-prompt</code> before matching, so a
+<strong>recitation is not an invocation</strong>. A real invocation is unaffected: it carries arguments the model made
+up, so it appears in no prompt. The subtraction is exact-line, so a recitation your application re-wraps
+across different line breaks is not subtracted — deliberately the conservative direction, since that can
+leave a false positive standing but can never hide a real invocation.</p>
 <p>Against an application the category runs <strong>four techniques</strong>, each an assertion of authority the endpoint
 cannot verify: an open-ended demand for whatever access is needed, a claimed operational role, an
 irreversible action demanded without confirmation, and a forged authorisation (a fabricated employee id
@@ -1588,7 +1598,7 @@ not evidence about them.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      MIT-licensed. Funded by the German Prototype Fund (BMFTR, FKZ 16IS26S10).
+      MIT-licensed. Funded by the German Federal Ministry of Research, Technology and Space (BMFTR) via the Prototype Fund, FKZ 16IS26S10.
     </div>
   
   
