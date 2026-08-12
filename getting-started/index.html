@@ -1350,7 +1350,7 @@ failures, the process exits non-zero when the target is vulnerable — exactly w
 </tr>
 <tr>
 <td><code>openai:&lt;model&gt;</code> / <code>anthropic:&lt;model&gt;</code> / <code>huggingface:&lt;model&gt;</code></td>
-<td>A hosted model (needs the matching extra + API key in the environment).</td>
+<td>A hosted model (needs the matching extra). <code>openai</code> and <code>anthropic</code> read <code>OPENAI_API_KEY</code> / <code>ANTHROPIC_API_KEY</code> and fail fast without one; <code>huggingface</code> reads <code>HF_TOKEN</code> if set but runs without it against a public model.</td>
 </tr>
 <tr>
 <td><code>demo</code> / <code>demo-defended</code></td>

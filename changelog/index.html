@@ -1621,6 +1621,23 @@ yet published to PyPI</strong>. The forward-looking plan is the <a href="https:/
 </ul>
 <h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Permanent link">&para;</a></h3>
 <ul>
+<li><strong>"A target we could not reach is never reported as a vulnerable one" now holds on <em>every</em> provider, not
+  just on the OpenAI-compatible ones.</strong> The guarantee shipped on 2026-08-05: a transport failure is
+  recorded inconclusive and flagged <code>undelivered</code>, never scored as a finding, and the run exits non-zero
+  so an empty findings list cannot pass CI as a clean bill of health. It rests on the adapter raising
+  <code>AdapterError</code>, and only <code>OpenAIAdapter</code> (with its <code>ollama</code> and <code>lmstudio</code> subclasses) and the
+  <code>app:&lt;url&gt;</code> endpoint adapter did. <code>--target anthropic:…</code> and <code>--target huggingface:…</code> let their vendor
+  SDK's connection error propagate instead, and an exception on the probe path is a failing pytest test,
+  which this suite renders as a CVSS-scored OWASP finding. So on those two targets an unreachable endpoint
+  still produced the exact defect the 2026-08-05 fix was written to end: a full set of critical
+  vulnerabilities whose evidence text is a Python traceback. Measured before fixing, with a fake SDK
+  client raising the connection error each real SDK raises: both propagated, while the OpenAI control
+  returned <code>undelivered</code>. The translation now lives in one place (<code>adapters.base.transport_errors</code>) that
+  all three adapters use and a third-party adapter can import, and it distinguishes a failure to <em>reach</em>
+  the target from a failure <em>of</em> the target, so a bad request still propagates unchanged rather than being
+  laundered into "not delivered". A test pins that every provider in the registry either proves the
+  contract or is explicitly exempted with a reason, so a provider added later cannot reintroduce the gap
+  in silence. (2026-08-12)</li>
 <li><strong>The LLM06 finding itself now applies the recitation guard, so quoting your own action grammar can no
   longer be published as an unauthorized invocation.</strong> This completes the fix below, which reached only the
   run-level marker check on 2026-08-10 because changing how a finding is scored has to be validated against
