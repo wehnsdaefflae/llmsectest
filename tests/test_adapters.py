@@ -262,7 +262,8 @@ def test_complete_translates_connection_error(monkeypatch):
     )
     with pytest.raises(AdapterError) as exc:
         adapter.complete(CompletionRequest(messages=[Message.user("hi")]))
-    assert "is the server reachable" in str(exc.value)
+    # wording is now one shared format across every adapter (adapters.base.transport_errors)
+    assert "is the endpoint reachable" in str(exc.value)
 
 
 def test_complete_passes_through_non_connection_error(monkeypatch):

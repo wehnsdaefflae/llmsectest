@@ -8,7 +8,13 @@ from __future__ import annotations
 
 import os
 
-from .base import AdapterError, CompletionRequest, CompletionResponse, LLMAdapter
+from .base import (
+    AdapterError,
+    CompletionRequest,
+    CompletionResponse,
+    LLMAdapter,
+    transport_errors,
+)
 
 
 class HuggingFaceAdapter(LLMAdapter):
@@ -30,14 +36,18 @@ class HuggingFaceAdapter(LLMAdapter):
         self._client = InferenceClient(model=model, token=key)
 
     def complete(self, request: CompletionRequest) -> CompletionResponse:
-        resp = self._client.chat_completion(
-            messages=[
-                {"role": m.role.value, "content": m.content} for m in request.messages
-            ],
-            max_tokens=request.max_tokens,
-            temperature=max(request.temperature, 0.01),
-            stop=request.stop,
-        )
+        # An unreachable endpoint must reach run_probe as an AdapterError, or the probe
+        # is published as a critical finding instead of recorded undelivered. See
+        # adapters.base.transport_errors.
+        with transport_errors(self.provider, "the HuggingFace Inference API"):
+            resp = self._client.chat_completion(
+                messages=[
+                    {"role": m.role.value, "content": m.content} for m in request.messages
+                ],
+                max_tokens=request.max_tokens,
+                temperature=max(request.temperature, 0.01),
+                stop=request.stop,
+            )
         return CompletionResponse(
             text=resp.choices[0].message.content or "",
             model=self.model,

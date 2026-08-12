@@ -8,6 +8,8 @@ same way. Probes depend only on this module, never on a vendor SDK.
 from __future__ import annotations
 
 import abc
+import contextlib
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from enum import Enum
 
@@ -105,6 +107,67 @@ class AdapterTimeoutError(AdapterError):
         super().__init__(message)
         self.timeout = timeout
         self.bytes_received = bytes_received
+
+
+#: Class names of a transport-level failure, matched across the exception's whole MRO.
+#: Matching by *name* rather than by type is what lets one helper serve every provider
+#: without importing a single vendor SDK eagerly: it catches ``openai`` and
+#: ``anthropic``'s ``APIConnectionError``/``APITimeoutError``, ``httpx``'s
+#: ``ConnectError``, ``requests``' ``ConnectionError``/``Timeout``, and the stdlib pair,
+#: including for a provider whose package is not installed here at all.
+_TRANSPORT_ERROR_NAMES = frozenset({
+    "APIConnectionError", "APITimeoutError",
+    "ConnectionError", "ConnectError", "Timeout", "TimeoutError",
+})
+
+
+def is_transport_error(exc: BaseException) -> bool:
+    """True for a failure to *reach* the target, as opposed to a failure of the target."""
+    return bool({t.__name__ for t in type(exc).__mro__} & _TRANSPORT_ERROR_NAMES)
+
+
+@contextlib.contextmanager
+def transport_errors(provider: str, endpoint: str) -> Iterator[None]:
+    """Translate a vendor SDK's transport failure into :class:`AdapterError`.
+
+    Wrap the network call itself, and nothing else, in every adapter::
+
+        with transport_errors(self.provider, "the Anthropic API"):
+            resp = self._client.messages.create(...)
+
+    **This is not cosmetic, it is what makes the report honest, and it was missing on
+    two of our own adapters until 2026-08-12.** A probe that raises out of
+    :func:`~llmsectest.probes.runner.run_probe` is a failing pytest test, and this suite
+    renders a failing security test as a CVSS-scored OWASP finding, so an unreachable
+    endpoint published a full set of critical vulnerabilities with a Python traceback as
+    the evidence text (found in the cohort on 2026-08-04). The fix on 2026-08-05 gave
+    ``run_probe`` an ``except AdapterError`` that records the probe *undelivered*
+    instead, and exits the run non-zero. But that guarantee only reaches a target whose
+    adapter actually raises ``AdapterError``: ``OpenAIAdapter`` translated, the
+    ``anthropic`` and ``huggingface`` adapters did not, so both still published the
+    2026-08-04 defect. Measured rather than assumed, with a fake SDK client raising the
+    transport error each real SDK raises: ``run_probe`` propagated the raw exception on
+    both, and returned ``undelivered`` on the openai control.
+
+    Living here rather than in one adapter is the durable half: a **new** adapter gets
+    the guarantee by using the helper, and ``test_adapter_transport.py`` fails when a
+    provider is added to the registry without a case proving it, so the gap cannot be
+    reintroduced silently.
+
+    Only transport failures are translated (see :func:`is_transport_error`). Every other
+    error, including a malformed reply or a bad request, propagates unchanged: those are
+    facts about the target, and burying them here would trade one dishonest report for
+    another.
+    """
+    try:
+        yield
+    except Exception as exc:  # broad on purpose: re-raised below unless transport-level
+        if is_transport_error(exc):
+            raise AdapterError(
+                f"{provider} request to {endpoint} failed, is the endpoint reachable? "
+                f"({type(exc).__name__}: {exc})"
+            ) from exc
+        raise
 
 
 class LLMAdapter(abc.ABC):

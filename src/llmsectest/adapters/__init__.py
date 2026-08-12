@@ -15,6 +15,8 @@ from .base import (
     Message,
     PreflightResult,
     Role,
+    is_transport_error,
+    transport_errors,
 )
 from .mock import EchoAdapter, ScriptedAdapter
 
@@ -74,5 +76,7 @@ __all__ = [
     "ScriptedAdapter",
     "available_providers",
     "get_adapter",
+    "is_transport_error",
     "register_adapter",
+    "transport_errors",
 ]

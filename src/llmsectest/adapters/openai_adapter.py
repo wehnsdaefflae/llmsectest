@@ -19,21 +19,8 @@ from .base import (
     CompletionResponse,
     LLMAdapter,
     PreflightResult,
+    transport_errors,
 )
-
-
-def _is_connection_error(exc: BaseException) -> bool:
-    """True for a transport-level failure (server unreachable / timeout).
-
-    Checked by class name across the MRO so we needn't import the openai SDK's
-    exception types eagerly — it matches ``openai.APIConnectionError`` /
-    ``APITimeoutError`` as well as the stdlib ``ConnectionError`` / ``TimeoutError``.
-    """
-    names = {t.__name__ for t in type(exc).__mro__}
-    return bool(names & {
-        "APIConnectionError", "APITimeoutError",
-        "ConnectionError", "ConnectError", "Timeout", "TimeoutError",
-    })
 
 
 class OpenAIAdapter(LLMAdapter):
@@ -64,7 +51,11 @@ class OpenAIAdapter(LLMAdapter):
         self._client = OpenAI(api_key=key, base_url=base_url)
 
     def complete(self, request: CompletionRequest) -> CompletionResponse:
-        try:
+        # A transport failure (local server down, wrong port) becomes an AdapterError
+        # rather than an opaque SDK traceback, so the probe is recorded undelivered
+        # instead of published as a finding. Any other error (auth, rate limit, bad
+        # request) propagates unchanged. See adapters.base.transport_errors.
+        with transport_errors(self.provider, self.base_url or "the OpenAI API"):
             resp = self._client.chat.completions.create(
                 model=self.model,
                 messages=[{"role": m.role.value, "content": m.content} for m in request.messages],
@@ -72,18 +63,6 @@ class OpenAIAdapter(LLMAdapter):
                 temperature=request.temperature,
                 stop=request.stop,
             )
-        except Exception as exc:  # broad on purpose: re-raised below unless transport-level
-            # Translate a transport failure (local server down, wrong port) into
-            # a clear AdapterError instead of an opaque SDK traceback — the same
-            # actionable message preflight gives, but on the live scan path where
-            # a flaky local server is most likely to drop mid-suite. Any other
-            # error (auth, rate limit, bad request) propagates unchanged.
-            if _is_connection_error(exc):
-                raise AdapterError(
-                    f"{self.provider} request to {self.base_url or 'the OpenAI API'} "
-                    f"failed ({type(exc).__name__}: {exc}) — is the server reachable?"
-                ) from exc
-            raise
         choice = resp.choices[0]
         usage = getattr(resp, "usage", None)
         return CompletionResponse(

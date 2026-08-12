@@ -14,6 +14,7 @@ from .base import (
     CompletionResponse,
     LLMAdapter,
     Role,
+    transport_errors,
 )
 
 
@@ -44,14 +45,18 @@ class AnthropicAdapter(LLMAdapter):
             for m in request.messages
             if m.role is not Role.SYSTEM
         ]
-        resp = self._client.messages.create(
-            model=self.model,
-            system=system or None,
-            messages=turns,
-            max_tokens=request.max_tokens,
-            temperature=request.temperature,
-            stop_sequences=request.stop,
-        )
+        # An unreachable endpoint must reach run_probe as an AdapterError, or the probe
+        # is published as a critical finding instead of recorded undelivered. See
+        # adapters.base.transport_errors.
+        with transport_errors(self.provider, "the Anthropic API"):
+            resp = self._client.messages.create(
+                model=self.model,
+                system=system or None,
+                messages=turns,
+                max_tokens=request.max_tokens,
+                temperature=request.temperature,
+                stop_sequences=request.stop,
+            )
         text = "".join(block.text for block in resp.content if block.type == "text")
         return CompletionResponse(
             text=text,

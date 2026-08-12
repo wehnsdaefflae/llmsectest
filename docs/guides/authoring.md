@@ -17,6 +17,46 @@ reply = llm.prompt(
 assert "system prompt" not in reply.lower()
 ```
 
+## Writing your own adapter
+
+`register_adapter("myprovider", MyAdapter)` puts a new target behind the same `--target` flag as the
+shipped ones. A custom adapter has exactly one obligation beyond returning the reply, and it is the
+one that keeps the report honest:
+
+**Translate your transport failures into `AdapterError`.** Wrap the network call, and only the
+network call:
+
+```python
+from llmsectest.adapters import (
+    CompletionResponse, LLMAdapter, register_adapter, transport_errors,
+)
+
+class MyAdapter(LLMAdapter):
+    provider = "myprovider"
+
+    def complete(self, request):
+        with transport_errors(self.provider, "the MyProvider API"):
+            resp = self._client.chat(...)          # only this line
+        return CompletionResponse(                  # parsing stays outside
+            text=resp.text, model=self.model, provider=self.provider,
+        )
+
+register_adapter("myprovider", MyAdapter)
+```
+
+Without it, an unreachable endpoint is a **worse** outcome than a missing result. A probe that
+raises out of [`run_probe`](../api.md) is a failing `pytest` test, and this suite renders a failing
+security test as a CVSS-scored OWASP finding — so a mistyped URL reports your application as
+critically vulnerable, with a Python traceback as the evidence. `run_probe` catches `AdapterError`
+and records the probe as `undelivered` instead: inconclusive, never a finding, and the run still
+exits non-zero so the empty findings list cannot pass CI as a clean bill of health.
+
+`transport_errors` translates only a failure to *reach* the target (connection refused, DNS,
+timeout — matched across the vendor SDK's own exception classes without importing it). Anything
+else propagates unchanged, which is why the `with` block goes around the request and not around
+your response parsing: a malformed reply or a bad request is a fact about the target, and reporting
+it as "not delivered" would trade one dishonest report for another.
+
 ## Deterministic tests with offline adapters
 
 No API key, fully reproducible — ideal for unit-testing your guardrails or your own probes:

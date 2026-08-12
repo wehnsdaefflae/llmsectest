@@ -28,6 +28,23 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
   is where the grammar is written down. (2026-08-10)
 
 ### Fixed
+- **"A target we could not reach is never reported as a vulnerable one" now holds on *every* provider, not
+  just on the OpenAI-compatible ones.** The guarantee shipped on 2026-08-05: a transport failure is
+  recorded inconclusive and flagged `undelivered`, never scored as a finding, and the run exits non-zero
+  so an empty findings list cannot pass CI as a clean bill of health. It rests on the adapter raising
+  `AdapterError`, and only `OpenAIAdapter` (with its `ollama` and `lmstudio` subclasses) and the
+  `app:<url>` endpoint adapter did. `--target anthropic:…` and `--target huggingface:…` let their vendor
+  SDK's connection error propagate instead, and an exception on the probe path is a failing pytest test,
+  which this suite renders as a CVSS-scored OWASP finding. So on those two targets an unreachable endpoint
+  still produced the exact defect the 2026-08-05 fix was written to end: a full set of critical
+  vulnerabilities whose evidence text is a Python traceback. Measured before fixing, with a fake SDK
+  client raising the connection error each real SDK raises: both propagated, while the OpenAI control
+  returned `undelivered`. The translation now lives in one place (`adapters.base.transport_errors`) that
+  all three adapters use and a third-party adapter can import, and it distinguishes a failure to *reach*
+  the target from a failure *of* the target, so a bad request still propagates unchanged rather than being
+  laundered into "not delivered". A test pins that every provider in the registry either proves the
+  contract or is explicitly exempted with a reason, so a provider added later cannot reintroduce the gap
+  in silence. (2026-08-12)
 - **The LLM06 finding itself now applies the recitation guard, so quoting your own action grammar can no
   longer be published as an unauthorized invocation.** This completes the fix below, which reached only the
   run-level marker check on 2026-08-10 because changing how a finding is scored has to be validated against
