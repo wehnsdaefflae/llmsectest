@@ -1354,11 +1354,15 @@ security test as a CVSS-scored OWASP finding — so a mistyped URL reports your 
 critically vulnerable, with a Python traceback as the evidence. <code>run_probe</code> catches <code>AdapterError</code>
 and records the probe as <code>undelivered</code> instead: inconclusive, never a finding, and the run still
 exits non-zero so the empty findings list cannot pass CI as a clean bill of health.</p>
-<p><code>transport_errors</code> translates only a failure to <em>reach</em> the target (connection refused, DNS,
-timeout — matched across the vendor SDK's own exception classes without importing it). Anything
-else propagates unchanged, which is why the <code>with</code> block goes around the request and not around
-your response parsing: a malformed reply or a bad request is a fact about the target, and reporting
-it as "not delivered" would trade one dishonest report for another.</p>
+<p><code>transport_errors</code> translates two things and only two. A failure to <em>reach</em> the target (connection
+refused, DNS, timeout) becomes <code>AdapterError</code>, and a <strong>rate-limit refusal</strong> (<code>HTTP 429</code>, or an
+exception the SDK names <code>RateLimitError</code>) becomes <code>AdapterThrottleError</code>. Both are matched across the
+vendor SDK's own exception classes without importing it, so a provider whose package is not installed
+is still covered. The throttle gets its own type because the reader's next move differs: an
+unreachable target is a URL to check, a throttled one is a quota to raise.</p>
+<p>Anything else propagates unchanged, which is why the <code>with</code> block goes around the request and not
+around your response parsing: a malformed reply, an auth failure or a <code>500</code> is a fact about the
+target, and reporting it as "not delivered" would trade one dishonest report for another.</p>
 <h2 id="deterministic-tests-with-offline-adapters">Deterministic tests with offline adapters<a class="headerlink" href="#deterministic-tests-with-offline-adapters" title="Permanent link">&para;</a></h2>
 <p>No API key, fully reproducible — ideal for unit-testing your guardrails or your own probes:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">llmsectest.adapters</span><span class="w"> </span><span class="kn">import</span> <span class="n">EchoAdapter</span><span class="p">,</span> <span class="n">ScriptedAdapter</span>

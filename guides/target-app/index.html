@@ -1437,6 +1437,13 @@ from a clean bill of health. <code>0 findings, 25 never delivered</code> is not 
 <p>A slow app is a different case. One that exceeds <code>--app-timeout</code> was reached and ran out of budget: that
 is also inconclusive, but it does not fail the run — raise the budget instead. The console line
 distinguishes them (<code>Inconclusive: 26 (26 never delivered)</code>).</p>
+<p><strong>A rate-limited target is a third case, and it says so.</strong> A hosted target that answers <code>HTTP 429</code> has
+been reached, so the report does not tell you to check whether your endpoint is up. Those probes are
+recorded inconclusive in the same tally, with <code>rate limited by the target</code> as the reason and the
+provider's own <code>Retry-After</code> value when it sent one, and the run exits non-zero for the same reason as
+above. There is deliberately no retry or backoff: getting the count right comes first, and a retry loop
+built over a wrong count would only produce a confidently wrong number. Slow the scan down or raise your
+quota, then run it again.</p>
 <h2 id="when-you-cant-run-the-app-the-persona-proxy">When you can't run the app: the persona proxy<a class="headerlink" href="#when-you-cant-run-the-app-the-persona-proxy" title="Permanent link">&para;</a></h2>
 <p>If you only have the app's system prompt (not a running instance), load it onto a model and test that
 as a proxy. Lower fidelity (no guardrail/RAG/tool code), but useful:</p>

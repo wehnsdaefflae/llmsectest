@@ -1621,6 +1621,23 @@ yet published to PyPI</strong>. The forward-looking plan is the <a href="https:/
 </ul>
 <h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Permanent link">&para;</a></h3>
 <ul>
+<li><strong>A target that only rate-limited you is no longer published as a vulnerable one.</strong> A hosted provider
+  answering <code>HTTP 429</code> raises a rate-limit exception, and that exception matched nothing in the
+  transport-failure translation added on 2026-08-12: it propagated out of <code>run_probe</code>, failed the pytest
+  test, and this suite renders a failing security test as a CVSS-scored OWASP finding. So a scan that ran
+  into your API quota reported your application as critically vulnerable, with a Python traceback as the
+  evidence, on every hosted target. It is the same defect the 2026-08-05 and 2026-08-12 entries below
+  describe, in a third shape, and it survived both because <code>OpenAIAdapter</code>'s own comment recorded the
+  behaviour as intentional ("rate limit … propagates unchanged") and the audit read the comment. Measured
+  before fixing, against the real <code>openai.RateLimitError</code>, and again after. A 429 is now recorded
+  inconclusive in the same tally as an unreachable target, so the run still exits non-zero and cannot pass
+  CI as clean, but it carries its <strong>own</strong> reason and its own exception type (<code>AdapterThrottleError</code>),
+  because the two need different actions from you: unreachable is a URL to check, throttled is a quota to
+  raise. The provider's <code>Retry-After</code> value is carried into the report when it sends one. Detection is by
+  the SDK's exception name <strong>and</strong> by an <code>HTTP 429</code> found anywhere the exception carries a status, since
+  some clients (<code>huggingface_hub</code>) raise one generic error class for every status. Only 429 is translated:
+  a <code>500</code>, an auth failure and a bad request still propagate, because those are facts about the target.
+  There is deliberately no retry or backoff yet — the honest count comes before the backoff. (2026-08-13)</li>
 <li><strong>"A target we could not reach is never reported as a vulnerable one" now holds on <em>every</em> provider, not
   just on the OpenAI-compatible ones.</strong> The guarantee shipped on 2026-08-05: a transport failure is
   recorded inconclusive and flagged <code>undelivered</code>, never scored as a finding, and the run exits non-zero

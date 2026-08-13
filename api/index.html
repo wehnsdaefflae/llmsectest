@@ -3010,9 +3010,9 @@ installed.</p>
 
                   <details class="mkdocstrings-source">
                     <summary>Source code in <code>src/llmsectest/adapters/base.py</code></summary>
-                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-183">183</a></span>
-<span class="normal"><a href="#__codelineno-0-184">184</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-183" name="__codelineno-0-183"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-<a id="__codelineno-0-184" name="__codelineno-0-184"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-295">295</a></span>
+<span class="normal"><a href="#__codelineno-0-296">296</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-295" name="__codelineno-0-295"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<a id="__codelineno-0-296" name="__codelineno-0-296"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
 </code></pre></div></td></tr></table></div>
                   </details>
 
@@ -3051,11 +3051,11 @@ installed.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/llmsectest/adapters/base.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-186">186</a></span>
-<span class="normal"><a href="#__codelineno-0-187">187</a></span>
-<span class="normal"><a href="#__codelineno-0-188">188</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-186" name="__codelineno-0-186"></a><span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
-<a id="__codelineno-0-187" name="__codelineno-0-187"></a><span class="k">def</span><span class="w"> </span><span class="nf">complete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">:</span> <span class="n">CompletionRequest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CompletionResponse</span><span class="p">:</span>
-<a id="__codelineno-0-188" name="__codelineno-0-188"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Run one chat completion and return the assistant text.&quot;&quot;&quot;</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-298">298</a></span>
+<span class="normal"><a href="#__codelineno-0-299">299</a></span>
+<span class="normal"><a href="#__codelineno-0-300">300</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-298" name="__codelineno-0-298"></a><span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
+<a id="__codelineno-0-299" name="__codelineno-0-299"></a><span class="k">def</span><span class="w"> </span><span class="nf">complete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">:</span> <span class="n">CompletionRequest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CompletionResponse</span><span class="p">:</span>
+<a id="__codelineno-0-300" name="__codelineno-0-300"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Run one chat completion and return the assistant text.&quot;&quot;&quot;</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -3086,27 +3086,27 @@ down server / unloaded model fails fast instead of mid-suite.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/llmsectest/adapters/base.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-190">190</a></span>
-<span class="normal"><a href="#__codelineno-0-191">191</a></span>
-<span class="normal"><a href="#__codelineno-0-192">192</a></span>
-<span class="normal"><a href="#__codelineno-0-193">193</a></span>
-<span class="normal"><a href="#__codelineno-0-194">194</a></span>
-<span class="normal"><a href="#__codelineno-0-195">195</a></span>
-<span class="normal"><a href="#__codelineno-0-196">196</a></span>
-<span class="normal"><a href="#__codelineno-0-197">197</a></span>
-<span class="normal"><a href="#__codelineno-0-198">198</a></span>
-<span class="normal"><a href="#__codelineno-0-199">199</a></span>
-<span class="normal"><a href="#__codelineno-0-200">200</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-190" name="__codelineno-0-190"></a><span class="k">def</span><span class="w"> </span><span class="nf">preflight</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PreflightResult</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-191" name="__codelineno-0-191"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Best-effort health check before a scan.</span>
-<a id="__codelineno-0-192" name="__codelineno-0-192"></a>
-<a id="__codelineno-0-193" name="__codelineno-0-193"></a><span class="sd">    Returns ``None`` when the provider exposes no cheap health endpoint (the</span>
-<a id="__codelineno-0-194" name="__codelineno-0-194"></a><span class="sd">    scan then proceeds and surfaces any real error on its first request).</span>
-<a id="__codelineno-0-195" name="__codelineno-0-195"></a><span class="sd">    Local OpenAI-compatible runtimes override this to verify the server is</span>
-<a id="__codelineno-0-196" name="__codelineno-0-196"></a><span class="sd">    reachable and the requested model is loaded, raising</span>
-<a id="__codelineno-0-197" name="__codelineno-0-197"></a><span class="sd">    :class:`AdapterError` with an actionable message on failure — so a</span>
-<a id="__codelineno-0-198" name="__codelineno-0-198"></a><span class="sd">    down server / unloaded model fails fast instead of mid-suite.</span>
-<a id="__codelineno-0-199" name="__codelineno-0-199"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-200" name="__codelineno-0-200"></a>    <span class="k">return</span> <span class="kc">None</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-302">302</a></span>
+<span class="normal"><a href="#__codelineno-0-303">303</a></span>
+<span class="normal"><a href="#__codelineno-0-304">304</a></span>
+<span class="normal"><a href="#__codelineno-0-305">305</a></span>
+<span class="normal"><a href="#__codelineno-0-306">306</a></span>
+<span class="normal"><a href="#__codelineno-0-307">307</a></span>
+<span class="normal"><a href="#__codelineno-0-308">308</a></span>
+<span class="normal"><a href="#__codelineno-0-309">309</a></span>
+<span class="normal"><a href="#__codelineno-0-310">310</a></span>
+<span class="normal"><a href="#__codelineno-0-311">311</a></span>
+<span class="normal"><a href="#__codelineno-0-312">312</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-302" name="__codelineno-0-302"></a><span class="k">def</span><span class="w"> </span><span class="nf">preflight</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PreflightResult</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-303" name="__codelineno-0-303"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Best-effort health check before a scan.</span>
+<a id="__codelineno-0-304" name="__codelineno-0-304"></a>
+<a id="__codelineno-0-305" name="__codelineno-0-305"></a><span class="sd">    Returns ``None`` when the provider exposes no cheap health endpoint (the</span>
+<a id="__codelineno-0-306" name="__codelineno-0-306"></a><span class="sd">    scan then proceeds and surfaces any real error on its first request).</span>
+<a id="__codelineno-0-307" name="__codelineno-0-307"></a><span class="sd">    Local OpenAI-compatible runtimes override this to verify the server is</span>
+<a id="__codelineno-0-308" name="__codelineno-0-308"></a><span class="sd">    reachable and the requested model is loaded, raising</span>
+<a id="__codelineno-0-309" name="__codelineno-0-309"></a><span class="sd">    :class:`AdapterError` with an actionable message on failure — so a</span>
+<a id="__codelineno-0-310" name="__codelineno-0-310"></a><span class="sd">    down server / unloaded model fails fast instead of mid-suite.</span>
+<a id="__codelineno-0-311" name="__codelineno-0-311"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-312" name="__codelineno-0-312"></a>    <span class="k">return</span> <span class="kc">None</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -3133,19 +3133,19 @@ down server / unloaded model fails fast instead of mid-suite.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/llmsectest/adapters/base.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-202">202</a></span>
-<span class="normal"><a href="#__codelineno-0-203">203</a></span>
-<span class="normal"><a href="#__codelineno-0-204">204</a></span>
-<span class="normal"><a href="#__codelineno-0-205">205</a></span>
-<span class="normal"><a href="#__codelineno-0-206">206</a></span>
-<span class="normal"><a href="#__codelineno-0-207">207</a></span>
-<span class="normal"><a href="#__codelineno-0-208">208</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-202" name="__codelineno-0-202"></a><span class="k">def</span><span class="w"> </span><span class="nf">prompt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<a id="__codelineno-0-203" name="__codelineno-0-203"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Convenience: send a single user turn, return the response text.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-204" name="__codelineno-0-204"></a>    <span class="n">messages</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Message</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-<a id="__codelineno-0-205" name="__codelineno-0-205"></a>    <span class="k">if</span> <span class="n">system</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-206" name="__codelineno-0-206"></a>        <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Message</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">system</span><span class="p">))</span>
-<a id="__codelineno-0-207" name="__codelineno-0-207"></a>    <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Message</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="n">text</span><span class="p">))</span>
-<a id="__codelineno-0-208" name="__codelineno-0-208"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">complete</span><span class="p">(</span><span class="n">CompletionRequest</span><span class="p">(</span><span class="n">messages</span><span class="o">=</span><span class="n">messages</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span><span class="o">.</span><span class="n">text</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-314">314</a></span>
+<span class="normal"><a href="#__codelineno-0-315">315</a></span>
+<span class="normal"><a href="#__codelineno-0-316">316</a></span>
+<span class="normal"><a href="#__codelineno-0-317">317</a></span>
+<span class="normal"><a href="#__codelineno-0-318">318</a></span>
+<span class="normal"><a href="#__codelineno-0-319">319</a></span>
+<span class="normal"><a href="#__codelineno-0-320">320</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-314" name="__codelineno-0-314"></a><span class="k">def</span><span class="w"> </span><span class="nf">prompt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-0-315" name="__codelineno-0-315"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Convenience: send a single user turn, return the response text.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-316" name="__codelineno-0-316"></a>    <span class="n">messages</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Message</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+<a id="__codelineno-0-317" name="__codelineno-0-317"></a>    <span class="k">if</span> <span class="n">system</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-318" name="__codelineno-0-318"></a>        <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Message</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">system</span><span class="p">))</span>
+<a id="__codelineno-0-319" name="__codelineno-0-319"></a>    <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Message</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="n">text</span><span class="p">))</span>
+<a id="__codelineno-0-320" name="__codelineno-0-320"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">complete</span><span class="p">(</span><span class="n">CompletionRequest</span><span class="p">(</span><span class="n">messages</span><span class="o">=</span><span class="n">messages</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span><span class="o">.</span><span class="n">text</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -3386,9 +3386,7 @@ down server / unloaded model fails fast instead of mid-suite.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/llmsectest/adapters/__init__.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-54">54</a></span>
-<span class="normal"><a href="#__codelineno-0-55">55</a></span>
-<span class="normal"><a href="#__codelineno-0-56">56</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-56">56</a></span>
 <span class="normal"><a href="#__codelineno-0-57">57</a></span>
 <span class="normal"><a href="#__codelineno-0-58">58</a></span>
 <span class="normal"><a href="#__codelineno-0-59">59</a></span>
@@ -3396,17 +3394,19 @@ down server / unloaded model fails fast instead of mid-suite.</p>
 <span class="normal"><a href="#__codelineno-0-61">61</a></span>
 <span class="normal"><a href="#__codelineno-0-62">62</a></span>
 <span class="normal"><a href="#__codelineno-0-63">63</a></span>
-<span class="normal"><a href="#__codelineno-0-64">64</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-54" name="__codelineno-0-54"></a><span class="k">def</span><span class="w"> </span><span class="nf">get_adapter</span><span class="p">(</span><span class="n">provider</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LLMAdapter</span><span class="p">:</span>
-<a id="__codelineno-0-55" name="__codelineno-0-55"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Construct an adapter for ``provider`` (e.g. ``&quot;openai&quot;``, ``&quot;mock&quot;``).&quot;&quot;&quot;</span>
-<a id="__codelineno-0-56" name="__codelineno-0-56"></a>    <span class="n">key</span> <span class="o">=</span> <span class="n">provider</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-<a id="__codelineno-0-57" name="__codelineno-0-57"></a>    <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_REGISTRY</span><span class="p">:</span>
-<a id="__codelineno-0-58" name="__codelineno-0-58"></a>        <span class="k">raise</span> <span class="n">AdapterError</span><span class="p">(</span>
-<a id="__codelineno-0-59" name="__codelineno-0-59"></a>            <span class="sa">f</span><span class="s2">&quot;unknown provider </span><span class="si">{</span><span class="n">provider</span><span class="si">!r}</span><span class="s2">; available: </span><span class="si">{</span><span class="n">available_providers</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
-<a id="__codelineno-0-60" name="__codelineno-0-60"></a>        <span class="p">)</span>
-<a id="__codelineno-0-61" name="__codelineno-0-61"></a>    <span class="bp">cls</span> <span class="o">=</span> <span class="n">_load</span><span class="p">(</span><span class="n">_REGISTRY</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
-<a id="__codelineno-0-62" name="__codelineno-0-62"></a>    <span class="k">if</span> <span class="n">model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-63" name="__codelineno-0-63"></a>        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">model</span>
-<a id="__codelineno-0-64" name="__codelineno-0-64"></a>    <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="normal"><a href="#__codelineno-0-64">64</a></span>
+<span class="normal"><a href="#__codelineno-0-65">65</a></span>
+<span class="normal"><a href="#__codelineno-0-66">66</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-56" name="__codelineno-0-56"></a><span class="k">def</span><span class="w"> </span><span class="nf">get_adapter</span><span class="p">(</span><span class="n">provider</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LLMAdapter</span><span class="p">:</span>
+<a id="__codelineno-0-57" name="__codelineno-0-57"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Construct an adapter for ``provider`` (e.g. ``&quot;openai&quot;``, ``&quot;mock&quot;``).&quot;&quot;&quot;</span>
+<a id="__codelineno-0-58" name="__codelineno-0-58"></a>    <span class="n">key</span> <span class="o">=</span> <span class="n">provider</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+<a id="__codelineno-0-59" name="__codelineno-0-59"></a>    <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_REGISTRY</span><span class="p">:</span>
+<a id="__codelineno-0-60" name="__codelineno-0-60"></a>        <span class="k">raise</span> <span class="n">AdapterError</span><span class="p">(</span>
+<a id="__codelineno-0-61" name="__codelineno-0-61"></a>            <span class="sa">f</span><span class="s2">&quot;unknown provider </span><span class="si">{</span><span class="n">provider</span><span class="si">!r}</span><span class="s2">; available: </span><span class="si">{</span><span class="n">available_providers</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+<a id="__codelineno-0-62" name="__codelineno-0-62"></a>        <span class="p">)</span>
+<a id="__codelineno-0-63" name="__codelineno-0-63"></a>    <span class="bp">cls</span> <span class="o">=</span> <span class="n">_load</span><span class="p">(</span><span class="n">_REGISTRY</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+<a id="__codelineno-0-64" name="__codelineno-0-64"></a>    <span class="k">if</span> <span class="n">model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-65" name="__codelineno-0-65"></a>        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">model</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66"></a>    <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -3429,9 +3429,9 @@ down server / unloaded model fails fast instead of mid-suite.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/llmsectest/adapters/__init__.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-35">35</a></span>
-<span class="normal"><a href="#__codelineno-0-36">36</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-35" name="__codelineno-0-35"></a><span class="k">def</span><span class="w"> </span><span class="nf">available_providers</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<a id="__codelineno-0-36" name="__codelineno-0-36"></a>    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">_REGISTRY</span><span class="p">)</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-37">37</a></span>
+<span class="normal"><a href="#__codelineno-0-38">38</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-37" name="__codelineno-0-37"></a><span class="k">def</span><span class="w"> </span><span class="nf">available_providers</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<a id="__codelineno-0-38" name="__codelineno-0-38"></a>    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">_REGISTRY</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -3458,11 +3458,11 @@ down server / unloaded model fails fast instead of mid-suite.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/llmsectest/adapters/__init__.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-39">39</a></span>
-<span class="normal"><a href="#__codelineno-0-40">40</a></span>
-<span class="normal"><a href="#__codelineno-0-41">41</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-39" name="__codelineno-0-39"></a><span class="k">def</span><span class="w"> </span><span class="nf">register_adapter</span><span class="p">(</span><span class="n">provider</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">type</span><span class="p">[</span><span class="n">LLMAdapter</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-40" name="__codelineno-0-40"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Register a custom adapter. ``target`` is a class or ``&quot;module:Class&quot;``.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-41" name="__codelineno-0-41"></a>    <span class="n">_REGISTRY</span><span class="p">[</span><span class="n">provider</span><span class="p">]</span> <span class="o">=</span> <span class="n">target</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-41">41</a></span>
+<span class="normal"><a href="#__codelineno-0-42">42</a></span>
+<span class="normal"><a href="#__codelineno-0-43">43</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-41" name="__codelineno-0-41"></a><span class="k">def</span><span class="w"> </span><span class="nf">register_adapter</span><span class="p">(</span><span class="n">provider</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">type</span><span class="p">[</span><span class="n">LLMAdapter</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-42" name="__codelineno-0-42"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Register a custom adapter. ``target`` is a class or ``&quot;module:Class&quot;``.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-43" name="__codelineno-0-43"></a>    <span class="n">_REGISTRY</span><span class="p">[</span><span class="n">provider</span><span class="p">]</span> <span class="o">=</span> <span class="n">target</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -4478,143 +4478,168 @@ exception is a <code>timeout_is_signal</code> case on a target proven responsive
 :func:<code>_timeout_outcome</code>); pass no record and every timeout stays inconclusive.</p>
 <p>Every other adapter failure (unreachable endpoint, malformed reply, auth error) is
 caught the same way and recorded <strong>undelivered</strong> — inconclusive, never a finding (see
-:func:<code>_undelivered_outcome</code>). A misconfiguration still fails loudly, on the run's
+:func:<code>_undelivered_outcome</code>), with a rate limit given its own reason
+(:func:<code>_throttled_outcome</code>). <strong>Anything else raised while obtaining the reply is caught
+too</strong> (:func:<code>_unscored_outcome</code>): the guarantee is a property, not a list of the
+failures we happened to think of. A misconfiguration still fails loudly, on the run's
 exit code rather than in the findings list.</p>
 
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/llmsectest/probes/runner.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-188">188</a></span>
-<span class="normal"><a href="#__codelineno-0-189">189</a></span>
-<span class="normal"><a href="#__codelineno-0-190">190</a></span>
-<span class="normal"><a href="#__codelineno-0-191">191</a></span>
-<span class="normal"><a href="#__codelineno-0-192">192</a></span>
-<span class="normal"><a href="#__codelineno-0-193">193</a></span>
-<span class="normal"><a href="#__codelineno-0-194">194</a></span>
-<span class="normal"><a href="#__codelineno-0-195">195</a></span>
-<span class="normal"><a href="#__codelineno-0-196">196</a></span>
-<span class="normal"><a href="#__codelineno-0-197">197</a></span>
-<span class="normal"><a href="#__codelineno-0-198">198</a></span>
-<span class="normal"><a href="#__codelineno-0-199">199</a></span>
-<span class="normal"><a href="#__codelineno-0-200">200</a></span>
-<span class="normal"><a href="#__codelineno-0-201">201</a></span>
-<span class="normal"><a href="#__codelineno-0-202">202</a></span>
-<span class="normal"><a href="#__codelineno-0-203">203</a></span>
-<span class="normal"><a href="#__codelineno-0-204">204</a></span>
-<span class="normal"><a href="#__codelineno-0-205">205</a></span>
-<span class="normal"><a href="#__codelineno-0-206">206</a></span>
-<span class="normal"><a href="#__codelineno-0-207">207</a></span>
-<span class="normal"><a href="#__codelineno-0-208">208</a></span>
-<span class="normal"><a href="#__codelineno-0-209">209</a></span>
-<span class="normal"><a href="#__codelineno-0-210">210</a></span>
-<span class="normal"><a href="#__codelineno-0-211">211</a></span>
-<span class="normal"><a href="#__codelineno-0-212">212</a></span>
-<span class="normal"><a href="#__codelineno-0-213">213</a></span>
-<span class="normal"><a href="#__codelineno-0-214">214</a></span>
-<span class="normal"><a href="#__codelineno-0-215">215</a></span>
-<span class="normal"><a href="#__codelineno-0-216">216</a></span>
-<span class="normal"><a href="#__codelineno-0-217">217</a></span>
-<span class="normal"><a href="#__codelineno-0-218">218</a></span>
-<span class="normal"><a href="#__codelineno-0-219">219</a></span>
-<span class="normal"><a href="#__codelineno-0-220">220</a></span>
-<span class="normal"><a href="#__codelineno-0-221">221</a></span>
-<span class="normal"><a href="#__codelineno-0-222">222</a></span>
-<span class="normal"><a href="#__codelineno-0-223">223</a></span>
-<span class="normal"><a href="#__codelineno-0-224">224</a></span>
-<span class="normal"><a href="#__codelineno-0-225">225</a></span>
-<span class="normal"><a href="#__codelineno-0-226">226</a></span>
-<span class="normal"><a href="#__codelineno-0-227">227</a></span>
-<span class="normal"><a href="#__codelineno-0-228">228</a></span>
-<span class="normal"><a href="#__codelineno-0-229">229</a></span>
-<span class="normal"><a href="#__codelineno-0-230">230</a></span>
-<span class="normal"><a href="#__codelineno-0-231">231</a></span>
-<span class="normal"><a href="#__codelineno-0-232">232</a></span>
-<span class="normal"><a href="#__codelineno-0-233">233</a></span>
-<span class="normal"><a href="#__codelineno-0-234">234</a></span>
-<span class="normal"><a href="#__codelineno-0-235">235</a></span>
-<span class="normal"><a href="#__codelineno-0-236">236</a></span>
-<span class="normal"><a href="#__codelineno-0-237">237</a></span>
-<span class="normal"><a href="#__codelineno-0-238">238</a></span>
-<span class="normal"><a href="#__codelineno-0-239">239</a></span>
-<span class="normal"><a href="#__codelineno-0-240">240</a></span>
-<span class="normal"><a href="#__codelineno-0-241">241</a></span>
-<span class="normal"><a href="#__codelineno-0-242">242</a></span>
-<span class="normal"><a href="#__codelineno-0-243">243</a></span>
-<span class="normal"><a href="#__codelineno-0-244">244</a></span>
-<span class="normal"><a href="#__codelineno-0-245">245</a></span>
-<span class="normal"><a href="#__codelineno-0-246">246</a></span>
-<span class="normal"><a href="#__codelineno-0-247">247</a></span>
-<span class="normal"><a href="#__codelineno-0-248">248</a></span>
-<span class="normal"><a href="#__codelineno-0-249">249</a></span>
-<span class="normal"><a href="#__codelineno-0-250">250</a></span>
-<span class="normal"><a href="#__codelineno-0-251">251</a></span>
-<span class="normal"><a href="#__codelineno-0-252">252</a></span>
-<span class="normal"><a href="#__codelineno-0-253">253</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-188" name="__codelineno-0-188"></a><span class="k">def</span><span class="w"> </span><span class="nf">run_probe</span><span class="p">(</span>
-<a id="__codelineno-0-189" name="__codelineno-0-189"></a>    <span class="n">adapter</span><span class="p">:</span> <span class="n">LLMAdapter</span><span class="p">,</span>
-<a id="__codelineno-0-190" name="__codelineno-0-190"></a>    <span class="n">case</span><span class="p">:</span> <span class="n">ProbeCase</span><span class="p">,</span>
-<a id="__codelineno-0-191" name="__codelineno-0-191"></a>    <span class="n">responsiveness</span><span class="p">:</span> <span class="n">TargetResponsiveness</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-192" name="__codelineno-0-192"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ProbeOutcome</span><span class="p">:</span>
-<a id="__codelineno-0-193" name="__codelineno-0-193"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Send ``case`` to ``adapter``, score the reply, and record its cost and latency.</span>
-<a id="__codelineno-0-194" name="__codelineno-0-194"></a>
-<a id="__codelineno-0-195" name="__codelineno-0-195"></a><span class="sd">    Drives the target through :meth:`~llmsectest.adapters.base.LLMAdapter.complete`</span>
-<a id="__codelineno-0-196" name="__codelineno-0-196"></a><span class="sd">    (rather than the text-only ``prompt`` convenience) so the full response — including</span>
-<a id="__codelineno-0-197" name="__codelineno-0-197"></a><span class="sd">    the provider&#39;s usage block — is available: the per-probe output-token count is</span>
-<a id="__codelineno-0-198" name="__codelineno-0-198"></a><span class="sd">    captured on the outcome as the precise denial-of-wallet cost figure (``None`` for a</span>
-<a id="__codelineno-0-199" name="__codelineno-0-199"></a><span class="sd">    black-box endpoint that reports no usage). Wall-clock latency is recorded on every</span>
-<a id="__codelineno-0-200" name="__codelineno-0-200"></a><span class="sd">    outcome, timed out or not.</span>
-<a id="__codelineno-0-201" name="__codelineno-0-201"></a>
-<a id="__codelineno-0-202" name="__codelineno-0-202"></a><span class="sd">    A case with :attr:`~llmsectest.probes.models.ProbeCase.cost_ceiling` set is *also*</span>
-<a id="__codelineno-0-203" name="__codelineno-0-203"></a><span class="sd">    flagged (independently of its text detector) when the reply reached the request&#39;s</span>
-<a id="__codelineno-0-204" name="__codelineno-0-204"></a><span class="sd">    ``max_tokens`` budget — the &quot;would-have-continued&quot; denial-of-wallet signal that the</span>
-<a id="__codelineno-0-205" name="__codelineno-0-205"></a><span class="sd">    text oracles cannot see. The request&#39;s own ``max_tokens`` is the ceiling reference, so</span>
-<a id="__codelineno-0-206" name="__codelineno-0-206"></a><span class="sd">    the two never drift.</span>
-<a id="__codelineno-0-207" name="__codelineno-0-207"></a>
-<a id="__codelineno-0-208" name="__codelineno-0-208"></a><span class="sd">    A target that does not respond within its per-request time budget raises</span>
-<a id="__codelineno-0-209" name="__codelineno-0-209"></a><span class="sd">    :class:`~llmsectest.adapters.base.AdapterTimeoutError`; this is caught rather than</span>
-<a id="__codelineno-0-210" name="__codelineno-0-210"></a><span class="sd">    allowed to abort the scan, and recorded as an **inconclusive** outcome</span>
-<a id="__codelineno-0-211" name="__codelineno-0-211"></a><span class="sd">    (``errored=True``) — a timeout is not by itself proof of a vulnerability. The single</span>
-<a id="__codelineno-0-212" name="__codelineno-0-212"></a><span class="sd">    exception is a ``timeout_is_signal`` case on a target proven responsive by the optional</span>
-<a id="__codelineno-0-213" name="__codelineno-0-213"></a><span class="sd">    ``responsiveness`` record, which scores as an LLM10 finding (see</span>
-<a id="__codelineno-0-214" name="__codelineno-0-214"></a><span class="sd">    :func:`_timeout_outcome`); pass no record and every timeout stays inconclusive.</span>
-<a id="__codelineno-0-215" name="__codelineno-0-215"></a>
-<a id="__codelineno-0-216" name="__codelineno-0-216"></a><span class="sd">    Every other adapter failure (unreachable endpoint, malformed reply, auth error) is</span>
-<a id="__codelineno-0-217" name="__codelineno-0-217"></a><span class="sd">    caught the same way and recorded **undelivered** — inconclusive, never a finding (see</span>
-<a id="__codelineno-0-218" name="__codelineno-0-218"></a><span class="sd">    :func:`_undelivered_outcome`). A misconfiguration still fails loudly, on the run&#39;s</span>
-<a id="__codelineno-0-219" name="__codelineno-0-219"></a><span class="sd">    exit code rather than in the findings list.</span>
-<a id="__codelineno-0-220" name="__codelineno-0-220"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-221" name="__codelineno-0-221"></a>    <span class="n">request</span> <span class="o">=</span> <span class="n">CompletionRequest</span><span class="p">(</span>
-<a id="__codelineno-0-222" name="__codelineno-0-222"></a>        <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
-<a id="__codelineno-0-223" name="__codelineno-0-223"></a>            <span class="n">Message</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">case</span><span class="o">.</span><span class="n">system_prompt</span><span class="p">),</span>
-<a id="__codelineno-0-224" name="__codelineno-0-224"></a>            <span class="n">Message</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="n">case</span><span class="o">.</span><span class="n">user_prompt</span><span class="p">),</span>
-<a id="__codelineno-0-225" name="__codelineno-0-225"></a>        <span class="p">],</span>
-<a id="__codelineno-0-226" name="__codelineno-0-226"></a>        <span class="n">temperature</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
-<a id="__codelineno-0-227" name="__codelineno-0-227"></a>    <span class="p">)</span>
-<a id="__codelineno-0-228" name="__codelineno-0-228"></a>    <span class="n">started</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span>
-<a id="__codelineno-0-229" name="__codelineno-0-229"></a>    <span class="k">try</span><span class="p">:</span>
-<a id="__codelineno-0-230" name="__codelineno-0-230"></a>        <span class="n">response</span> <span class="o">=</span> <span class="n">adapter</span><span class="o">.</span><span class="n">complete</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
-<a id="__codelineno-0-231" name="__codelineno-0-231"></a>    <span class="k">except</span> <span class="n">AdapterTimeoutError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-<a id="__codelineno-0-232" name="__codelineno-0-232"></a>        <span class="c1"># Before AdapterError below: AdapterTimeoutError is a subclass of it, and a</span>
-<a id="__codelineno-0-233" name="__codelineno-0-233"></a>        <span class="c1"># timeout carries its own scoring rule.</span>
-<a id="__codelineno-0-234" name="__codelineno-0-234"></a>        <span class="k">if</span> <span class="n">responsiveness</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-235" name="__codelineno-0-235"></a>            <span class="n">responsiveness</span><span class="o">.</span><span class="n">record_timeout</span><span class="p">()</span>
-<a id="__codelineno-0-236" name="__codelineno-0-236"></a>        <span class="k">return</span> <span class="n">_timeout_outcome</span><span class="p">(</span><span class="n">case</span><span class="p">,</span> <span class="n">exc</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">started</span><span class="p">,</span> <span class="n">responsiveness</span><span class="p">)</span>
-<a id="__codelineno-0-237" name="__codelineno-0-237"></a>    <span class="k">except</span> <span class="n">AdapterError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-<a id="__codelineno-0-238" name="__codelineno-0-238"></a>        <span class="k">return</span> <span class="n">_undelivered_outcome</span><span class="p">(</span><span class="n">case</span><span class="p">,</span> <span class="n">exc</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">started</span><span class="p">)</span>
-<a id="__codelineno-0-239" name="__codelineno-0-239"></a>    <span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">started</span>
-<a id="__codelineno-0-240" name="__codelineno-0-240"></a>    <span class="k">if</span> <span class="n">responsiveness</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-241" name="__codelineno-0-241"></a>        <span class="n">responsiveness</span><span class="o">.</span><span class="n">record_completion</span><span class="p">(</span><span class="n">elapsed</span><span class="p">)</span>
-<a id="__codelineno-0-242" name="__codelineno-0-242"></a>    <span class="n">output_tokens</span> <span class="o">=</span> <span class="n">_output_tokens</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">usage</span><span class="p">)</span>
-<a id="__codelineno-0-243" name="__codelineno-0-243"></a>    <span class="n">vulnerable</span><span class="p">,</span> <span class="n">evidence</span> <span class="o">=</span> <span class="n">get_detector</span><span class="p">(</span><span class="n">case</span><span class="o">.</span><span class="n">detector</span><span class="p">)(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">case</span><span class="p">)</span>
-<a id="__codelineno-0-244" name="__codelineno-0-244"></a>    <span class="k">if</span> <span class="n">case</span><span class="o">.</span><span class="n">cost_ceiling</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">vulnerable</span><span class="p">:</span>
-<a id="__codelineno-0-245" name="__codelineno-0-245"></a>        <span class="n">vulnerable</span><span class="p">,</span> <span class="n">evidence</span> <span class="o">=</span> <span class="n">output_ceiling_reached</span><span class="p">(</span><span class="n">output_tokens</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">max_tokens</span><span class="p">)</span>
-<a id="__codelineno-0-246" name="__codelineno-0-246"></a>    <span class="k">return</span> <span class="n">ProbeOutcome</span><span class="p">(</span>
-<a id="__codelineno-0-247" name="__codelineno-0-247"></a>        <span class="n">case</span><span class="o">=</span><span class="n">case</span><span class="p">,</span>
-<a id="__codelineno-0-248" name="__codelineno-0-248"></a>        <span class="n">response</span><span class="o">=</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
-<a id="__codelineno-0-249" name="__codelineno-0-249"></a>        <span class="n">vulnerable</span><span class="o">=</span><span class="n">vulnerable</span><span class="p">,</span>
-<a id="__codelineno-0-250" name="__codelineno-0-250"></a>        <span class="n">evidence</span><span class="o">=</span><span class="n">evidence</span><span class="p">,</span>
-<a id="__codelineno-0-251" name="__codelineno-0-251"></a>        <span class="n">output_tokens</span><span class="o">=</span><span class="n">output_tokens</span><span class="p">,</span>
-<a id="__codelineno-0-252" name="__codelineno-0-252"></a>        <span class="n">elapsed_seconds</span><span class="o">=</span><span class="n">elapsed</span><span class="p">,</span>
-<a id="__codelineno-0-253" name="__codelineno-0-253"></a>    <span class="p">)</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-264">264</a></span>
+<span class="normal"><a href="#__codelineno-0-265">265</a></span>
+<span class="normal"><a href="#__codelineno-0-266">266</a></span>
+<span class="normal"><a href="#__codelineno-0-267">267</a></span>
+<span class="normal"><a href="#__codelineno-0-268">268</a></span>
+<span class="normal"><a href="#__codelineno-0-269">269</a></span>
+<span class="normal"><a href="#__codelineno-0-270">270</a></span>
+<span class="normal"><a href="#__codelineno-0-271">271</a></span>
+<span class="normal"><a href="#__codelineno-0-272">272</a></span>
+<span class="normal"><a href="#__codelineno-0-273">273</a></span>
+<span class="normal"><a href="#__codelineno-0-274">274</a></span>
+<span class="normal"><a href="#__codelineno-0-275">275</a></span>
+<span class="normal"><a href="#__codelineno-0-276">276</a></span>
+<span class="normal"><a href="#__codelineno-0-277">277</a></span>
+<span class="normal"><a href="#__codelineno-0-278">278</a></span>
+<span class="normal"><a href="#__codelineno-0-279">279</a></span>
+<span class="normal"><a href="#__codelineno-0-280">280</a></span>
+<span class="normal"><a href="#__codelineno-0-281">281</a></span>
+<span class="normal"><a href="#__codelineno-0-282">282</a></span>
+<span class="normal"><a href="#__codelineno-0-283">283</a></span>
+<span class="normal"><a href="#__codelineno-0-284">284</a></span>
+<span class="normal"><a href="#__codelineno-0-285">285</a></span>
+<span class="normal"><a href="#__codelineno-0-286">286</a></span>
+<span class="normal"><a href="#__codelineno-0-287">287</a></span>
+<span class="normal"><a href="#__codelineno-0-288">288</a></span>
+<span class="normal"><a href="#__codelineno-0-289">289</a></span>
+<span class="normal"><a href="#__codelineno-0-290">290</a></span>
+<span class="normal"><a href="#__codelineno-0-291">291</a></span>
+<span class="normal"><a href="#__codelineno-0-292">292</a></span>
+<span class="normal"><a href="#__codelineno-0-293">293</a></span>
+<span class="normal"><a href="#__codelineno-0-294">294</a></span>
+<span class="normal"><a href="#__codelineno-0-295">295</a></span>
+<span class="normal"><a href="#__codelineno-0-296">296</a></span>
+<span class="normal"><a href="#__codelineno-0-297">297</a></span>
+<span class="normal"><a href="#__codelineno-0-298">298</a></span>
+<span class="normal"><a href="#__codelineno-0-299">299</a></span>
+<span class="normal"><a href="#__codelineno-0-300">300</a></span>
+<span class="normal"><a href="#__codelineno-0-301">301</a></span>
+<span class="normal"><a href="#__codelineno-0-302">302</a></span>
+<span class="normal"><a href="#__codelineno-0-303">303</a></span>
+<span class="normal"><a href="#__codelineno-0-304">304</a></span>
+<span class="normal"><a href="#__codelineno-0-305">305</a></span>
+<span class="normal"><a href="#__codelineno-0-306">306</a></span>
+<span class="normal"><a href="#__codelineno-0-307">307</a></span>
+<span class="normal"><a href="#__codelineno-0-308">308</a></span>
+<span class="normal"><a href="#__codelineno-0-309">309</a></span>
+<span class="normal"><a href="#__codelineno-0-310">310</a></span>
+<span class="normal"><a href="#__codelineno-0-311">311</a></span>
+<span class="normal"><a href="#__codelineno-0-312">312</a></span>
+<span class="normal"><a href="#__codelineno-0-313">313</a></span>
+<span class="normal"><a href="#__codelineno-0-314">314</a></span>
+<span class="normal"><a href="#__codelineno-0-315">315</a></span>
+<span class="normal"><a href="#__codelineno-0-316">316</a></span>
+<span class="normal"><a href="#__codelineno-0-317">317</a></span>
+<span class="normal"><a href="#__codelineno-0-318">318</a></span>
+<span class="normal"><a href="#__codelineno-0-319">319</a></span>
+<span class="normal"><a href="#__codelineno-0-320">320</a></span>
+<span class="normal"><a href="#__codelineno-0-321">321</a></span>
+<span class="normal"><a href="#__codelineno-0-322">322</a></span>
+<span class="normal"><a href="#__codelineno-0-323">323</a></span>
+<span class="normal"><a href="#__codelineno-0-324">324</a></span>
+<span class="normal"><a href="#__codelineno-0-325">325</a></span>
+<span class="normal"><a href="#__codelineno-0-326">326</a></span>
+<span class="normal"><a href="#__codelineno-0-327">327</a></span>
+<span class="normal"><a href="#__codelineno-0-328">328</a></span>
+<span class="normal"><a href="#__codelineno-0-329">329</a></span>
+<span class="normal"><a href="#__codelineno-0-330">330</a></span>
+<span class="normal"><a href="#__codelineno-0-331">331</a></span>
+<span class="normal"><a href="#__codelineno-0-332">332</a></span>
+<span class="normal"><a href="#__codelineno-0-333">333</a></span>
+<span class="normal"><a href="#__codelineno-0-334">334</a></span>
+<span class="normal"><a href="#__codelineno-0-335">335</a></span>
+<span class="normal"><a href="#__codelineno-0-336">336</a></span>
+<span class="normal"><a href="#__codelineno-0-337">337</a></span>
+<span class="normal"><a href="#__codelineno-0-338">338</a></span>
+<span class="normal"><a href="#__codelineno-0-339">339</a></span>
+<span class="normal"><a href="#__codelineno-0-340">340</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-264" name="__codelineno-0-264"></a><span class="k">def</span><span class="w"> </span><span class="nf">run_probe</span><span class="p">(</span>
+<a id="__codelineno-0-265" name="__codelineno-0-265"></a>    <span class="n">adapter</span><span class="p">:</span> <span class="n">LLMAdapter</span><span class="p">,</span>
+<a id="__codelineno-0-266" name="__codelineno-0-266"></a>    <span class="n">case</span><span class="p">:</span> <span class="n">ProbeCase</span><span class="p">,</span>
+<a id="__codelineno-0-267" name="__codelineno-0-267"></a>    <span class="n">responsiveness</span><span class="p">:</span> <span class="n">TargetResponsiveness</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-268" name="__codelineno-0-268"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ProbeOutcome</span><span class="p">:</span>
+<a id="__codelineno-0-269" name="__codelineno-0-269"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Send ``case`` to ``adapter``, score the reply, and record its cost and latency.</span>
+<a id="__codelineno-0-270" name="__codelineno-0-270"></a>
+<a id="__codelineno-0-271" name="__codelineno-0-271"></a><span class="sd">    Drives the target through :meth:`~llmsectest.adapters.base.LLMAdapter.complete`</span>
+<a id="__codelineno-0-272" name="__codelineno-0-272"></a><span class="sd">    (rather than the text-only ``prompt`` convenience) so the full response — including</span>
+<a id="__codelineno-0-273" name="__codelineno-0-273"></a><span class="sd">    the provider&#39;s usage block — is available: the per-probe output-token count is</span>
+<a id="__codelineno-0-274" name="__codelineno-0-274"></a><span class="sd">    captured on the outcome as the precise denial-of-wallet cost figure (``None`` for a</span>
+<a id="__codelineno-0-275" name="__codelineno-0-275"></a><span class="sd">    black-box endpoint that reports no usage). Wall-clock latency is recorded on every</span>
+<a id="__codelineno-0-276" name="__codelineno-0-276"></a><span class="sd">    outcome, timed out or not.</span>
+<a id="__codelineno-0-277" name="__codelineno-0-277"></a>
+<a id="__codelineno-0-278" name="__codelineno-0-278"></a><span class="sd">    A case with :attr:`~llmsectest.probes.models.ProbeCase.cost_ceiling` set is *also*</span>
+<a id="__codelineno-0-279" name="__codelineno-0-279"></a><span class="sd">    flagged (independently of its text detector) when the reply reached the request&#39;s</span>
+<a id="__codelineno-0-280" name="__codelineno-0-280"></a><span class="sd">    ``max_tokens`` budget — the &quot;would-have-continued&quot; denial-of-wallet signal that the</span>
+<a id="__codelineno-0-281" name="__codelineno-0-281"></a><span class="sd">    text oracles cannot see. The request&#39;s own ``max_tokens`` is the ceiling reference, so</span>
+<a id="__codelineno-0-282" name="__codelineno-0-282"></a><span class="sd">    the two never drift.</span>
+<a id="__codelineno-0-283" name="__codelineno-0-283"></a>
+<a id="__codelineno-0-284" name="__codelineno-0-284"></a><span class="sd">    A target that does not respond within its per-request time budget raises</span>
+<a id="__codelineno-0-285" name="__codelineno-0-285"></a><span class="sd">    :class:`~llmsectest.adapters.base.AdapterTimeoutError`; this is caught rather than</span>
+<a id="__codelineno-0-286" name="__codelineno-0-286"></a><span class="sd">    allowed to abort the scan, and recorded as an **inconclusive** outcome</span>
+<a id="__codelineno-0-287" name="__codelineno-0-287"></a><span class="sd">    (``errored=True``) — a timeout is not by itself proof of a vulnerability. The single</span>
+<a id="__codelineno-0-288" name="__codelineno-0-288"></a><span class="sd">    exception is a ``timeout_is_signal`` case on a target proven responsive by the optional</span>
+<a id="__codelineno-0-289" name="__codelineno-0-289"></a><span class="sd">    ``responsiveness`` record, which scores as an LLM10 finding (see</span>
+<a id="__codelineno-0-290" name="__codelineno-0-290"></a><span class="sd">    :func:`_timeout_outcome`); pass no record and every timeout stays inconclusive.</span>
+<a id="__codelineno-0-291" name="__codelineno-0-291"></a>
+<a id="__codelineno-0-292" name="__codelineno-0-292"></a><span class="sd">    Every other adapter failure (unreachable endpoint, malformed reply, auth error) is</span>
+<a id="__codelineno-0-293" name="__codelineno-0-293"></a><span class="sd">    caught the same way and recorded **undelivered** — inconclusive, never a finding (see</span>
+<a id="__codelineno-0-294" name="__codelineno-0-294"></a><span class="sd">    :func:`_undelivered_outcome`), with a rate limit given its own reason</span>
+<a id="__codelineno-0-295" name="__codelineno-0-295"></a><span class="sd">    (:func:`_throttled_outcome`). **Anything else raised while obtaining the reply is caught</span>
+<a id="__codelineno-0-296" name="__codelineno-0-296"></a><span class="sd">    too** (:func:`_unscored_outcome`): the guarantee is a property, not a list of the</span>
+<a id="__codelineno-0-297" name="__codelineno-0-297"></a><span class="sd">    failures we happened to think of. A misconfiguration still fails loudly, on the run&#39;s</span>
+<a id="__codelineno-0-298" name="__codelineno-0-298"></a><span class="sd">    exit code rather than in the findings list.</span>
+<a id="__codelineno-0-299" name="__codelineno-0-299"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-300" name="__codelineno-0-300"></a>    <span class="n">request</span> <span class="o">=</span> <span class="n">CompletionRequest</span><span class="p">(</span>
+<a id="__codelineno-0-301" name="__codelineno-0-301"></a>        <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+<a id="__codelineno-0-302" name="__codelineno-0-302"></a>            <span class="n">Message</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">case</span><span class="o">.</span><span class="n">system_prompt</span><span class="p">),</span>
+<a id="__codelineno-0-303" name="__codelineno-0-303"></a>            <span class="n">Message</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="n">case</span><span class="o">.</span><span class="n">user_prompt</span><span class="p">),</span>
+<a id="__codelineno-0-304" name="__codelineno-0-304"></a>        <span class="p">],</span>
+<a id="__codelineno-0-305" name="__codelineno-0-305"></a>        <span class="n">temperature</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+<a id="__codelineno-0-306" name="__codelineno-0-306"></a>    <span class="p">)</span>
+<a id="__codelineno-0-307" name="__codelineno-0-307"></a>    <span class="n">started</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span>
+<a id="__codelineno-0-308" name="__codelineno-0-308"></a>    <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-0-309" name="__codelineno-0-309"></a>        <span class="n">response</span> <span class="o">=</span> <span class="n">adapter</span><span class="o">.</span><span class="n">complete</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+<a id="__codelineno-0-310" name="__codelineno-0-310"></a>    <span class="k">except</span> <span class="n">AdapterTimeoutError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+<a id="__codelineno-0-311" name="__codelineno-0-311"></a>        <span class="c1"># Before AdapterError below: AdapterTimeoutError is a subclass of it, and a</span>
+<a id="__codelineno-0-312" name="__codelineno-0-312"></a>        <span class="c1"># timeout carries its own scoring rule.</span>
+<a id="__codelineno-0-313" name="__codelineno-0-313"></a>        <span class="k">if</span> <span class="n">responsiveness</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-314" name="__codelineno-0-314"></a>            <span class="n">responsiveness</span><span class="o">.</span><span class="n">record_timeout</span><span class="p">()</span>
+<a id="__codelineno-0-315" name="__codelineno-0-315"></a>        <span class="k">return</span> <span class="n">_timeout_outcome</span><span class="p">(</span><span class="n">case</span><span class="p">,</span> <span class="n">exc</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">started</span><span class="p">,</span> <span class="n">responsiveness</span><span class="p">)</span>
+<a id="__codelineno-0-316" name="__codelineno-0-316"></a>    <span class="k">except</span> <span class="n">AdapterThrottleError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+<a id="__codelineno-0-317" name="__codelineno-0-317"></a>        <span class="c1"># Also before AdapterError: a throttle is undelivered like an unreachable target,</span>
+<a id="__codelineno-0-318" name="__codelineno-0-318"></a>        <span class="c1"># but it is a different fact about the target and says so.</span>
+<a id="__codelineno-0-319" name="__codelineno-0-319"></a>        <span class="k">return</span> <span class="n">_throttled_outcome</span><span class="p">(</span><span class="n">case</span><span class="p">,</span> <span class="n">exc</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">started</span><span class="p">)</span>
+<a id="__codelineno-0-320" name="__codelineno-0-320"></a>    <span class="k">except</span> <span class="n">AdapterError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+<a id="__codelineno-0-321" name="__codelineno-0-321"></a>        <span class="k">return</span> <span class="n">_undelivered_outcome</span><span class="p">(</span><span class="n">case</span><span class="p">,</span> <span class="n">exc</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">started</span><span class="p">)</span>
+<a id="__codelineno-0-322" name="__codelineno-0-322"></a>    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>  <span class="c1"># broad on purpose: the floor, see _unscored_outcome</span>
+<a id="__codelineno-0-323" name="__codelineno-0-323"></a>        <span class="k">if</span> <span class="n">_is_pytest_control_flow</span><span class="p">(</span><span class="n">exc</span><span class="p">):</span>
+<a id="__codelineno-0-324" name="__codelineno-0-324"></a>            <span class="k">raise</span>
+<a id="__codelineno-0-325" name="__codelineno-0-325"></a>        <span class="k">return</span> <span class="n">_unscored_outcome</span><span class="p">(</span><span class="n">case</span><span class="p">,</span> <span class="n">exc</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">started</span><span class="p">)</span>
+<a id="__codelineno-0-326" name="__codelineno-0-326"></a>    <span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">started</span>
+<a id="__codelineno-0-327" name="__codelineno-0-327"></a>    <span class="k">if</span> <span class="n">responsiveness</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-328" name="__codelineno-0-328"></a>        <span class="n">responsiveness</span><span class="o">.</span><span class="n">record_completion</span><span class="p">(</span><span class="n">elapsed</span><span class="p">)</span>
+<a id="__codelineno-0-329" name="__codelineno-0-329"></a>    <span class="n">output_tokens</span> <span class="o">=</span> <span class="n">_output_tokens</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">usage</span><span class="p">)</span>
+<a id="__codelineno-0-330" name="__codelineno-0-330"></a>    <span class="n">vulnerable</span><span class="p">,</span> <span class="n">evidence</span> <span class="o">=</span> <span class="n">get_detector</span><span class="p">(</span><span class="n">case</span><span class="o">.</span><span class="n">detector</span><span class="p">)(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">case</span><span class="p">)</span>
+<a id="__codelineno-0-331" name="__codelineno-0-331"></a>    <span class="k">if</span> <span class="n">case</span><span class="o">.</span><span class="n">cost_ceiling</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">vulnerable</span><span class="p">:</span>
+<a id="__codelineno-0-332" name="__codelineno-0-332"></a>        <span class="n">vulnerable</span><span class="p">,</span> <span class="n">evidence</span> <span class="o">=</span> <span class="n">output_ceiling_reached</span><span class="p">(</span><span class="n">output_tokens</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">max_tokens</span><span class="p">)</span>
+<a id="__codelineno-0-333" name="__codelineno-0-333"></a>    <span class="k">return</span> <span class="n">ProbeOutcome</span><span class="p">(</span>
+<a id="__codelineno-0-334" name="__codelineno-0-334"></a>        <span class="n">case</span><span class="o">=</span><span class="n">case</span><span class="p">,</span>
+<a id="__codelineno-0-335" name="__codelineno-0-335"></a>        <span class="n">response</span><span class="o">=</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
+<a id="__codelineno-0-336" name="__codelineno-0-336"></a>        <span class="n">vulnerable</span><span class="o">=</span><span class="n">vulnerable</span><span class="p">,</span>
+<a id="__codelineno-0-337" name="__codelineno-0-337"></a>        <span class="n">evidence</span><span class="o">=</span><span class="n">evidence</span><span class="p">,</span>
+<a id="__codelineno-0-338" name="__codelineno-0-338"></a>        <span class="n">output_tokens</span><span class="o">=</span><span class="n">output_tokens</span><span class="p">,</span>
+<a id="__codelineno-0-339" name="__codelineno-0-339"></a>        <span class="n">elapsed_seconds</span><span class="o">=</span><span class="n">elapsed</span><span class="p">,</span>
+<a id="__codelineno-0-340" name="__codelineno-0-340"></a>    <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
