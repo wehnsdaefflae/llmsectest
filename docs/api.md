@@ -68,7 +68,7 @@ white-box LLM03 supply-chain scanner, and the LLM01 red-team set.
 
 The refusal oracle that scores the red-team set (inverted polarity: a target is
 a finding when it complies with a harmful request instead of refusing it), and
-its mirror image — the over-refusal oracle that flags a refusal of a *benign*
+its mirror image, the over-refusal oracle that flags a refusal of a *benign*
 twin (the false-refusal-rate metric, a usability signal kept out of the findings).
 
 ::: llmsectest.probes.detectors

@@ -134,7 +134,7 @@ def generate_console_summary(
             # Printed per category and with the flag named, because the action a reader
             # can take is to go and check that one string. A bare "unconfirmed" would
             # only tell them to distrust the row.
-            lines.append(f"    {c.YELLOW}Unconfirmed: {cat} — {reason}{c.RESET}")
+            lines.append(f"    {c.YELLOW}Unconfirmed: {cat}, {reason}{c.RESET}")
         if attacks["inconclusive"]:
             # Name the undelivered subset: "the target ran out of time" and "we never
             # reached the target" have different fixes, and only the second means the

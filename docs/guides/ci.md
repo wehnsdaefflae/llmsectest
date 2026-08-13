@@ -48,12 +48,12 @@ llmsectest --target app:http://localhost:8000/chat \
   --report-formats=sarif,html,json,markdown
 ```
 
-- **SARIF** — code-scanning ingestion (GitHub, GitLab, Azure DevOps).
-- **HTML** — a human-readable report to attach as a build artifact.
-- **JSON** — machine-readable for your own dashboards.
-- **Markdown** — drop into a PR comment or job summary.
+- **SARIF**, code-scanning ingestion (GitHub, GitLab, Azure DevOps).
+- **HTML**, a human-readable report to attach as a build artifact.
+- **JSON**, machine-readable for your own dashboards.
+- **Markdown**, drop into a PR comment or job summary.
 
 ## Gating policy
 
 By default any finding fails the run. Use a baseline to accept known issues and fail only on *new*
-ones — see the policy/baseline options in the [CLI reference](../cli.md).
+ones, see the policy/baseline options in the [CLI reference](../cli.md).

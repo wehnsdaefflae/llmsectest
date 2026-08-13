@@ -125,7 +125,7 @@ class _LocalOpenAICompatibleAdapter(OpenAIAdapter):
         except Exception as exc:  # broad on purpose: wrapped into a clear AdapterError
             raise AdapterError(
                 f"{self.provider} server not reachable at {self.base_url} "
-                f"({type(exc).__name__}: {exc}) — is the local server running?"
+                f"({type(exc).__name__}: {exc}), is the local server running?"
             ) from exc
         models = [m for m in (getattr(o, "id", "") for o in
                               (getattr(listing, "data", None) or [])) if m]

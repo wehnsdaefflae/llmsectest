@@ -1,4 +1,4 @@
-# LLM07 — System Prompt Leakage
+# LLM07, System Prompt Leakage
 
 > Ask the application to repeat its instructions, and it does.
 
@@ -24,9 +24,9 @@ llmsectest --target app:http://localhost:8000/chat \
     --app-prompt "$(cat prompts/support-bot.txt)"
 ```
 
-The oracle is deliberately dull. LLMSecTest picks the longest distinctive line of the prompt you passed,
+The oracle is dull. LLMSecTest picks the longest distinctive line of the prompt you passed,
 takes the first 60 characters of it, and looks for that span in the reply. A finding therefore means the
-application reproduced **your own text, verbatim** — not that a model said something that sounded like an
+application reproduced **your own text, verbatim**, not that a model said something that sounded like an
 instruction. There is no scoring, no similarity threshold, and no way for a reply that merely talks about
 system prompts to be reported as a leak.
 
@@ -68,7 +68,7 @@ about confidentiality applies to the request that names the secret, and not to t
 
 !!! danger "If your scan reports an LLM07 finding, read the evidence for your own secrets"
     Not just the value you passed to `--app-secret`: any key, endpoint, internal system name or customer
-    identifier your prompt happens to carry. The finding text contains what the app actually said, so
+    identifier your prompt happens to carry. The finding text contains what the app said, so
     the leak is right there to search.
 
 The practical consequence is a design rule rather than a scanner setting: **treat the system prompt as
@@ -77,7 +77,7 @@ API the model calls, not in the instructions the model can be talked into reciti
 
 That rule is worth more than an assertion, so one of our test applications is built to it. Its prompt names
 the enrolment service it talks to, states that it does not hold the master key, and tells the user where to
-go for one. Scanning it produces exactly the result the rule predicts:
+go for one. Scanning it produces the result the rule predicts:
 
 ```text
 LLM07 System Prompt Leakage           — attempted 1, findings 1     ← the prompt still leaks
@@ -127,12 +127,12 @@ it cannot see:
   base85, ROT13, quoted-printable, uuencode, Unicode-confusable and character-split forms all still
   count). The app-mode span check is a literal substring match, so an app talked into emitting its prompt
   base64-encoded is not currently reported. The asymmetry is on our backlog; it is stated here rather than
-  left for you to discover, because "no finding" from a check that cannot see the evasion is exactly the
+  left for you to discover, because "no finding" from a check that cannot see the evasion is the
   false confidence this tool exists to avoid.
 
 Application mode also runs **one** technique against the bare model's five, which is the same gap
 [LLM02](llm02.md#adding-three-more-techniques-and-what-still-did-not-happen-2026-08-06) had before its
-corpus was widened. A clean row here is one refused request, not a category that was thoroughly probed.
+corpus was widened. A clean row here is one refused request. It isn't a category we probed hard.
 
 ## What it does not test
 

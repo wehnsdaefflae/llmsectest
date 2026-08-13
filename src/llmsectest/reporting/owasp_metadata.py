@@ -287,7 +287,7 @@ OWASP_LLM_CATEGORIES: dict[str, OWASPCategory] = {
         full_description=(
             "Vector and embedding weaknesses arise in systems that use Retrieval-Augmented Generation "
             "(RAG) and other embedding-based methods. Flaws in how vectors and embeddings are generated, "
-            "stored, retrieved or access-controlled can be exploited — intentionally or accidentally — to "
+            "stored, retrieved or access-controlled can be exploited, intentionally or accidentally — to "
             "inject harmful content, retrieve another tenant's data, leak sensitive information embedded "
             "in the index, or invert embeddings back into their source text. Multi-tenant vector stores "
             "without strict partitioning, and federated knowledge bases, are especially exposed."
@@ -324,8 +324,8 @@ OWASP_LLM_CATEGORIES: dict[str, OWASPCategory] = {
         description="LLMs produce false but plausible content (hallucination), which overreliance lets propagate into decisions.",
         full_description=(
             "Misinformation occurs when an LLM produces false or misleading information that appears "
-            "credible. Its main cause is hallucination — the model fills gaps with statistically "
-            "plausible but incorrect content — compounded by bias, incomplete training data, and "
+            "credible. Its main cause is hallucination, the model fills gaps with statistically "
+            "plausible but incorrect content, compounded by bias, incomplete training data, and "
             "fabricated facts, citations or code packages. Overreliance, where users or systems trust "
             "unverified output without oversight, is the amplifier that lets misinformation reach "
             "decisions, leading to security breaches, reputational harm, legal liability, and (via "
@@ -365,8 +365,8 @@ OWASP_LLM_CATEGORIES: dict[str, OWASPCategory] = {
             "Unbounded consumption occurs when an LLM application allows excessive and uncontrolled "
             "inference, letting attackers degrade service, drive up costs (denial of wallet), or "
             "extract the model. Because each query is resource-intensive and input length is variable, "
-            "unthrottled or oversized requests can exhaust compute, inflate API bills, and — through "
-            "high-volume querying — enable functional model replication or distillation. It subsumes the "
+            "unthrottled or oversized requests can exhaust compute, inflate API bills, and, through "
+            "high-volume querying, enable functional model replication or distillation. It subsumes the "
             "older 'Model Denial of Service' and 'Model Theft' risks under one resource-control category."
         ),
         help_text=(

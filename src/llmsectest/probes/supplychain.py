@@ -73,10 +73,10 @@ KNOWN_MALICIOUS_PACKAGES: dict[str, str] = {
     "telnet": "squats the stdlib 'telnetlib' module name (SK-CSIRT 2017)",
     "urlib3": "typosquat of 'urllib3' (SK-CSIRT 2017)",
     "urllib": "squats the stdlib 'urllib' module name (SK-CSIRT 2017)",
-    "colourama": "typosquat of 'colorama' — crypto clipboard hijacker (2018)",
+    "colourama": "typosquat of 'colorama', crypto clipboard hijacker (2018)",
     "ssh-decorate": "malicious upload exfiltrating SSH credentials (2018)",
-    "python3-dateutil": "typosquat of 'python-dateutil' — credential stealer (2019)",
-    "jeilyfish": "typosquat of 'jellyfish' — SSH/GPG-key stealer (2019)",
+    "python3-dateutil": "typosquat of 'python-dateutil', credential stealer (2019)",
+    "jeilyfish": "typosquat of 'jellyfish', SSH/GPG-key stealer (2019)",
     "pytagora": "malicious upload (JFrog disclosure, 2021)",
     "noblesse": "info-stealer malicious upload (JFrog disclosure, 2021)",
 }
@@ -227,7 +227,7 @@ def _index_directive_findings(line: str, rel: str) -> list[SupplyChainFinding]:
             id=f"LLM03-index-cleartext-{canonicalize_name(value)[:24]}",
             severity="high", package=value, manifest=rel,
             technique="package index over cleartext HTTP",
-            evidence=f"{opt} points at an http:// index ({value}) — packages can be "
+            evidence=f"{opt} points at an http:// index ({value}), packages can be "
                      "swapped in transit (MITM).",
             recommendation="Use an https:// index URL; prefer the default PyPI index.",
         ))
@@ -352,7 +352,7 @@ def _classify(dep: Dependency) -> SupplyChainFinding | None:
             package=dep.name, manifest=dep.manifest,
             technique="unpinned dependency floats to any future version",
             evidence=f"'{dep.name}' has no version constraint, so the build pulls whatever "
-                     "the index serves next — including a compromised release.",
+                     "the index serves next, including a compromised release.",
             recommendation=f"Pin '{dep.name}' to a reviewed version (e.g. '{dep.name}==X.Y.Z') "
                            "or use a hash-locked requirements file.",
         )
@@ -400,7 +400,7 @@ def scan_dependencies(repo: str | Path) -> list[SupplyChainFinding]:
     """
     repo = Path(repo)
     findings: list[SupplyChainFinding] = []
-    seen: set[tuple[str, str]] = set()  # (canonical name, technique-class) — dedupe across manifests
+    seen: set[tuple[str, str]] = set()  # (canonical name, technique-class), dedupe across manifests
     for manifest in discover_manifests(repo):
         deps, dir_findings = _parse_manifest(manifest, str(manifest.relative_to(repo)))
         findings.extend(dir_findings)

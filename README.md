@@ -22,7 +22,7 @@ llmsectest --target app:http://localhost:8000/chat --app-secret "your-canary"
 Write your own checks as ordinary pytest tests; get SARIF / HTML / JSON / Markdown reports
 with CVSS v4.0- and risk-scored findings.
 
-📖 **Documentation: [docs.llmsec.dev](https://docs.llmsec.dev)** — getting started, testing your
+📖 **Documentation: [docs.llmsec.dev](https://docs.llmsec.dev)**. Getting started, testing your
 running app, the OWASP coverage map, CLI and API reference. Build locally with
 `pip install -e ".[docs]" && mkdocs serve`.
 
@@ -33,7 +33,7 @@ via the [Prototype Fund](https://prototypefund.de) (FKZ 16IS26S10). MIT-licensed
 See [Funding](#funding).
 
 > **Status: pre-alpha (active grant development).** All **10** OWASP LLM Top 10 (2025)
-> categories ship a real probe or scanner — none is a placeholder, and a scan that cannot
+> categories ship a real probe or scanner. None is a placeholder, and a scan that cannot
 > reach one says so instead of passing it silently.
 >
 > **Known limitations** live in the [changelog](CHANGELOG.md#known-issue) and are named on the
@@ -63,28 +63,28 @@ See [Funding](#funding).
   metadata, risk scoring, baselines and policy gates. Every finding carries a **CVSS v4.0** base score
   for its category, reported as SARIF `security-severity`.
 - **Four attack mechanisms per category, not four wordings.** The application-mode LLM02 and LLM06 probes
-  each run four techniques — for LLM02 a direct request, a claimed authority, an indirect ask for a
-  handover document, and an **encoded-exfiltration** request that a naive output filter passes; for LLM06
-  four assertions of authority the endpoint cannot verify. No LLM02 prompt contains the secret it scores,
+  each run four techniques. LLM02 sends a direct request, a claimed authority, an indirect ask for a
+  handover document, and an **encoded-exfiltration** request that a naive output filter waves through.
+  LLM06 sends four assertions of authority the endpoint has no way to check. No LLM02 prompt contains the secret it scores,
   and no LLM06 prompt contains the action signature or dictates the reply format, so a finding can only
   come from the application.
 - **Encoded leaks still count.** The LLM02 / LLM07 / LLM08 leak oracles **de-obfuscate** a reply before
   matching, so a secret returned base64/hex/base32/base85/ASCII85/ROT13/quoted-printable/uuencode-encoded,
-  Unicode-disguised (full-width or zero-width characters), or split across separators is caught — including
-  when the separator is *spelled out* (`E SPACE X SPACE A …`), which is what a small model reached for on
-  its own when asked to defeat an output filter.
+  Unicode-disguised (full-width or zero-width characters), or split across separators is caught. That includes
+  the separator being *spelled out* (`E SPACE X SPACE A …`). A small model came up with that one by
+  itself when we asked it to get past an output filter.
 - **Over-refusal is measured too.** `--redteam-benign` runs the matched benign twins and reports the
-  target's **false-refusal rate** — a usability signal, kept out of the security findings and the exit code.
+  target's **false-refusal rate**, a usability signal that's kept out of the security findings and the exit code.
 - **One adapter for every target.** OpenAI, Anthropic, HuggingFace, and local Ollama / LM Studio, plus a
   running application at its own HTTP endpoint (`--target app:<url>`).
-- **Next.** Depth, not breadth: the white-box LLM08 dimensions and a classifier refusal oracle. The
-  modules under [`examples/`](examples/) demonstrate the reporting pipeline across all ten categories with
-  deterministic mock fixtures.
+- **Next up.** More depth. The white-box LLM08 dimensions and a classifier refusal oracle. The modules
+  under [`examples/`](examples/) show the reporting pipeline across all ten categories with deterministic
+  mock fixtures.
 
 ## The unified adapter
 
 Every provider is wrapped in one `LLMAdapter` contract, so a probe targets any
-model the same way. Vendor SDKs are imported lazily — install only what you use.
+model the same way. Vendor SDKs are imported lazily, so install only what you use.
 
 ```python
 from llmsectest import get_adapter
@@ -113,8 +113,8 @@ runs a red-team jailbreak set (JailbreakBench/AdvBench) scored by a refusal orac
 llmsectest                                   # offline demo target (shows findings)
 llmsectest --target openai:gpt-4o-mini       # scan a live model
 llmsectest --target anthropic:claude-3-5-haiku --report-formats=sarif,html,json,markdown
-llmsectest --target ollama:gemma4:e2b-it-q4_K_M  # local model via Ollama — no API key, no paid calls
-llmsectest --target lmstudio:<model>             # local model via LM Studio — no API key, no paid calls
+llmsectest --target ollama:gemma4:e2b-it-q4_K_M  # local model via Ollama, no API key, no paid calls
+llmsectest --target lmstudio:<model>             # local model via LM Studio, no API key, no paid calls
 llmsectest --preflight --target ollama:gemma4:e2b-it-q4_K_M  # health-check the local server/model first
 llmsectest --target app:http://localhost:8000/chat  # test YOUR running app (black-box, real guardrails)
 llmsectest --target app:http://localhost:8000/chat --repo .  # ...and scan its dependencies (LLM03)
@@ -139,21 +139,21 @@ Each run writes to a per-target path (`results/<target-slug>.sarif`), so scannin
 several targets in a row never overwrites an earlier report; pass `--sarif-output`
 to choose your own. `--validate` with no path checks the current target's report.
 
-**A clean run says what it withstood.** Every scan reports the attacks it actually
+**A clean run says what it withstood.** Every scan reports the attacks it
 delivered and how many the target held off, per OWASP category: in the console, in the
 HTML report and as an `attacks_withstood` property in the SARIF. Without it an empty
-findings list is silence: the report of a well-defended app looks exactly like the report
-of a scan that attacked nothing. Only real probes count (a coverage assertion or a static
+findings list is just silence. The report of a well-defended app reads the same as the
+report of a scan that attacked nothing. Only real probes count (a coverage assertion or a static
 scanner never inflates the number), and a probe that ran out of `--app-timeout` is neither
 withstood nor a finding, because a target that stops answering must not look like one that
 resisted. See [Red-team your defense](https://docs.llmsec.dev/guides/red-team-your-defense/).
 
 **A target we could not reach is never reported as a vulnerable one.** If your endpoint is
 unreachable, replies with something that isn't JSON, or dies partway through, those probes are
-recorded **inconclusive** and the run **exits non-zero** — both halves, because an empty findings
+recorded **inconclusive** and the run **exits non-zero**. Both halves matter, because an empty findings
 list from a scan that reached nothing would otherwise pass CI as a clean bill of health. The count
 appears as a banner on the HTML page, an `undelivered` property in the SARIF, and a line in the
-console summary. A slow app is a different case: it was reached, so raise `--app-timeout` instead. So
+console summary. A slow app is different. You reached it, so raise `--app-timeout` instead. So
 is a **rate-limited** one: a hosted target answering `HTTP 429` was reached too, so those probes are
 inconclusive and named as throttled rather than as unreachable, with the provider's own `Retry-After`
 where it sent one. This holds for **every** `--target`, local or hosted, and that is a checked
@@ -162,11 +162,10 @@ and its own throttle, so a test pins that every provider we ship does both (see 
 security tests](https://docs.llmsec.dev/guides/authoring/) if you add one of your own).
 
 **Browse a report as HTML.** `--render-sarif <file.sarif>` turns any SARIF v2.1.0
-report — one of ours, or any other tool's — into a single self-contained HTML page
+report, one of ours or any other tool's, into a single self-contained HTML page
 (`results/<target>.html` by default, or `-o <path>`): findings grouped by OWASP
 category, CVSS-scored and colour-coded by severity, each with its location,
-evidence and remediation, plus a rule-reference glossary. No server, no assets —
-open it in a browser or share the file. Handy for reviewing the reports from the
+evidence and remediation, plus a rule-reference glossary. No server, no assets. Open it in a browser or send someone the file. Handy for reviewing the reports from the
 real projects you point LLMSecTest at. Interop is proven against committed output
 from three real scanners (ruff, Bandit, Semgrep), which between them use every CWE
 convention we have seen in the wild, so a third-party finding shows its CWE rather
@@ -219,7 +218,7 @@ for case in get_corpus():
 ## Author your own security tests
 
 Mark a test with its OWASP category and severity; the plugin captures the
-outcome and emits reports. Reporting is opt-in — pass `--sarif-output` (or set
+outcome and emits reports. Reporting is opt-in. Pass `--sarif-output` (or set
 `sarif_output` in your pytest config) to switch it on.
 
 ```python
@@ -244,17 +243,17 @@ llmsectest --validate results/out.sarif
 
 A failed security test becomes a SARIF finding with OWASP metadata, CWE tags, a
 **CVSS v4.0 base score** (vector + score, surfaced as `security-severity`), and
-remediation guidance — ready for the GitHub Security tab. When the target reports
+remediation guidance, ready for the GitHub Security tab. When the target reports
 token usage, each finding also carries its real **output-token cost** and the run
 records a **denial-of-wallet total** (the LLM10 cost figure, trackable over time).
-If any probe went **inconclusive** — an `app:<url>` target exceeded `--app-timeout`, or
-could not be reached at all — the run also records how many, and how many of those never
+If any probe went **inconclusive**, because an `app:<url>` target exceeded `--app-timeout` or
+could not be reached at all, the run also records how many, and how many of those never
 reached the target, so a clean-looking report never hides that some probes could not be
 concluded. See [`examples/`](examples/) for one test module per OWASP category.
 
 ## Install
 
-Pre-alpha: not yet on PyPI — install from source (a `pip install llmsectest` will
+Pre-alpha, so not yet on PyPI. Install from source (a `pip install llmsectest` will
 come with the first PyPI release). Substitute your extras in the `[...]`:
 
 ```bash

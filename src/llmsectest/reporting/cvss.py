@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-try:  # optional dependency — see module docstring
+try:  # optional dependency, see module docstring
     from cvss import CVSS4 as _CVSS4
 
     _HAVE_CVSS = True

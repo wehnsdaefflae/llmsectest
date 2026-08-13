@@ -1,14 +1,14 @@
 """Render any SARIF v2.1.0 file as a standalone, browsable HTML report.
 
 Unlike :mod:`llmsectest.reporting.html_generator` (which renders the in-memory
-pytest result model during a run), this reads a finished ``.sarif`` file — ours
-*or* any other tool's — and produces a single self-contained HTML page (inline
+pytest result model during a run), this reads a finished ``.sarif`` file ,  ours
+*or* any other tool's ,  and produces a single self-contained HTML page (inline
 CSS, no assets, no network) you can open or share. It is SARIF-native: it reads
 the runs / rules / results contract directly, so a finding from a third-party
 scanner renders too, just with whatever metadata that tool supplied.
 
-For LLMSecTest's own reports it surfaces the rich per-finding metadata we emit —
-OWASP LLM category, CVSS v4.0 score/severity, CWE, location and remediation — and
+For LLMSecTest's own reports it surfaces the rich per-finding metadata we emit , 
+OWASP LLM category, CVSS v4.0 score/severity, CWE, location and remediation ,  and
 groups findings by OWASP category. Missing fields degrade gracefully.
 """
 
@@ -58,7 +58,7 @@ def _as_list(obj: Any) -> list:
 
 def _as_str_list(obj: Any) -> list[str]:
     """Coerce a field that should be a list of strings (e.g. ``cwe``). A lone
-    scalar — some tools emit a single CWE as a bare string — becomes a one-item
+    scalar ,  some tools emit a single CWE as a bare string ,  becomes a one-item
     list rather than being iterated character-by-character; a dict/None yields []."""
     if isinstance(obj, list):
         return [str(x) for x in obj if x not in (None, "")]
@@ -91,9 +91,9 @@ def _cwes_of(result: dict, rule: dict) -> list[str]:
     ``properties.cwe`` / ``properties.cwe_ids`` field; many security scanners
     instead follow the GitHub code-scanning tag convention and encode it as an
     ``external/cwe/cwe-NNN`` entry in ``properties.tags`` (Bandit does exactly
-    this — see ``tests/fixtures/bandit-1.9.4.sarif``). Both are surfaced here.
+    this ,  see ``tests/fixtures/bandit-1.9.4.sarif``). Both are surfaced here.
 
-    Ids are canonicalised to ``CWE-NNN`` and de-duplicated, explicit ids first —
+    Ids are canonicalised to ``CWE-NNN`` and de-duplicated, explicit ids first , 
     so our own reports (which carry only ``properties.cwe``) render byte-for-byte
     as before, while a Bandit/CodeQL finding now shows its CWE instead of none.
     """
@@ -142,7 +142,7 @@ def _severity_of(result: dict, rule: dict) -> str:
     score = _score_of(result, rule)
     if score is not None:
         return _severity_from_score(score)
-    # No CVSS — fall back to the SARIF level (error/warning/note).
+    # No CVSS ,  fall back to the SARIF level (error/warning/note).
     level = result.get("level") or _as_dict(rule.get("defaultConfiguration")).get("level", "")
     return {"error": "high", "warning": "medium", "note": "low"}.get(level, "none")
 
@@ -183,7 +183,7 @@ def _rule_index(run: dict) -> dict[str, dict]:
 
 def _sev_badge(sev: str, score: float | None) -> str:
     colour, _ = _SEVERITY.get(sev, _SEVERITY["none"])
-    label = sev.upper() if sev != "none" else "—"
+    label = sev.upper() if sev != "none" else ", "
     if score is not None:
         label = f"{label} · CVSS {score:g}"
     return f'<span class="badge" style="background:{colour}">{_esc(label)}</span>'
@@ -410,7 +410,7 @@ def _undelivered_banner(undelivered: object) -> str:
     """Warn, above everything else, that this report does not describe a target.
 
     When probes never reached the target the page below is not a clean bill of health,
-    it is a scan of nothing — and the failure is silent by nature, since an undelivered
+    it is a scan of nothing ,  and the failure is silent by nature, since an undelivered
     probe is inconclusive and therefore appears in no findings list. The banner leads
     the page for that reason. Type-guarded like every other foreign field here: this
     renderer displays any tool's SARIF, so a malformed property must degrade to "".
@@ -425,7 +425,7 @@ def _undelivered_banner(undelivered: object) -> str:
     detail = f"<ul>{items}</ul>" if items else ""
     return (
         '<section class="void">'
-        f'<div class="h">⚠ Scan incomplete — {_esc(count)} probe(s) never reached the target</div>'
+        f'<div class="h">⚠ Scan incomplete ,  {_esc(count)} probe(s) never reached the target</div>'
         "<p>These attacks were never answered, so they are counted as inconclusive rather "
         "than as findings. A quiet report below is therefore not evidence that the target "
         "is secure. Check that the endpoint URL is right and the application was running "
@@ -439,7 +439,7 @@ def _secret_exposed_banner(exposed: object) -> str:
 
     It leads the page for the same reason the undelivered banner does: it changes what
     everything below it means. A reader who scrolls to a sensitive-disclosure row reading
-    "withstood" and stops there has been told the opposite of what happened — which is
+    "withstood" and stops there has been told the opposite of what happened ,  which is
     exactly what our own reports did until 2026-08-07, on 20 of 41 test applications.
     Type-guarded like every other foreign field here: this renderer displays any tool's
     SARIF, so a malformed property must degrade to "".
@@ -581,7 +581,7 @@ def render_sarif_html(doc: dict, *, source_name: str | None = None,
         if isinstance(dow, dict) and "total_output_tokens" in dow
         else None
     )
-    # Inconclusive probes (target exceeded --app-timeout) — surfaced so a clean-looking
+    # Inconclusive probes (target exceeded --app-timeout) ,  surfaced so a clean-looking
     # report never hides that some probes could not be concluded (they are errored, not
     # findings, so they appear nowhere else in the report).
     inc = _props(first_run).get("inconclusive")
@@ -596,7 +596,7 @@ def render_sarif_html(doc: dict, *, source_name: str | None = None,
     banner = (_undelivered_banner(undelivered)
               + _secret_exposed_banner(_props(first_run).get("secret_exposed"))
               + _unconfirmed_marker_banner(_props(first_run).get("unconfirmed_markers")))
-    # Attacks the target withstood — the positive evidence that turns an empty
+    # Attacks the target withstood ,  the positive evidence that turns an empty
     # findings list from silence into a result.
     tally = _props(first_run).get("attacks_withstood")
     held_bit = (
@@ -617,7 +617,7 @@ def render_sarif_html(doc: dict, *, source_name: str | None = None,
         # Suppressed under the banner: "no findings" plus "we never reached the target"
         # is the exact pair of statements that must not be read together as a pass.
         body.append(
-            '<div class="empty">✓ No findings in this report — '
+            '<div class="empty">✓ No findings in this report, '
             + (f"the target withstood {_esc(tally.get('withstood', 0))} of "
                f"{_esc(tally['attempted'])} delivered attacks."
                if held_bit else "the scan was clean.")
@@ -632,7 +632,7 @@ def render_sarif_html(doc: dict, *, source_name: str | None = None,
         body.extend(_finding_card(result, rule) for result, rule in items)
     body.append(_rules_glossary(all_rules))
 
-    title = f"LLMSecTest SARIF report — {source_name}" if source_name else "LLMSecTest SARIF report"
+    title = f"LLMSecTest SARIF report, {source_name}" if source_name else "LLMSecTest SARIF report"
     return (
         "<!DOCTYPE html>\n"
         f'<html lang="en"><head><meta charset="utf-8">'

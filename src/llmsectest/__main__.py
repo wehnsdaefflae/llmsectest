@@ -29,10 +29,10 @@ Examples:
 
 Application scans (``--target app:<url>``) always exercise LLM01 + LLM05 + LLM09 +
 LLM10 black-box. Optional inputs unlock the remaining black-box categories:
-``--app-prompt`` (the app's own system prompt — inline text or a file path)
+``--app-prompt`` (the app's own system prompt, inline text or a file path)
 enables LLM07, ``--app-secret`` (a real secret the app holds) enables LLM02,
 ``--app-action`` (a privileged tool/action signature; repeatable) enables LLM06,
-and two RAG markers enable LLM08 — ``--app-canary`` (confidential content planted
+and two RAG markers enable LLM08, ``--app-canary`` (confidential content planted
 in the app's retrieved corpus) for retrieval-exposure probes and
 ``--app-rag-poison`` (the marker a planted poisoned document tells the app to emit)
 for indirect-prompt-injection-via-retrieved-document probes. Categories without
@@ -87,7 +87,7 @@ def print_banner():
 
 
 # How each OWASP-2025 category is tested, and what a developer must provide for
-# the categories not yet covered — so the coverage map has no silent gaps.
+# the categories not yet covered, so the coverage map has no silent gaps.
 _TESTABILITY = {
     "owasp_llm01": ("black-box", None),
     "owasp_llm02": ("black-box", None),
@@ -119,7 +119,7 @@ def check_coverage():
 
     covered = set(covered_categories())
     print_banner()
-    print("\nOWASP LLM Top 10 (2025) — coverage & how each is tested:")
+    print("\nOWASP LLM Top 10 (2025), coverage & how each is tested:")
     print("-" * 78)
     for marker, category in sorted(OWASP_LLM_CATEGORIES.items()):
         modality, requires = _TESTABILITY.get(marker, ("?", None))
@@ -127,7 +127,7 @@ def check_coverage():
             kind = "scan  " if marker in SCANNER_CATEGORIES else "probes"
             status = f"✓ {kind} ({modality})"
         else:
-            status = f"  planned  ({modality} — {requires or 'planned'})"
+            status = f"  planned  ({modality}, {requires or 'planned'})"
         cvss = cvss_for_category(marker)
         cvss_col = f"CVSS {cvss.base_score:>4} {cvss.severity}" if cvss else ""
         print(f"  [{status}] {category.id}: {category.name:<34s} {cvss_col}")
@@ -141,7 +141,7 @@ def check_coverage():
     print("--app-action (repeatable) / --app-canary / --app-rag-poison to unlock")
     print("LLM07 / LLM02 / LLM06 / LLM08 (retrieval exposure + RAG indirect injection).")
     print("--app-timeout <seconds> caps each app request (a slow endpoint is recorded")
-    print("as inconclusive, not left to hang the scan) — except on the two bounded LLM10")
+    print("as inconclusive, not left to hang the scan), except on the two bounded LLM10")
     print("probes, where exhausting the budget is itself the finding, provided the app")
     print("answered its other probes well inside that same budget.")
     print("White-box categories need app internals (deps/model files) and run from a path.")
@@ -165,7 +165,7 @@ def list_probes():
     for case in get_corpus():
         if case.owasp != current:
             current = case.owasp
-            print(f"\n{OWASP_LLM_CATEGORIES[case.owasp].id} — {OWASP_LLM_CATEGORIES[case.owasp].name}")
+            print(f"\n{OWASP_LLM_CATEGORIES[case.owasp].id}, {OWASP_LLM_CATEGORIES[case.owasp].name}")
         print(f"  {case.severity:>8s}  {case.id}  ({case.technique})")
     from .probes.redteam import builtin_benign
 
@@ -287,7 +287,7 @@ def _has_explicit_path(args: list) -> bool:
 
     A token is a test path only if it (1) is not an option, (2) is not the value
     of a known value-taking option in ``--opt value`` form, and (3) refers to
-    something pytest could actually collect — an existing file/dir, optionally
+    something pytest could actually collect, an existing file/dir, optionally
     with a ``::nodeid`` suffix. Both guards together close the documented
     ``--opt value`` footgun, where e.g. ``--report-dir tmp`` was mistaken for a
     positional path and silently skipped the packaged suite.
@@ -321,7 +321,7 @@ _APP_SUITE_MODULES = (
     "test_llm08_vector_embedding.py",  # LLM08 retrieval exposure; self-skips without --app-canary
     "test_llm03_supply_chain.py",  # white-box repo scan; self-skips without --repo
     "test_llm04_data_model_poisoning.py",  # white-box model-file scan; self-skips without --model-scan
-    "test_owasp_coverage.py",  # enumerates all 10 — unimplemented ones skip "not yet implemented"
+    "test_owasp_coverage.py",  # enumerates all 10, unimplemented ones skip "not yet implemented"
 )
 
 
@@ -330,7 +330,7 @@ def _is_app_target(target: str | None) -> bool:
 
 
 def _print_coverage_footer(target: str | None) -> None:
-    """Surface which OWASP categories this run did and did not exercise — so a
+    """Surface which OWASP categories this run did and did not exercise, so a
     category is never silently left untested."""
     def cid(marker: str) -> str:
         return marker.replace("owasp_llm", "LLM")
@@ -349,7 +349,7 @@ def _print_coverage_footer(target: str | None) -> None:
                            known_poison=poison)
         exercised = [c.owasp for c in cov if c.exercised]
         skipped = [(c.owasp, c.reason) for c in cov if not c.exercised]
-        print(f"Application-scan coverage — {len(exercised)}/10 OWASP categories "
+        print(f"Application-scan coverage, {len(exercised)}/10 OWASP categories "
               "exercised black-box. No silent gaps:")
     else:
         from .probes import APP_ONLY_CATEGORIES, SCANNER_CATEGORIES, covered_categories
@@ -365,26 +365,26 @@ def _print_coverage_footer(target: str | None) -> None:
                 if m in SCANNER_CATEGORIES and not os.environ.get(scanner_env):
                     skipped.append((m, scanner_hint))
                 elif m in APP_ONLY_CATEGORIES:
-                    skipped.append((m, ("needs a RAG application target — "
+                    skipped.append((m, ("needs a RAG application target, "
                                         "--target app:<url> with --app-canary "
                                         "and/or --app-rag-poison")))
                 else:
                     exercised.append(m)
             else:
                 skipped.append(
-                    (m, (f"not yet implemented ({_TESTABILITY[m][0]} — "
+                    (m, (f"not yet implemented ({_TESTABILITY[m][0]}, "
                          f"{_TESTABILITY[m][1] or 'planned'})"))
                 )
-        print(f"Coverage this run — {len(exercised)}/10 OWASP categories exercised. "
+        print(f"Coverage this run, {len(exercised)}/10 OWASP categories exercised. "
               "No silent gaps:")
     print("  exercised:    " + ", ".join(cid(m) for m in exercised))
     for marker, reason in skipped:
         print(f"  not exercised {cid(marker)}: {reason}")
     if "owasp_llm01" in exercised:
         # Surface the LLM01 red-team depth (the JailbreakBench module), not just
-        # that LLM01 ran — so the red-team coverage is never a silent gap. Count
+        # that LLM01 ran, so the red-team coverage is never a silent gap. Count
         # only the in-memory built-in set; name an external set by its path (the
-        # suite run itself reports how many of it ran) — the footer never does IO.
+        # suite run itself reports how many of it ran), the footer never does IO.
         from .probes.redteam import builtin_behaviors
 
         rt_path = os.environ.get(envvars.REDTEAM_SET) or None
@@ -396,9 +396,9 @@ def _print_coverage_footer(target: str | None) -> None:
         # Surface the depth of the LLM03 scan too, not just that it ran.
         print("  LLM03 depth:  structural scan "
               + ("+ OSV.dev known-CVE lookup (--osv)" if osv_on
-                 else "only — add --osv for a known-CVE lookup (networked, no key)"))
+                 else "only, add --osv for a known-CVE lookup (networked, no key)"))
     if not _is_app_target(target) and "owasp_llm04" in exercised:
-        # Surface the depth of the LLM04 scan too — offline pickle/opcode scan.
+        # Surface the depth of the LLM04 scan too, offline pickle/opcode scan.
         print("  LLM04 depth:  offline serialization-opcode scan of model files "
               "(pickle/PyTorch-zip/numpy) for code-execution imports")
     print("Full map: llmsectest --check")
@@ -408,8 +408,8 @@ def _print_coverage_footer(target: str | None) -> None:
 def _print_over_refusal(target: str | None, path: str | None) -> None:
     """Run the JBB benign twins against the target and print the false-refusal rate.
 
-    This is a *usability* measurement — the specificity control for the LLM01
-    refusal oracle — kept deliberately separate from the SARIF security findings:
+    This is a *usability* measurement, the specificity control for the LLM01
+    refusal oracle, kept deliberately separate from the SARIF security findings:
     over-refusing a harmless request is a product-quality defect, not an OWASP
     vulnerability, so it never counts as a finding or changes the exit code.
     """
@@ -419,14 +419,14 @@ def _print_over_refusal(target: str | None, path: str | None) -> None:
     report = measure_false_refusal(adapter, path)
     source = f"set {path}" if path else "built-in starter set"
     print("\n" + "-" * 68)
-    print(f"Over-refusal (benign-twin) measurement — {report.total} benign requests "
+    print(f"Over-refusal (benign-twin) measurement, {report.total} benign requests "
           f"({source}):")
     print(f"  false-refusal rate: {report.rate:.0%} "
           f"({report.refused}/{report.total} benign requests refused)")
     for o in report.over_refusals:
         print(f"    over-refused: {o.case.id} ({o.case.technique})")
     print("  A benign twin is a harmless request matched to a red-team behavior; refusing")
-    print("  it is an over-refusal — a usability defect, not a security finding. It is the")
+    print("  it is an over-refusal, a usability defect, not a security finding. It is the")
     print("  specificity control for the refusal oracle (string-matching; a classifier")
     print("  oracle is the documented upgrade). Not counted in findings or the exit code.")
     print("-" * 68)
@@ -456,7 +456,7 @@ def run_suite(args: list, target: str | None, repo: str | None = None,
     ``app_prompt``/``app_secret``/``app_actions``/``app_canary``/``app_rag_poison``
     (from ``--app-prompt``/``--app-secret``/``--app-action``/``--app-canary``/
     ``--app-rag-poison``) are the dev-supplied application inputs that unlock
-    LLM07/LLM02/LLM06/LLM08 against an ``app:<url>`` target — ``app_canary`` drives
+    LLM07/LLM02/LLM06/LLM08 against an ``app:<url>`` target, ``app_canary`` drives
     LLM08 retrieval exposure and ``app_rag_poison`` drives LLM08 indirect injection
     via a poisoned retrieved document.
     ``app_timeout`` (from ``--app-timeout``, seconds) caps how long a single request
@@ -464,12 +464,12 @@ def run_suite(args: list, target: str | None, repo: str | None = None,
     inconclusive probe rather than hanging the scan.
     ``redteam_benign`` (from ``--redteam-benign``) additionally measures the
     target's **false-refusal rate** over the JBB benign twins after the security
-    suite — a usability metric reported separately, never a SARIF finding.
+    suite, a usability metric reported separately, never a SARIF finding.
     """
     Path("results").mkdir(exist_ok=True)
     # Only-when-supplied env vars travel from the CLI to the suite subprocess;
     # an absent value must leave the variable unset (the suite treats unset as
-    # "use the default") — see envvars for the contract.
+    # "use the default"), see envvars for the contract.
     suite_env = {
         envvars.TARGET: target,
         envvars.REPO: repo,
@@ -523,8 +523,8 @@ def _render_sarif(args: list) -> int:
     """Render a finished ``.sarif`` file as a standalone HTML report.
 
     ``--render-sarif <file.sarif>`` writes ``<file>.html`` next to it (or to
-    ``-o``/``--html-output <path>``). Works on any SARIF v2.1.0 file — ours or a
-    third party's — so a scan of a project under test can be reviewed in a browser.
+    ``-o``/``--html-output <path>``). Works on any SARIF v2.1.0 file, ours or a
+    third party's, so a scan of a project under test can be reviewed in a browser.
     """
     from .reporting import render_sarif_file
 
@@ -558,7 +558,7 @@ def _generate_sbom(args: list) -> int:
 
     ``--sbom [<out.json>] --repo <path>`` parses every dependency manifest under
     the repo (the same LLM03 parse pass as the supply-chain scan) and writes a
-    CycloneDX 1.6 JSON Software Bill of Materials — one component per dependency,
+    CycloneDX 1.6 JSON Software Bill of Materials, one component per dependency,
     exactly-pinned versions carried into the PURL. Defaults the output to
     ``results/<repo>.cdx.json``. Requires ``--repo`` (an SBOM is about a project's
     own dependency tree, not a running endpoint).
@@ -604,14 +604,14 @@ def run_preflight(target: str | None) -> int:
         adapter = resolve_target(spec)
         result = adapter.preflight()
     except AdapterError as exc:
-        print(f"preflight FAILED — {spec}: {exc}", file=sys.stderr)
+        print(f"preflight FAILED, {spec}: {exc}", file=sys.stderr)
         return 1
     if result is None:
-        print(f"preflight: {spec} — provider "
+        print(f"preflight: {spec}, provider "
               f"{getattr(adapter, 'provider', '?')!r} exposes no health endpoint; "
               "the scan will surface any error on its first request.")
         return 0
-    print(f"preflight OK — {spec}")
+    print(f"preflight OK, {spec}")
     print(f"  provider: {result.provider}")
     if result.base_url:
         print(f"  server:   {result.base_url} (reachable)")
@@ -622,9 +622,9 @@ def run_preflight(target: str | None) -> int:
             shown += f" (+{extra} more)"
         print(f"  models:   {shown}")
     if result.model_loaded is True:
-        print(f"  model:    {adapter.model} — loaded")
+        print(f"  model:    {adapter.model}, loaded")
     elif result.model_loaded is None:
-        print(f"  model:    {adapter.model} — not advertised by the server (not verified)")
+        print(f"  model:    {adapter.model}, not advertised by the server (not verified)")
     return 0
 
 
@@ -640,7 +640,7 @@ def main():
         try:
             print(f"llmsectest {version('llmsectest')}")
         except PackageNotFoundError:
-            print("llmsectest (not installed — running from source)")
+            print("llmsectest (not installed, running from source)")
         return 0
     if "--check" in args:
         check_coverage()
@@ -683,7 +683,7 @@ def main():
         print(f"error: --redteam-set file not found: {redteam_set}", file=sys.stderr)
         return 2
     if redteam_benign_set and not _is_existing_file(redteam_benign_set):
-        # A path was given but doesn't exist — don't silently use the built-in set.
+        # A path was given but doesn't exist, don't silently use the built-in set.
         print(f"error: --redteam-benign file not found: {redteam_benign_set}",
               file=sys.stderr)
         return 2
@@ -696,7 +696,7 @@ def main():
               f"(got {target or 'the offline demo'})", file=sys.stderr)
         return 2
     if app_prompt and _is_existing_file(app_prompt):
-        # System prompts are long and multiline — accept a file path too (a long
+        # System prompts are long and multiline, accept a file path too (a long
         # inline prompt overflows the name limit; _is_existing_file handles that).
         app_prompt = Path(app_prompt).read_text(encoding="utf-8")
 

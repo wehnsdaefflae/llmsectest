@@ -43,6 +43,6 @@ def test_owasp_category_implemented(marker):
         pytest.skip(f"{category.id} {category.name}: "
                     f"{NOT_IMPLEMENTED.get(marker, 'not yet implemented')}")
     if marker in SCANNER_CATEGORIES or marker in APP_ONLY_CATEGORIES:
-        return  # covered without a bare-model probe corpus — LLM03 scanner /
+        return  # covered without a bare-model probe corpus, LLM03 scanner /
                 # LLM08 application-only retrieval-exposure probes (see those modules)
     assert cases_for(marker), f"{category.id} reported as covered but ships no probe cases"

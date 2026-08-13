@@ -177,7 +177,7 @@ def _classify_global(module: str, name: str) -> tuple[str, str, str] | None:
     top = module.split(".", 1)[0]
     if top in _EXEC_MODULES:
         return ("critical", "code-execution import in serialized model",
-                (f"unpickling imports '{module}.{name}' — module '{top}' executes "
+                (f"unpickling imports '{module}.{name}', module '{top}' executes "
                  "OS/process/network/interpreter code on load"))
     exec_names = _EXEC_GLOBALS.get(module) or _EXEC_GLOBALS.get(top)
     if exec_names and name in exec_names:
@@ -199,7 +199,7 @@ def _scan_pickle_bytes(data: bytes, model_file: str, member: str) -> list[ModelP
     (whose module/name are the two preceding string pushes). Never unpickles.
     """
     findings: list[ModelPoisonFinding] = []
-    seen: set[tuple[str, str]] = set()  # (module, name) — dedupe within a stream
+    seen: set[tuple[str, str]] = set()  # (module, name), dedupe within a stream
     recent_strings: list[str] = []
     try:
         ops = pickletools.genops(data)

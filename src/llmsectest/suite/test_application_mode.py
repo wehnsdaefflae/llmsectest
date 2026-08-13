@@ -33,7 +33,7 @@ def _params():
     target = os.environ.get(envvars.TARGET, "")
     if not target.startswith("app:"):
         return [pytest.param(None, id="application-mode", marks=pytest.mark.skip(
-            reason="application-mode extras apply only to --target app:<url> — "
+            reason="application-mode extras apply only to --target app:<url>, "
                    "model/demo targets run the full canary corpus instead"))]
 
     # LLM08 (retrieval exposure + RAG indirect injection) is gated on --app-canary /

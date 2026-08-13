@@ -202,7 +202,7 @@ class SARIFPlugin:
                 print("\n" + "=" * 70)
                 print(
                     f"❌ SCAN INCOMPLETE: {len(undelivered)} probe(s) were never delivered "
-                    "to the target — the results below do not describe its security"
+                    "to the target, the results below do not describe its security"
                 )
                 for result in undelivered[:5]:
                     print(f"  {result.properties['llmsec_undelivered']}")

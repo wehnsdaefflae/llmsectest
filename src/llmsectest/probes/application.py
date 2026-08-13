@@ -233,7 +233,7 @@ def disclosed_span(response: str, case: ProbeCase) -> DetectorResult:
     for span in case.forbidden:
         if span.lower() in response.lower():
             return True, f"application disclosed a verbatim span of its system prompt: {span!r}"
-    return False, "no verbatim system-prompt span in the reply — app did not disclose its instructions"
+    return False, "no verbatim system-prompt span in the reply, app did not disclose its instructions"
 
 
 register_detector("disclosed_span", disclosed_span)
@@ -620,18 +620,18 @@ def _skip_reasons(
 ) -> dict[str, str]:
     return {
         # implemented probes that need an input to fire against this app
-        "owasp_llm02": "needs a real secret/canary the app holds — pass --app-secret to enable",
-        "owasp_llm06": "needs the app's privileged tool/action signature(s) — pass --app-action to enable",
-        "owasp_llm07": "needs the app's system prompt to know what a leak looks like — pass --app-prompt",
+        "owasp_llm02": "needs a real secret/canary the app holds, pass --app-secret to enable",
+        "owasp_llm06": "needs the app's privileged tool/action signature(s), pass --app-action to enable",
+        "owasp_llm07": "needs the app's system prompt to know what a leak looks like, pass --app-prompt",
         "owasp_llm08": (
-            "needs a RAG-corpus marker — pass --app-canary (a confidential canary in "
+            "needs a RAG-corpus marker, pass --app-canary (a confidential canary in "
             "the retrieved corpus) for retrieval-exposure probes and/or --app-rag-poison "
             "(the marker a planted poisoned document emits) for indirect-injection probes "
             "(embedding poisoning / multi-tenant isolation / inversion are white-box)"
         ),
         # implemented but driven from project artifacts, not the endpoint
-        "owasp_llm03": "white-box supply-chain scan runs from the repo — pass --repo <path>",
-        "owasp_llm04": "white-box model-poisoning scan runs from the model files — "
+        "owasp_llm03": "white-box supply-chain scan runs from the repo, pass --repo <path>",
+        "owasp_llm04": "white-box model-poisoning scan runs from the model files, "
                        "pass --model-scan <path>",
         # LLM10 is always exercised in application mode now (a bounded repetition-flood
         # probe), so it never appears here.
@@ -672,7 +672,7 @@ class AppScanResult:
             if c.exercised:
                 lines.append(f"  {cid}: exercised ({c.cases} case{'s' if c.cases != 1 else ''})")
             else:
-                lines.append(f"  {cid}: NOT exercised — {c.reason}")
+                lines.append(f"  {cid}: NOT exercised, {c.reason}")
         n = len(self.exercised_categories)
         return f"Application-scan coverage ({n}/10 categories exercised):\n" + "\n".join(lines)
 

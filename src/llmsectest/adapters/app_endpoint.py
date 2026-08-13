@@ -198,16 +198,16 @@ class AppEndpointAdapter(LLMAdapter):
     def _timeout_error(self, bytes_received: int | None = None) -> AdapterTimeoutError:
         if bytes_received:
             produced = (
-                f" — it emitted {bytes_received} byte(s) of response in that time and "
+                f". It emitted {bytes_received} byte(s) of response in that time and "
                 "had still not terminated, so it did not bound its per-request work"
             )
         elif bytes_received == 0:
             produced = (
-                " — it sent no response body at all in that time, so it did not bound "
+                ". It sent no response body at all in that time, so it did not bound "
                 "its per-request work"
             )
         else:
-            produced = " — the app did not bound its per-request work"
+            produced = ". The app did not bound its per-request work"
         return AdapterTimeoutError(
             f"app endpoint {self.endpoint} did not respond within "
             f"{self.timeout:g}s{produced} "

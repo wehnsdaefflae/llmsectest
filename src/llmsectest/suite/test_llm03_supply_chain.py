@@ -30,7 +30,7 @@ def _load():
     """Return (findings, skip_reason). ``findings`` is None when skipped."""
     repo = os.environ.get(envvars.REPO)
     if not repo:
-        return None, "no project repo supplied — pass --repo <path> to scan dependencies"
+        return None, "no project repo supplied, pass --repo <path> to scan dependencies"
     path = Path(repo)
     if not path.exists():
         return None, f"repo path {repo!r} does not exist"
@@ -44,7 +44,7 @@ def _osv_params(repo: str) -> list:
     """Params for the known-CVE layer — each non-run state is a visible skip."""
     if not os.environ.get(envvars.OSV):
         return [pytest.param(None, id="osv-cve-lookup", marks=pytest.mark.skip(
-            reason="LLM03 known-CVE lookup not requested — pass --osv to query "
+            reason="LLM03 known-CVE lookup not requested, pass --osv to query "
                    "OSV.dev for advisories against pinned versions (networked)"))]
     result = scan_known_vulnerabilities(repo)
     if result.error:
@@ -53,7 +53,7 @@ def _osv_params(repo: str) -> list:
     if result.queried == 0:
         return [pytest.param(None, id="osv-cve-lookup", marks=pytest.mark.skip(
             reason="LLM03 known-CVE lookup: no exactly-pinned (==X.Y.Z) dependencies "
-                   "to query — OSV can only attribute advisories to a concrete version"))]
+                   "to query, OSV can only attribute advisories to a concrete version"))]
     if not result.findings:
         return [pytest.param(None, id=f"no-known-cves-{result.queried}-pinned-queried")]
     return [pytest.param(f, id=f.id, marks=getattr(pytest.mark, f.severity))

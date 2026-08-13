@@ -2,7 +2,7 @@
 
 Most of this documentation is about finding out that something is broken. This page is about the
 other direction: you have built a defense (a prompt-injection filter, a spotlighting layer in front of
-your RAG context, an output guard) and you want to know whether it actually does anything.
+your RAG context, an output guard) and you want to know whether it does anything.
 
 Nothing new is needed to do that. Point `--target` at the **defended** endpoint and every probe becomes
 a test of the defense: a finding means an attack got through it.
@@ -49,8 +49,7 @@ protects one surface, and you want to see *that* surface, not a total.
 
 ## What "withstood" does and does not mean
 
-It means: these attacks, against this deployment, on this run. It is evidence that a defense is doing
-work, not proof of immunity. A model's output is sampled, so a defense that holds 21 of 21 today may
+It means: these attacks, against this deployment, on this run. It's evidence that a defense is doing work. It's no proof of immunity. A model's output is sampled, so a defense that holds 21 of 21 today may
 leak once tomorrow; run it repeatedly and treat a single breach as real. And LLMSecTest attacks the
 surface it can reach, so a defense that holds against these probes has not been proven against an
 adversary who writes new ones.
@@ -62,7 +61,7 @@ Two habits make the evidence stronger:
   means nothing yet.
 - **Watch for a defense that works by being useless.** An app that refuses everything withstands
   everything. `--redteam-benign` measures the opposite failure (refusals of harmless requests) and
-  reports a false-refusal rate that is deliberately kept out of the findings and the exit code.
+  reports a false-refusal rate that we keep out of the findings and the exit code.
 
 For a worked example of this on RAG indirect injection, including a defense that measurably fails,
 see [LLM08, Vector and Embedding Weaknesses](../owasp/llm08.md).

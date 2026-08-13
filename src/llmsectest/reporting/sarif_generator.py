@@ -29,7 +29,7 @@ def _as_int(value: Any) -> int | None:
     fixture) and is normally already an ``int``; guard against a stray ``None`` or
     a non-numeric string so the cost plumbing never raises on a malformed record.
     """
-    if isinstance(value, bool):  # bool is an int subclass — never a token count
+    if isinstance(value, bool):  # bool is an int subclass, never a token count
         return None
     if isinstance(value, (int, float)):
         return int(value)

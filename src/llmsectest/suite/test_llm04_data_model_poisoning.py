@@ -23,7 +23,7 @@ def _load():
     """Return (findings, skip_reason). ``findings`` is None when skipped."""
     path = os.environ.get(envvars.MODEL_SCAN)
     if not path:
-        return None, ("no model path supplied — pass --model-scan <path> to scan "
+        return None, ("no model path supplied, pass --model-scan <path> to scan "
                       "model files for poisoning")
     p = Path(path)
     if not p.exists():

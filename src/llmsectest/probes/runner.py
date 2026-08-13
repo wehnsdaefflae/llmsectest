@@ -137,7 +137,7 @@ def _timeout_outcome(
             vulnerable=True,
             evidence=(
                 f"bounded request exhausted the {budget} per-request budget"
-                f"{_volume_produced(exc)} while {responsiveness.summary()} — a finite, "
+                f"{_volume_produced(exc)} while {responsiveness.summary()}, a finite, "
                 "self-terminating request that consumes the caller's entire time budget "
                 "is unbounded resource consumption, not ordinary slowness (raise "
                 "--app-timeout to see how far past the budget the app would have run)"
@@ -148,7 +148,7 @@ def _timeout_outcome(
         case=case,
         response="",
         vulnerable=False,
-        evidence=f"probe inconclusive — {exc}",
+        evidence=f"probe inconclusive, {exc}",
         errored=True,
         elapsed_seconds=elapsed,
     )
@@ -179,7 +179,7 @@ def _undelivered_outcome(case: ProbeCase, exc: AdapterError, elapsed: float) -> 
         case=case,
         response="",
         vulnerable=False,
-        evidence=f"probe not delivered — {exc}",
+        evidence=f"probe not delivered, {exc}",
         errored=True,
         undelivered=True,
         elapsed_seconds=elapsed,
@@ -225,7 +225,7 @@ def _unscored_outcome(case: ProbeCase, exc: BaseException, elapsed: float) -> Pr
         response="",
         vulnerable=False,
         evidence=(
-            f"probe not scored — the target's reply could not be obtained "
+            f"probe not scored, the target's reply could not be obtained "
             f"({type(exc).__name__}: {exc})"
         ),
         errored=True,
@@ -254,7 +254,7 @@ def _throttled_outcome(
         case=case,
         response="",
         vulnerable=False,
-        evidence=f"probe not answered — rate limited by the target: {exc}",
+        evidence=f"probe not answered, rate limited by the target: {exc}",
         errored=True,
         undelivered=True,
         elapsed_seconds=elapsed,

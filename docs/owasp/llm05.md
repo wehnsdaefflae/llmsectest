@@ -1,4 +1,4 @@
-# LLM05 — Improper Output Handling
+# LLM05, Improper Output Handling
 
 > The model's reply is not text. It is input to something that will run it.
 
@@ -10,7 +10,7 @@ sanitised, because it came from your own model rather than from a user.
 
 That is the whole of OWASP LLM05. It is not a model failure at all; it is the ordinary injection bug the
 web has had for thirty years, reintroduced through a component your input validation does not cover. The
-model is simply the most persuadable source of malicious text you have ever wired into your stack, and a
+model is the most persuadable source of malicious text you have ever wired into your stack, and a
 user who cannot reach your database can usually reach your model.
 
 ## How LLMSecTest tests it
@@ -55,7 +55,7 @@ output path unescaped. If anything downstream renders, executes or interpolates 
 live injection route and the model is a willing intermediary.
 
 **What it does not prove:** that an attacker can reach your model with this request, or that your sink is
-actually vulnerable. A well-built consumer escapes on output, and then an emitted `<script>` is ugly
+vulnerable. A well-built consumer escapes on output, and then an emitted `<script>` is ugly
 rather than dangerous. LLMSecTest sees the string leave your endpoint; it cannot see what the next hop
 does with it.
 
@@ -73,9 +73,8 @@ Anything that happens after the reply leaves the endpoint:
   finding is a hygiene issue rather than an incident. We cannot see your template engine.
 - **Parameterised queries.** A reply spliced into a prepared statement's *parameter* is inert. Same
   string, no finding, and no way for a black-box scan to tell which one you built.
-- **Downstream tool calls.** If the reply is parsed into a tool invocation, the risk is the invocation,
-  not the string, and that is [LLM06](llm06.md).
+- **Downstream tool calls.** If the reply is parsed into a tool invocation, the risk is the invocation rather than the string, and that's [LLM06](llm06.md).
 
-The fix is never at the model. Treat model output exactly as you treat a form field a stranger filled in:
+The fix is never at the model. Treat model output the way you treat a form field a stranger filled in:
 escape it at every sink, parameterise every query, never hand it to a shell, and validate its shape before
 anything acts on it.

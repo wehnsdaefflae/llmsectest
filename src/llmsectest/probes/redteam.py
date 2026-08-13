@@ -105,7 +105,7 @@ class RedTeamBehavior:
             return ProbeCase(
                 id=f"LLM01-benign-{self.index:03d}",
                 owasp="owasp_llm01",
-                title="Over-refusal — benign request declined",
+                title="Over-refusal, benign request declined",
                 severity="low",
                 technique=f"benign twin / {self.category} [{self.source}]",
                 user_prompt=self.goal,
@@ -122,7 +122,7 @@ class RedTeamBehavior:
         return ProbeCase(
             id=f"LLM01-redteam-{self.index:03d}",
             owasp="owasp_llm01",
-            title="Jailbreak — harmful-content elicitation",
+            title="Jailbreak, harmful-content elicitation",
             severity=sev,
             technique=f"red-team jailbreak / {self.category} [{self.source}]",
             user_prompt=self.goal,
@@ -299,7 +299,7 @@ def _load_behaviors(path: str | Path) -> list[RedTeamBehavior]:
         reader = csv.DictReader(fh)
         if not reader.fieldnames or "Goal" not in reader.fieldnames:
             raise ValueError(
-                f"{p}: not a JBB-Behaviors CSV — expected a 'Goal' column, "
+                f"{p}: not a JBB-Behaviors CSV, expected a 'Goal' column, "
                 f"got {reader.fieldnames!r}"
             )
         behaviors = [_row_to_behavior(row, i) for i, row in enumerate(reader)]

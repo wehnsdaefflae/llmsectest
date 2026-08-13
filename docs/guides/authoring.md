@@ -20,7 +20,7 @@ assert "system prompt" not in reply.lower()
 ## Writing your own adapter
 
 `register_adapter("myprovider", MyAdapter)` puts a new target behind the same `--target` flag as the
-shipped ones. A custom adapter has exactly one obligation beyond returning the reply, and it is the
+shipped ones. A custom adapter has one obligation beyond returning the reply, and it is the
 one that keeps the report honest:
 
 **Translate your transport failures into `AdapterError`.** Wrap the network call, and only the
@@ -46,7 +46,7 @@ register_adapter("myprovider", MyAdapter)
 
 Without it, an unreachable endpoint is a **worse** outcome than a missing result. A probe that
 raises out of [`run_probe`](../api.md) is a failing `pytest` test, and this suite renders a failing
-security test as a CVSS-scored OWASP finding — so a mistyped URL reports your application as
+security test as a CVSS-scored OWASP finding. So a mistyped URL reports your application as
 critically vulnerable, with a Python traceback as the evidence. `run_probe` catches `AdapterError`
 and records the probe as `undelivered` instead: inconclusive, never a finding, and the run still
 exits non-zero so the empty findings list cannot pass CI as a clean bill of health.
@@ -56,7 +56,7 @@ refused, DNS, timeout) becomes `AdapterError`, and a **rate-limit refusal** (`HT
 exception the SDK names `RateLimitError`) becomes `AdapterThrottleError`. Both are matched across the
 vendor SDK's own exception classes without importing it, so a provider whose package is not installed
 is still covered. The throttle gets its own type because the reader's next move differs: an
-unreachable target is a URL to check, a throttled one is a quota to raise.
+unreachable target is a URL to check. A throttled one is a quota to raise.
 
 Anything else propagates unchanged, which is why the `with` block goes around the request and not
 around your response parsing: a malformed reply, an auth failure or a `500` is a fact about the
@@ -64,7 +64,7 @@ target, and reporting it as "not delivered" would trade one dishonest report for
 
 ## Deterministic tests with offline adapters
 
-No API key, fully reproducible — ideal for unit-testing your guardrails or your own probes:
+No API key, fully reproducible, ideal for unit-testing your guardrails or your own probes:
 
 ```python
 from llmsectest.adapters import EchoAdapter, ScriptedAdapter
@@ -112,4 +112,4 @@ for case in cases_for("owasp_llm01"):
 ```
 
 Detectors are looked up by name from a registry, so you can register a stronger scoring oracle without
-touching the corpus — see [`register_detector`](../api.md).
+touching the corpus, see [`register_detector`](../api.md).

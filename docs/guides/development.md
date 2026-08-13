@@ -37,7 +37,7 @@ module-level statements recorded as never executed. On the same green suite:
 | `pytest --cov=llmsectest` | 48% |
 | `coverage run -m pytest` | 72% |
 
-The 48% is an artifact of import order, not untested code. `coverage run` starts
+The 48% comes from import order. The code is tested. `coverage run` starts
 measuring before pytest loads anything, so it sees the real picture. This is a
 general trap for any package that is itself a pytest plugin.
 
@@ -46,7 +46,7 @@ Configuration lives in `pyproject.toml` under `[tool.coverage.run]` and
 the floor set in `fail_under`. The floor ratchets upward: raise it when a change
 legitimately lifts coverage, and never lower it to turn a red build green.
 
-### What is deliberately excluded
+### What is excluded
 
 `src/llmsectest/suite/` (the packaged probe suite) is omitted from the
 measurement. Those modules only execute against a live target (a model, or an

@@ -41,14 +41,14 @@ def _params():
     target = os.environ.get(envvars.TARGET, "")
     if not target.startswith("app:"):
         return [pytest.param(None, id="vector-embedding", marks=pytest.mark.skip(
-            reason="LLM08 probes need a RAG application — pass --target app:<url> with "
+            reason="LLM08 probes need a RAG application, pass --target app:<url> with "
                    "--app-canary <confidential content in a retrieved document> and/or "
                    "--app-rag-poison <marker a planted poisoned document emits>; a bare "
                    "model has no retrieval corpus"))]
     prompt, _secret, _actions, canary, poison = envvars.app_inputs_from_env()
     if not canary and not poison:
         return [pytest.param(None, id="vector-embedding", marks=pytest.mark.skip(
-            reason="LLM08: no RAG-corpus marker supplied — pass --app-canary "
+            reason="LLM08: no RAG-corpus marker supplied, pass --app-canary "
                    "<confidential content in an indexed document> for retrieval exposure "
                    "and/or --app-rag-poison <marker a poisoned document emits> for "
                    "indirect injection, so a leak/obey is unambiguous"))]
