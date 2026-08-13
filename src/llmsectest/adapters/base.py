@@ -109,6 +109,42 @@ class AdapterTimeoutError(AdapterError):
         self.bytes_received = bytes_received
 
 
+class AdapterThrottleError(AdapterError):
+    """Raised when a target refused the request because we asked too often (HTTP 429).
+
+    A subclass of :class:`AdapterError` so it lands in the same *inconclusive, never a
+    finding* channel as an unreachable endpoint, but distinguishable, and the distinction
+    is the point. Until 2026-08-13 a throttle was neither: the vendor SDK's rate-limit
+    exception matched nothing in :data:`_TRANSPORT_ERROR_NAMES`, so it propagated out of
+    :func:`~llmsectest.probes.runner.run_probe`, failed the pytest test, and this suite
+    renders a failing security test as a CVSS-scored OWASP finding. A hosted target that
+    merely throttled us was published as a vulnerable one — the 2026-08-04 defect, alive
+    in a second shape on every hosted provider. Measured on the real ``openai``
+    ``RateLimitError`` before the fix, not inferred from reading the code.
+
+    It is deliberately **not** folded into "is the endpoint reachable?". The endpoint was
+    reached and answered, correctly, with a 429; an operator told to check their URL would
+    look in the wrong place. ``retry_after`` carries the provider's ``Retry-After`` header
+    in seconds when it sent one, because that is the number the operator actually needs.
+
+    There is still no retry or backoff here, on purpose: the honest count comes before the
+    backoff, the same order the 2026-08-05 undelivered fix took. Deciding *not* to score an
+    answer we never got is a correctness property; retrying to get one is a feature, and
+    a feature built on top of a wrong count would only produce a confident wrong number.
+    """
+
+    def __init__(self, message: str, retry_after: float | None = None):
+        super().__init__(message)
+        self.retry_after = retry_after
+
+
+#: Class names of a rate-limit refusal, matched across the exception's whole MRO. Name
+#: matching catches ``openai``/``anthropic``'s ``RateLimitError`` and the ``TooManyRequests``
+#: spelling used by ``requests``-style stacks. It is only half the test, because a provider
+#: may raise a *generic* HTTP error carrying a 429 (``huggingface_hub`` raises
+#: ``HfHubHTTPError``, whose name says nothing at all) — see :func:`http_status`.
+_RATE_LIMIT_ERROR_NAMES = frozenset({"RateLimitError", "TooManyRequests"})
+
 #: Class names of a transport-level failure, matched across the exception's whole MRO.
 #: Matching by *name* rather than by type is what lets one helper serve every provider
 #: without importing a single vendor SDK eagerly: it catches ``openai`` and
@@ -124,6 +160,60 @@ _TRANSPORT_ERROR_NAMES = frozenset({
 def is_transport_error(exc: BaseException) -> bool:
     """True for a failure to *reach* the target, as opposed to a failure of the target."""
     return bool({t.__name__ for t in type(exc).__mro__} & _TRANSPORT_ERROR_NAMES)
+
+
+def http_status(exc: BaseException) -> int | None:
+    """The HTTP status an SDK exception carries, wherever that SDK chose to put it.
+
+    There is no shared convention: ``openai`` and ``anthropic`` expose ``status_code`` on
+    the exception, ``httpx``/``requests``-based stacks hang a ``response`` object off it,
+    and some wrappers only set ``.response.status_code``. Read every spelling and take the
+    first integer that turns up, so a status-based rule works for a provider whose package
+    is not installed here at all.
+    """
+    for value in (
+        getattr(exc, "status_code", None),
+        getattr(getattr(exc, "response", None), "status_code", None),
+        getattr(exc, "code", None),
+    ):
+        if isinstance(value, int):
+            return value
+        if isinstance(value, str) and value.isdigit():
+            return int(value)
+    return None
+
+
+def is_rate_limit_error(exc: BaseException) -> bool:
+    """True when the target refused *because we asked too often*, not because it broke.
+
+    Two independent tests, because either alone misses real providers: the exception's
+    class name (``RateLimitError``), and an HTTP **429** carried anywhere
+    :func:`http_status` looks. ``huggingface_hub`` is the case that needs the second one,
+    since it raises a generic ``HfHubHTTPError`` for every status.
+    """
+    if {t.__name__ for t in type(exc).__mro__} & _RATE_LIMIT_ERROR_NAMES:
+        return True
+    return http_status(exc) == 429
+
+
+def _retry_after_seconds(exc: BaseException) -> float | None:
+    """The provider's ``Retry-After`` header in seconds, when it sent one.
+
+    Only the delta-seconds form is read. The HTTP-date form is legal too, but turning it
+    into a wait needs the response clock, and a wrong number here is worse than none: it
+    would go into a report as advice.
+    """
+    headers = getattr(getattr(exc, "response", None), "headers", None)
+    if headers is None:
+        return None
+    try:
+        raw = headers.get("retry-after") or headers.get("Retry-After")
+    except (AttributeError, TypeError):
+        return None
+    try:
+        return float(raw)
+    except (TypeError, ValueError):
+        return None
 
 
 @contextlib.contextmanager
@@ -154,14 +244,36 @@ def transport_errors(provider: str, endpoint: str) -> Iterator[None]:
     provider is added to the registry without a case proving it, so the gap cannot be
     reintroduced silently.
 
-    Only transport failures are translated (see :func:`is_transport_error`). Every other
-    error, including a malformed reply or a bad request, propagates unchanged: those are
-    facts about the target, and burying them here would trade one dishonest report for
-    another.
+    A **rate-limit refusal** is translated too, into :class:`AdapterThrottleError`, and
+    for the same reason: an answer we never got must not be scored. It gets its own class
+    and its own message because the operator's next move differs — reached-but-throttled
+    is a budget to raise, unreachable is a URL to check. Added 2026-08-13, after measuring
+    that a real ``openai.RateLimitError`` propagated out of ``run_probe`` and was published
+    as a critical finding; the comment in ``openai_adapter.complete`` had recorded that
+    behaviour as intentional ("rate limit … propagates unchanged"), which is how it
+    survived the 2026-08-05 fix and the 2026-08-12 audit.
+
+    Nothing else is translated (see :func:`is_transport_error`, :func:`is_rate_limit_error`).
+    Every other error, including a malformed reply, an auth failure or a 500, propagates
+    unchanged: those are facts about the target, and burying them here would trade one
+    dishonest report for another.
     """
     try:
         yield
-    except Exception as exc:  # broad on purpose: re-raised below unless transport-level
+    except Exception as exc:  # broad on purpose: re-raised below unless we translate it
+        if is_rate_limit_error(exc):
+            retry_after = _retry_after_seconds(exc)
+            hint = (
+                f" the target asked us to retry after {retry_after:g}s;"
+                if retry_after is not None
+                else ""
+            )
+            raise AdapterThrottleError(
+                f"{provider} rate-limited the request to {endpoint} (HTTP 429).{hint} "
+                f"No answer was returned, so nothing was scored "
+                f"({type(exc).__name__}: {exc})",
+                retry_after=retry_after,
+            ) from exc
         if is_transport_error(exc):
             raise AdapterError(
                 f"{provider} request to {endpoint} failed, is the endpoint reachable? "

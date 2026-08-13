@@ -51,10 +51,12 @@ class OpenAIAdapter(LLMAdapter):
         self._client = OpenAI(api_key=key, base_url=base_url)
 
     def complete(self, request: CompletionRequest) -> CompletionResponse:
-        # A transport failure (local server down, wrong port) becomes an AdapterError
-        # rather than an opaque SDK traceback, so the probe is recorded undelivered
-        # instead of published as a finding. Any other error (auth, rate limit, bad
-        # request) propagates unchanged. See adapters.base.transport_errors.
+        # A transport failure (local server down, wrong port) becomes an AdapterError and
+        # a 429 becomes an AdapterThrottleError, rather than an opaque SDK traceback, so
+        # the probe is recorded undelivered instead of published as a finding. Any other
+        # error (auth, bad request) propagates unchanged: it is a fact about the target.
+        # This comment used to list "rate limit" among the errors that propagate, and that
+        # was the defect, not a note about it — see adapters.base.transport_errors.
         with transport_errors(self.provider, self.base_url or "the OpenAI API"):
             resp = self._client.chat.completions.create(
                 model=self.model,

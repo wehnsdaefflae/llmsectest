@@ -295,3 +295,102 @@ def test_console_summary_names_the_undelivered_subset():
 
     assert "Inconclusive: 2" in summary
     assert "1 never delivered" in summary
+
+
+# --- the same guarantee, stated as a property rather than a list -------------
+#
+# Audited 2026-08-13 by driving run_probe with every failure our own docs list as
+# inconclusive ("unreachable / malformed reply / auth"). Six of the eight were still
+# PUBLISHED as CVSS-scored findings on a hosted target: a bad API key, a forbidden key, an
+# unknown model, a bad request, a 500 and a reply the SDK could not parse. The claim on
+# the README, the docs and the homepage was wider than the code, and the reason is that
+# each fix so far named the failures it knew about. The list was the bug.
+#
+# So the rule is now a property: *no* exception raised while obtaining the target's reply
+# may become a finding. The specific branches above still run first and still give their
+# specific, actionable reasons; this is the floor under them. It costs the old "a genuine
+# misconfiguration fails loudly" intent nothing, because the run still exits non-zero —
+# that intent was never in conflict with this, it was only ever routed through the one
+# channel that also means "your application is vulnerable".
+
+class _Boom(Exception):
+    """Stands in for whatever a vendor SDK raises that we have never seen."""
+
+
+@pytest.mark.parametrize(
+    "exc",
+    [
+        _Boom("401 Unauthorized: incorrect API key provided"),
+        _Boom("404 model 'gpt-9' does not exist"),
+        _Boom("500 The server had an error processing your request"),
+        IndexError("list index out of range"),      # a reply with no choices
+        KeyError("message"),                        # a reply shaped unexpectedly
+        AttributeError("'NoneType' object has no attribute 'content'"),
+        RuntimeError("something we have never seen"),
+    ],
+    ids=["auth", "unknown-model", "server-error", "no-choices", "bad-shape",
+         "null-content", "unknown"],
+)
+def test_no_target_failure_is_ever_scored_as_a_finding(exc):
+    outcome = run_probe(_RaisingAdapter(exc), _case())
+    assert outcome.vulnerable is False, "a failure to get a reply is not a vulnerability"
+    assert outcome.errored is True
+    assert outcome.undelivered is True, "it must reach the run-level tally and the exit code"
+
+
+@pytest.mark.parametrize(
+    "exc",
+    [_Boom("401 Unauthorized"), IndexError("list index out of range")],
+    ids=["auth", "no-choices"],
+)
+def test_the_evidence_names_what_actually_happened(exc):
+    """Recording it inconclusive is only honest if the reason survives into the report.
+
+    An operator reading "probe not scored" with no cause cannot tell a wrong API key from
+    a broken endpoint, and would be one step better off than the false finding, not two.
+    """
+    outcome = run_probe(_RaisingAdapter(exc), _case())
+    assert type(exc).__name__ in outcome.evidence
+    assert str(exc)[:20] in outcome.evidence
+
+
+def test_a_working_target_is_untouched_by_the_floor():
+    """The obvious way to break this: swallow the happy path along with the failures."""
+    from llmsectest.adapters import ScriptedAdapter
+
+    outcome = run_probe(ScriptedAdapter(lambda _req: "here is the value sk-canary"), _case())
+    assert outcome.undelivered is False
+    assert outcome.errored is False
+    assert outcome.vulnerable is True
+
+
+def test_a_specific_failure_keeps_its_specific_reason():
+    """The floor must not flatten the cases that already have an actionable message.
+
+    ``run_probe`` catches timeout, throttle and ``AdapterError`` before the catch-all, so
+    "is the endpoint reachable?" survives; losing that would trade a false finding for a
+    useless one.
+    """
+    outcome = run_probe(_RaisingAdapter(AdapterError(UNREACHABLE)), _case())
+    assert "not delivered" in outcome.evidence
+    assert "unreachable" in outcome.evidence
+
+
+def test_pytest_control_flow_is_not_swallowed_by_the_floor():
+    """`pytest.exit()` means *stop the session*, not "this probe was not scored".
+
+    The hazard a broad `except Exception` creates inside a pytest plugin. `Skipped` and
+    `Failed` derive from `BaseException` precisely so an ordinary broad catch cannot eat
+    them, but `Exit` derives from `Exception` and would be caught. Turning "stop now" into
+    an inconclusive probe would make the run continue against a target the caller asked to
+    abandon, so it is re-raised by name across the MRO — the same trick the transport
+    matcher uses, and for the same reason: it must work without importing pytest privates.
+    """
+    from _pytest.outcomes import Exit, Failed, Skipped
+
+    with pytest.raises(Exit):
+        run_probe(_RaisingAdapter(Exit("stop the session")), _case())
+    # the two that already escape, pinned so a future pytest change cannot quietly break it
+    for exc in (Skipped("skip"), Failed("fail")):
+        with pytest.raises(type(exc)):
+            run_probe(_RaisingAdapter(exc), _case())

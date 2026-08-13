@@ -111,6 +111,14 @@ A slow app is a different case. One that exceeds `--app-timeout` was reached and
 is also inconclusive, but it does not fail the run — raise the budget instead. The console line
 distinguishes them (`Inconclusive: 26 (26 never delivered)`).
 
+**A rate-limited target is a third case, and it says so.** A hosted target that answers `HTTP 429` has
+been reached, so the report does not tell you to check whether your endpoint is up. Those probes are
+recorded inconclusive in the same tally, with `rate limited by the target` as the reason and the
+provider's own `Retry-After` value when it sent one, and the run exits non-zero for the same reason as
+above. There is deliberately no retry or backoff: getting the count right comes first, and a retry loop
+built over a wrong count would only produce a confidently wrong number. Slow the scan down or raise your
+quota, then run it again.
+
 ## When you can't run the app: the persona proxy
 
 If you only have the app's system prompt (not a running instance), load it onto a model and test that

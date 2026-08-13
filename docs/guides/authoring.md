@@ -51,11 +51,16 @@ critically vulnerable, with a Python traceback as the evidence. `run_probe` catc
 and records the probe as `undelivered` instead: inconclusive, never a finding, and the run still
 exits non-zero so the empty findings list cannot pass CI as a clean bill of health.
 
-`transport_errors` translates only a failure to *reach* the target (connection refused, DNS,
-timeout — matched across the vendor SDK's own exception classes without importing it). Anything
-else propagates unchanged, which is why the `with` block goes around the request and not around
-your response parsing: a malformed reply or a bad request is a fact about the target, and reporting
-it as "not delivered" would trade one dishonest report for another.
+`transport_errors` translates two things and only two. A failure to *reach* the target (connection
+refused, DNS, timeout) becomes `AdapterError`, and a **rate-limit refusal** (`HTTP 429`, or an
+exception the SDK names `RateLimitError`) becomes `AdapterThrottleError`. Both are matched across the
+vendor SDK's own exception classes without importing it, so a provider whose package is not installed
+is still covered. The throttle gets its own type because the reader's next move differs: an
+unreachable target is a URL to check, a throttled one is a quota to raise.
+
+Anything else propagates unchanged, which is why the `with` block goes around the request and not
+around your response parsing: a malformed reply, an auth failure or a `500` is a fact about the
+target, and reporting it as "not delivered" would trade one dishonest report for another.
 
 ## Deterministic tests with offline adapters
 

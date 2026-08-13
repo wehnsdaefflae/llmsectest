@@ -28,6 +28,23 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
   is where the grammar is written down. (2026-08-10)
 
 ### Fixed
+- **A target that only rate-limited you is no longer published as a vulnerable one.** A hosted provider
+  answering `HTTP 429` raises a rate-limit exception, and that exception matched nothing in the
+  transport-failure translation added on 2026-08-12: it propagated out of `run_probe`, failed the pytest
+  test, and this suite renders a failing security test as a CVSS-scored OWASP finding. So a scan that ran
+  into your API quota reported your application as critically vulnerable, with a Python traceback as the
+  evidence, on every hosted target. It is the same defect the 2026-08-05 and 2026-08-12 entries below
+  describe, in a third shape, and it survived both because `OpenAIAdapter`'s own comment recorded the
+  behaviour as intentional ("rate limit … propagates unchanged") and the audit read the comment. Measured
+  before fixing, against the real `openai.RateLimitError`, and again after. A 429 is now recorded
+  inconclusive in the same tally as an unreachable target, so the run still exits non-zero and cannot pass
+  CI as clean, but it carries its **own** reason and its own exception type (`AdapterThrottleError`),
+  because the two need different actions from you: unreachable is a URL to check, throttled is a quota to
+  raise. The provider's `Retry-After` value is carried into the report when it sends one. Detection is by
+  the SDK's exception name **and** by an `HTTP 429` found anywhere the exception carries a status, since
+  some clients (`huggingface_hub`) raise one generic error class for every status. Only 429 is translated:
+  a `500`, an auth failure and a bad request still propagate, because those are facts about the target.
+  There is deliberately no retry or backoff yet — the honest count comes before the backoff. (2026-08-13)
 - **"A target we could not reach is never reported as a vulnerable one" now holds on *every* provider, not
   just on the OpenAI-compatible ones.** The guarantee shipped on 2026-08-05: a transport failure is
   recorded inconclusive and flagged `undelivered`, never scored as a finding, and the run exits non-zero

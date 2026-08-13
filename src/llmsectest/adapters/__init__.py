@@ -9,12 +9,14 @@ from __future__ import annotations
 
 from .base import (
     AdapterError,
+    AdapterThrottleError,
     CompletionRequest,
     CompletionResponse,
     LLMAdapter,
     Message,
     PreflightResult,
     Role,
+    is_rate_limit_error,
     is_transport_error,
     transport_errors,
 )
@@ -66,6 +68,7 @@ def get_adapter(provider: str, model: str | None = None, **kwargs) -> LLMAdapter
 
 __all__ = [
     "AdapterError",
+    "AdapterThrottleError",
     "CompletionRequest",
     "CompletionResponse",
     "EchoAdapter",
@@ -76,6 +79,7 @@ __all__ = [
     "ScriptedAdapter",
     "available_providers",
     "get_adapter",
+    "is_rate_limit_error",
     "is_transport_error",
     "register_adapter",
     "transport_errors",

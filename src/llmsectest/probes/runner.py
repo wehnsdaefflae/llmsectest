@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 
 from ..adapters.base import (
     AdapterError,
+    AdapterThrottleError,
     AdapterTimeoutError,
     CompletionRequest,
     LLMAdapter,
@@ -185,6 +186,81 @@ def _undelivered_outcome(case: ProbeCase, exc: AdapterError, elapsed: float) -> 
     )
 
 
+#: Class names pytest uses for *control flow* rather than for a failure, matched across the
+#: MRO so no pytest private has to be imported here. ``Skipped`` and ``Failed`` derive from
+#: ``BaseException`` precisely so an ordinary ``except Exception`` cannot eat them, but
+#: ``Exit`` — what ``pytest.exit()`` raises to stop the whole session — derives from
+#: ``Exception`` and would be caught by the floor below. Turning "stop now" into "this probe
+#: was not scored" would keep the scan running against a target the caller asked to abandon.
+_PYTEST_CONTROL_FLOW = frozenset({"Exit", "Skipped", "Failed", "OutcomeException"})
+
+
+def _is_pytest_control_flow(exc: BaseException) -> bool:
+    return bool({t.__name__ for t in type(exc).__mro__} & _PYTEST_CONTROL_FLOW)
+
+
+def _unscored_outcome(case: ProbeCase, exc: BaseException, elapsed: float) -> ProbeOutcome:
+    """The floor under every named case above: no failure to get a reply is ever a finding.
+
+    Each fix before this one named the failures it knew about — a transport error on
+    2026-08-05, two more adapters on 2026-08-12, a 429 on 2026-08-13 — and **the list was
+    the bug**. Auditing the same day against every failure our own docs, README and homepage
+    describe as inconclusive ("unreachable / malformed reply / auth"), six of eight were
+    still published as CVSS-scored findings on a hosted target: a wrong API key, a
+    forbidden one, an unknown model, a bad request, a 500, and a reply the SDK could not
+    parse. The claim was wider than the code, on every public surface, for eight days.
+
+    So the guarantee is stated as a **property** instead: an exception raised while
+    obtaining the target's reply is inconclusive, full stop. The specific branches keep
+    running first and keep their specific, actionable reasons; this only catches what they
+    do not.
+
+    It does not weaken the original "a genuine misconfiguration must fail loudly" intent,
+    which is the objection that kept this open. The run still exits non-zero and the reason
+    still reaches every surface. That intent was never in conflict with this — it was only
+    ever routed through the one channel that also means "your application is vulnerable".
+    """
+    return ProbeOutcome(
+        case=case,
+        response="",
+        vulnerable=False,
+        evidence=(
+            f"probe not scored — the target's reply could not be obtained "
+            f"({type(exc).__name__}: {exc})"
+        ),
+        errored=True,
+        undelivered=True,
+        elapsed_seconds=elapsed,
+    )
+
+
+def _throttled_outcome(
+    case: ProbeCase, exc: AdapterThrottleError, elapsed: float
+) -> ProbeOutcome:
+    """Score a rate-limit refusal: inconclusive, never a finding, and named as a throttle.
+
+    Same channel as :func:`_undelivered_outcome` — the probe was never answered, so it is
+    inconclusive, it is counted in the run-level ``undelivered`` tally, and the run exits
+    non-zero rather than reading as a pass. Only the *reason* differs, and it has to,
+    because it is the reason the reader acts on: "is the endpoint reachable?" sends an
+    operator to check a URL that is fine, when what happened is that their request budget
+    ran out. ``retry_after`` is carried into the evidence when the provider sent one.
+
+    Until 2026-08-13 this case was in neither channel: the SDK's rate-limit exception
+    matched no transport-error name, propagated out of :func:`run_probe`, and was rendered
+    as a CVSS-scored finding. A throttled target was published as a vulnerable one.
+    """
+    return ProbeOutcome(
+        case=case,
+        response="",
+        vulnerable=False,
+        evidence=f"probe not answered — rate limited by the target: {exc}",
+        errored=True,
+        undelivered=True,
+        elapsed_seconds=elapsed,
+    )
+
+
 def run_probe(
     adapter: LLMAdapter,
     case: ProbeCase,
@@ -215,7 +291,10 @@ def run_probe(
 
     Every other adapter failure (unreachable endpoint, malformed reply, auth error) is
     caught the same way and recorded **undelivered** — inconclusive, never a finding (see
-    :func:`_undelivered_outcome`). A misconfiguration still fails loudly, on the run's
+    :func:`_undelivered_outcome`), with a rate limit given its own reason
+    (:func:`_throttled_outcome`). **Anything else raised while obtaining the reply is caught
+    too** (:func:`_unscored_outcome`): the guarantee is a property, not a list of the
+    failures we happened to think of. A misconfiguration still fails loudly, on the run's
     exit code rather than in the findings list.
     """
     request = CompletionRequest(
@@ -234,8 +313,16 @@ def run_probe(
         if responsiveness is not None:
             responsiveness.record_timeout()
         return _timeout_outcome(case, exc, time.monotonic() - started, responsiveness)
+    except AdapterThrottleError as exc:
+        # Also before AdapterError: a throttle is undelivered like an unreachable target,
+        # but it is a different fact about the target and says so.
+        return _throttled_outcome(case, exc, time.monotonic() - started)
     except AdapterError as exc:
         return _undelivered_outcome(case, exc, time.monotonic() - started)
+    except Exception as exc:  # broad on purpose: the floor, see _unscored_outcome
+        if _is_pytest_control_flow(exc):
+            raise
+        return _unscored_outcome(case, exc, time.monotonic() - started)
     elapsed = time.monotonic() - started
     if responsiveness is not None:
         responsiveness.record_completion(elapsed)

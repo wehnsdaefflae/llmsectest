@@ -153,11 +153,13 @@ unreachable, replies with something that isn't JSON, or dies partway through, th
 recorded **inconclusive** and the run **exits non-zero** — both halves, because an empty findings
 list from a scan that reached nothing would otherwise pass CI as a clean bill of health. The count
 appears as a banner on the HTML page, an `undelivered` property in the SARIF, and a line in the
-console summary. A slow app is a different case: it was reached, so raise `--app-timeout` instead.
-This holds for **every** `--target`, local or hosted, and that is a checked property rather than a
-promise: each provider's adapter has to translate its own transport failures, so a test pins that
-every provider we ship does (see [Author your own security
-tests](https://docs.llmsec.dev/guides/authoring/) if you add one of your own).
+console summary. A slow app is a different case: it was reached, so raise `--app-timeout` instead. So
+is a **rate-limited** one: a hosted target answering `HTTP 429` was reached too, so those probes are
+inconclusive and named as throttled rather than as unreachable, with the provider's own `Retry-After`
+where it sent one. This holds for **every** `--target`, local or hosted, and that is a checked
+property rather than a promise: each provider's adapter has to translate its own transport failures
+and its own throttle, so a test pins that every provider we ship does both (see [Author your own
+security tests](https://docs.llmsec.dev/guides/authoring/) if you add one of your own).
 
 **Browse a report as HTML.** `--render-sarif <file.sarif>` turns any SARIF v2.1.0
 report — one of ours, or any other tool's — into a single self-contained HTML page
