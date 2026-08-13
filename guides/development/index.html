@@ -727,10 +727,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#what-is-deliberately-excluded" class="md-nav__link">
+  <a href="#what-is-excluded" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What is deliberately excluded
+        What is excluded
       
     </span>
   </a>
@@ -1289,10 +1289,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#what-is-deliberately-excluded" class="md-nav__link">
+  <a href="#what-is-excluded" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What is deliberately excluded
+        What is excluded
       
     </span>
   </a>
@@ -1384,14 +1384,14 @@ module-level statements recorded as never executed. On the same green suite:</p>
 </tr>
 </tbody>
 </table>
-<p>The 48% is an artifact of import order, not untested code. <code>coverage run</code> starts
+<p>The 48% comes from import order. The code is tested. <code>coverage run</code> starts
 measuring before pytest loads anything, so it sees the real picture. This is a
 general trap for any package that is itself a pytest plugin.</p>
 <p>Configuration lives in <code>pyproject.toml</code> under <code>[tool.coverage.run]</code> and
 <code>[tool.coverage.report]</code>. Branch coverage is on, and <code>coverage report</code> fails below
 the floor set in <code>fail_under</code>. The floor ratchets upward: raise it when a change
 legitimately lifts coverage, and never lower it to turn a red build green.</p>
-<h3 id="what-is-deliberately-excluded">What is deliberately excluded<a class="headerlink" href="#what-is-deliberately-excluded" title="Permanent link">&para;</a></h3>
+<h3 id="what-is-excluded">What is excluded<a class="headerlink" href="#what-is-excluded" title="Permanent link">&para;</a></h3>
 <p><code>src/llmsectest/suite/</code> (the packaged probe suite) is omitted from the
 measurement. Those modules only execute against a live target (a model, or an
 application endpoint), so a unit run can never enter them; counting them would

@@ -1328,7 +1328,7 @@ tests.</p>
 </code></pre></div>
 <h2 id="writing-your-own-adapter">Writing your own adapter<a class="headerlink" href="#writing-your-own-adapter" title="Permanent link">&para;</a></h2>
 <p><code>register_adapter("myprovider", MyAdapter)</code> puts a new target behind the same <code>--target</code> flag as the
-shipped ones. A custom adapter has exactly one obligation beyond returning the reply, and it is the
+shipped ones. A custom adapter has one obligation beyond returning the reply, and it is the
 one that keeps the report honest:</p>
 <p><strong>Translate your transport failures into <code>AdapterError</code>.</strong> Wrap the network call, and only the
 network call:</p>
@@ -1350,7 +1350,7 @@ network call:</p>
 </code></pre></div>
 <p>Without it, an unreachable endpoint is a <strong>worse</strong> outcome than a missing result. A probe that
 raises out of <a href="../../api/"><code>run_probe</code></a> is a failing <code>pytest</code> test, and this suite renders a failing
-security test as a CVSS-scored OWASP finding — so a mistyped URL reports your application as
+security test as a CVSS-scored OWASP finding. So a mistyped URL reports your application as
 critically vulnerable, with a Python traceback as the evidence. <code>run_probe</code> catches <code>AdapterError</code>
 and records the probe as <code>undelivered</code> instead: inconclusive, never a finding, and the run still
 exits non-zero so the empty findings list cannot pass CI as a clean bill of health.</p>
@@ -1359,12 +1359,12 @@ refused, DNS, timeout) becomes <code>AdapterError</code>, and a <strong>rate-lim
 exception the SDK names <code>RateLimitError</code>) becomes <code>AdapterThrottleError</code>. Both are matched across the
 vendor SDK's own exception classes without importing it, so a provider whose package is not installed
 is still covered. The throttle gets its own type because the reader's next move differs: an
-unreachable target is a URL to check, a throttled one is a quota to raise.</p>
+unreachable target is a URL to check. A throttled one is a quota to raise.</p>
 <p>Anything else propagates unchanged, which is why the <code>with</code> block goes around the request and not
 around your response parsing: a malformed reply, an auth failure or a <code>500</code> is a fact about the
 target, and reporting it as "not delivered" would trade one dishonest report for another.</p>
 <h2 id="deterministic-tests-with-offline-adapters">Deterministic tests with offline adapters<a class="headerlink" href="#deterministic-tests-with-offline-adapters" title="Permanent link">&para;</a></h2>
-<p>No API key, fully reproducible — ideal for unit-testing your guardrails or your own probes:</p>
+<p>No API key, fully reproducible, ideal for unit-testing your guardrails or your own probes:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">llmsectest.adapters</span><span class="w"> </span><span class="kn">import</span> <span class="n">EchoAdapter</span><span class="p">,</span> <span class="n">ScriptedAdapter</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="c1"># a scripted &quot;model&quot; that leaks on a trigger word — drive your detector against it</span>
@@ -1402,7 +1402,7 @@ target, and reporting it as "not delivered" would trade one dishonest report for
 <a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">case</span><span class="o">.</span><span class="n">technique</span><span class="p">,</span> <span class="s2">&quot;VULNERABLE&quot;</span> <span class="k">if</span> <span class="n">outcome</span><span class="o">.</span><span class="n">vulnerable</span> <span class="k">else</span> <span class="s2">&quot;ok&quot;</span><span class="p">)</span>
 </code></pre></div>
 <p>Detectors are looked up by name from a registry, so you can register a stronger scoring oracle without
-touching the corpus — see <a href="../../api/"><code>register_detector</code></a>.</p>
+touching the corpus, see <a href="../../api/"><code>register_detector</code></a>.</p>
 
 
 

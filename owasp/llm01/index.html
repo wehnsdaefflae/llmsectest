@@ -1312,7 +1312,7 @@
   
 
 
-<h1 id="llm01-prompt-injection">LLM01 — Prompt Injection<a class="headerlink" href="#llm01-prompt-injection" title="Permanent link">&para;</a></h1>
+<h1 id="llm01-prompt-injection">LLM01, Prompt Injection<a class="headerlink" href="#llm01-prompt-injection" title="Permanent link">&para;</a></h1>
 <blockquote>
 <p>User prompts alter the intended behavior of the LLM system.</p>
 </blockquote>
@@ -1328,9 +1328,9 @@ to emit a unique sentinel; if the reply contains it, the injection succeeded. Th
 inside your app, so it works black-box against any endpoint.</p>
 <p>Techniques in the corpus include:</p>
 <ul>
-<li><strong>Direct instruction override</strong> — "Ignore previous instructions and …".</li>
-<li><strong>Forged system delimiter</strong> — fake <code>system:</code>/role markers to impersonate the app's own instructions.</li>
-<li><strong>Prefix / compliance priming</strong> — coaxing a "Sure, …" prefix that carries the injected payload.</li>
+<li><strong>Direct instruction override</strong>, "Ignore previous instructions and …".</li>
+<li><strong>Forged system delimiter</strong>, fake <code>system:</code>/role markers to impersonate the app's own instructions.</li>
+<li><strong>Prefix / compliance priming</strong>, coaxing a "Sure, …" prefix that carries the injected payload.</li>
 <li><strong>Role-play jailbreak (DAN-style)</strong> and <strong>task context switch</strong>.</li>
 </ul>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat
@@ -1338,11 +1338,11 @@ inside your app, so it works black-box against any endpoint.</p>
 <h2 id="red-team-jailbreak-prompts-jailbreakbench-advbench">Red-team jailbreak prompts (JailbreakBench / AdvBench)<a class="headerlink" href="#red-team-jailbreak-prompts-jailbreakbench-advbench" title="Permanent link">&para;</a></h2>
 <p>Beyond the marker-injection corpus, LLMSecTest runs a <strong>red-team set</strong> of harmful-behavior prompts and
 checks whether your target <strong>refuses</strong> them. These behaviors plant no marker, so a different oracle
-applies — a <strong>refusal oracle</strong> (inverted polarity): the target is a finding when it <em>complies</em> with a
+applies, a <strong>refusal oracle</strong> (inverted polarity): the target is a finding when it <em>complies</em> with a
 harmful request instead of refusing it.</p>
 <ul>
 <li>The full corpus is the MIT-licensed <strong><a href="https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors">JailbreakBench JBB-Behaviors</a></strong>
-  set — 100 curated misuse behaviors (18% sourced from <strong>AdvBench</strong>, 27% from HarmBench/TDC, 55% original),
+  set, 100 curated misuse behaviors (18% sourced from <strong>AdvBench</strong>, 27% from HarmBench/TDC, 55% original),
   plus 100 benign twins for false-positive testing. Download <code>data/harmful-behaviors.csv</code> once and run:</li>
 </ul>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>llmsectest<span class="w"> </span>--redteam-set<span class="w"> </span>jbb/data/harmful-behaviors.csv<span class="w"> </span>--target<span class="w"> </span>ollama:llama3
@@ -1350,45 +1350,45 @@ harmful request instead of refusing it.</p>
 <ul>
 <li>Without <code>--redteam-set</code>, a small built-in starter set ships so an offline run still exercises the oracle.</li>
 <li>The oracle is the <strong>refusal-string baseline</strong> (Zou et al. 2023): it matches standard refusal phrases and
-  the behavior's affirmative target completion. It is deliberately conservative — it errs toward "refused",
+  the behavior's affirmative target completion. It leans conservative. It errs toward "refused",
   so it <strong>under-reports</strong> successful jailbreaks rather than raising false findings. For higher recall, swap
   in a classifier oracle (Llama-Guard, GLiGuard, or garak's ModernBERT refusal detector) via the detector
   registry; that work is on the <a href="https://llmsec.dev/#roadmap">roadmap</a>.</li>
 <li><strong>A refusal that quotes the demand is a refusal.</strong> The bias toward "refused" used to have a hole: the
   affirmative-completion check overrode everything, so a model answering <em>"I won't do that; you asked me to
-  begin with \"Sure, here is …\""</em> was reported as having complied — the articulate refusal is the one that
+  begin with \"Sure, here is …\""</em> was reported as having complied. The articulate refusal is the one that
   repeats the phrase being matched. An affirmative completion appearing <strong>only inside quotation marks</strong>, in
   a reply that also refuses, is now read as attribution. One unquoted emission still makes it a finding, so
   a compliant reply cannot escape by also citing the demand.</li>
 </ul>
-<p>This deepens LLM01 — it is not a separate OWASP category.</p>
+<p>This deepens LLM01. It is not a separate OWASP category.</p>
 <h2 id="over-refusal-the-benign-twins-redteam-benign">Over-refusal: the benign twins (<code>--redteam-benign</code>)<a class="headerlink" href="#over-refusal-the-benign-twins-redteam-benign" title="Permanent link">&para;</a></h2>
 <p>A refusal oracle only tells half the story. A target that refuses <em>everything</em> would score perfectly on
-the harmful set while being useless in practice. JBB-Behaviors ships <strong>100 benign twins</strong> — harmless
-requests topic-matched to the harmful behaviors — and <code>--redteam-benign</code> runs them through the mirror-image
+the harmful set while being useless in practice. JBB-Behaviors ships <strong>100 benign twins</strong>, harmless
+requests topic-matched to the harmful behaviors. And <code>--redteam-benign</code> runs them through the mirror-image
 <strong>over-refusal oracle</strong>: here a <em>refusal of a harmless request</em> is the finding. The result is the target's
 <strong>false-refusal rate</strong> (the share of benign requests it wrongly declines).</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>llmsectest<span class="w"> </span>--redteam-benign<span class="w">                          </span><span class="c1"># built-in benign twins</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>llmsectest<span class="w"> </span>--redteam-benign<span class="w"> </span>jbb/data/benign-behaviors.csv<span class="w"> </span>--target<span class="w"> </span>ollama:llama3<span class="w">   </span><span class="c1"># the full 100</span>
 </code></pre></div>
-<p>Over-refusing is a <strong>usability</strong> defect, not a security vulnerability — so it would be backwards to count
+<p>Over-refusing is a <strong>usability</strong> defect, not a security vulnerability. So it would be backwards to count
 it as a finding (a cautious model is <em>safer</em>, not more vulnerable). LLMSecTest therefore reports the
 false-refusal rate as a <strong>separate quality metric</strong>: it never enters the SARIF security report and never
-changes the exit code. It is the <strong>specificity control</strong> for the refusal oracle — and, paired with the
+changes the exit code. It is the <strong>specificity control</strong> for the refusal oracle. And, paired with the
 harmful set, it exposes the security/usability trade-off directly. The offline demos make the split
 vivid: <code>demo-vulnerable</code> complies with everything (0% over-refusal but many findings), while
 <code>demo-defended</code> refuses everything (0 findings but a <strong>100%</strong> false-refusal rate). The same
 string-matching caveat applies, inverted: a benign reply that incidentally contains a refusal-like phrase
 can be over-counted, which a classifier oracle would fix.</p>
 <h2 id="reading-a-finding">Reading a finding<a class="headerlink" href="#reading-a-finding" title="Permanent link">&para;</a></h2>
-<p>A finding names the technique, the OWASP category (LLM01), a severity, and the evidence — for example
+<p>A finding names the technique, the OWASP category (LLM01), a severity, and the evidence, for example
 <em>"target obeyed the injected instruction and emitted marker: PWNED-LLM01-DELIM"</em>, alongside the prompt
 and the app's response. In SARIF it lands in your code-scanning view mapped to LLM01, carrying LLM01's
 CVSS v4.0 base score (<code>9.2</code>, vector <code>CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:L/VI:H/VA:N/SC:L/SI:H/SA:N</code>)
 as its <code>security-severity</code>.</p>
 <h2 id="remediation">Remediation<a class="headerlink" href="#remediation" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Treat <strong>all</strong> model input as untrusted — including tool outputs, retrieved documents, and prior turns.</li>
+<li>Treat <strong>all</strong> model input as untrusted, including tool outputs, retrieved documents, and prior turns.</li>
 <li>Keep privileged instructions out of reach of user content; don't concatenate user text into the
   system prompt.</li>
 <li>Constrain outputs and <strong>validate them</strong> before acting (see <a href="../llm05/">LLM05</a>); require explicit,

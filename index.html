@@ -1262,9 +1262,8 @@
 
 
 <h1 id="llmsectest">LLMSecTest<a class="headerlink" href="#llmsectest" title="Permanent link">&para;</a></h1>
-<p><strong>Pytest-native security testing for LLM <em>applications</em> — mapped to the <a href="https://genai.owasp.org/llm-top-10/">OWASP LLM Top 10 (2025)</a>.</strong></p>
-<p>LLMSecTest tests <strong>applications that use an LLM</strong> (a system prompt, guardrails, RAG, and tools around a
-model) — not bare models — for the security risks in the OWASP Top 10 for LLM Applications, and emits
+<p><strong>Pytest-native security testing for LLM <em>applications</em>, mapped to the <a href="https://genai.owasp.org/llm-top-10/">OWASP LLM Top 10 (2025)</a>.</strong></p>
+<p>LLMSecTest tests <strong>applications that use an LLM</strong> (a system prompt, guardrails, RAG, and tools around a model) rather than bare models, for the security risks in the OWASP Top 10 for LLM Applications, and emits
 <strong>SARIF / HTML / JSON / Markdown</strong> reports that drop straight into CI/CD.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># pre-alpha: install from source (not yet on PyPI)</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;git+https://github.com/wehnsdaefflae/llmsectest&quot;</span>
@@ -1274,13 +1273,13 @@ model) — not bare models — for the security risks in the OWASP Top 10 for LL
 </code></pre></div>
 <p>A failing probe is a <strong>finding</strong>, so a non-zero exit fails your pipeline when your app is vulnerable.</p>
 <h2 id="why">Why<a class="headerlink" href="#why" title="Permanent link">&para;</a></h2>
-<p>With LLMs in real products, users face new risks — prompt injection, sensitive-data disclosure and
+<p>With LLMs in real products, users face new risks, prompt injection, sensitive-data disclosure and
 unsafe output handling are common, well-documented failure modes. Developers in finance and healthcare lack an open, CI-ready way to
-check their LLM apps against a recognized standard. LLMSecTest is that — MIT-licensed and fully
+check their LLM apps against a recognized standard. LLMSecTest is that, MIT-licensed and fully
 open-source, built on <code>pytest</code> so it fits the tools developers already use.</p>
 <h2 id="what-it-tests">What it tests<a class="headerlink" href="#what-it-tests" title="Permanent link">&para;</a></h2>
 <p>The OWASP LLM Top 10 spans two testing modalities. LLMSecTest is honest about which apply to a given
-target — run <code>llmsectest --check</code> to see the live map.</p>
+target, run <code>llmsectest --check</code> to see the live map.</p>
 <table>
 <thead>
 <tr>
@@ -1293,7 +1292,7 @@ target — run <code>llmsectest --check</code> to see the live map.</p>
 <tr>
 <td>LLM01</td>
 <td>Prompt Injection</td>
-<td><strong>black-box</strong> — your app endpoint</td>
+<td><strong>black-box</strong>, your app endpoint</td>
 </tr>
 <tr>
 <td>LLM02</td>
@@ -1303,12 +1302,12 @@ target — run <code>llmsectest --check</code> to see the live map.</p>
 <tr>
 <td>LLM03</td>
 <td>Supply Chain</td>
-<td>white-box — your deps (<code>--repo</code>)</td>
+<td>white-box, your deps (<code>--repo</code>)</td>
 </tr>
 <tr>
 <td>LLM04</td>
 <td>Data and Model Poisoning</td>
-<td>white-box — your model files (<code>--model-scan</code>)</td>
+<td>white-box, your model files (<code>--model-scan</code>)</td>
 </tr>
 <tr>
 <td>LLM05</td>
@@ -1323,22 +1322,22 @@ target — run <code>llmsectest --check</code> to see the live map.</p>
 <tr>
 <td>LLM07</td>
 <td>System Prompt Leakage</td>
-<td><strong>black-box</strong> — prompt extraction</td>
+<td><strong>black-box</strong>, prompt extraction</td>
 </tr>
 <tr>
 <td>LLM08</td>
 <td>Vector and Embedding Weaknesses</td>
-<td><strong>black-box</strong> — your RAG app (<code>--app-canary</code> / <code>--app-rag-poison</code>)</td>
+<td><strong>black-box</strong>, your RAG app (<code>--app-canary</code> / <code>--app-rag-poison</code>)</td>
 </tr>
 <tr>
 <td>LLM09</td>
 <td>Misinformation</td>
-<td><strong>black-box</strong> — nonexistent-entity confabulation</td>
+<td><strong>black-box</strong>, nonexistent-entity confabulation</td>
 </tr>
 <tr>
 <td>LLM10</td>
 <td>Unbounded Consumption</td>
-<td><strong>black-box</strong> — flood / output amplification</td>
+<td><strong>black-box</strong>, flood / output amplification</td>
 </tr>
 </tbody>
 </table>
@@ -1351,7 +1350,7 @@ target — run <code>llmsectest --check</code> to see the live map.</p>
 black-box probes for <strong>LLM01/02/05/06/07/09/10</strong>, white-box scanners for <strong>LLM03 (supply chain)</strong>
 (<code>--repo</code>) and <strong>LLM04 (data and model poisoning)</strong> (<code>--model-scan</code>), and black-box <strong>LLM08 (vector &amp;
 embedding weaknesses)</strong> RAG probes. What remains is depth, not breadth. Coverage claims here always
-match what the tool actually does — see <code>llmsectest --check</code>.</p>
+match what the tool does, see <code>llmsectest --check</code>.</p>
 </div>
 <h2 id="funding">Funding<a class="headerlink" href="#funding" title="Permanent link">&para;</a></h2>
 <p>LLMSecTest is funded by the <strong>German Federal Ministry of Research, Technology and Space (BMFTR)</strong>

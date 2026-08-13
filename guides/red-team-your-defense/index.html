@@ -1271,7 +1271,7 @@
 <h1 id="red-team-your-defense">Red-team your defense<a class="headerlink" href="#red-team-your-defense" title="Permanent link">&para;</a></h1>
 <p>Most of this documentation is about finding out that something is broken. This page is about the
 other direction: you have built a defense (a prompt-injection filter, a spotlighting layer in front of
-your RAG context, an output guard) and you want to know whether it actually does anything.</p>
+your RAG context, an output guard) and you want to know whether it does anything.</p>
 <p>Nothing new is needed to do that. Point <code>--target</code> at the <strong>defended</strong> endpoint and every probe becomes
 a test of the defense: a finding means an attack got through it.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat<span class="w"> </span><span class="se">\</span>
@@ -1307,8 +1307,7 @@ regressed, and it says so even when the finding count stayed inside whatever var
 from a sampled model. That comparison is the reason the tally is per category: a defense usually
 protects one surface, and you want to see <em>that</em> surface, not a total.</p>
 <h2 id="what-withstood-does-and-does-not-mean">What "withstood" does and does not mean<a class="headerlink" href="#what-withstood-does-and-does-not-mean" title="Permanent link">&para;</a></h2>
-<p>It means: these attacks, against this deployment, on this run. It is evidence that a defense is doing
-work, not proof of immunity. A model's output is sampled, so a defense that holds 21 of 21 today may
+<p>It means: these attacks, against this deployment, on this run. It's evidence that a defense is doing work. It's no proof of immunity. A model's output is sampled, so a defense that holds 21 of 21 today may
 leak once tomorrow; run it repeatedly and treat a single breach as real. And LLMSecTest attacks the
 surface it can reach, so a defense that holds against these probes has not been proven against an
 adversary who writes new ones.</p>
@@ -1319,7 +1318,7 @@ adversary who writes new ones.</p>
   means nothing yet.</li>
 <li><strong>Watch for a defense that works by being useless.</strong> An app that refuses everything withstands
   everything. <code>--redteam-benign</code> measures the opposite failure (refusals of harmless requests) and
-  reports a false-refusal rate that is deliberately kept out of the findings and the exit code.</li>
+  reports a false-refusal rate that we keep out of the findings and the exit code.</li>
 </ul>
 <p>For a worked example of this on RAG indirect injection, including a defense that measurably fails,
 see <a href="../../owasp/llm08/">LLM08, Vector and Embedding Weaknesses</a>.</p>

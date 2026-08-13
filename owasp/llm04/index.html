@@ -1324,16 +1324,16 @@
   
 
 
-<h1 id="llm04-data-and-model-poisoning">LLM04 — Data and Model Poisoning<a class="headerlink" href="#llm04-data-and-model-poisoning" title="Permanent link">&para;</a></h1>
+<h1 id="llm04-data-and-model-poisoning">LLM04, Data and Model Poisoning<a class="headerlink" href="#llm04-data-and-model-poisoning" title="Permanent link">&para;</a></h1>
 <blockquote>
-<p>Tampered training/fine-tuning data or a tampered model artifact introduces backdoors, bias or — most
-directly — code that runs when the model is loaded.</p>
+<p>Tampered training/fine-tuning data or a tampered model artifact introduces backdoors, bias or, most
+directly, code that runs when the model is loaded.</p>
 </blockquote>
 <p><strong>Modality:</strong> white-box (needs the model files). <strong>Status:</strong> covered.</p>
 <p>OWASP lists data and model poisoning as LLM04. The training-data dimension is hard to test black-box, but
 the most <em>direct</em> poisoning vector is concrete and checkable: the <strong>serialized model artifact</strong> a project
-loads. Python's <code>pickle</code> — and every format built on it (<code>torch.save</code> <code>.pt</code>/<code>.pth</code>/<code>.ckpt</code>, <code>joblib</code>,
-scikit-learn <code>.pkl</code>, numpy object arrays) — executes embedded callables when it is <strong>loaded</strong>. An attacker
+loads. Python's <code>pickle</code>. And every format built on it (<code>torch.save</code> <code>.pt</code>/<code>.pth</code>/<code>.ckpt</code>, <code>joblib</code>,
+scikit-learn <code>.pkl</code>, numpy object arrays), executes embedded callables when it is <strong>loaded</strong>. An attacker
 who can swap or modify the weights file you download from a hub therefore gets arbitrary code execution the
 moment you call <code>torch.load</code> / <code>pickle.load</code>: the classic "load a poisoned model, run the attacker's
 payload" supply-side attack (the same risk ProtectAI <code>modelscan</code>, <code>picklescan</code>, <code>fickling</code> and Hugging
@@ -1341,42 +1341,42 @@ Face's hub-side pickle scanning address).</p>
 <h2 id="how-llmsectest-tests-it">How LLMSecTest tests it<a class="headerlink" href="#how-llmsectest-tests-it" title="Permanent link">&para;</a></h2>
 <p>Point LLMSecTest at the model file or directory with <code>--model-scan &lt;path&gt;</code>. It discovers serialized model
 files (recursing through the tree, skipping vendored/virtualenv dirs) and walks each pickle's <strong>opcode
-stream</strong> with the standard-library <code>pickletools</code> — it <strong>never unpickles</strong>, so scanning a hostile file is
+stream</strong> with the standard-library <code>pickletools</code>. It <strong>never unpickles</strong>, so scanning a hostile file is
 itself safe. It flags any opcode that imports a code-execution primitive on load:</p>
 <ul>
-<li><strong>Code-execution import</strong> (<code>critical</code>) — a <code>GLOBAL</code> / <code>STACK_GLOBAL</code> importing an OS/process/exec module
+<li><strong>Code-execution import</strong> (<code>critical</code>), a <code>GLOBAL</code> / <code>STACK_GLOBAL</code> importing an OS/process/exec module
   (<code>os</code>, <code>posix</code>, <code>subprocess</code>, <code>socket</code>, <code>ctypes</code>, <code>runpy</code>, <code>pty</code>, …), a <code>builtins</code> execution primitive
   (<code>eval</code>, <code>exec</code>, <code>compile</code>, <code>__import__</code>, …), or a nested-unpickle primitive (<code>pickle.loads</code>,
   <code>numpy.load</code>, <code>torch.load</code>). These run OS/interpreter code, or unpickle further attacker bytes, on load.</li>
-<li><strong>Pickle gadget primitive</strong> (<code>high</code>) — a reflection / partial-application gadget (<code>operator.attrgetter</code>,
+<li><strong>Pickle gadget primitive</strong> (<code>high</code>), a reflection / partial-application gadget (<code>operator.attrgetter</code>,
   <code>functools.partial</code>/<code>reduce</code>, <code>importlib.import_module</code>) used to build pickle exploit chains. Lower
   severity because it needs chaining and is occasionally legitimate, but still surfaced.</li>
-<li><strong>Numpy object array</strong> (<code>medium</code>) — a <code>.npy</code>/<code>.npz</code> whose dtype is <code>object</code>, so loading it requires
+<li><strong>Numpy object array</strong> (<code>medium</code>), a <code>.npy</code>/<code>.npz</code> whose dtype is <code>object</code>, so loading it requires
   <code>allow_pickle=True</code> and unpickles embedded objects; its trailing pickle is opcode-scanned too.</li>
 </ul>
 <p>It understands raw pickle streams (protocols 0–5), PyTorch ≥1.6 <strong>zip archives</strong> (<code>.pt</code>/<code>.pth</code>/<code>.ckpt</code>,
-whose <code>data.pkl</code> member is scanned) and <code>.npz</code>. The scan is <strong>deterministic and offline</strong> — no model load,
-no network — so it is safe and reproducible in CI.</p>
+whose <code>data.pkl</code> member is scanned) and <code>.npz</code>. The scan is <strong>deterministic and offline</strong>, no model load,
+no network. So it is safe and reproducible in CI.</p>
 <h3 id="why-it-doesnt-false-positive">Why it doesn't false-positive<a class="headerlink" href="#why-it-doesnt-false-positive" title="Permanent link">&para;</a></h3>
 <p>The dangerous-import list is <strong>curated and exact</strong> (like LLM03's known-malicious-package list), not a fuzzy
-heuristic. A legitimate weights file only references tensor-rebuild helpers — <code>torch._utils._rebuild_tensor_v2</code>,
-<code>collections.OrderedDict</code>, <code>numpy.core.multiarray._reconstruct</code> — none of which is on the list, so a clean
+heuristic. A legitimate weights file only references tensor-rebuild helpers, <code>torch._utils._rebuild_tensor_v2</code>,
+<code>collections.OrderedDict</code>, <code>numpy.core.multiarray._reconstruct</code>, none of which is on the list, so a clean
 model produces no finding. A model that imports <code>os.system</code> on load does not occur by accident.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>llmsectest<span class="w"> </span>--model-scan<span class="w"> </span>models/<span class="w">                       </span><span class="c1"># scan a directory of model files</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>llmsectest<span class="w"> </span>--model-scan<span class="w"> </span>model.pt<span class="w">                      </span><span class="c1"># scan a single artifact</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat<span class="w"> </span>--model-scan<span class="w"> </span>models/<span class="w">   </span><span class="c1"># app probes + model scan</span>
 </code></pre></div>
 <p>Without <code>--model-scan</code>, LLM04 is reported as a <strong>skipped</strong> test (with the reason that it needs a model
-path) — never a silent pass.</p>
+path), never a silent pass.</p>
 <h2 id="reading-a-finding">Reading a finding<a class="headerlink" href="#reading-a-finding" title="Permanent link">&para;</a></h2>
 <p>A finding names the technique, the model file (and the container member, for a zip), the evidence and a
-concrete remediation — for example <em>"[code-execution import in serialized model] poisoned.pt!archive/data.pkl:
+concrete remediation, for example <em>"[code-execution import in serialized model] poisoned.pt!archive/data.pkl:
 unpickling imports 'subprocess.Popen' …"</em>. In SARIF it maps to LLM04 and carries LLM04's CVSS v4.0 base
 score (<code>7.1</code>) as its <code>security-severity</code>. Its <strong>location points at the model file in the scanned project</strong>,
 not at LLMSecTest's own test file.</p>
 <h2 id="remediation">Remediation<a class="headerlink" href="#remediation" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Prefer a <strong>code-free serialization format</strong> — <a href="https://github.com/huggingface/safetensors">safetensors</a>
+<li>Prefer a <strong>code-free serialization format</strong>, <a href="https://github.com/huggingface/safetensors">safetensors</a>
   stores only tensors and runs no code on load.</li>
 <li>If you must load a pickle, use <code>torch.load(..., weights_only=True)</code> (or a restricted <code>Unpickler</code>) and load
   only artifacts whose <strong>hash you have verified</strong> from a trusted source.</li>
@@ -1385,7 +1385,7 @@ not at LLMSecTest's own test file.</p>
 <h2 id="scope-and-roadmap">Scope and roadmap<a class="headerlink" href="#scope-and-roadmap" title="Permanent link">&para;</a></h2>
 <p>This is the offline, zero-dependency baseline, focused on the load-time code-execution vector. A richer
 engine (ProtectAI <code>modelscan</code> / <code>picklescan</code> / <code>fickling</code>) behind an optional extra, and the training-data
-provenance dimensions, are tracked follow-ups — mirroring how LLM03 layers the networked OSV.dev lookup on
+provenance dimensions, are tracked follow-ups, mirroring how LLM03 layers the networked OSV.dev lookup on
 top of its offline structural scan.</p>
 <p>See the <a href="https://genai.owasp.org/llmrisk/llm042025-data-and-model-poisoning/">OWASP LLM04 entry</a> for the
 full guidance.</p>

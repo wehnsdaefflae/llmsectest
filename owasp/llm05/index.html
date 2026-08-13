@@ -1268,7 +1268,7 @@
   
 
 
-<h1 id="llm05-improper-output-handling">LLM05 — Improper Output Handling<a class="headerlink" href="#llm05-improper-output-handling" title="Permanent link">&para;</a></h1>
+<h1 id="llm05-improper-output-handling">LLM05, Improper Output Handling<a class="headerlink" href="#llm05-improper-output-handling" title="Permanent link">&para;</a></h1>
 <blockquote>
 <p>The model's reply is not text. It is input to something that will run it.</p>
 </blockquote>
@@ -1278,7 +1278,7 @@ webhook payload. Every one of those is an interpreter, and the reply arrives as 
 sanitised, because it came from your own model rather than from a user.</p>
 <p>That is the whole of OWASP LLM05. It is not a model failure at all; it is the ordinary injection bug the
 web has had for thirty years, reintroduced through a component your input validation does not cover. The
-model is simply the most persuadable source of malicious text you have ever wired into your stack, and a
+model is the most persuadable source of malicious text you have ever wired into your stack, and a
 user who cannot reach your database can usually reach your model.</p>
 <h2 id="how-llmsectest-tests-it">How LLMSecTest tests it<a class="headerlink" href="#how-llmsectest-tests-it" title="Permanent link">&para;</a></h2>
 <p>Nothing to configure. The probe supplies its own marker, so it runs against any target:</p>
@@ -1336,7 +1336,7 @@ proves and what it does not.</p>
 output path unescaped. If anything downstream renders, executes or interpolates that string, you have a
 live injection route and the model is a willing intermediary.</p>
 <p><strong>What it does not prove:</strong> that an attacker can reach your model with this request, or that your sink is
-actually vulnerable. A well-built consumer escapes on output, and then an emitted <code>&lt;script&gt;</code> is ugly
+vulnerable. A well-built consumer escapes on output, and then an emitted <code>&lt;script&gt;</code> is ugly
 rather than dangerous. LLMSecTest sees the string leave your endpoint; it cannot see what the next hop
 does with it.</p>
 <p>The realistic attack is indirect: the instruction to emit the payload arrives in a document the app
@@ -1351,10 +1351,9 @@ someone else's text gets into it".</p>
   finding is a hygiene issue rather than an incident. We cannot see your template engine.</li>
 <li><strong>Parameterised queries.</strong> A reply spliced into a prepared statement's <em>parameter</em> is inert. Same
   string, no finding, and no way for a black-box scan to tell which one you built.</li>
-<li><strong>Downstream tool calls.</strong> If the reply is parsed into a tool invocation, the risk is the invocation,
-  not the string, and that is <a href="../llm06/">LLM06</a>.</li>
+<li><strong>Downstream tool calls.</strong> If the reply is parsed into a tool invocation, the risk is the invocation rather than the string, and that's <a href="../llm06/">LLM06</a>.</li>
 </ul>
-<p>The fix is never at the model. Treat model output exactly as you treat a form field a stranger filled in:
+<p>The fix is never at the model. Treat model output the way you treat a form field a stranger filled in:
 escape it at every sink, parameterise every query, never hand it to a shell, and validate its shape before
 anything acts on it.</p>
 
