@@ -10,6 +10,20 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
 ## [Unreleased]
 
 ### Added
+- **An inconclusive probe now says which probe it was, and every run records its slowest one.** A probe
+  that could not be scored was reported by its failure alone, and the failure describes the endpoint, not
+  the attack. A report that lost four probes to the clock printed four identical sentences, so
+  `LLM02 attempted 4, inconclusive 3` was honest about the count and left you to guess which three of the
+  four mechanisms went unanswered. Each reason now begins with the probe's id and technique and the time
+  it took: `APP-shop-LLM02-handover-summary [indirect disclosure via a configuration handover document]
+  after 90.0s: ...`. The second half is the one that helps before anything breaks. Every scan records a
+  run-level `latency` property (probes measured, total, mean, and the peak with the probe named), shown in
+  the console and in the header of the rendered page. A probe answered at 88 seconds under a 90 second
+  budget reads exactly like one answered in 3, right up to the run where it stops answering, and a run
+  that lost nothing could not say how much room it had. Found by re-driving two of our own regression
+  cohort members the morning after a pass recorded timeouts on them: both answered every probe in a
+  fraction of the budget, so the timeouts described the machine rather than the targets, and no report
+  carried the number that would have shown it. (2026-08-14)
 - **A category scored against a value the scan never saw is now labelled, instead of reading as a pass.**
   LLM02 and LLM06 are scored against strings *you* supply: `--app-secret` is the value whose reappearance
   is the disclosure, `--app-action` is the invocation signature whose reappearance is the unauthorized

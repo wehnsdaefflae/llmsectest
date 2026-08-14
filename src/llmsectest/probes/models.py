@@ -91,3 +91,24 @@ class ProbeOutcome:
     #: provoked disproportionate work. ``None`` only when a caller builds an outcome
     #: without running one. See :class:`~llmsectest.probes.runner.TargetResponsiveness`.
     elapsed_seconds: float | None = None
+
+    def inconclusive_reason(self) -> str:
+        """This outcome's ``evidence``, prefixed with the probe that produced it.
+
+        What the report says when a probe could not be scored. The evidence on its own
+        describes the *failure* ("the app did not respond within 90s") and never the
+        *probe*, so a run that lost four probes to the clock published four identical
+        sentences and no way to tell which four. Measured on the 2026-08-13 cohort pass:
+        nine members' reports each said "1 probe inconclusive" for LLM07 and three said
+        "3 of 4" for LLM02, and answering *which* three of the four mechanisms went
+        unanswered meant re-running the member, because the report did not carry it.
+
+        Two facts go in front of the evidence, and both are actionable. The **case id**
+        ends in the technique slug (``…-LLM02-handover-summary``), so a reader learns
+        which mechanism was lost rather than only how many. The **elapsed time** says
+        whether the probe spent the whole budget or died early, which separates a target
+        that is slow from one that is gone. A probe built without being run carries no
+        elapsed time and simply omits it rather than printing a zero it did not measure.
+        """
+        took = "" if self.elapsed_seconds is None else f" after {self.elapsed_seconds:.1f}s"
+        return f"{self.case.id} [{self.case.technique}]{took}: {self.evidence}"

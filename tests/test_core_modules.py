@@ -588,6 +588,71 @@ class TestSARIFGeneration:
         clean = json.loads(generator.generate(results[:1]))["runs"][0]
         assert "inconclusive" not in clean.get("properties", {})
 
+    def test_probe_latency_surfaces_as_run_property_naming_the_slowest(self):
+        """Every probe's wall-clock time aggregates into a run-level ``latency``, and the
+        peak names the probe that produced it.
+
+        The instrument the 2026-08-13 cohort pass did not have. That pass recorded ten
+        members with timed-out probes and nothing about how close the *answered* probes
+        came to the same budget, so a report could not say whether a timeout described the
+        target or the machine. Same shape and same on/off rule as ``denial_of_wallet``."""
+        results = [
+            TestResult(
+                nodeid="…::test_sensitive_disclosure[LLM02-direct]",
+                location=("src/llmsectest/suite/test_llm02.py", 20, "t"),
+                outcome="passed",
+                markers=["security", "owasp_llm02"],
+                properties={"llmsec_elapsed": 2.5, "llmsec_case": "APP-x-LLM02-direct"},
+            ),
+            TestResult(
+                nodeid="…::test_sensitive_disclosure[LLM02-handover-summary]",
+                location=("src/llmsectest/suite/test_llm02.py", 20, "t"),
+                outcome="passed",
+                markers=["security", "owasp_llm02"],
+                properties={"llmsec_elapsed": 88.0,
+                            "llmsec_case": "APP-x-LLM02-handover-summary"},
+            ),
+            TestResult(  # a coverage assertion: no timing recorded, contributes nothing
+                nodeid="…::test_owasp_coverage",
+                location=("src/llmsectest/suite/test_owasp_coverage.py", 8, "t"),
+                outcome="passed",
+                markers=["security"],
+                properties={},
+            ),
+        ]
+        generator = SARIFGenerator("llmsectest", "0.1.0", source_root=".")
+        run = json.loads(generator.generate(results))["runs"][0]
+        lat = run["properties"]["latency"]
+        assert lat["probes_measured"] == 2
+        assert lat["total_seconds"] == 90.5
+        assert lat["peak_seconds"] == 88.0
+        assert lat["peak_probe"] == "APP-x-LLM02-handover-summary"
+        assert lat["mean_seconds"] == 45.2
+
+        # A run where nothing was timed carries no latency property at all.
+        untimed = json.loads(generator.generate(results[2:]))["runs"][0]
+        assert "latency" not in untimed.get("properties", {})
+
+    def test_probe_latency_ignores_malformed_timings(self):
+        """A non-numeric, boolean or negative elapsed value is dropped, not reported.
+
+        The property arrives from ``pytest`` ``user_properties``, so the generator treats
+        it as untrusted input for the same reason ``_as_int`` does: a report that raises
+        while writing itself is worse than one missing a cost line."""
+        def timed(value):
+            return TestResult(
+                nodeid=f"…::probe[{value}]",
+                location=("src/llmsectest/suite/test_llm02.py", 20, "t"),
+                outcome="passed",
+                markers=["security", "owasp_llm02"],
+                properties={"llmsec_elapsed": value, "llmsec_case": "APP-x"},
+            )
+        generator = SARIFGenerator("llmsectest", "0.1.0", source_root=".")
+        results = [timed("slow"), timed(True), timed(-1.0), timed(4.0)]
+        lat = json.loads(generator.generate(results))["runs"][0]["properties"]["latency"]
+        assert lat["probes_measured"] == 1
+        assert lat["peak_seconds"] == 4.0
+
     def test_sarif_version(self, sample_results):
         """Verify SARIF output uses version 2.1.0."""
         generator = SARIFGenerator("llmsectest", "0.1.0", source_root=".")

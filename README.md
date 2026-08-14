@@ -249,7 +249,10 @@ records a **denial-of-wallet total** (the LLM10 cost figure, trackable over time
 If any probe went **inconclusive**, because an `app:<url>` target exceeded `--app-timeout` or
 could not be reached at all, the run also records how many, and how many of those never
 reached the target, so a clean-looking report never hides that some probes could not be
-concluded. See [`examples/`](examples/) for one test module per OWASP category.
+concluded. Each one is **named** by probe id and technique, so you can read off which
+attacks went unanswered instead of only how many. Every run also records its **slowest
+probe**, so a target sitting just inside its budget is visible before the run where it
+stops answering. See [`examples/`](examples/) for one test module per OWASP category.
 
 ## Install
 

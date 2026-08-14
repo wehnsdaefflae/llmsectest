@@ -604,7 +604,17 @@ def render_sarif_html(doc: dict, *, source_name: str | None = None,
         if isinstance(tally, dict) and tally.get("attempted")
         else None
     )
-    meta_bits = [b for b in (tool_str, source_name, generated, held_bit, cost_bit, inc_bit) if b]
+    # Slowest probe of the run. It sits next to the inconclusive count on purpose: those
+    # two numbers are the same measurement either side of the budget, and reading the peak
+    # is how you tell "this target is comfortable" from "this target nearly timed out".
+    lat = _props(first_run).get("latency")
+    slow_bit = (
+        f"slowest probe {lat['peak_seconds']:g}s"
+        if isinstance(lat, dict) and lat.get("peak_seconds")
+        else None
+    )
+    meta_bits = [b for b in (tool_str, source_name, generated, held_bit, cost_bit,
+                             inc_bit, slow_bit) if b]
 
     # Group findings by OWASP category, ordered LLM01..LLM10 then Other; within a
     # group, most severe first.

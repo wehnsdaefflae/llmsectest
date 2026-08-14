@@ -116,6 +116,27 @@ def test_renders_inconclusive_probe_count():
     assert "5 probe(s) inconclusive" in html            # run-level inconclusive tally
 
 
+def test_renders_the_slowest_probe_beside_the_inconclusive_count():
+    """The peak latency belongs next to the timeout count: they are one measurement
+    either side of the budget, and only the peak says how close a clean run came."""
+    doc = _doc([_RESULT_LLM01], [_RULE_LLM01])
+    doc["runs"][0]["properties"] = {
+        "inconclusive": {"count": 1, "reasons": ["APP-x-LLM02-direct [direct]: timeout"]},
+        "latency": {"probes_measured": 32, "total_seconds": 210.4, "peak_seconds": 88.0,
+                    "peak_probe": "APP-x-LLM02-handover-summary", "mean_seconds": 6.6},
+    }
+    html = render_sarif_html(doc)
+    assert "slowest probe 88s" in html
+
+
+def test_a_malformed_latency_property_does_not_break_the_render():
+    """Same contract as every other run property: a foreign or truncated file may put
+    anything here, and losing the whole report over one meta field is the worse failure."""
+    doc = _doc([_RESULT_LLM01], [_RULE_LLM01])
+    doc["runs"][0]["properties"] = {"latency": "88s"}
+    assert "slowest probe" not in render_sarif_html(doc)
+
+
 # --- robustness on malformed / foreign SARIF ----------------------------------
 # The renderer's contract is to display *any* tool's SARIF and let missing fields
 # "degrade gracefully". A third-party (or hand-written / truncated) file can put

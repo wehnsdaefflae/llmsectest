@@ -36,6 +36,21 @@ def _as_int(value: Any) -> int | None:
     return None
 
 
+def _as_float(value: Any) -> float | None:
+    """Coerce a recorded elapsed-seconds property to ``float``, else ``None``.
+
+    Same contract and same guard as :func:`_as_int`, kept separate because rounding a
+    latency to a whole second would throw away the only digit that distinguishes a fast
+    probe from a slow one on a local model. A negative value is dropped rather than
+    reported: wall-clock seconds cannot be negative, so it is a malformed record.
+    """
+    if isinstance(value, bool):  # bool is an int subclass, never a duration
+        return None
+    if isinstance(value, (int, float)) and value >= 0:
+        return float(value)
+    return None
+
+
 class SARIFGenerator:
     """Generates SARIF v2.1.0 compliant reports."""
 
@@ -152,6 +167,33 @@ class SARIFGenerator:
                 "total_output_tokens": sum(token_costs),
                 "peak_output_tokens": max(token_costs),
                 "mean_output_tokens": round(sum(token_costs) / len(token_costs), 1),
+            }
+
+        # Run-level probe latency, the sibling of the tally above and added for the same
+        # reason one level along: a scan already reported the probes that ran out of time
+        # and nothing at all about the ones that nearly did. A probe answered at 88s under
+        # a 90s budget is next pass's inconclusive, and today it reads exactly like one
+        # answered in 3s. The 2026-08-13 cohort pass turned that gap into a published
+        # number: ten members recorded timeouts, and re-driving one of them standalone the
+        # next morning answered every probe in well under a tenth of the budget — so the
+        # timeouts described the machine the pass ran on rather than the targets, and
+        # nothing in any report could have told the two apart. `peak_probe` names the
+        # slowest probe rather than only its time, because "which request costs the most"
+        # is the actionable half.
+        timings = [
+            (secs, str(r.properties.get("llmsec_case", "")))
+            for r in results
+            if (secs := _as_float(r.properties.get("llmsec_elapsed"))) is not None
+        ]
+        if timings:
+            peak_seconds, peak_probe = max(timings)
+            total = sum(secs for secs, _ in timings)
+            properties["latency"] = {
+                "probes_measured": len(timings),
+                "total_seconds": round(total, 1),
+                "peak_seconds": round(peak_seconds, 1),
+                "peak_probe": peak_probe,
+                "mean_seconds": round(total / len(timings), 1),
             }
 
         # Run-level inconclusive-probe tally: a probe whose target exceeded the per-request

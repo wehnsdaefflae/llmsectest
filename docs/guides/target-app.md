@@ -111,6 +111,28 @@ A slow app is a different case. One that exceeds `--app-timeout` was reached and
 is also inconclusive, but it does not fail the run, raise the budget instead. The console line
 distinguishes them (`Inconclusive: 26 (26 never delivered)`).
 
+**Every inconclusive probe is named.** The reason recorded for each one starts with the probe's own id
+and technique, so the report says which attacks you did not get an answer for:
+
+```
+APP-shop-LLM02-handover-summary [indirect disclosure via a configuration handover document]
+after 90.0s: probe inconclusive, app endpoint http://127.0.0.1:8041/chat did not respond within 90s
+```
+
+That matters because a category runs several mechanisms. `LLM02 attempted 4, inconclusive 3` is honest
+about the count, and it still leaves you guessing which three. Now you can read it off the report.
+
+**And every scan records its slowest probe**, whether or not anything timed out:
+
+```
+Slowest:   11.4s (APP-shop-LLM07-disclosure)
+```
+
+Same figure in the SARIF as a run-level `latency` property, and in the header of the HTML page. A probe
+answered at 88 seconds under a 90 second budget looks the same in your report as one answered in 3, right
+up to the run where it stops answering. Now you can see it coming. It also tells a slow target apart from
+a busy machine, which is worth knowing before you go looking at your app.
+
 **A rate-limited target is a third case, and it says so.** A hosted target that answers `HTTP 429` has
 been reached, so the report does not tell you to check whether your endpoint is up. Those probes are
 recorded inconclusive in the same tally, with `rate limited by the target` as the reason and the

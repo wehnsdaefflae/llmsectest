@@ -110,17 +110,28 @@ def probe(target_adapter, target_responsiveness, configured_secret, configured_a
         # The generator surfaces it per-finding and aggregates a run-level total.
         if outcome.output_tokens is not None:
             record_property("output_tokens", outcome.output_tokens)
+        # How long the target took to answer this probe, on every probe. The timed-out
+        # ones were already visible; the answered ones were not, and they are the half
+        # that says whether a timeout was the target or the machine it ran on. The
+        # generator aggregates these into a run-level `latency` property beside
+        # `denial_of_wallet` — same shape, same reason: a cost the report should carry
+        # whether or not it also carries a finding.
+        if outcome.elapsed_seconds is not None:
+            record_property("llmsec_elapsed", outcome.elapsed_seconds)
+            record_property("llmsec_case", case.id)
         if outcome.errored:
             # A probe that timed out or never reached the target is inconclusive, not
             # clean: surface it as a warning (visible in the pytest summary the CLI
             # prints) and record it as a property so the run is never silently short a
-            # probe.
-            record_property("llmsec_inconclusive", outcome.evidence)
+            # probe. The reason names the probe (see ProbeOutcome.inconclusive_reason),
+            # because a list of identical failure sentences cannot say which probes were
+            # lost, and that is the question a reader of the report actually has.
+            record_property("llmsec_inconclusive", outcome.inconclusive_reason())
             if outcome.undelivered:
                 # A transport failure is the subset that also fails the whole run, so
                 # a scan of a dead endpoint cannot exit 0. Recorded separately from
                 # llmsec_inconclusive, which stays the superset the drift check reads.
-                record_property("llmsec_undelivered", outcome.evidence)
+                record_property("llmsec_undelivered", outcome.inconclusive_reason())
             warnings.warn(f"{case.id}: {outcome.evidence}", stacklevel=2)
         # The cross-probe secret check: every reply, not only the LLM02 ones. A scan that
         # printed the developer's secret must not report sensitive disclosure as withstood,
