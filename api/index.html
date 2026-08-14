@@ -1353,6 +1353,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="ProbeOutcome">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#llmsectest.probes.ProbeOutcome.inconclusive_reason" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        inconclusive_reason
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
           <li class="md-nav__item">
@@ -2282,6 +2299,23 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="ProbeOutcome">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#llmsectest.probes.ProbeOutcome.inconclusive_reason" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        inconclusive_reason
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -3787,6 +3821,82 @@ handling), LLM06 (excessive agency), LLM07 (system prompt leakage), LLM09
 
 
 
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="llmsectest.probes.ProbeOutcome.inconclusive_reason" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">inconclusive_reason</span>
+
+
+<a href="#llmsectest.probes.ProbeOutcome.inconclusive_reason" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">inconclusive_reason</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>This outcome's <code>evidence</code>, prefixed with the probe that produced it.</p>
+<p>What the report says when a probe could not be scored. The evidence on its own
+describes the <em>failure</em> ("the app did not respond within 90s") and never the
+<em>probe</em>, so a run that lost four probes to the clock published four identical
+sentences and no way to tell which four. Measured on the 2026-08-13 cohort pass:
+nine members' reports each said "1 probe inconclusive" for LLM07 and three said
+"3 of 4" for LLM02, and answering <em>which</em> three of the four mechanisms went
+unanswered meant re-running the member, because the report did not carry it.</p>
+<p>Two facts go in front of the evidence, and both are actionable. The <strong>case id</strong>
+ends in the technique slug (<code>…-LLM02-handover-summary</code>), so a reader learns
+which mechanism was lost rather than only how many. The <strong>elapsed time</strong> says
+whether the probe spent the whole budget or died early, which separates a target
+that is slow from one that is gone. A probe built without being run carries no
+elapsed time and simply omits it rather than printing a zero it did not measure.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/llmsectest/probes/models.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-95"> 95</a></span>
+<span class="normal"><a href="#__codelineno-0-96"> 96</a></span>
+<span class="normal"><a href="#__codelineno-0-97"> 97</a></span>
+<span class="normal"><a href="#__codelineno-0-98"> 98</a></span>
+<span class="normal"><a href="#__codelineno-0-99"> 99</a></span>
+<span class="normal"><a href="#__codelineno-0-100">100</a></span>
+<span class="normal"><a href="#__codelineno-0-101">101</a></span>
+<span class="normal"><a href="#__codelineno-0-102">102</a></span>
+<span class="normal"><a href="#__codelineno-0-103">103</a></span>
+<span class="normal"><a href="#__codelineno-0-104">104</a></span>
+<span class="normal"><a href="#__codelineno-0-105">105</a></span>
+<span class="normal"><a href="#__codelineno-0-106">106</a></span>
+<span class="normal"><a href="#__codelineno-0-107">107</a></span>
+<span class="normal"><a href="#__codelineno-0-108">108</a></span>
+<span class="normal"><a href="#__codelineno-0-109">109</a></span>
+<span class="normal"><a href="#__codelineno-0-110">110</a></span>
+<span class="normal"><a href="#__codelineno-0-111">111</a></span>
+<span class="normal"><a href="#__codelineno-0-112">112</a></span>
+<span class="normal"><a href="#__codelineno-0-113">113</a></span>
+<span class="normal"><a href="#__codelineno-0-114">114</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-95" name="__codelineno-0-95"></a><span class="k">def</span><span class="w"> </span><span class="nf">inconclusive_reason</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-0-96" name="__codelineno-0-96"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;This outcome&#39;s ``evidence``, prefixed with the probe that produced it.</span>
+<a id="__codelineno-0-97" name="__codelineno-0-97"></a>
+<a id="__codelineno-0-98" name="__codelineno-0-98"></a><span class="sd">    What the report says when a probe could not be scored. The evidence on its own</span>
+<a id="__codelineno-0-99" name="__codelineno-0-99"></a><span class="sd">    describes the *failure* (&quot;the app did not respond within 90s&quot;) and never the</span>
+<a id="__codelineno-0-100" name="__codelineno-0-100"></a><span class="sd">    *probe*, so a run that lost four probes to the clock published four identical</span>
+<a id="__codelineno-0-101" name="__codelineno-0-101"></a><span class="sd">    sentences and no way to tell which four. Measured on the 2026-08-13 cohort pass:</span>
+<a id="__codelineno-0-102" name="__codelineno-0-102"></a><span class="sd">    nine members&#39; reports each said &quot;1 probe inconclusive&quot; for LLM07 and three said</span>
+<a id="__codelineno-0-103" name="__codelineno-0-103"></a><span class="sd">    &quot;3 of 4&quot; for LLM02, and answering *which* three of the four mechanisms went</span>
+<a id="__codelineno-0-104" name="__codelineno-0-104"></a><span class="sd">    unanswered meant re-running the member, because the report did not carry it.</span>
+<a id="__codelineno-0-105" name="__codelineno-0-105"></a>
+<a id="__codelineno-0-106" name="__codelineno-0-106"></a><span class="sd">    Two facts go in front of the evidence, and both are actionable. The **case id**</span>
+<a id="__codelineno-0-107" name="__codelineno-0-107"></a><span class="sd">    ends in the technique slug (``…-LLM02-handover-summary``), so a reader learns</span>
+<a id="__codelineno-0-108" name="__codelineno-0-108"></a><span class="sd">    which mechanism was lost rather than only how many. The **elapsed time** says</span>
+<a id="__codelineno-0-109" name="__codelineno-0-109"></a><span class="sd">    whether the probe spent the whole budget or died early, which separates a target</span>
+<a id="__codelineno-0-110" name="__codelineno-0-110"></a><span class="sd">    that is slow from one that is gone. A probe built without being run carries no</span>
+<a id="__codelineno-0-111" name="__codelineno-0-111"></a><span class="sd">    elapsed time and simply omits it rather than printing a zero it did not measure.</span>
+<a id="__codelineno-0-112" name="__codelineno-0-112"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-113" name="__codelineno-0-113"></a>    <span class="n">took</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">elapsed_seconds</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot; after </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">elapsed_seconds</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">s&quot;</span>
+<a id="__codelineno-0-114" name="__codelineno-0-114"></a>    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">case</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2"> [</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">case</span><span class="o">.</span><span class="n">technique</span><span class="si">}</span><span class="s2">]</span><span class="si">{</span><span class="n">took</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">evidence</span><span class="si">}</span><span class="s2">&quot;</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
 
 
 
@@ -6600,31 +6710,31 @@ suffix (<code>results/foo.sarif</code> → <code>results/foo.html</code>).</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/llmsectest/reporting/sarif_html.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-651">651</a></span>
-<span class="normal"><a href="#__codelineno-0-652">652</a></span>
-<span class="normal"><a href="#__codelineno-0-653">653</a></span>
-<span class="normal"><a href="#__codelineno-0-654">654</a></span>
-<span class="normal"><a href="#__codelineno-0-655">655</a></span>
-<span class="normal"><a href="#__codelineno-0-656">656</a></span>
-<span class="normal"><a href="#__codelineno-0-657">657</a></span>
-<span class="normal"><a href="#__codelineno-0-658">658</a></span>
-<span class="normal"><a href="#__codelineno-0-659">659</a></span>
-<span class="normal"><a href="#__codelineno-0-660">660</a></span>
-<span class="normal"><a href="#__codelineno-0-661">661</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-661">661</a></span>
 <span class="normal"><a href="#__codelineno-0-662">662</a></span>
-<span class="normal"><a href="#__codelineno-0-663">663</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-651" name="__codelineno-0-651"></a><span class="k">def</span><span class="w"> </span><span class="nf">render_sarif_file</span><span class="p">(</span><span class="n">in_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="n">out_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-<a id="__codelineno-0-652" name="__codelineno-0-652"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Read a ``.sarif`` file, render it to HTML, and write the page.</span>
-<a id="__codelineno-0-653" name="__codelineno-0-653"></a>
-<a id="__codelineno-0-654" name="__codelineno-0-654"></a><span class="sd">    Returns the path written. ``out_path`` defaults to the input with a ``.html``</span>
-<a id="__codelineno-0-655" name="__codelineno-0-655"></a><span class="sd">    suffix (``results/foo.sarif`` → ``results/foo.html``).</span>
-<a id="__codelineno-0-656" name="__codelineno-0-656"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-657" name="__codelineno-0-657"></a>    <span class="n">in_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">in_path</span><span class="p">)</span>
-<a id="__codelineno-0-658" name="__codelineno-0-658"></a>    <span class="n">doc</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">in_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
-<a id="__codelineno-0-659" name="__codelineno-0-659"></a>    <span class="n">page</span> <span class="o">=</span> <span class="n">render_sarif_html</span><span class="p">(</span><span class="n">doc</span><span class="p">,</span> <span class="n">source_name</span><span class="o">=</span><span class="n">in_path</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-<a id="__codelineno-0-660" name="__codelineno-0-660"></a>    <span class="n">out</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_path</span><span class="p">)</span> <span class="k">if</span> <span class="n">out_path</span> <span class="k">else</span> <span class="n">in_path</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">&quot;.html&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-661" name="__codelineno-0-661"></a>    <span class="n">out</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<a id="__codelineno-0-662" name="__codelineno-0-662"></a>    <span class="n">out</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">page</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-663" name="__codelineno-0-663"></a>    <span class="k">return</span> <span class="n">out</span>
+<span class="normal"><a href="#__codelineno-0-663">663</a></span>
+<span class="normal"><a href="#__codelineno-0-664">664</a></span>
+<span class="normal"><a href="#__codelineno-0-665">665</a></span>
+<span class="normal"><a href="#__codelineno-0-666">666</a></span>
+<span class="normal"><a href="#__codelineno-0-667">667</a></span>
+<span class="normal"><a href="#__codelineno-0-668">668</a></span>
+<span class="normal"><a href="#__codelineno-0-669">669</a></span>
+<span class="normal"><a href="#__codelineno-0-670">670</a></span>
+<span class="normal"><a href="#__codelineno-0-671">671</a></span>
+<span class="normal"><a href="#__codelineno-0-672">672</a></span>
+<span class="normal"><a href="#__codelineno-0-673">673</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-661" name="__codelineno-0-661"></a><span class="k">def</span><span class="w"> </span><span class="nf">render_sarif_file</span><span class="p">(</span><span class="n">in_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="n">out_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<a id="__codelineno-0-662" name="__codelineno-0-662"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Read a ``.sarif`` file, render it to HTML, and write the page.</span>
+<a id="__codelineno-0-663" name="__codelineno-0-663"></a>
+<a id="__codelineno-0-664" name="__codelineno-0-664"></a><span class="sd">    Returns the path written. ``out_path`` defaults to the input with a ``.html``</span>
+<a id="__codelineno-0-665" name="__codelineno-0-665"></a><span class="sd">    suffix (``results/foo.sarif`` → ``results/foo.html``).</span>
+<a id="__codelineno-0-666" name="__codelineno-0-666"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-667" name="__codelineno-0-667"></a>    <span class="n">in_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">in_path</span><span class="p">)</span>
+<a id="__codelineno-0-668" name="__codelineno-0-668"></a>    <span class="n">doc</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">in_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
+<a id="__codelineno-0-669" name="__codelineno-0-669"></a>    <span class="n">page</span> <span class="o">=</span> <span class="n">render_sarif_html</span><span class="p">(</span><span class="n">doc</span><span class="p">,</span> <span class="n">source_name</span><span class="o">=</span><span class="n">in_path</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+<a id="__codelineno-0-670" name="__codelineno-0-670"></a>    <span class="n">out</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_path</span><span class="p">)</span> <span class="k">if</span> <span class="n">out_path</span> <span class="k">else</span> <span class="n">in_path</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">&quot;.html&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-671" name="__codelineno-0-671"></a>    <span class="n">out</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-0-672" name="__codelineno-0-672"></a>    <span class="n">out</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">page</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-673" name="__codelineno-0-673"></a>    <span class="k">return</span> <span class="n">out</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -6750,7 +6860,17 @@ suffix (<code>results/foo.sarif</code> → <code>results/foo.html</code>).</p>
 <span class="normal"><a href="#__codelineno-0-645">645</a></span>
 <span class="normal"><a href="#__codelineno-0-646">646</a></span>
 <span class="normal"><a href="#__codelineno-0-647">647</a></span>
-<span class="normal"><a href="#__codelineno-0-648">648</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-552" name="__codelineno-0-552"></a><span class="k">def</span><span class="w"> </span><span class="nf">render_sarif_html</span><span class="p">(</span><span class="n">doc</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">source_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="normal"><a href="#__codelineno-0-648">648</a></span>
+<span class="normal"><a href="#__codelineno-0-649">649</a></span>
+<span class="normal"><a href="#__codelineno-0-650">650</a></span>
+<span class="normal"><a href="#__codelineno-0-651">651</a></span>
+<span class="normal"><a href="#__codelineno-0-652">652</a></span>
+<span class="normal"><a href="#__codelineno-0-653">653</a></span>
+<span class="normal"><a href="#__codelineno-0-654">654</a></span>
+<span class="normal"><a href="#__codelineno-0-655">655</a></span>
+<span class="normal"><a href="#__codelineno-0-656">656</a></span>
+<span class="normal"><a href="#__codelineno-0-657">657</a></span>
+<span class="normal"><a href="#__codelineno-0-658">658</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-552" name="__codelineno-0-552"></a><span class="k">def</span><span class="w"> </span><span class="nf">render_sarif_html</span><span class="p">(</span><span class="n">doc</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">source_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <a id="__codelineno-0-553" name="__codelineno-0-553"></a>                      <span class="n">generated</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <a id="__codelineno-0-554" name="__codelineno-0-554"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Render a parsed SARIF document into a standalone HTML page (string).&quot;&quot;&quot;</span>
 <a id="__codelineno-0-555" name="__codelineno-0-555"></a>    <span class="n">runs</span> <span class="o">=</span> <span class="n">_as_list</span><span class="p">(</span><span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;runs&quot;</span><span class="p">))</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">doc</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="p">[]</span>
@@ -6805,48 +6925,58 @@ suffix (<code>results/foo.sarif</code> → <code>results/foo.html</code>).</p>
 <a id="__codelineno-0-604" name="__codelineno-0-604"></a>        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tally</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">tally</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;attempted&quot;</span><span class="p">)</span>
 <a id="__codelineno-0-605" name="__codelineno-0-605"></a>        <span class="k">else</span> <span class="kc">None</span>
 <a id="__codelineno-0-606" name="__codelineno-0-606"></a>    <span class="p">)</span>
-<a id="__codelineno-0-607" name="__codelineno-0-607"></a>    <span class="n">meta_bits</span> <span class="o">=</span> <span class="p">[</span><span class="n">b</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="p">(</span><span class="n">tool_str</span><span class="p">,</span> <span class="n">source_name</span><span class="p">,</span> <span class="n">generated</span><span class="p">,</span> <span class="n">held_bit</span><span class="p">,</span> <span class="n">cost_bit</span><span class="p">,</span> <span class="n">inc_bit</span><span class="p">)</span> <span class="k">if</span> <span class="n">b</span><span class="p">]</span>
-<a id="__codelineno-0-608" name="__codelineno-0-608"></a>
-<a id="__codelineno-0-609" name="__codelineno-0-609"></a>    <span class="c1"># Group findings by OWASP category, ordered LLM01..LLM10 then Other; within a</span>
-<a id="__codelineno-0-610" name="__codelineno-0-610"></a>    <span class="c1"># group, most severe first.</span>
-<a id="__codelineno-0-611" name="__codelineno-0-611"></a>    <span class="n">groups</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{}</span>
-<a id="__codelineno-0-612" name="__codelineno-0-612"></a>    <span class="k">for</span> <span class="n">result</span><span class="p">,</span> <span class="n">rule</span> <span class="ow">in</span> <span class="n">findings</span><span class="p">:</span>
-<a id="__codelineno-0-613" name="__codelineno-0-613"></a>        <span class="n">groups</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">_owasp_of</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">rule</span><span class="p">),</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">result</span><span class="p">,</span> <span class="n">rule</span><span class="p">))</span>
-<a id="__codelineno-0-614" name="__codelineno-0-614"></a>
-<a id="__codelineno-0-615" name="__codelineno-0-615"></a>    <span class="n">body</span> <span class="o">=</span> <span class="p">[</span><span class="n">banner</span><span class="p">,</span> <span class="n">_summary</span><span class="p">(</span><span class="n">findings</span><span class="p">)]</span>
-<a id="__codelineno-0-616" name="__codelineno-0-616"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">findings</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">banner</span><span class="p">:</span>
-<a id="__codelineno-0-617" name="__codelineno-0-617"></a>        <span class="c1"># Suppressed under the banner: &quot;no findings&quot; plus &quot;we never reached the target&quot;</span>
-<a id="__codelineno-0-618" name="__codelineno-0-618"></a>        <span class="c1"># is the exact pair of statements that must not be read together as a pass.</span>
-<a id="__codelineno-0-619" name="__codelineno-0-619"></a>        <span class="n">body</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-<a id="__codelineno-0-620" name="__codelineno-0-620"></a>            <span class="s1">&#39;&lt;div class=&quot;empty&quot;&gt;✓ No findings in this report, &#39;</span>
-<a id="__codelineno-0-621" name="__codelineno-0-621"></a>            <span class="o">+</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;the target withstood </span><span class="si">{</span><span class="n">_esc</span><span class="p">(</span><span class="n">tally</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;withstood&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span><span class="si">}</span><span class="s2"> of &quot;</span>
-<a id="__codelineno-0-622" name="__codelineno-0-622"></a>               <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_esc</span><span class="p">(</span><span class="n">tally</span><span class="p">[</span><span class="s1">&#39;attempted&#39;</span><span class="p">])</span><span class="si">}</span><span class="s2"> delivered attacks.&quot;</span>
-<a id="__codelineno-0-623" name="__codelineno-0-623"></a>               <span class="k">if</span> <span class="n">held_bit</span> <span class="k">else</span> <span class="s2">&quot;the scan was clean.&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-624" name="__codelineno-0-624"></a>            <span class="o">+</span> <span class="s2">&quot;&lt;/div&gt;&quot;</span>
-<a id="__codelineno-0-625" name="__codelineno-0-625"></a>        <span class="p">)</span>
-<a id="__codelineno-0-626" name="__codelineno-0-626"></a>    <span class="n">body</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_withstood_section</span><span class="p">(</span><span class="n">tally</span><span class="p">))</span>
-<a id="__codelineno-0-627" name="__codelineno-0-627"></a>    <span class="k">for</span> <span class="p">(</span><span class="n">cat</span><span class="p">,</span> <span class="n">name</span><span class="p">),</span> <span class="n">items</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">groups</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">kv</span><span class="p">:</span> <span class="n">_OWASP_ORDER</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">kv</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="mi">99</span><span class="p">)):</span>
-<a id="__codelineno-0-628" name="__codelineno-0-628"></a>        <span class="n">items</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">rr</span><span class="p">:</span> <span class="n">_SEVERITY</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">_severity_of</span><span class="p">(</span><span class="o">*</span><span class="n">rr</span><span class="p">),</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">))[</span><span class="mi">1</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<a id="__codelineno-0-629" name="__codelineno-0-629"></a>        <span class="n">label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">cat</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-<a id="__codelineno-0-630" name="__codelineno-0-630"></a>        <span class="n">body</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;&lt;h2 class=&quot;cat&quot;&gt;</span><span class="si">{</span><span class="n">_esc</span><span class="p">(</span><span class="n">label</span><span class="p">)</span><span class="si">}</span><span class="s1"> &#39;</span>
-<a id="__codelineno-0-631" name="__codelineno-0-631"></a>                    <span class="sa">f</span><span class="s1">&#39;&lt;span class=&quot;cnt&quot;&gt;· </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">)</span><span class="si">}</span><span class="s1">&lt;/span&gt;&lt;/h2&gt;&#39;</span><span class="p">)</span>
-<a id="__codelineno-0-632" name="__codelineno-0-632"></a>        <span class="n">body</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_finding_card</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">rule</span><span class="p">)</span> <span class="k">for</span> <span class="n">result</span><span class="p">,</span> <span class="n">rule</span> <span class="ow">in</span> <span class="n">items</span><span class="p">)</span>
-<a id="__codelineno-0-633" name="__codelineno-0-633"></a>    <span class="n">body</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_rules_glossary</span><span class="p">(</span><span class="n">all_rules</span><span class="p">))</span>
-<a id="__codelineno-0-634" name="__codelineno-0-634"></a>
-<a id="__codelineno-0-635" name="__codelineno-0-635"></a>    <span class="n">title</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;LLMSecTest SARIF report, </span><span class="si">{</span><span class="n">source_name</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">source_name</span> <span class="k">else</span> <span class="s2">&quot;LLMSecTest SARIF report&quot;</span>
-<a id="__codelineno-0-636" name="__codelineno-0-636"></a>    <span class="k">return</span> <span class="p">(</span>
-<a id="__codelineno-0-637" name="__codelineno-0-637"></a>        <span class="s2">&quot;&lt;!DOCTYPE html&gt;</span><span class="se">\n</span><span class="s2">&quot;</span>
-<a id="__codelineno-0-638" name="__codelineno-0-638"></a>        <span class="sa">f</span><span class="s1">&#39;&lt;html lang=&quot;en&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&#39;</span>
-<a id="__codelineno-0-639" name="__codelineno-0-639"></a>        <span class="s1">&#39;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;&#39;</span>
-<a id="__codelineno-0-640" name="__codelineno-0-640"></a>        <span class="sa">f</span><span class="s2">&quot;&lt;title&gt;</span><span class="si">{</span><span class="n">_esc</span><span class="p">(</span><span class="n">title</span><span class="p">)</span><span class="si">}</span><span class="s2">&lt;/title&gt;&lt;style&gt;</span><span class="si">{</span><span class="n">_CSS</span><span class="si">}</span><span class="s2">&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&quot;</span>
-<a id="__codelineno-0-641" name="__codelineno-0-641"></a>        <span class="s1">&#39;&lt;header class=&quot;topbar&quot;&gt;&lt;div class=&quot;brand&quot;&gt;LLMSecTest &#39;</span>
-<a id="__codelineno-0-642" name="__codelineno-0-642"></a>        <span class="s2">&quot;&lt;span&gt;SARIF report&lt;/span&gt;&lt;/div&gt;&quot;</span>
-<a id="__codelineno-0-643" name="__codelineno-0-643"></a>        <span class="sa">f</span><span class="s1">&#39;&lt;div class=&quot;meta&quot;&gt;</span><span class="si">{</span><span class="n">_esc</span><span class="p">(</span><span class="s2">&quot; · &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">meta_bits</span><span class="p">))</span><span class="si">}</span><span class="s1">&lt;/div&gt;&lt;/header&gt;&#39;</span>
-<a id="__codelineno-0-644" name="__codelineno-0-644"></a>        <span class="sa">f</span><span class="s1">&#39;&lt;main&gt;</span><span class="si">{</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">body</span><span class="p">)</span><span class="si">}</span><span class="s1">&lt;/main&gt;&#39;</span>
-<a id="__codelineno-0-645" name="__codelineno-0-645"></a>        <span class="s1">&#39;&lt;footer&gt;Generated by LLMSecTest from a SARIF v2.1.0 report · &#39;</span>
-<a id="__codelineno-0-646" name="__codelineno-0-646"></a>        <span class="s2">&quot;findings map to the OWASP LLM Top 10 (2025).&lt;/footer&gt;&quot;</span>
-<a id="__codelineno-0-647" name="__codelineno-0-647"></a>        <span class="s2">&quot;&lt;/body&gt;&lt;/html&gt;&quot;</span>
-<a id="__codelineno-0-648" name="__codelineno-0-648"></a>    <span class="p">)</span>
+<a id="__codelineno-0-607" name="__codelineno-0-607"></a>    <span class="c1"># Slowest probe of the run. It sits next to the inconclusive count on purpose: those</span>
+<a id="__codelineno-0-608" name="__codelineno-0-608"></a>    <span class="c1"># two numbers are the same measurement either side of the budget, and reading the peak</span>
+<a id="__codelineno-0-609" name="__codelineno-0-609"></a>    <span class="c1"># is how you tell &quot;this target is comfortable&quot; from &quot;this target nearly timed out&quot;.</span>
+<a id="__codelineno-0-610" name="__codelineno-0-610"></a>    <span class="n">lat</span> <span class="o">=</span> <span class="n">_props</span><span class="p">(</span><span class="n">first_run</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;latency&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-611" name="__codelineno-0-611"></a>    <span class="n">slow_bit</span> <span class="o">=</span> <span class="p">(</span>
+<a id="__codelineno-0-612" name="__codelineno-0-612"></a>        <span class="sa">f</span><span class="s2">&quot;slowest probe </span><span class="si">{</span><span class="n">lat</span><span class="p">[</span><span class="s1">&#39;peak_seconds&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2">s&quot;</span>
+<a id="__codelineno-0-613" name="__codelineno-0-613"></a>        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">lat</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;peak_seconds&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-614" name="__codelineno-0-614"></a>        <span class="k">else</span> <span class="kc">None</span>
+<a id="__codelineno-0-615" name="__codelineno-0-615"></a>    <span class="p">)</span>
+<a id="__codelineno-0-616" name="__codelineno-0-616"></a>    <span class="n">meta_bits</span> <span class="o">=</span> <span class="p">[</span><span class="n">b</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="p">(</span><span class="n">tool_str</span><span class="p">,</span> <span class="n">source_name</span><span class="p">,</span> <span class="n">generated</span><span class="p">,</span> <span class="n">held_bit</span><span class="p">,</span> <span class="n">cost_bit</span><span class="p">,</span>
+<a id="__codelineno-0-617" name="__codelineno-0-617"></a>                             <span class="n">inc_bit</span><span class="p">,</span> <span class="n">slow_bit</span><span class="p">)</span> <span class="k">if</span> <span class="n">b</span><span class="p">]</span>
+<a id="__codelineno-0-618" name="__codelineno-0-618"></a>
+<a id="__codelineno-0-619" name="__codelineno-0-619"></a>    <span class="c1"># Group findings by OWASP category, ordered LLM01..LLM10 then Other; within a</span>
+<a id="__codelineno-0-620" name="__codelineno-0-620"></a>    <span class="c1"># group, most severe first.</span>
+<a id="__codelineno-0-621" name="__codelineno-0-621"></a>    <span class="n">groups</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{}</span>
+<a id="__codelineno-0-622" name="__codelineno-0-622"></a>    <span class="k">for</span> <span class="n">result</span><span class="p">,</span> <span class="n">rule</span> <span class="ow">in</span> <span class="n">findings</span><span class="p">:</span>
+<a id="__codelineno-0-623" name="__codelineno-0-623"></a>        <span class="n">groups</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">_owasp_of</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">rule</span><span class="p">),</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">result</span><span class="p">,</span> <span class="n">rule</span><span class="p">))</span>
+<a id="__codelineno-0-624" name="__codelineno-0-624"></a>
+<a id="__codelineno-0-625" name="__codelineno-0-625"></a>    <span class="n">body</span> <span class="o">=</span> <span class="p">[</span><span class="n">banner</span><span class="p">,</span> <span class="n">_summary</span><span class="p">(</span><span class="n">findings</span><span class="p">)]</span>
+<a id="__codelineno-0-626" name="__codelineno-0-626"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">findings</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">banner</span><span class="p">:</span>
+<a id="__codelineno-0-627" name="__codelineno-0-627"></a>        <span class="c1"># Suppressed under the banner: &quot;no findings&quot; plus &quot;we never reached the target&quot;</span>
+<a id="__codelineno-0-628" name="__codelineno-0-628"></a>        <span class="c1"># is the exact pair of statements that must not be read together as a pass.</span>
+<a id="__codelineno-0-629" name="__codelineno-0-629"></a>        <span class="n">body</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+<a id="__codelineno-0-630" name="__codelineno-0-630"></a>            <span class="s1">&#39;&lt;div class=&quot;empty&quot;&gt;✓ No findings in this report, &#39;</span>
+<a id="__codelineno-0-631" name="__codelineno-0-631"></a>            <span class="o">+</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;the target withstood </span><span class="si">{</span><span class="n">_esc</span><span class="p">(</span><span class="n">tally</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;withstood&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span><span class="si">}</span><span class="s2"> of &quot;</span>
+<a id="__codelineno-0-632" name="__codelineno-0-632"></a>               <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_esc</span><span class="p">(</span><span class="n">tally</span><span class="p">[</span><span class="s1">&#39;attempted&#39;</span><span class="p">])</span><span class="si">}</span><span class="s2"> delivered attacks.&quot;</span>
+<a id="__codelineno-0-633" name="__codelineno-0-633"></a>               <span class="k">if</span> <span class="n">held_bit</span> <span class="k">else</span> <span class="s2">&quot;the scan was clean.&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-634" name="__codelineno-0-634"></a>            <span class="o">+</span> <span class="s2">&quot;&lt;/div&gt;&quot;</span>
+<a id="__codelineno-0-635" name="__codelineno-0-635"></a>        <span class="p">)</span>
+<a id="__codelineno-0-636" name="__codelineno-0-636"></a>    <span class="n">body</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_withstood_section</span><span class="p">(</span><span class="n">tally</span><span class="p">))</span>
+<a id="__codelineno-0-637" name="__codelineno-0-637"></a>    <span class="k">for</span> <span class="p">(</span><span class="n">cat</span><span class="p">,</span> <span class="n">name</span><span class="p">),</span> <span class="n">items</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">groups</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">kv</span><span class="p">:</span> <span class="n">_OWASP_ORDER</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">kv</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="mi">99</span><span class="p">)):</span>
+<a id="__codelineno-0-638" name="__codelineno-0-638"></a>        <span class="n">items</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">rr</span><span class="p">:</span> <span class="n">_SEVERITY</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">_severity_of</span><span class="p">(</span><span class="o">*</span><span class="n">rr</span><span class="p">),</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">))[</span><span class="mi">1</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-0-639" name="__codelineno-0-639"></a>        <span class="n">label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">cat</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+<a id="__codelineno-0-640" name="__codelineno-0-640"></a>        <span class="n">body</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;&lt;h2 class=&quot;cat&quot;&gt;</span><span class="si">{</span><span class="n">_esc</span><span class="p">(</span><span class="n">label</span><span class="p">)</span><span class="si">}</span><span class="s1"> &#39;</span>
+<a id="__codelineno-0-641" name="__codelineno-0-641"></a>                    <span class="sa">f</span><span class="s1">&#39;&lt;span class=&quot;cnt&quot;&gt;· </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">)</span><span class="si">}</span><span class="s1">&lt;/span&gt;&lt;/h2&gt;&#39;</span><span class="p">)</span>
+<a id="__codelineno-0-642" name="__codelineno-0-642"></a>        <span class="n">body</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_finding_card</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">rule</span><span class="p">)</span> <span class="k">for</span> <span class="n">result</span><span class="p">,</span> <span class="n">rule</span> <span class="ow">in</span> <span class="n">items</span><span class="p">)</span>
+<a id="__codelineno-0-643" name="__codelineno-0-643"></a>    <span class="n">body</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_rules_glossary</span><span class="p">(</span><span class="n">all_rules</span><span class="p">))</span>
+<a id="__codelineno-0-644" name="__codelineno-0-644"></a>
+<a id="__codelineno-0-645" name="__codelineno-0-645"></a>    <span class="n">title</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;LLMSecTest SARIF report, </span><span class="si">{</span><span class="n">source_name</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">source_name</span> <span class="k">else</span> <span class="s2">&quot;LLMSecTest SARIF report&quot;</span>
+<a id="__codelineno-0-646" name="__codelineno-0-646"></a>    <span class="k">return</span> <span class="p">(</span>
+<a id="__codelineno-0-647" name="__codelineno-0-647"></a>        <span class="s2">&quot;&lt;!DOCTYPE html&gt;</span><span class="se">\n</span><span class="s2">&quot;</span>
+<a id="__codelineno-0-648" name="__codelineno-0-648"></a>        <span class="sa">f</span><span class="s1">&#39;&lt;html lang=&quot;en&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&#39;</span>
+<a id="__codelineno-0-649" name="__codelineno-0-649"></a>        <span class="s1">&#39;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;&#39;</span>
+<a id="__codelineno-0-650" name="__codelineno-0-650"></a>        <span class="sa">f</span><span class="s2">&quot;&lt;title&gt;</span><span class="si">{</span><span class="n">_esc</span><span class="p">(</span><span class="n">title</span><span class="p">)</span><span class="si">}</span><span class="s2">&lt;/title&gt;&lt;style&gt;</span><span class="si">{</span><span class="n">_CSS</span><span class="si">}</span><span class="s2">&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&quot;</span>
+<a id="__codelineno-0-651" name="__codelineno-0-651"></a>        <span class="s1">&#39;&lt;header class=&quot;topbar&quot;&gt;&lt;div class=&quot;brand&quot;&gt;LLMSecTest &#39;</span>
+<a id="__codelineno-0-652" name="__codelineno-0-652"></a>        <span class="s2">&quot;&lt;span&gt;SARIF report&lt;/span&gt;&lt;/div&gt;&quot;</span>
+<a id="__codelineno-0-653" name="__codelineno-0-653"></a>        <span class="sa">f</span><span class="s1">&#39;&lt;div class=&quot;meta&quot;&gt;</span><span class="si">{</span><span class="n">_esc</span><span class="p">(</span><span class="s2">&quot; · &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">meta_bits</span><span class="p">))</span><span class="si">}</span><span class="s1">&lt;/div&gt;&lt;/header&gt;&#39;</span>
+<a id="__codelineno-0-654" name="__codelineno-0-654"></a>        <span class="sa">f</span><span class="s1">&#39;&lt;main&gt;</span><span class="si">{</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">body</span><span class="p">)</span><span class="si">}</span><span class="s1">&lt;/main&gt;&#39;</span>
+<a id="__codelineno-0-655" name="__codelineno-0-655"></a>        <span class="s1">&#39;&lt;footer&gt;Generated by LLMSecTest from a SARIF v2.1.0 report · &#39;</span>
+<a id="__codelineno-0-656" name="__codelineno-0-656"></a>        <span class="s2">&quot;findings map to the OWASP LLM Top 10 (2025).&lt;/footer&gt;&quot;</span>
+<a id="__codelineno-0-657" name="__codelineno-0-657"></a>        <span class="s2">&quot;&lt;/body&gt;&lt;/html&gt;&quot;</span>
+<a id="__codelineno-0-658" name="__codelineno-0-658"></a>    <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
