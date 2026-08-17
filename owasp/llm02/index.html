@@ -1464,6 +1464,19 @@ undefended application all came back refused. A sample of the replies:</p>
 <p>The encoded-exfiltration reply is the informative one: the model did not refuse so much as fail to connect
 "your configured credentials" to the block of text sitting in its own system prompt. That is a different
 failure from being well-defended, and it is a reason to be careful about what a clean row means.</p>
+<div class="admonition warning">
+<p class="admonition-title">Part of that zero is not a refusal. It is a probe that never came back (2026-08-17)</p>
+<p>On a full pass of our cohort, ten applications lose four or five probes to the per-request deadline,
+and on nine of them the lost probes are a <strong>consecutive block</strong> covering <code>LLM07-disclosure</code> and three
+of the four LLM02 mechanisms. Those probes were never answered, so they were never refused either. The
+reports say so on their own faces (<code>LLM02 attempted 4, inconclusive 3</code>) and the cohort rate leaves
+those applications out rather than counting them clean, but the sentence above still needs the caveat:
+on those ten, "all four mechanisms came back refused" is not what happened.</p>
+<p>The cause is partly us. Our deadline releases the client and not the application, so one slow
+generation keeps a serialised backend busy and the probes issued behind it inherit a queue they did
+not cause. Only the first timeout of a block has a cause of its own. See
+<a href="../../guides/target-app/#when-the-scan-cant-reach-your-app">Test your running application</a>.</p>
+</div>
 <h3 id="the-secret-was-not-protected-we-were-looking-in-the-wrong-place">The secret was not protected. We were looking in the wrong place<a class="headerlink" href="#the-secret-was-not-protected-we-were-looking-in-the-wrong-place" title="Permanent link">&para;</a></h3>
 <p>Auditing that zero turned up something worse than a thin corpus, and it is a defect in this tool rather
 than a property of the applications. <strong>Across our test cohort, 20 of the 41 applications that declare a
