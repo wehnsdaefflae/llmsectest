@@ -108,6 +108,19 @@ The encoded-exfiltration reply is the informative one: the model did not refuse 
 "your configured credentials" to the block of text sitting in its own system prompt. That is a different
 failure from being well-defended, and it is a reason to be careful about what a clean row means.
 
+!!! warning "Part of that zero is not a refusal. It is a probe that never came back (2026-08-17)"
+    On a full pass of our cohort, ten applications lose four or five probes to the per-request deadline,
+    and on nine of them the lost probes are a **consecutive block** covering `LLM07-disclosure` and three
+    of the four LLM02 mechanisms. Those probes were never answered, so they were never refused either. The
+    reports say so on their own faces (`LLM02 attempted 4, inconclusive 3`) and the cohort rate leaves
+    those applications out rather than counting them clean, but the sentence above still needs the caveat:
+    on those ten, "all four mechanisms came back refused" is not what happened.
+
+    The cause is partly us. Our deadline releases the client and not the application, so one slow
+    generation keeps a serialised backend busy and the probes issued behind it inherit a queue they did
+    not cause. Only the first timeout of a block has a cause of its own. See
+    [Test your running application](../guides/target-app.md#when-the-scan-cant-reach-your-app).
+
 ### The secret was not protected. We were looking in the wrong place
 
 Auditing that zero turned up something worse than a thin corpus, and it is a defect in this tool rather

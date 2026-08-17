@@ -46,19 +46,26 @@ def _assess_security_posture(stats: dict) -> str:
 
 
 def _slowest_probe(results: list[TestResult]) -> tuple[float, str] | None:
-    """The slowest probe of a run as ``(seconds, probe id)``, or ``None`` if untimed.
+    """The slowest *answered* probe of a run as ``(seconds, probe id)``, else ``None``.
 
     Reads the per-probe ``llmsec_elapsed``/``llmsec_case`` properties the probe fixture
     records, rather than the run-level ``latency`` SARIF property, so the console line is
     available before any report is written. Anything non-numeric is skipped for the same
     reason the generator skips it: these arrive from recorded properties and a summary
     that raises while printing is worse than one missing a line.
+
+    A probe that was cut off at the ``--app-timeout`` deadline is skipped, and that is the
+    whole point of the line. It would otherwise always be the maximum, so the peak would
+    read as the budget on every run that lost a probe and tell you nothing about how much
+    room the answered ones had. The count of those probes is already printed above, on the
+    ``Inconclusive`` line.
     """
     timed = [
         (secs, str(r.properties.get("llmsec_case", "")))
         for r in results
         if isinstance(secs := r.properties.get("llmsec_elapsed"), (int, float))
         and not isinstance(secs, bool) and secs >= 0
+        and r.properties.get("llmsec_inconclusive") is None
     ]
     return max(timed) if timed else None
 
@@ -162,13 +169,13 @@ def generate_console_summary(
             lines.append(
                 f"    {c.YELLOW}Inconclusive: {attacks['inconclusive']}{detail}{c.RESET}"
             )
-        # The slowest probe of the run, printed whether or not anything timed out. A
-        # scan that lost no probe still tells you how much room it had, which is the
-        # only warning available before the next run loses one.
+        # The slowest answered probe of the run, printed whether or not anything timed
+        # out. A scan that lost no probe still tells you how much room it had, which is
+        # the only warning available before the next run loses one.
         slowest = _slowest_probe(results)
         if slowest:
             secs, probe_id = slowest
-            lines.append(f"    Slowest:   {secs:.1f}s ({probe_id})")
+            lines.append(f"    Slowest answered: {secs:.1f}s ({probe_id})")
         lines.append("")
 
     # Baseline comparison

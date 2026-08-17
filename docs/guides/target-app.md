@@ -99,16 +99,16 @@ not-exercised rather than passed. Always check `llmsectest --check`.
 
 If your endpoint is unreachable, returns something that isn't the JSON shape above, or dies partway
 through a scan, those probes are recorded **inconclusive**, never as findings. A target we could not
-talk to is not a vulnerable target, and the report says so in three places: a red banner at the top of
+talk to is not a vulnerable target, and the report says so in three places. A red banner at the top of
 the HTML page, an `undelivered` count in the SARIF run properties, and the console *Attacks Delivered*
 block.
 
-**The run also exits non-zero.** That is deliberate, and it is the half that makes the rest safe: a scan
-that reached nothing produces an empty findings list, which in CI would otherwise be indistinguishable
-from a clean bill of health. `0 findings, 25 never delivered` is not a pass.
+**The run also exits non-zero.** That's deliberate, and it's the half that makes the rest safe. A scan
+that reached nothing produces an empty findings list, and in CI that's indistinguishable from a clean
+bill of health. `0 findings, 25 never delivered` is not a pass.
 
-A slow app is a different case. One that exceeds `--app-timeout` was reached and ran out of budget: that
-is also inconclusive, but it does not fail the run, raise the budget instead. The console line
+A slow app is a different case. One that exceeds `--app-timeout` was reached and ran out of budget. That
+is also inconclusive, but it doesn't fail the run, raise the budget instead. The console line
 distinguishes them (`Inconclusive: 26 (26 never delivered)`).
 
 **Every inconclusive probe is named.** The reason recorded for each one starts with the probe's own id
@@ -122,16 +122,41 @@ after 90.0s: probe inconclusive, app endpoint http://127.0.0.1:8041/chat did not
 That matters because a category runs several mechanisms. `LLM02 attempted 4, inconclusive 3` is honest
 about the count, and it still leaves you guessing which three. Now you can read it off the report.
 
-**And every scan records its slowest probe**, whether or not anything timed out:
+**And every scan records its slowest answered probe**, whether or not anything timed out:
 
 ```
-Slowest:   11.4s (APP-shop-LLM07-disclosure)
+Slowest answered: 11.4s (APP-shop-LLM07-disclosure)
 ```
 
 Same figure in the SARIF as a run-level `latency` property, and in the header of the HTML page. A probe
 answered at 88 seconds under a 90 second budget looks the same in your report as one answered in 3, right
 up to the run where it stops answering. Now you can see it coming. It also tells a slow target apart from
-a busy machine, which is worth knowing before you go looking at your app.
+a busy machine, worth knowing before you go looking at your app.
+
+The word *answered* is doing work. A probe recorded inconclusive because it ran out of time measured the
+timeout, so it never enters the mean or the peak. It gets `probes_unfinished` and `unfinished_seconds`
+instead. Fold the two together and the mean stops describing your app and starts describing your budget.
+
+There is one exception and we would rather name it than let you find it. The two **bounded LLM10** probes
+score a timeout as a finding, because a request for explicitly finite output that eats the whole budget is
+the vulnerability. Those probes are not inconclusive, so they land in the answered population and can set
+`peak_seconds` to your budget. On our own cohort that is 13 targets of 51, every one of them an LLM10
+bounded probe and nothing else. The finding's own text carries the honest figure beside it (*"21 other
+probes completed inside the same budget, median 4.5s, slowest 9.2s"*), so read that when the peak reads
+like a round number.
+
+We did that to ourselves. Our own 50-application cohort split into ten slow targets at 18 to 23 seconds a
+probe and forty fast ones at 4 to 10. It looked like two kinds of application. It was arithmetic. Each of
+the ten had lost four or five probes pinned at 90 seconds. Count only the probes that answered and the ten
+run at 5 to 12 seconds against the forty's 4 to 10, and the gap is gone.
+
+One more thing fell out of that, and you want it before you read your own timeouts. On nine of the ten,
+the probes that timed out were **consecutive**. That's not four expensive probes. It's one window where
+the app answered nothing, and our own deadline is what opens it. Your app doesn't stop working when we
+stop waiting. If your handler is synchronous in front of a backend that serves one request at a time, our
+next probe queues behind the generation we walked away from, and it times out for a reason that has
+nothing to do with it. So read a run of consecutive timeouts as one event, and only the first one as
+having a cause.
 
 **A rate-limited target is a third case, and it says so.** A hosted target that answers `HTTP 429` has
 been reached, so the report does not tell you to check whether your endpoint is up. Those probes are

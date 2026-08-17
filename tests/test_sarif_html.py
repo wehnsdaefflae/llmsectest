@@ -126,7 +126,26 @@ def test_renders_the_slowest_probe_beside_the_inconclusive_count():
                     "peak_probe": "APP-x-LLM02-handover-summary", "mean_seconds": 6.6},
     }
     html = render_sarif_html(doc)
-    assert "slowest probe 88s" in html
+    assert "slowest answered probe 88s" in html
+
+
+def test_the_peak_is_labelled_as_answered_so_it_is_not_read_as_the_budget():
+    """The generator leaves timed-out probes out of the peak, and the page says which
+    population the number describes rather than leaving the reader to assume.
+
+    Without the word, a peak of 88s beside "1 probe(s) inconclusive" invites exactly the
+    reading that produced the 2026-08-14 write-up: that the peak measures the target when
+    on a run that lost a probe it used to measure the deadline."""
+    doc = _doc([_RESULT_LLM01], [_RULE_LLM01])
+    doc["runs"][0]["properties"] = {
+        "inconclusive": {"count": 4, "reasons": ["APP-x-LLM07-disclosure: timeout"]},
+        "latency": {"probes_measured": 28, "total_seconds": 296.8, "peak_seconds": 12.4,
+                    "peak_probe": "APP-x-LLM06-forged", "mean_seconds": 10.6,
+                    "probes_unfinished": 4, "unfinished_seconds": 360.4},
+    }
+    html = render_sarif_html(doc)
+    assert "slowest answered probe 12.4s" in html
+    assert "4 probe(s) inconclusive" in html
 
 
 def test_a_malformed_latency_property_does_not_break_the_render():
@@ -134,7 +153,7 @@ def test_a_malformed_latency_property_does_not_break_the_render():
     anything here, and losing the whole report over one meta field is the worse failure."""
     doc = _doc([_RESULT_LLM01], [_RULE_LLM01])
     doc["runs"][0]["properties"] = {"latency": "88s"}
-    assert "slowest probe" not in render_sarif_html(doc)
+    assert "slowest answered probe" not in render_sarif_html(doc)
 
 
 # --- robustness on malformed / foreign SARIF ----------------------------------

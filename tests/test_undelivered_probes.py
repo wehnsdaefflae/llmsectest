@@ -321,6 +321,27 @@ def test_console_summary_omits_the_line_when_nothing_was_timed():
     assert "Slowest" not in summary
 
 
+def test_console_slowest_line_ignores_a_probe_that_hit_the_deadline():
+    """The line exists to say how much room the answered probes had, so the probe that
+    ran out of room cannot be the one it names.
+
+    A timed-out probe is pinned at the budget and is therefore always the maximum, so
+    including it makes the peak print the deadline back at you on every run that lost a
+    probe: the 2026-08-14 cohort pass has ten members whose peak reads 90.1s under a 90s
+    budget, which says nothing at all. Its count is already on the Inconclusive line."""
+    fast = _result("t_fast", "passed", "owasp_llm02")
+    fast.properties.update({"llmsec_elapsed": 4.2, "llmsec_case": "APP-x-LLM02-direct"})
+    lost = _result("t_lost", "passed", "owasp_llm07",
+                   inconclusive="probe inconclusive — timeout")
+    lost.properties.update({"llmsec_elapsed": 90.1, "llmsec_case": "APP-x-LLM07-disclosure"})
+
+    summary = generate_console_summary([fast, lost])
+
+    assert "4.2s (APP-x-LLM02-direct)" in summary
+    assert "90.1" not in summary
+    assert "Inconclusive: 1" in summary
+
+
 # --- the same guarantee, stated as a property rather than a list -------------
 #
 # Audited 2026-08-13 by driving run_probe with every failure our own docs list as

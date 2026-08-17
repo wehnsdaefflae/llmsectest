@@ -251,8 +251,14 @@ could not be reached at all, the run also records how many, and how many of thos
 reached the target, so a clean-looking report never hides that some probes could not be
 concluded. Each one is **named** by probe id and technique, so you can read off which
 attacks went unanswered instead of only how many. Every run also records its **slowest
-probe**, so a target sitting just inside its budget is visible before the run where it
-stops answering. See [`examples/`](examples/) for one test module per OWASP category.
+answered probe**, so a target sitting just inside its budget is visible before the run where
+it stops answering. A probe recorded **inconclusive** because it ran out of time measured the
+deadline, so it is counted apart and never moves that figure. Fold the two together and you
+learn how big your budget is, which we found out by doing it: our own cohort read as ten slow
+targets and forty fast ones until we took the timed-out probes back out, and then it read as
+one population. One exception, and it is ours to finish: the two **bounded LLM10** probes score
+a timeout as a *finding* rather than as inconclusive, so on a target that fails them the peak
+still reports the budget. See [`examples/`](examples/) for one test module per OWASP category.
 
 ## Install
 

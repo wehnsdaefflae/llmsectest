@@ -180,21 +180,43 @@ class SARIFGenerator:
         # nothing in any report could have told the two apart. `peak_probe` names the
         # slowest probe rather than only its time, because "which request costs the most"
         # is the actionable half.
-        timings = [
-            (secs, str(r.properties.get("llmsec_case", "")))
-            for r in results
-            if (secs := _as_float(r.properties.get("llmsec_elapsed"))) is not None
-        ]
-        if timings:
-            peak_seconds, peak_probe = max(timings)
-            total = sum(secs for secs, _ in timings)
-            properties["latency"] = {
-                "probes_measured": len(timings),
-                "total_seconds": round(total, 1),
-                "peak_seconds": round(peak_seconds, 1),
-                "peak_probe": peak_probe,
-                "mean_seconds": round(total / len(timings), 1),
-            }
+        #
+        # A probe cut off at the deadline measured the deadline and not the target, so it
+        # is counted apart from the rest (2026-08-17). The first version of this property
+        # averaged the two populations together, which quietly turned `mean_seconds` into
+        # a rescaled timeout count: on the 2026-08-14 cohort pass ten members read 18.4 to
+        # 23.3 s against the other forty's 3.5 to 10.1, were written up as two disjoint
+        # clusters of fast and slow targets, and taking the timed-out probes back out
+        # collapses the gap to 5.1-12.2 against 3.6-10.1, which overlap. One population,
+        # not two. Every key below therefore describes the probes that *finished*, and the
+        # ones that did not get two keys of their own rather than being folded in.
+        finished: list[tuple[float, str]] = []
+        unfinished: list[float] = []
+        for r in results:
+            secs = _as_float(r.properties.get("llmsec_elapsed"))
+            if secs is None:
+                continue
+            if r.properties.get("llmsec_inconclusive") is not None:
+                unfinished.append(secs)
+            else:
+                finished.append((secs, str(r.properties.get("llmsec_case", ""))))
+        if finished or unfinished:
+            latency: dict[str, Any] = {"probes_measured": len(finished)}
+            if finished:
+                peak_seconds, peak_probe = max(finished)
+                total = sum(secs for secs, _ in finished)
+                latency["total_seconds"] = round(total, 1)
+                latency["peak_seconds"] = round(peak_seconds, 1)
+                latency["peak_probe"] = peak_probe
+                latency["mean_seconds"] = round(total / len(finished), 1)
+            if unfinished:
+                # `unfinished` rather than `inconclusive` because this is the timing half
+                # of that count: the same probes, and the seconds they burned before the
+                # budget cut them off are real machine time even though they measure
+                # nothing about the target.
+                latency["probes_unfinished"] = len(unfinished)
+                latency["unfinished_seconds"] = round(sum(unfinished), 1)
+            properties["latency"] = latency
 
         # Run-level inconclusive-probe tally: a probe whose target exceeded the per-request
         # --app-timeout is recorded errored (llmsec_inconclusive) — neither a finding nor a

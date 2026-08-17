@@ -633,6 +633,61 @@ class TestSARIFGeneration:
         untimed = json.loads(generator.generate(results[2:]))["runs"][0]
         assert "latency" not in untimed.get("properties", {})
 
+    def _timed_probe(self, case, elapsed, inconclusive=None):
+        return TestResult(
+            nodeid=f"…::probe[{case}]",
+            location=("src/llmsectest/suite/test_llm02.py", 20, "t"),
+            outcome="passed",
+            markers=["security", "owasp_llm02"],
+            properties=(
+                {"llmsec_elapsed": elapsed, "llmsec_case": case}
+                | ({"llmsec_inconclusive": inconclusive} if inconclusive else {})
+            ),
+        )
+
+    def test_probe_latency_counts_a_timed_out_probe_apart_from_the_answered_ones(self):
+        """A probe cut off at the deadline measured the deadline, so it never moves the
+        mean or the peak.
+
+        Averaging the two populations together made ``mean_seconds`` a rescaled timeout
+        count. On the 2026-08-14 cohort pass ten members read 18.4 to 23.3 s against the
+        other forty's 3.5 to 10.1 and were written up as two disjoint clusters of fast and
+        slow targets; taking the timed-out probes out collapses them to 5.1 to 12.2 against
+        3.6 to 10.1, which overlap. Same reason the peak is answered-only: pinned at the
+        budget it reports the budget on every run that lost a probe."""
+        results = [
+            self._timed_probe("APP-x-LLM01-direct", 3.0),
+            self._timed_probe("APP-x-LLM02-direct", 5.0),
+            self._timed_probe("APP-x-LLM07-disclosure", 90.1, "after 90.1s: no reply"),
+            self._timed_probe("APP-x-LLM02-handover", 90.2, "after 90.2s: no reply"),
+        ]
+        generator = SARIFGenerator("llmsectest", "0.1.0", source_root=".")
+        lat = json.loads(generator.generate(results))["runs"][0]["properties"]["latency"]
+        assert lat["probes_measured"] == 2
+        assert lat["mean_seconds"] == 4.0
+        assert lat["peak_seconds"] == 5.0
+        assert lat["peak_probe"] == "APP-x-LLM02-direct"
+        assert lat["total_seconds"] == 8.0
+        # The seconds the cut-off probes burned are real machine time and are reported,
+        # just never as a fact about how fast the target answers.
+        assert lat["probes_unfinished"] == 2
+        assert lat["unfinished_seconds"] == 180.3
+
+    def test_probe_latency_makes_no_speed_claim_when_every_probe_timed_out(self):
+        """Nothing answered, so there is no mean to report and the block says so rather
+        than inventing one. Same rule as ``attacks_withstood`` omitting itself on a run
+        that delivered no probe: zero of zero is not a measurement."""
+        results = [
+            self._timed_probe("APP-x-LLM01-direct", 90.0, "after 90.0s: no reply"),
+            self._timed_probe("APP-x-LLM02-direct", 90.0, "after 90.0s: no reply"),
+        ]
+        generator = SARIFGenerator("llmsectest", "0.1.0", source_root=".")
+        lat = json.loads(generator.generate(results))["runs"][0]["properties"]["latency"]
+        assert lat["probes_measured"] == 0
+        assert lat["probes_unfinished"] == 2
+        assert "mean_seconds" not in lat
+        assert "peak_seconds" not in lat
+
     def test_probe_latency_ignores_malformed_timings(self):
         """A non-numeric, boolean or negative elapsed value is dropped, not reported.
 

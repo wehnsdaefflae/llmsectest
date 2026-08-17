@@ -607,9 +607,13 @@ def render_sarif_html(doc: dict, *, source_name: str | None = None,
     # Slowest probe of the run. It sits next to the inconclusive count on purpose: those
     # two numbers are the same measurement either side of the budget, and reading the peak
     # is how you tell "this target is comfortable" from "this target nearly timed out".
+    # It says *answered* because the generator now leaves the timed-out probes out of the
+    # peak: a probe pinned at the budget reports the budget, so a peak of 90.1s under a 90s
+    # deadline is not a fact about the target and reading it as one is what produced the
+    # 2026-08-14 "two clusters" write-up.
     lat = _props(first_run).get("latency")
     slow_bit = (
-        f"slowest probe {lat['peak_seconds']:g}s"
+        f"slowest answered probe {lat['peak_seconds']:g}s"
         if isinstance(lat, dict) and lat.get("peak_seconds")
         else None
     )

@@ -9,6 +9,34 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
 
 ## [Unreleased]
 
+### Fixed
+- **A probe cut off at the deadline no longer counts toward how fast the target answers.** The run-level
+  `latency` property averaged every timing together, including the probes pinned at `--app-timeout`, which
+  quietly made `mean_seconds` a rescaled count of how many probes were lost and made `peak_seconds` print
+  the budget back at you on any run that lost one. We drew the obvious wrong conclusion from our own
+  numbers: the 50-application regression cohort looked like two disjoint populations, ten "slow" targets at
+  18.4 to 23.3 seconds a probe against forty "fast" ones at 3.5 to 10.1, with nothing in between. It was
+  one population and some arithmetic. Each of the ten had lost four or five probes at 90 seconds; counting
+  only the probes that answered, the ten run at 5.1 to 12.2 seconds and the forty at 3.6 to 10.1, ranges
+  that overlap. Every key in `latency` now describes answered probes, the cut-off ones get
+  `probes_unfinished` and `unfinished_seconds` of their own, and a run where nothing answered reports no
+  mean at all rather than inventing one. The console line and the report header say **slowest answered
+  probe**. **Not finished, and the residue is documented rather than left to be discovered:** the two
+  bounded LLM10 probes score a timeout as a *finding* instead of as inconclusive, by design, so they stay
+  in the answered population and can still pin `peak_seconds` to the budget. Measured on the pass that
+  validated this change: 13 of 51 targets, every one of them an LLM10 bounded probe and no other category.
+  (2026-08-17)
+- **Documented, with a test that reproduces it: one timed-out probe can make the next probe time out too.**
+  Cutting the request loose at the deadline releases our client, never your application. If your handler is
+  synchronous in front of a backend that serves one request at a time, the generation we walked away from
+  keeps that backend busy and the next probe queues behind it, so it dies at the same wall for a reason
+  that has nothing to do with it. This is why timed-out probes in our own cohort arrive in a block that is
+  **consecutive in probe order** rather than scattered across a scan. All ten of the members above lost
+  such a block, nine of them the same four (`LLM07-disclosure`, then three `LLM02` mechanisms), and in
+  every case the probe that opens the block is one asking for a long verbatim reproduction.
+  Read a block of consecutive timeouts as one event and only the first as having a cause. The guide says so
+  and `tests/test_application_targets.py` drives a real serialising endpoint to show it. (2026-08-17)
+
 ### Added
 - **An inconclusive probe now says which probe it was, and every run records its slowest one.** A probe
   that could not be scored was reported by its failure alone, and the failure describes the endpoint, not

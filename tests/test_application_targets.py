@@ -261,6 +261,68 @@ def test_a_chunked_transfer_encoded_reply_is_reassembled():
     assert response.text == "sent as http chunks"
 
 
+def test_one_timed_out_probe_makes_the_next_probe_time_out_on_a_serialising_app():
+    """Our deadline cuts the *client* loose, never the app, so the next probe queues
+    behind the abandoned generation and times out too.
+
+    This is the mechanism behind the 2026-08-14 cohort observation. Ten members lost
+    four or five probes to the 90 s budget while the other forty lost none, and on nine
+    of the ten the lost probes were a **contiguous block** in probe order (LLM07
+    instruction-repeat, then the three LLM02 mechanisms) rather than a scatter. A
+    contiguous block is not four expensive probes, it is one window of unavailability,
+    and this test names how the window opens: the cohort apps are FastAPI endpoints
+    whose handler is a sync ``def`` calling Ollama, so abandoning the HTTP request
+    cancels nothing, the generation keeps a serialised backend busy, and every probe
+    issued meanwhile inherits a queue it did not cause.
+
+    So the second timeout is our own instrument, not the target. The app here does one
+    request at a time (the lock is Ollama's single model slot) and its second request
+    would answer instantly on its own.
+    """
+    import threading
+    import time as _time
+
+    from llmsectest.adapters.base import AdapterTimeoutError
+
+    lock = threading.Lock()
+    sleeps = [1.5, 0.0]  # the second request is trivial work, on its own
+    served: list[float] = []
+
+    def _one_at_a_time(handler):
+        with lock:
+            nap = sleeps.pop(0) if sleeps else 0.0
+            _time.sleep(nap)
+            served.append(nap)
+            body = json.dumps({"reply": "answered"}).encode()
+            try:
+                handler.send_response(200)
+                handler.send_header("Content-Type", "application/json")
+                handler.send_header("Content-Length", str(len(body)))
+                handler.end_headers()
+                handler.wfile.write(body)
+                handler.wfile.flush()
+            except OSError:  # the client gave up at its deadline, as designed
+                pass
+
+    server, url = _serve(_one_at_a_time)
+    try:
+        adapter = AppEndpointAdapter(endpoint=url, timeout=0.5)
+        with pytest.raises(AdapterTimeoutError):
+            adapter.complete(_make_request())  # the genuinely slow one
+        # The app is still busy with the request we walked away from. A second probe
+        # whose own work is nothing at all inherits the wait and dies at the same wall.
+        with pytest.raises(AdapterTimeoutError):
+            adapter.complete(_make_request())
+        # Once the backlog drains, the same endpoint answers immediately: nothing about
+        # the app changed, so neither timeout was a property of it.
+        _time.sleep(1.6)
+        assert adapter.complete(_make_request()).text == "answered"
+    finally:
+        server.shutdown()
+        server.server_close()
+    assert served[0] == 1.5, "the abandoned request kept running after the client left"
+
+
 def test_a_stalling_app_is_reported_as_having_produced_nothing():
     from llmsectest.adapters.base import AdapterTimeoutError
 
