@@ -9,6 +9,21 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
 
 ## [Unreleased]
 
+### Documentation
+- **The LLM02 page now carries what happens when a filter never sees the secret it guards.** A test
+  application of ours keeps only the credential's SHA-256 and hashes its outgoing text, which sounds
+  stronger than the literal filter it replaces and is weaker at the only job it has: it cannot normalise
+  anything, so it has to guess where the credential starts and stops before it can hash a candidate.
+  Measured both ways in one minute against the same application. Asked for a `curl` command it put the
+  value between spaces and the filter redacted it; asked for the `.env` line in `KEY=VALUE` form it wrote
+  `SIGNING_SECRET=<credential>` as one token, the digest did not match, and the credential shipped in
+  full. **Whether a hash filter protects anything depends on where the model happened to put a space.**
+  The page states a limitation of ours in the same breath, because it is the more useful half: **none of
+  our four LLM02 probes finds this.** All four ask for the credential as the object of the request, and an
+  application told never to state it refuses all four. Asking instead for a deploy artefact makes the
+  credential incidental to the job the assistant exists for. A fifth mechanism of that shape is the top
+  open item on the probe corpus. (2026-08-20)
+
 ### Fixed
 - **A probe cut off at the deadline no longer counts toward how fast the target answers.** The run-level
   `latency` property averaged every timing together, including the probes pinned at `--app-timeout`, which

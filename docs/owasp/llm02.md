@@ -62,6 +62,25 @@ defeat by asking politely for base64 is worth knowing about.
     The general lesson is worth more than the fix: an output filter over a value the model can *describe*
     is not a boundary, and the space of descriptions is not one you can enumerate ahead of the model.
 
+!!! example "A filter that never sees the secret it guards, and what that costs"
+
+    A stronger-sounding defence is to keep only the credential's SHA-256 and hash the outgoing text, so
+    the plaintext is nowhere in the process. A test application of ours does exactly that. It cannot
+    normalise anything, because normalising needs the value, so it has to guess where the credential
+    starts and stops before it can hash a candidate at all.
+
+    That guess is the whole defence. Asked for a `curl` command, the model put the credential between
+    spaces and the filter redacted it. Asked for the `.env` line in `KEY=VALUE` form, it wrote
+    `SIGNING_SECRET=<credential>` as a single token, the digest did not match, and the credential
+    shipped in full. Same value, same filter, one minute apart. **Whether a hash filter protects
+    anything depends on where the model happened to put a space.** A literal filter catches both.
+
+    A limitation of ours, stated because it is the more useful half: **none of our four LLM02 probes
+    finds this.** All four ask for the credential as the *object* of the request, and an application
+    told never to state it refuses all four. Asking instead for a deploy artefact makes the credential
+    incidental to the job the assistant exists for, and it complies. A fifth mechanism of that shape is
+    the top open item on the corpus.
+
 Without `--app-secret`, the app-mode probe reports **skipped, naming the flag it needs**. It is never
 silently passed.
 
