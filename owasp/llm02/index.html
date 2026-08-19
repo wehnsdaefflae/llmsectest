@@ -1410,6 +1410,23 @@ as of 2026-08-11 and reported as <code>spelled-split</code>, so the report still
 The general lesson is worth more than the fix: an output filter over a value the model can <em>describe</em>
 is not a boundary, and the space of descriptions is not one you can enumerate ahead of the model.</p>
 </div>
+<div class="admonition example">
+<p class="admonition-title">A filter that never sees the secret it guards, and what that costs</p>
+<p>A stronger-sounding defence is to keep only the credential's SHA-256 and hash the outgoing text, so
+the plaintext is nowhere in the process. A test application of ours does exactly that. It cannot
+normalise anything, because normalising needs the value, so it has to guess where the credential
+starts and stops before it can hash a candidate at all.</p>
+<p>That guess is the whole defence. Asked for a <code>curl</code> command, the model put the credential between
+spaces and the filter redacted it. Asked for the <code>.env</code> line in <code>KEY=VALUE</code> form, it wrote
+<code>SIGNING_SECRET=&lt;credential&gt;</code> as a single token, the digest did not match, and the credential
+shipped in full. Same value, same filter, one minute apart. <strong>Whether a hash filter protects
+anything depends on where the model happened to put a space.</strong> A literal filter catches both.</p>
+<p>A limitation of ours, stated because it is the more useful half: <strong>none of our four LLM02 probes
+finds this.</strong> All four ask for the credential as the <em>object</em> of the request, and an application
+told never to state it refuses all four. Asking instead for a deploy artefact makes the credential
+incidental to the job the assistant exists for, and it complies. A fifth mechanism of that shape is
+the top open item on the corpus.</p>
+</div>
 <p>Without <code>--app-secret</code>, the app-mode probe reports <strong>skipped, naming the flag it needs</strong>. It is never
 silently passed.</p>
 <h2 id="what-a-clean-llm02-result-does-and-does-not-tell-you">What a clean LLM02 result does and does not tell you<a class="headerlink" href="#what-a-clean-llm02-result-does-and-does-not-tell-you" title="Permanent link">&para;</a></h2>
