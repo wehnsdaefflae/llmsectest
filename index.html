@@ -1352,6 +1352,16 @@ black-box probes for <strong>LLM01/02/05/06/07/09/10</strong>, white-box scanner
 embedding weaknesses)</strong> RAG probes. What remains is depth, not breadth. Coverage claims here always
 match what the tool does, see <code>llmsectest --check</code>.</p>
 </div>
+<div class="admonition warning">
+<p class="admonition-title">Which edition, and why not the newer one</p>
+<p>A <strong>2026</strong> edition of the list came out on 3 August 2026. This tool implements <strong>2025</strong> and says so
+on every surface. Read side by side, the two lists hold the same ten risks: nothing was added,
+dropped, merged or split. Eight categories change number, and LLM07 System Prompt Leakage becomes
+LLM08 Hidden Context Exposure with a wider remit that now covers retrieved policy text and tool
+schemas. Every report and baseline published here carries 2025 numbers, so a silent renumber would
+change what already-published records mean, and OWASP's own per-category pages still carry 2025.
+Both change before this does.</p>
+</div>
 <h2 id="funding">Funding<a class="headerlink" href="#funding" title="Permanent link">&para;</a></h2>
 <p>LLMSecTest is funded by the <strong>German Federal Ministry of Research, Technology and Space (BMFTR)</strong>
 through the <strong><a href="https://prototypefund.de">Prototype Fund</a></strong>, funding code (Förderkennzeichen)

@@ -1154,6 +1154,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#fixed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#documentation" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1165,7 +1176,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fixed" class="md-nav__link">
+  <a href="#fixed_1" class="md-nav__link">
     <span class="md-ellipsis">
       
         Fixed
@@ -1187,7 +1198,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fixed_1" class="md-nav__link">
+  <a href="#fixed_2" class="md-nav__link">
     <span class="md-ellipsis">
       
         Fixed
@@ -1242,7 +1253,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fixed_2" class="md-nav__link">
+  <a href="#fixed_3" class="md-nav__link">
     <span class="md-ellipsis">
       
         Fixed
@@ -1286,7 +1297,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fixed_3" class="md-nav__link">
+  <a href="#fixed_4" class="md-nav__link">
     <span class="md-ellipsis">
       
         Fixed
@@ -1347,7 +1358,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fixed_4" class="md-nav__link">
+  <a href="#fixed_5" class="md-nav__link">
     <span class="md-ellipsis">
       
         Fixed
@@ -1409,6 +1420,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#fixed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#documentation" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1420,7 +1442,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fixed" class="md-nav__link">
+  <a href="#fixed_1" class="md-nav__link">
     <span class="md-ellipsis">
       
         Fixed
@@ -1442,7 +1464,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fixed_1" class="md-nav__link">
+  <a href="#fixed_2" class="md-nav__link">
     <span class="md-ellipsis">
       
         Fixed
@@ -1497,7 +1519,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fixed_2" class="md-nav__link">
+  <a href="#fixed_3" class="md-nav__link">
     <span class="md-ellipsis">
       
         Fixed
@@ -1541,7 +1563,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fixed_3" class="md-nav__link">
+  <a href="#fixed_4" class="md-nav__link">
     <span class="md-ellipsis">
       
         Fixed
@@ -1602,7 +1624,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fixed_4" class="md-nav__link">
+  <a href="#fixed_5" class="md-nav__link">
     <span class="md-ellipsis">
       
         Fixed
@@ -1644,6 +1666,26 @@
 <p>LLMSecTest is pre-1.0 and built in the open. <code>0.1.0</code> is the first tagged GitHub release; it is <strong>not
 yet published to PyPI</strong>. The forward-looking plan is the <a href="https://llmsec.dev/#roadmap">roadmap</a>.</p>
 <h2 id="unreleased"><a href="https://github.com/wehnsdaefflae/llmsectest/compare/v0.1.0...HEAD">Unreleased</a><a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
+<h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>CI ran 23 fewer tests than it reported on, and had done since the openai adapter was written.</strong>
+  <code>pip install -e ".[dev,cvss]"</code> did not install <code>openai</code>, so every test guarded by
+  <code>pytest.importorskip("openai")</code> skipped in every CI job on every Python in the matrix. A skip is green,
+  so nothing was red. What went untested there: the OpenAI adapter, and with it <code>ollama</code> and <code>lmstudio</code>,
+  which subclass it and are what this project's own daily cohort runs against. Also the one test written
+  to prove our rate-limit matcher is aimed at <code>openai.RateLimitError</code> as the vendor actually raises it,
+  i.e. the check for the 2026-08-13 defect, which had never executed outside a developer's machine.
+  <code>openai</code> and <code>httpx</code> are test dependencies of the <code>dev</code> extra now. They add nothing to what the shipped
+  package requires, which is still nothing.</li>
+<li><strong>The coverage floor was six points behind the tree, and the reason recorded beside it was wrong.</strong>
+  <code>fail_under</code> sat at 78 while CI measured 84, so a real regression had six points of room to hide. The
+  note in <code>pyproject.toml</code> attributed the CI-versus-local gap to the oldest Python in the matrix. It was
+  not the interpreter: measured on one tree, 3.11 with CI's install reports 84% (563 passed, 23 skipped),
+  and the same 3.11 with the two test dependencies added reports 85% with 586 passed and nothing skipped,
+  at exactly the 3926/502/1294/148 that local 3.12 produces. The gap was the skipped tests. Floor is 84,
+  the note says what was actually measured, and the rule that found this stands unchanged: measure with
+  CI's install command, not with your own environment. (2026-08-21)</li>
+</ul>
 <h3 id="documentation">Documentation<a class="headerlink" href="#documentation" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>The LLM02 page now carries what happens when a filter never sees the secret it guards.</strong> A test
@@ -1660,7 +1702,7 @@ yet published to PyPI</strong>. The forward-looking plan is the <a href="https:/
   credential incidental to the job the assistant exists for. A fifth mechanism of that shape is the top
   open item on the probe corpus. (2026-08-20)</li>
 </ul>
-<h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_1">Fixed<a class="headerlink" href="#fixed_1" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>A probe cut off at the deadline no longer counts toward how fast the target answers.</strong> The run-level
   <code>latency</code> property averaged every timing together, including the probes pinned at <code>--app-timeout</code>, which
@@ -1722,7 +1764,7 @@ yet published to PyPI</strong>. The forward-looking plan is the <a href="https:/
   as having appeared, because most applications hand their system prompt over on request and their prompt
   is where the grammar is written down. (2026-08-10)</li>
 </ul>
-<h3 id="fixed_1">Fixed<a class="headerlink" href="#fixed_1" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_2">Fixed<a class="headerlink" href="#fixed_2" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>A target that only rate-limited you is no longer published as a vulnerable one.</strong> A hosted provider
   answering <code>HTTP 429</code> raises a rate-limit exception, and that exception matched nothing in the
@@ -1948,7 +1990,7 @@ yet published to PyPI</strong>. The forward-looking plan is the <a href="https:/
   <a href="https://wehnsdaefflae.github.io/llmsectest/guides/red-team-your-defense/">Red-team your defense</a>.
   (2026-07-31)</li>
 </ul>
-<h3 id="fixed_2">Fixed<a class="headerlink" href="#fixed_2" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_3">Fixed<a class="headerlink" href="#fixed_3" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong><code>--app-timeout</code> now bounds the whole request, so a <em>streaming</em> app can no longer run past it.</strong> The
   budget was handed to <code>urllib</code>, whose <code>timeout</code> bounds a single socket <strong>operation</strong>, not the request. An
@@ -2212,7 +2254,7 @@ yet published to PyPI</strong>. The forward-looking plan is the <a href="https:/
   <strong>6/10</strong> OWASP categories. Without <code>--repo</code>, LLM03 reports itself skipped (needs a repo), never a
   silent pass. (2026-06-10)</li>
 </ul>
-<h3 id="fixed_3">Fixed<a class="headerlink" href="#fixed_3" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_4">Fixed<a class="headerlink" href="#fixed_4" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>An incomplete OSV.dev batch response is now reported instead of quietly shrinking the scan
   (<code>--osv</code>, OWASP LLM03).</strong> OSV answers one result per query, in order, and the scan paired the two by
@@ -2366,7 +2408,7 @@ yet published to PyPI</strong>. The forward-looking plan is the <a href="https:/
 <li>SARIF <code>security-severity</code> now carries the real CVSS v4.0 base score instead of a flat severity
   placeholder. (2026-06-09)</li>
 </ul>
-<h3 id="fixed_4">Fixed<a class="headerlink" href="#fixed_4" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_5">Fixed<a class="headerlink" href="#fixed_5" title="Permanent link">&para;</a></h3>
 <ul>
 <li>CLI: a space-separated option value (e.g. <code>--report-dir tmp</code>) was mistaken for a positional test path
   and silently skipped the packaged suite. (2026-06-09)</li>
