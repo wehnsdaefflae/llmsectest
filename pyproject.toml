@@ -41,12 +41,23 @@ all = ["openai>=1.0", "anthropic>=0.39", "huggingface_hub>=0.25", "cvss>=3.0"]
 # pytest11 plugin before pytest-cov starts, so the number lands ~24 points low. Shipping
 # the plugin would only invite that wrong measurement; `coverage run -m pytest` is both
 # correct and one dependency lighter.
+# `openai` and `httpx` are here as TEST dependencies, not as anything the shipped
+# package needs — its runtime `dependencies` list stays empty. Until 2026-08-21 they
+# were absent, and 23 tests carrying `pytest.importorskip("openai")` therefore skipped
+# in every CI run on every Python: the openai adapter, and with it `ollama` and
+# `lmstudio`, which subclass it and are what the daily cohort actually runs on. The
+# test written to prove our 429 matcher is aimed at the class the vendor really raises
+# had never executed in CI either. `check_no_test_skipped_for_missing_dep` in
+# bin/closeout.py now fails when a test importorskips something this list does not
+# provide, so a silently-skipped suite cannot come back.
 dev = [
     "pytest>=7.4.0",
     "coverage>=7.6,<8",
     "ruff>=0.16,<0.17",
     "mypy>=1.11,<2",
     "cvss>=3.0",
+    "openai>=1.0",
+    "httpx>=0.27",
 ]
 # mkdocs is pinned <2: the upstream "MkDocs 2.0" is a backward-incompatible, currently
 # unlicensed rewrite (TOML config, plugin/theme system removed, no migration path); the
@@ -100,10 +111,25 @@ branch = true
 #
 # 2026-08-05: 76 -> 78, and this time measured the documented way rather than locally.
 # A throwaway 3.11 venv built with CI's own command (`pip install -e ".[dev,cvss]"`)
-# reports 79% on this tree, against 80% on local 3.12 — so the gap the 08-04 break was
-# made of is real and still about one point. 78 keeps the point of margin the note above
-# asks for. The undelivered-probe tests are what lifted it.
-fail_under = 78
+# reports 79% on this tree, against 80% on local 3.12.
+#
+# 2026-08-21: 78 -> 84, and the *reason* recorded above turns out to be wrong, which is
+# worth more than the new number. The interpreter contributes nothing. Measured three
+# ways on one tree: 3.11 with CI's install reports 84% (563 passed, 23 skipped); add
+# `openai` and `httpx` and the same 3.11 reports 85% with 586 passed and nothing skipped,
+# at 3926/502/1294/148 — the identical figures local 3.12 produces. So the CI/local gap
+# was never a version difference. It was 23 tests skipping on a missing test dependency,
+# every one of them on the openai/ollama/lmstudio adapter path. Both deps are in the dev
+# extra now, so CI measures 85 and this floor keeps the one point of margin.
+#
+# The whole matrix was measured before moving the floor, not just its oldest member,
+# because that is the mistake this note is about: throwaway venvs on 3.11, 3.12 and 3.13
+# all report 586 passed and 3926/502/1294/148, byte for byte. The interpreter spread on
+# this tree is zero.
+#
+# The rule the note above states still stands, and it is the one that found this:
+# measure with CI's install command, not with your own environment.
+fail_under = 84
 show_missing = true
 exclude_also = [
     "if TYPE_CHECKING:",

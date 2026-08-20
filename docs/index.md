@@ -51,6 +51,15 @@ target, run `llmsectest --check` to see the live map.
     embedding weaknesses)** RAG probes. What remains is depth, not breadth. Coverage claims here always
     match what the tool does, see `llmsectest --check`.
 
+!!! warning "Which edition, and why not the newer one"
+    A **2026** edition of the list came out on 3 August 2026. This tool implements **2025** and says so
+    on every surface. Read side by side, the two lists hold the same ten risks: nothing was added,
+    dropped, merged or split. Eight categories change number, and LLM07 System Prompt Leakage becomes
+    LLM08 Hidden Context Exposure with a wider remit that now covers retrieved policy text and tool
+    schemas. Every report and baseline published here carries 2025 numbers, so a silent renumber would
+    change what already-published records mean, and OWASP's own per-category pages still carry 2025.
+    Both change before this does.
+
 ## Funding
 
 LLMSecTest is funded by the **German Federal Ministry of Research, Technology and Space (BMFTR)**

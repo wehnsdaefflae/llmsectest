@@ -9,6 +9,25 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
 
 ## [Unreleased]
 
+### Fixed
+- **CI ran 23 fewer tests than it reported on, and had done since the openai adapter was written.**
+  `pip install -e ".[dev,cvss]"` did not install `openai`, so every test guarded by
+  `pytest.importorskip("openai")` skipped in every CI job on every Python in the matrix. A skip is green,
+  so nothing was red. What went untested there: the OpenAI adapter, and with it `ollama` and `lmstudio`,
+  which subclass it and are what this project's own daily cohort runs against. Also the one test written
+  to prove our rate-limit matcher is aimed at `openai.RateLimitError` as the vendor actually raises it,
+  i.e. the check for the 2026-08-13 defect, which had never executed outside a developer's machine.
+  `openai` and `httpx` are test dependencies of the `dev` extra now. They add nothing to what the shipped
+  package requires, which is still nothing.
+- **The coverage floor was six points behind the tree, and the reason recorded beside it was wrong.**
+  `fail_under` sat at 78 while CI measured 84, so a real regression had six points of room to hide. The
+  note in `pyproject.toml` attributed the CI-versus-local gap to the oldest Python in the matrix. It was
+  not the interpreter: measured on one tree, 3.11 with CI's install reports 84% (563 passed, 23 skipped),
+  and the same 3.11 with the two test dependencies added reports 85% with 586 passed and nothing skipped,
+  at exactly the 3926/502/1294/148 that local 3.12 produces. The gap was the skipped tests. Floor is 84,
+  the note says what was actually measured, and the rule that found this stands unchanged: measure with
+  CI's install command, not with your own environment. (2026-08-21)
+
 ### Documentation
 - **The LLM02 page now carries what happens when a filter never sees the secret it guards.** A test
   application of ours keeps only the credential's SHA-256 and hashes its outgoing text, which sounds

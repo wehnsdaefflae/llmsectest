@@ -115,7 +115,16 @@ def _fake_huggingface(*, raises=None, reply="hello"):
 
 
 def _fake_openai_client(*, raises=None, reply="hello"):
-    """The openai SDK *is* installed, so only its client is faked (as elsewhere)."""
+    """Only the client is faked here, because the openai SDK itself is installed.
+
+    That sentence used to read "the openai SDK *is* installed" full stop, and it was true
+    of a developer's machine and false of CI, which did not install it until 2026-08-21.
+    So every test below that reaches this helper through ``_adapter("openai", ...)`` was
+    skipped in every CI run, silently, because a skip is green. The SDK is a declared test
+    dependency now and `check_no_test_skipped_for_missing_dep` fails if that stops being
+    true. The anthropic and huggingface fakes above stand up the whole *module* instead,
+    which is what you need when the vendor package genuinely is not there.
+    """
 
     class _Completions:
         def create(self, **kwargs):
