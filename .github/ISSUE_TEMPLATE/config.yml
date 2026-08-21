@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Report a vulnerability in LLMSecTest itself
+    url: https://github.com/wehnsdaefflae/llmsectest/security/advisories/new
+    about: Private disclosure. Please don't use a public issue for this.
+  - name: Docs
+    url: https://docs.llmsec.dev
+    about: Getting started, testing a running app, the OWASP coverage map.

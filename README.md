@@ -26,6 +26,11 @@ with CVSS v4.0- and risk-scored findings.
 running app, the OWASP coverage map, CLI and API reference. Build locally with
 `pip install -e ".[docs]" && mkdocs serve`.
 
+🤝 **Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md). The most useful thing you can send is a bad
+first run: if you tried it and gave up, say where you stopped. Two people already have, and both
+reports changed the tool. Security issues in the tool itself go through
+[SECURITY.md](SECURITY.md), privately.
+
 📝 **What's new:** see the [changelog](CHANGELOG.md) (also on the [docs site](https://docs.llmsec.dev/changelog/)); the forward plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 Funded by the German Federal Ministry of Research, Technology and Space (BMFTR)
