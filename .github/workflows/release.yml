@@ -1,0 +1,80 @@
+name: release
+
+# Publishes to PyPI when a v* tag is pushed.
+#
+# No API token anywhere. This uses PyPI Trusted Publishing (OIDC): PyPI is told, once,
+# that this repository's `release` workflow running in the `pypi` environment is allowed
+# to upload `llmsectest`, and GitHub mints a short-lived credential per run. There is no
+# long-lived secret to store, leak, or rotate, which for a security tool is the point.
+#
+# Setup on PyPI, once, by the account owner:
+#   PyPI → Your projects → llmsectest → Publishing  (or, before the first release,
+#   Account settings → Publishing → Add a pending publisher)
+#     Owner: wehnsdaefflae   Repository: llmsectest
+#     Workflow: release.yml  Environment: pypi
+#
+# Then: git tag v0.2.0 && git push origin v0.2.0
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  # The tag says a version; the package has to agree. A mismatch here is cheap to fix and
+  # expensive on PyPI, where a filename can never be reused even after a delete.
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.11" }
+      - run: pip install -e ".[dev,cvss]"
+      - run: ruff check src tests examples
+      - run: coverage run -m pytest -q
+      - run: coverage report
+      - name: the tag and the version in pyproject must match
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="$(python -c 'import tomllib,pathlib;print(tomllib.loads(pathlib.Path("pyproject.toml").read_text())["project"]["version"])')"
+          echo "tag=$tag pyproject=$pkg"
+          test "$tag" = "$pkg"
+
+  build:
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.11" }
+      - run: pip install build twine
+      - run: python -m build
+      - run: python -m twine check dist/*
+      # Install the built wheel in a clean interpreter and drive the real CLI, because a
+      # package that imports is not the same as a package that works: `--target
+      # demo-defended` is fully offline and exits 0, so it is a genuine end-to-end check.
+      - name: the wheel has to install and run
+        run: |
+          python -m venv /tmp/smoke
+          /tmp/smoke/bin/pip install dist/*.whl
+          cd /tmp
+          /tmp/smoke/bin/llmsectest --version
+          /tmp/smoke/bin/llmsectest --check
+          /tmp/smoke/bin/llmsectest --target demo-defended
+      - uses: actions/upload-artifact@v4
+        with: { name: dist, path: dist/ }
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write   # the OIDC token Trusted Publishing exchanges; nothing else
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { name: dist, path: dist/ }
+      - uses: pypa/gh-action-pypi-publish@release/v1

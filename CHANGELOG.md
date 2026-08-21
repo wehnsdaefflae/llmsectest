@@ -9,6 +9,14 @@ yet published to PyPI**. The forward-looking plan is the [roadmap](https://llmse
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-08-21
+
+First release published to PyPI. Everything below arrived after the 0.1.0 GitHub tag of
+2026-06-10: the remaining OWASP categories, application-mode scanning against a running
+endpoint, the undelivered-probe honesty guarantee and its widenings, the de-obfuscating leak
+oracles, the CycloneDX SBOM, and the reporting work that came out of scanning 50 applications
+a day and publishing every report.
+
 ### Fixed
 - **CI ran 23 fewer tests than it reported on, and had done since the openai adapter was written.**
   `pip install -e ".[dev,cvss]"` did not install `openai`, so every test guarded by
