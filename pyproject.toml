@@ -42,7 +42,7 @@ all = ["openai>=1.0", "anthropic>=0.39", "huggingface_hub>=0.25", "cvss>=3.0"]
 # the plugin would only invite that wrong measurement; `coverage run -m pytest` is both
 # correct and one dependency lighter.
 # `openai` and `httpx` are here as TEST dependencies, not as anything the shipped
-# package needs — its runtime `dependencies` list stays empty. Until 2026-08-21 they
+# package needs at runtime: `dependencies` above stays at `pytest` alone. Until 2026-08-21 they
 # were absent, and 23 tests carrying `pytest.importorskip("openai")` therefore skipped
 # in every CI run on every Python: the openai adapter, and with it `ollama` and
 # `lmstudio`, which subclass it and are what the daily cohort actually runs on. The

@@ -1,8 +1,11 @@
 name: release
 
-# Publishes to PyPI when a v* tag is pushed.
+# Validates a release when a v* tag is pushed. It does NOT publish on a tag today: the
+# `publish` job below is `workflow_dispatch` only, because releases currently go out from a
+# workstation with an API token. Flip that condition and drop the token the day a trusted
+# publisher is configured, and this header becomes true again.
 #
-# No API token anywhere. This uses PyPI Trusted Publishing (OIDC): PyPI is told, once,
+# When it does run, it uses PyPI Trusted Publishing (OIDC) and no API token: PyPI is told, once,
 # that this repository's `release` workflow running in the `pypi` environment is allowed
 # to upload `llmsectest`, and GitHub mints a short-lived credential per run. There is no
 # long-lived secret to store, leak, or rotate, which for a security tool is the point.
@@ -13,7 +16,7 @@ name: release
 #     Owner: wehnsdaefflae   Repository: llmsectest
 #     Workflow: release.yml  Environment: pypi
 #
-# Then: git tag v0.2.0 && git push origin v0.2.0
+# Then: git tag v0.2.0 && git push origin v0.2.0  (runs check + build; publish is manual)
 
 on:
   push:
