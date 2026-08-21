@@ -6,8 +6,7 @@ LLMSecTest tests **applications that use an LLM** (a system prompt, guardrails, 
 **SARIF / HTML / JSON / Markdown** reports that drop straight into CI/CD.
 
 ```bash
-# pre-alpha: install from source (not yet on PyPI)
-pip install "git+https://github.com/wehnsdaefflae/llmsectest"
+pip install llmsectest
 
 # point it at your running app and test it black-box
 llmsectest --target app:http://localhost:8000/chat

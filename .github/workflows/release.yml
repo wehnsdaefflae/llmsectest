@@ -68,7 +68,18 @@ jobs:
       - uses: actions/upload-artifact@v4
         with: { name: dist, path: dist/ }
 
+  # Manual dispatch only, deliberately. Mark chose to publish with an API token from a
+  # workstation (2026-08-21), so this job would fail on a tag push: Trusted Publishing is
+  # not configured on PyPI, and by the time a tag exists the version is usually already
+  # uploaded, which PyPI rejects because a filename can never be reused. A red X on the
+  # repository's front page is a bad first impression bought for nothing.
+  #
+  # `check` and `build` still run on every tag, and they are the parts with teeth: they
+  # prove the tag matches the version in pyproject and that the wheel installs and scans
+  # in a clean interpreter. Flip this to the tag trigger the day a trusted publisher is
+  # configured, and drop the token.
   publish:
+    if: github.event_name == 'workflow_dispatch'
     needs: build
     runs-on: ubuntu-latest
     environment: pypi
@@ -78,3 +89,5 @@ jobs:
       - uses: actions/download-artifact@v4
         with: { name: dist, path: dist/ }
       - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          skip-existing: true

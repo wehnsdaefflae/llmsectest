@@ -14,8 +14,7 @@ it was told to keep, or into acting on an instruction hidden in a document it re
 through. **How:** point it at an endpoint and read the report.
 
 ```bash
-# pre-alpha: install from source, not yet on PyPI
-pip install "git+https://github.com/wehnsdaefflae/llmsectest"
+pip install llmsectest
 llmsectest --target app:http://localhost:8000/chat --app-secret "your-canary"
 ```
 
@@ -267,14 +266,15 @@ still reports the budget. See [`examples/`](examples/) for one test module per O
 
 ## Install
 
-Pre-alpha, so not yet on PyPI. Install from source (a `pip install llmsectest` will
+On PyPI since 0.2.0. The core install pulls in `pytest` and nothing else; provider SDKs and
+custom CVSS scoring are optional extras.
 come with the first PyPI release). Substitute your extras in the `[...]`:
 
 ```bash
-pip install "git+https://github.com/wehnsdaefflae/llmsectest"                             # core
-pip install "llmsectest[anthropic] @ git+https://github.com/wehnsdaefflae/llmsectest"     # + Anthropic SDK
-pip install "llmsectest[cvss] @ git+https://github.com/wehnsdaefflae/llmsectest"          # + score custom CVSS vectors (core ships the OWASP-category scores)
-pip install "llmsectest[all] @ git+https://github.com/wehnsdaefflae/llmsectest"           # all providers
+pip install llmsectest                              # core
+pip install "llmsectest[anthropic]"                 # + Anthropic SDK
+pip install "llmsectest[cvss]"                      # + score custom CVSS vectors (core ships the OWASP-category scores)
+pip install "llmsectest[all]"                       # all providers
 ```
 
 The ten OWASP-category CVSS v4.0 scores ship in the dependency-free core; the
