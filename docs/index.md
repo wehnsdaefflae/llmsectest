@@ -66,13 +66,9 @@ through the **[Prototype Fund](https://prototypefund.de)**, funding code (Förde
 **16IS26S10**. The funding guideline is implemented by the Open Knowledge Foundation Deutschland; the
 project agency is VDI/VDE-IT.
 
-<p>
-  <img src="assets/bmftr-funded-by-en.png"
-       alt="With funding from the Federal Ministry of Research, Technology and Space (BMFTR)"
-       height="90">
-</p>
-<p>
-  <img src="assets/prototype-fund-en.png"
-       alt="Supported by the Prototype Fund"
-       height="70">
+<p class="fund-logos">
+  <img src="assets/bmftr-funded-by-en.png" class="logo-bmftr"
+       alt="With funding from the Federal Ministry of Research, Technology and Space (BMFTR)">
+  <img src="assets/prototype-fund-en.png" class="logo-ptf"
+       alt="Supported by the Prototype Fund">
 </p>

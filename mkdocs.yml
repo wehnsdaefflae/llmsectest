@@ -48,6 +48,9 @@ markdown_extensions:
   - pymdownx.tabbed: { alternate_style: true }
   - toc: { permalink: true }
 
+extra_css:
+  - stylesheets/extra.css
+
 nav:
   - Home: index.md
   - Getting started: getting-started.md
