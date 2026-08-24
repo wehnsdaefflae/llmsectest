@@ -1316,7 +1316,7 @@
 
 <h1 id="author-your-own-security-tests">Author your own security tests<a class="headerlink" href="#author-your-own-security-tests" title="Permanent link">&para;</a></h1>
 <p>LLMSecTest is just <code>pytest</code>, so app-specific security tests are ordinary test files. Use the unified
-adapter to drive any target the same way, and the offline adapters for deterministic, network-free
+adapter to drive any target the same way. The offline adapters for deterministic, network-free
 tests.</p>
 <h2 id="the-unified-adapter">The unified adapter<a class="headerlink" href="#the-unified-adapter" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">llmsectest</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_adapter</span>
@@ -1330,9 +1330,9 @@ tests.</p>
 </code></pre></div>
 <h2 id="writing-your-own-adapter">Writing your own adapter<a class="headerlink" href="#writing-your-own-adapter" title="Permanent link">&para;</a></h2>
 <p><code>register_adapter("myprovider", MyAdapter)</code> puts a new target behind the same <code>--target</code> flag as the
-shipped ones. A custom adapter has one obligation beyond returning the reply, and it is the
-one that keeps the report honest:</p>
-<p><strong>Translate your transport failures into <code>AdapterError</code>.</strong> Wrap the network call, and only the
+shipped ones. A custom adapter has one obligation beyond returning the reply, the one
+that keeps the report honest:</p>
+<p><strong>Translate your transport failures into <code>AdapterError</code>.</strong> Wrap the network call and nothing but the
 network call:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">llmsectest.adapters</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="n">CompletionResponse</span><span class="p">,</span> <span class="n">LLMAdapter</span><span class="p">,</span> <span class="n">register_adapter</span><span class="p">,</span> <span class="n">transport_errors</span><span class="p">,</span>
@@ -1351,7 +1351,7 @@ network call:</p>
 <a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="n">register_adapter</span><span class="p">(</span><span class="s2">&quot;myprovider&quot;</span><span class="p">,</span> <span class="n">MyAdapter</span><span class="p">)</span>
 </code></pre></div>
 <p>Without it, an unreachable endpoint is a <strong>worse</strong> outcome than a missing result. A probe that
-raises out of <a href="../../api/"><code>run_probe</code></a> is a failing <code>pytest</code> test, and this suite renders a failing
+raises out of <a href="../../api/"><code>run_probe</code></a> is a failing <code>pytest</code> test. This suite renders a failing
 security test as a CVSS-scored OWASP finding. So a mistyped URL reports your application as
 critically vulnerable, with a Python traceback as the evidence. <code>run_probe</code> catches <code>AdapterError</code>
 and records the probe as <code>undelivered</code> instead: inconclusive, never a finding, and the run still

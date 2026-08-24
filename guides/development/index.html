@@ -1390,9 +1390,9 @@ module-level statements recorded as never executed. On the same green suite:</p>
 measuring before pytest loads anything, so it sees the real picture. This is a
 general trap for any package that is itself a pytest plugin.</p>
 <p>Configuration lives in <code>pyproject.toml</code> under <code>[tool.coverage.run]</code> and
-<code>[tool.coverage.report]</code>. Branch coverage is on, and <code>coverage report</code> fails below
+<code>[tool.coverage.report]</code>. Branch coverage is on. <code>coverage report</code> fails below
 the floor set in <code>fail_under</code>. The floor ratchets upward: raise it when a change
-legitimately lifts coverage, and never lower it to turn a red build green.</p>
+legitimately lifts coverage and never lower it to turn a red build green.</p>
 <h3 id="what-is-excluded">What is excluded<a class="headerlink" href="#what-is-excluded" title="Permanent link">&para;</a></h3>
 <p><code>src/llmsectest/suite/</code> (the packaged probe suite) is omitted from the
 measurement. Those modules only execute against a live target (a model, or an
@@ -1403,11 +1403,11 @@ untested. They are exercised end to end against real applications instead.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>ruff<span class="w"> </span>check<span class="w"> </span>src<span class="w"> </span>tests
 </code></pre></div>
 <p>The rule set is declared explicitly in <code>pyproject.toml</code> rather than inherited from
-ruff's defaults, and the tool is pinned to a major range. Ruff's default selection
+ruff's defaults. The tool is pinned to a major range. Ruff's default selection
 changes between releases, so an unpinned linter can turn a green branch red without
 a single line of code changing.</p>
 <h2 id="profiling">Profiling<a class="headerlink" href="#profiling" title="Permanent link">&para;</a></h2>
-<p>There is no profiling dependency, and adding one has been measured to be
+<p>There is no profiling dependency and adding one has been measured to be
 unnecessary. A real scan is dominated by waiting for the model: in a 183-second
 bare-model run, 180.8 seconds (98.8%) were spent in <code>socket.recv</code>, and everything
 this project's own Python does totalled under 1.2 seconds, most of it interpreter

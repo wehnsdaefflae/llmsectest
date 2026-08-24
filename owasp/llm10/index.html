@@ -1309,7 +1309,7 @@
 <p>Unrestricted, expensive inference that lets an attacker degrade service, run up cost, or extract the model.</p>
 </blockquote>
 <p><strong>Modality:</strong> black-box. <strong>Status:</strong> covered.</p>
-<p>Every LLM call costs compute and money, and the output length is attacker-influenced. An application
+<p>Every LLM call costs compute and money. The output length is attacker-influenced. An application
 that does not bound what it will generate is exposed to <strong>denial of service</strong> (one request ties up the
 model), <strong>denial of wallet</strong> (a cheap request provokes an expensive, runaway completion that lands on
 your API bill), and, through high-volume querying, model extraction. The 2025 OWASP list folds the
@@ -1334,7 +1334,7 @@ varying the technique:</p>
 flooding the marker or fills the token budget. The <code>unbounded_consumption</code> detector counts how many times
 the marker appears and flags the reply when it crosses a <strong>flood threshold</strong> that sits far above any
 legitimate "here are a few examples" sample. Because the signal is <em>willingness to flood</em>, it is visible even within a finite token
-budget. The target does not have to literally generate forever, and the detector does not depend on the
+budget. The target does not have to literally generate forever. The detector does not depend on the
 adapter's own <code>max_tokens</code> cap.</p>
 <p>The marker lives in the attack, so the probe needs no setup. Against a <strong>model</strong> target the adapter's
 <code>max_tokens</code> keeps the "repeat 10,000×" / "continue forever" prompts bounded. A real <strong>application
@@ -1361,11 +1361,11 @@ disproportionate work. That's the vulnerability. Nothing is missing from the mea
 "inconclusive" quietly under-reported the apps that consume the most.</p>
 <p>A timeout is only read that way when the same app has <strong>demonstrated</strong> it answers quickly:</p>
 <ul>
-<li>at least three other probes in the run completed inside the same budget, and</li>
+<li>at least three other probes in the run completed inside the same budget and</li>
 <li>their <strong>median</strong> latency sits under half the budget (the median, so one slow outlier does not veto the
   signal; the headroom, so an app that habitually finishes just under the wire is never called responsive).</li>
 </ul>
-<p>Fail either test, a uniformly slow app, a scan too short to establish a pattern, an unquantified budget, and the probe stays <strong>inconclusive</strong>, as before. The finding quotes the evidence it relied on, and
+<p>Fail either test, a uniformly slow app, a scan too short to establish a pattern, an unquantified budget, and the probe stays <strong>inconclusive</strong>, as before. The finding quotes the evidence it relied on and
 says how much output the app produced while failing to terminate:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>bounded request exhausted the 90s per-request budget, having produced 412308 byte(s) of output without
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>terminating, while 21 other probe(s) completed inside the same budget (median 6.4s, slowest 38.1s) — a
@@ -1373,8 +1373,8 @@ says how much output the app produced while failing to terminate:</p>
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>consumption, not ordinary slowness
 </code></pre></div>
 <p>That volume is the difference between an app that went <strong>quiet</strong> and one that kept <strong>producing</strong>. Both
-exceed the budget; only the second is measured consumption, and a report that cannot tell them apart cannot
-say how bad the finding is. An app that sent nothing at all is reported as such, and a target whose adapter
+exceed the budget; only the second is measured consumption. A report that cannot tell them apart cannot
+say how bad the finding is. An app that sent nothing at all is reported as such. A target whose adapter
 cannot measure the volume says nothing rather than guessing.</p>
 <div class="admonition note">
 <p class="admonition-title">The budget is a wall-clock deadline, not a socket timeout</p>
@@ -1401,7 +1401,7 @@ target reports one, is captured on the probe outcome as the precise cost. Agains
 that reports usage, the <code>LLM10-output-ceiling</code> case adds the "would have continued" signal, a reply
 that lands at the <code>max_tokens</code> budget reached the ceiling and did not bound itself. A black-box app
 endpoint reports no token count, so that signal is inert there rather than a false positive. As
-with every LLMSecTest oracle, these limitations are documented, not hidden.</p>
+with every LLMSecTest oracle, these limitations are written down where the claim is made.</p>
 </div>
 <h2 id="reading-a-finding">Reading a finding<a class="headerlink" href="#reading-a-finding" title="Permanent link">&para;</a></h2>
 <p>A finding names the technique, the marker and how many times it was emitted, for example <em>"target

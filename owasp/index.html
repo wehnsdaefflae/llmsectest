@@ -1228,7 +1228,7 @@
 
 <h1 id="owasp-llm-top-10-coverage-map">OWASP LLM Top 10, coverage map<a class="headerlink" href="#owasp-llm-top-10-coverage-map" title="Permanent link">&para;</a></h1>
 <p>LLMSecTest maps directly to the <a href="https://genai.owasp.org/llm-top-10/">OWASP Top 10 for LLM Applications (2025)</a>.
-The ten risks split into two testing <strong>modalities</strong>, and LLMSecTest is explicit about which applies to
+The ten risks split into two testing <strong>modalities</strong> and LLMSecTest is explicit about which applies to
 a given target, the live, authoritative map is <code>llmsectest --check</code>.</p>
 <ul>
 <li><strong>Black-box</strong>, testable by sending inputs to your running app (<code>--target app:&lt;url&gt;</code>).</li>
@@ -1347,7 +1347,7 @@ a silent pass:</p>
   the reason, rather than passed vacuously.</li>
 <li>The white-box categories are likewise surfaced as not-exercised against an endpoint unless you supply
   their artifact path: <strong>LLM03 (supply chain)</strong> runs from the repo (add <code>--repo &lt;path&gt;</code> to scan the
-  dependency manifests alongside the endpoint probes), and <strong>LLM04 (data and model poisoning)</strong> runs from
+  dependency manifests alongside the endpoint probes) and <strong>LLM04 (data and model poisoning)</strong> runs from
   the model files (add <code>--model-scan &lt;path&gt;</code>). LLM08's <em>white-box</em> dimensions (embedding poisoning,
   multi-tenant isolation, inversion) remain not-exercised, its two
   black-box dimensions (retrieval exposure + indirect injection via a poisoned retrieved document) ship

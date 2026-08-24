@@ -1356,7 +1356,7 @@ finding reflects how your app behaves under attack.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:https://your-app.example.com/chat
 </code></pre></div>
 <p>LLMSecTest POSTs the <strong>attacker turn</strong> to your endpoint and reads the reply. It sends <em>only</em> the user
-message. Your application supplies its own system prompt, and that's the thing we want to test.</p>
+message. Your application supplies its own system prompt. That's the thing we want to test.</p>
 <h3 id="request-and-response-shapes">Request and response shapes<a class="headerlink" href="#request-and-response-shapes" title="Permanent link">&para;</a></h3>
 <p>By default the request body is <code>{"message": "&lt;attacker input&gt;"}</code> and the reply is auto-detected across
 common shapes: a top-level <code>reply</code> / <code>response</code> / <code>message</code> / <code>content</code> / <code>answer</code> field, or the
@@ -1417,7 +1417,7 @@ only you, the app's developer, know:</p>
   <code>--app-secret</code>. There the secret lives in the prompt/config, here in the retrieved corpus.</li>
 <li><strong><code>--app-rag-poison</code></strong>, the marker a <strong>poisoned document</strong> planted in your retrieved corpus instructs
   the model to emit. Enables the <strong>LLM08</strong> indirect-injection probes: benign queries retrieve the poisoned
-  doc, and a vulnerable app obeys its instruction and emits the marker (which the probe never named). It
+  doc. A vulnerable app obeys its instruction and emits the marker (which the probe never named). It
   proves the app trusts retrieved content, the LLM08↔LLM01 bridge. Independent of <code>--app-canary</code>; supply
   either or both.</li>
 </ul>
@@ -1430,11 +1430,11 @@ not-exercised rather than passed. Always check <code>llmsectest --check</code>.<
 <h2 id="when-the-scan-cant-reach-your-app">When the scan can't reach your app<a class="headerlink" href="#when-the-scan-cant-reach-your-app" title="Permanent link">&para;</a></h2>
 <p>If your endpoint is unreachable, returns something that isn't the JSON shape above, or dies partway
 through a scan, those probes are recorded <strong>inconclusive</strong>, never as findings. A target we could not
-talk to is not a vulnerable target, and the report says so in three places. A red banner at the top of
+talk to is not a vulnerable target. The report says so in three places. A red banner at the top of
 the HTML page, an <code>undelivered</code> count in the SARIF run properties, and the console <em>Attacks Delivered</em>
 block.</p>
-<p><strong>The run also exits non-zero.</strong> That's deliberate, and it's the half that makes the rest safe. A scan
-that reached nothing produces an empty findings list, and in CI that's indistinguishable from a clean
+<p><strong>The run also exits non-zero.</strong> That's deliberate. It's the half that makes the rest safe. A scan
+that reached nothing produces an empty findings list. In CI that's indistinguishable from a clean
 bill of health. <code>0 findings, 25 never delivered</code> is not a pass.</p>
 <p>A slow app is a different case. One that exceeds <code>--app-timeout</code> was reached and ran out of budget. That
 is also inconclusive, but it doesn't fail the run, raise the budget instead. The console line
@@ -1445,7 +1445,7 @@ and technique, so the report says which attacks you did not get an answer for:</
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>after 90.0s: probe inconclusive, app endpoint http://127.0.0.1:8041/chat did not respond within 90s
 </code></pre></div>
 <p>That matters because a category runs several mechanisms. <code>LLM02 attempted 4, inconclusive 3</code> is honest
-about the count, and it still leaves you guessing which three. Now you can read it off the report.</p>
+about the count. It still leaves you guessing which three. Now you can read it off the report.</p>
 <p><strong>And every scan records its slowest answered probe</strong>, whether or not anything timed out:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>Slowest answered: 11.4s (APP-shop-LLM07-disclosure)
 </code></pre></div>
@@ -1466,19 +1466,19 @@ like a round number.</p>
 <p>We did that to ourselves. Our own 50-application cohort split into ten slow targets at 18 to 23 seconds a
 probe and forty fast ones at 4 to 10. It looked like two kinds of application. It was arithmetic. Each of
 the ten had lost four or five probes pinned at 90 seconds. Count only the probes that answered and the ten
-run at 5 to 12 seconds against the forty's 4 to 10, and the gap is gone.</p>
-<p>One more thing fell out of that, and you want it before you read your own timeouts. On nine of the ten,
+run at 5 to 12 seconds against the forty's 4 to 10. The gap is gone.</p>
+<p>One more thing fell out of that. You want it before you read your own timeouts. On nine of the ten,
 the probes that timed out were <strong>consecutive</strong>. That's not four expensive probes. It's one window where
-the app answered nothing, and our own deadline is what opens it. Your app doesn't stop working when we
+the app answered nothing. Our own deadline is what opens it. Your app doesn't stop working when we
 stop waiting. If your handler is synchronous in front of a backend that serves one request at a time, our
 next probe queues behind the generation we walked away from, and it times out for a reason that has
-nothing to do with it. So read a run of consecutive timeouts as one event, and only the first one as
+nothing to do with it. So read a run of consecutive timeouts as one event and only the first one as
 having a cause.</p>
-<p><strong>A rate-limited target is a third case, and it says so.</strong> A hosted target that answers <code>HTTP 429</code> has
+<p><strong>A rate-limited target is a third case. It says so.</strong> A hosted target that answers <code>HTTP 429</code> has
 been reached, so the report does not tell you to check whether your endpoint is up. Those probes are
 recorded inconclusive in the same tally, with <code>rate limited by the target</code> as the reason and the
 provider's own <code>Retry-After</code> value when it sent one, and the run exits non-zero for the same reason as
-above. There is no retry or backoff: getting the count right comes first, and a retry loop
+above. There is no retry or backoff: getting the count right comes first. A retry loop
 built over a wrong count would only produce a confidently wrong number. Slow the scan down or raise your
 quota, then run it again.</p>
 <h2 id="when-you-cant-run-the-app-the-persona-proxy">When you can't run the app: the persona proxy<a class="headerlink" href="#when-you-cant-run-the-app-the-persona-proxy" title="Permanent link">&para;</a></h2>

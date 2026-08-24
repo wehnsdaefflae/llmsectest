@@ -1373,7 +1373,7 @@ packaged OWASP probe suite against your chosen target and writes reports.</p>
 </tr>
 <tr>
 <td><code>--redteam-benign [&lt;csv&gt;]</code></td>
-<td>Measure <strong>over-refusal</strong>: run the JBB <strong>benign twins</strong> (harmless requests matched to the harmful behaviours) through the over-refusal oracle and report the target's <strong>false-refusal rate</strong>. Bare uses a built-in benign set; pass JBB's <code>benign-behaviors.csv</code> for the full 100. A usability metric, over-refusing is a quality defect, not a vulnerability — so it is reported separately and never enters the SARIF findings or the exit code.</td>
+<td>Measure <strong>over-refusal</strong>: run the JBB <strong>benign twins</strong> (harmless requests matched to the harmful behaviours) through the over-refusal oracle and report the target's <strong>false-refusal rate</strong>. Bare uses a built-in benign set; pass JBB's <code>benign-behaviors.csv</code> for the full 100. Over-refusing is a usability defect rather than a vulnerability, so it is reported separately and never enters the SARIF findings or the exit code.</td>
 </tr>
 <tr>
 <td><code>--app-prompt &lt;text-or-file&gt;</code></td>
@@ -1393,11 +1393,11 @@ packaged OWASP probe suite against your chosen target and writes reports.</p>
 </tr>
 <tr>
 <td><code>--app-rag-poison &lt;marker&gt;</code></td>
-<td>With <code>--target app:&lt;url&gt;</code>: the <strong>marker a poisoned document planted in the app's retrieved corpus instructs the model to emit</strong>, unlocks the <strong>LLM08</strong> indirect-injection probes (kb-directive, follow-retrieved, apply-policy). Each is a benign query that never names the marker; if the app retrieves the poisoned doc and emits it, the app obeyed an injected instruction from retrieved content. Categorized LLM08 (not LLM01) because the injection vector is the retrieval layer — the LLM08↔LLM01 bridge.</td>
+<td>With <code>--target app:&lt;url&gt;</code>: the <strong>marker a poisoned document planted in the app's retrieved corpus instructs the model to emit</strong>, unlocks the <strong>LLM08</strong> indirect-injection probes (kb-directive, follow-retrieved, apply-policy). Each is a benign query that never names the marker; if the app retrieves the poisoned doc and emits it, the app obeyed an injected instruction from retrieved content. Categorized LLM08 rather than LLM01 because the injection vector is the retrieval layer, which is the LLM08↔LLM01 bridge.</td>
 </tr>
 <tr>
 <td><code>--app-timeout &lt;seconds&gt;</code></td>
-<td>With <code>--target app:&lt;url&gt;</code>: the <strong>per-request time budget</strong> for a single call to the app (default 120 s). A real <strong>wall-clock deadline</strong> over connect, headers and body (not a per-socket-operation timeout, which an app that keeps trickling output never trips at all). A request that exceeds it is recorded as an <strong>inconclusive</strong> probe, not a finding (a timeout is generally not proof of a vulnerability) and not a silent clean, but a warning in the summary and a run-level <code>inconclusive</code> count in the SARIF/HTML report — so one slow or runaway endpoint cannot hang the whole scan and lose every other result, and a report never silently hides that some probes could not be concluded. The one exception is the two <strong>bounded LLM10 probes</strong>, where exhausting the budget <em>is</em> the finding — but only on an app that demonstrably answered its other probes well inside the same budget (<a href="../owasp/llm10/#when-the-app-never-answers-at-all">LLM10</a>). Raise it for a legitimately slow app; lower it to keep a scan under a fixed wall-clock budget (e.g. in CI).</td>
+<td>With <code>--target app:&lt;url&gt;</code>: the <strong>per-request time budget</strong> for a single call to the app (default 120 s). A real <strong>wall-clock deadline</strong> over connect, headers and body (not a per-socket-operation timeout, which an app that keeps trickling output never trips at all). A request that exceeds it is recorded as an <strong>inconclusive</strong> probe. It is never a finding, since a timeout is generally not proof of a vulnerability, and it is never a silent clean either: it becomes a warning in the summary plus a run-level <code>inconclusive</code> count in the SARIF/HTML report. So one slow or runaway endpoint cannot hang the whole scan and lose every other result. A report never silently hides that some probes could not be concluded. The one exception is the two <strong>bounded LLM10 probes</strong>, where exhausting the budget <em>is</em> the finding, though only on an app that demonstrably answered its other probes well inside the same budget (<a href="../owasp/llm10/#when-the-app-never-answers-at-all">LLM10</a>). Raise it for a legitimately slow app; lower it to keep a scan under a fixed wall-clock budget (e.g. in CI).</td>
 </tr>
 <tr>
 <td><code>--check</code></td>
@@ -1490,7 +1490,7 @@ neither withstood nor a finding. See <a href="../guides/red-team-your-defense/">
 </table>
 <p>Any other <code>pytest</code> option (e.g. <code>-k</code>, <code>-v</code>, <code>-x</code>) is passed straight through.</p>
 <h2 id="coverage-footer-no-silent-gaps">Coverage footer (no silent gaps)<a class="headerlink" href="#coverage-footer-no-silent-gaps" title="Permanent link">&para;</a></h2>
-<p>All ten OWASP categories run on every invocation: each ships a real probe or scanner, and any category
+<p>All ten OWASP categories run on every invocation: each ships a real probe or scanner and any category
 that needs an input it wasn't given (a repo, a model path, an app marker) is reported as a <strong>skipped test</strong>
 naming the flag that would enable it (skip reasons print by default). A run also ends with a footer listing
 <strong>all ten</strong> categories. Which this run exercised and which it did not, with the reason, so a category is never silently left untested. A model/demo target exercises the always-on black-box probe categories
