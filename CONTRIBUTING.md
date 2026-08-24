@@ -5,7 +5,7 @@ is tell me where it broke.
 
 ## The most valuable contribution is a bad first run
 
-I run this tool against 50 applications every day, and every one of them is an application I wrote.
+I run this tool against 50 applications every day. Every one of them is an application I wrote.
 That means I'm the worst person to find out where it fails on *your* application. If you tried it and
 gave up, please open an issue saying where you stopped. "I gave up at X" is the report I want most.
 Two of them have already changed the tool. One person bounced off the README, another off a stale
@@ -22,7 +22,7 @@ pip install -e ".[dev,cvss]"
 llmsectest --check          # prints the OWASP coverage map
 ```
 
-Tests, lint and coverage, which is exactly what CI runs:
+Tests, lint and coverage, which is what CI runs:
 
 ```bash
 ruff check src tests examples
@@ -36,7 +36,7 @@ a longer writeup in `docs/guides/development.md`.
 
 ## What a good change looks like
 
-- **A test that fails before your fix.** This is a security scanner, and a change with no test is a claim.
+- **A test that fails before your fix.** This is a security scanner. A change with no test is a claim.
 - **Say what you measured.** "This should be faster" is a hypothesis. "This takes 6.1s against 9.4s on
   the same corpus" is a result. Either is fine in a PR. Just say which one it is.
 - **Match the surrounding style.** Comments here explain *why*, usually with the incident that caused
@@ -48,7 +48,7 @@ a longer writeup in `docs/guides/development.md`.
 ## Good first issues
 
 Issues tagged [`good first issue`](https://github.com/wehnsdaefflae/llmsectest/labels/good%20first%20issue)
-are real gaps rather than busywork, and each one says what "done" means. If one is unclear, that's a
+are real gaps rather than busywork. Each one says what "done" means. If one is unclear, that's a
 bug in the issue and I'd like to hear about it.
 
 ## Reporting a vulnerability
@@ -60,4 +60,4 @@ issue for that one.
 
 MIT. By contributing you agree your work ships under it. The project is funded by the German Federal
 Ministry of Research, Technology and Space through the [Prototype Fund](https://prototypefund.de),
-funding code 16IS26S10. That changes nothing about the licence, and it's worth knowing.
+funding code 16IS26S10. That changes nothing about the licence. It's worth knowing.

@@ -1,7 +1,7 @@
 # OWASP LLM Top 10, coverage map
 
 LLMSecTest maps directly to the [OWASP Top 10 for LLM Applications (2025)](https://genai.owasp.org/llm-top-10/).
-The ten risks split into two testing **modalities**, and LLMSecTest is explicit about which applies to
+The ten risks split into two testing **modalities** and LLMSecTest is explicit about which applies to
 a given target, the live, authoritative map is `llmsectest --check`.
 
 - **Black-box**, testable by sending inputs to your running app (`--target app:<url>`).
@@ -64,7 +64,7 @@ a silent pass:
   the reason, rather than passed vacuously.
 - The white-box categories are likewise surfaced as not-exercised against an endpoint unless you supply
   their artifact path: **LLM03 (supply chain)** runs from the repo (add `--repo <path>` to scan the
-  dependency manifests alongside the endpoint probes), and **LLM04 (data and model poisoning)** runs from
+  dependency manifests alongside the endpoint probes) and **LLM04 (data and model poisoning)** runs from
   the model files (add `--model-scan <path>`). LLM08's *white-box* dimensions (embedding poisoning,
   multi-tenant isolation, inversion) remain not-exercised, its two
   black-box dimensions (retrieval exposure + indirect injection via a poisoned retrieved document) ship

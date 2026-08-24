@@ -1,7 +1,7 @@
 # Author your own security tests
 
 LLMSecTest is just `pytest`, so app-specific security tests are ordinary test files. Use the unified
-adapter to drive any target the same way, and the offline adapters for deterministic, network-free
+adapter to drive any target the same way. The offline adapters for deterministic, network-free
 tests.
 
 ## The unified adapter
@@ -20,10 +20,10 @@ assert "system prompt" not in reply.lower()
 ## Writing your own adapter
 
 `register_adapter("myprovider", MyAdapter)` puts a new target behind the same `--target` flag as the
-shipped ones. A custom adapter has one obligation beyond returning the reply, and it is the
-one that keeps the report honest:
+shipped ones. A custom adapter has one obligation beyond returning the reply, the one
+that keeps the report honest:
 
-**Translate your transport failures into `AdapterError`.** Wrap the network call, and only the
+**Translate your transport failures into `AdapterError`.** Wrap the network call and nothing but the
 network call:
 
 ```python
@@ -45,7 +45,7 @@ register_adapter("myprovider", MyAdapter)
 ```
 
 Without it, an unreachable endpoint is a **worse** outcome than a missing result. A probe that
-raises out of [`run_probe`](../api.md) is a failing `pytest` test, and this suite renders a failing
+raises out of [`run_probe`](../api.md) is a failing `pytest` test. This suite renders a failing
 security test as a CVSS-scored OWASP finding. So a mistyped URL reports your application as
 critically vulnerable, with a Python traceback as the evidence. `run_probe` catches `AdapterError`
 and records the probe as `undelivered` instead: inconclusive, never a finding, and the run still

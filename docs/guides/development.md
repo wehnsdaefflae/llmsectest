@@ -42,9 +42,9 @@ measuring before pytest loads anything, so it sees the real picture. This is a
 general trap for any package that is itself a pytest plugin.
 
 Configuration lives in `pyproject.toml` under `[tool.coverage.run]` and
-`[tool.coverage.report]`. Branch coverage is on, and `coverage report` fails below
+`[tool.coverage.report]`. Branch coverage is on. `coverage report` fails below
 the floor set in `fail_under`. The floor ratchets upward: raise it when a change
-legitimately lifts coverage, and never lower it to turn a red build green.
+legitimately lifts coverage and never lower it to turn a red build green.
 
 ### What is excluded
 
@@ -61,13 +61,13 @@ ruff check src tests
 ```
 
 The rule set is declared explicitly in `pyproject.toml` rather than inherited from
-ruff's defaults, and the tool is pinned to a major range. Ruff's default selection
+ruff's defaults. The tool is pinned to a major range. Ruff's default selection
 changes between releases, so an unpinned linter can turn a green branch red without
 a single line of code changing.
 
 ## Profiling
 
-There is no profiling dependency, and adding one has been measured to be
+There is no profiling dependency and adding one has been measured to be
 unnecessary. A real scan is dominated by waiting for the model: in a 183-second
 bare-model run, 180.8 seconds (98.8%) were spent in `socket.recv`, and everything
 this project's own Python does totalled under 1.2 seconds, most of it interpreter

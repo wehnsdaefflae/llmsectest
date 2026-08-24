@@ -18,7 +18,7 @@ monorepos and nested projects are covered, while skipping vendored/virtualenv tr
 declared dependency:
 
 - **Known-malicious / typosquatted package** (`critical`), the name matches a curated list of packages
-  documented to have carried malware on PyPI or to squat a popular package / stdlib module. A hit is high-signal. These are real malicious uploads, and we don't guess at typos.
+  documented to have carried malware on PyPI or to squat a popular package / stdlib module. A hit is high-signal. These are real malicious uploads. We don't guess at typos.
 - **Direct VCS / URL install** (`high`), pulled from a git ref or arbitrary URL (`git+https://…`,
   `pkg @ https://…`) instead of the index, bypassing its integrity, signing and yank guarantees.
 - **Unpinned dependency** (`high`), no version constraint at all, so the build floats to *any* future
@@ -39,10 +39,10 @@ cross-ecosystem advisory database that also backs `pip-audit`, via its free batc
 auth). Published advisories against the pinned version become one aggregated finding per package,
 linking the OSV advisory ids.
 
-Only exact pins are queried: a range like `>=1.0` doesn't determine which version an install actually
+Only exact pins are queried, since a range like `>=1.0` doesn't determine which version an install
 receives, so a static manifest scan cannot honestly attribute a CVE to it (resolving the live
 environment is `pip-audit`'s job). The lookup is **off by default** so the standard scan stays
-offline; every non-run state, not requested, nothing exactly pinned, or a failed lookup, appears as an explicit **skip reason**, never as "no known CVEs".
+offline; every non-run state, not requested, nothing pinned, or a failed lookup, appears as an explicit **skip reason**, never as "no known CVEs".
 
 ```bash
 llmsectest --repo .                                   # scan this project's dependencies
@@ -57,7 +57,7 @@ a silent pass.
 
 An SBOM inventories what a project pulls in, the raw material for supply-chain risk assessment,
 increasingly a compliance requirement in its own right. `llmsectest --sbom --repo <path>` writes a
-[CycloneDX](https://cyclonedx.org) 1.6 JSON SBOM of the project's declared dependencies: one component per
+[CycloneDX](https://cyclonedx.org) 1.6 JSON SBOM of the project's declared dependencies, one component per
 dependency, identified by [PURL](https://github.com/package-url/purl-spec)
 (`pkg:pypi/name@version`), ready for any CycloneDX-consuming tool (Dependency-Track, `grype`, `osv-scanner`,
 a GitHub dependency submission, …).
@@ -66,8 +66,8 @@ The **pinned/unpinned grading is carried into the SBOM** through the same logic 
 decide what to flag: an exactly-pinned dependency (`==X.Y.Z`) becomes a component with a concrete `version`
 and a fully-qualified PURL, while a range or unpinned dependency has no statically-resolvable version, so its
 component **omits `version`** and records the raw constraint in a `llmsectest:constraint` property. The SBOM
-is therefore only ever as precise as the manifests allow. It never asserts a version a manifest did not pin,
-and the same unpinned dependency the LLM03 scan flags as a risk shows up version-less in the SBOM.
+is therefore only ever as precise as the manifests allow. It never asserts a version a manifest did not pin.
+The same unpinned dependency the LLM03 scan flags as a risk shows up version-less in the SBOM.
 
 It is built dependency-free from the standard library (CycloneDX JSON is a stable, well-specified schema); the
 richer [`cyclonedx-python-lib`](https://github.com/CycloneDX/cyclonedx-python-lib) engine, XML/SPDX output,

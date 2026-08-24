@@ -40,6 +40,10 @@ plugins:
 
 markdown_extensions:
   - admonition
+  # `??? note` collapsibles need this. Without it the block renders as a literal
+  # `??? note "..."` paragraph with its body as a code block, which is how llm08.md's
+  # 934-word measurement narrative shipped on docs.llmsec.dev until 2026-08-24.
+  - pymdownx.details
   - attr_list
   - pymdownx.highlight: { anchor_linenums: true }
   - pymdownx.inlinehilite

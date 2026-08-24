@@ -14,10 +14,16 @@ keywords = ["llm", "security", "pytest", "owasp", "sarif", "red-team"]
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
     "Framework :: Pytest",
+    "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    # 3.13 is in the CI matrix and was missing here, so anyone filtering PyPI by it saw nothing.
+    "Programming Language :: Python :: 3.13",
     "Topic :: Security",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Software Development :: Testing",
 ]
 dependencies = ["pytest>=7.4.0"]
 
@@ -75,6 +81,9 @@ llmsectest = "llmsectest.plugin"
 Homepage = "https://llmsec.dev"
 Documentation = "https://docs.llmsec.dev"
 Repository = "https://github.com/wehnsdaefflae/llmsectest"
+Issues = "https://github.com/wehnsdaefflae/llmsectest/issues"
+Changelog = "https://docs.llmsec.dev/changelog/"
+"Scan reports" = "https://llmsec.dev/reports/"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/llmsectest"]

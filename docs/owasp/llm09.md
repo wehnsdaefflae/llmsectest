@@ -39,7 +39,7 @@ llmsectest --target app:http://localhost:8000/chat    # black-box: LLM09 runs wi
 
 !!! note "Disclaimer/engagement screening oracle (non-circular, conservative)"
     The oracle needs no LLM judge, ground truth is that the entity provably does not exist. It is a
-    screening oracle: it under-reports a confabulation that paraphrases without naming the entity, and it
+    screening oracle: it under-reports a confabulation that paraphrases without naming the entity. It
     treats any uncertainty phrasing ("I'm not aware…", "I don't have verified information…") as safe, so it
     errs toward *not* flagging, the safe direction for a security scanner. A classifier / retrieval-
     grounding oracle is the stronger optional upgrade, swappable via the detector registry. As with every

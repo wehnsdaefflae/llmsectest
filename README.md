@@ -4,19 +4,25 @@
 [![docs](https://github.com/wehnsdaefflae/llmsectest/actions/workflows/docs.yml/badge.svg)](https://docs.llmsec.dev)
 [![license: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-A pytest-native security testing framework for LLM applications, mapped to the
-[OWASP LLM Top 10 (2025)](https://owasp.org/www-project-top-10-for-large-language-model-applications/).
+Your LLM application can be talked into ignoring its instructions, into repeating a secret it
+was told to keep, or into acting on an instruction hidden in a document it retrieved. Your
+test suite cannot see any of that. Neither can the scanners already in your pipeline.
 
-**Why:** putting a language model in your app adds failure modes your existing test suite
-cannot see. A user can talk the model into ignoring its instructions, into repeating a secret
-it was told to keep, or into acting on an instruction hidden in a document it retrieved.
-**What:** LLMSecTest attacks your running app the way an adversary would and reports what got
-through. **How:** point it at an endpoint and read the report.
+LLMSecTest attacks your running application the way an attacker would, then tells you what
+got out. It runs the
+[OWASP LLM Top 10 (2025)](https://owasp.org/www-project-top-10-for-large-language-model-applications/)
+against a live endpoint and writes SARIF your CI already knows how to read. It is a pytest
+plugin, so it goes in the test run you already have.
 
 ```bash
 pip install llmsectest
 llmsectest --target app:http://localhost:8000/chat --app-secret "your-canary"
 ```
+
+🔬 **See what it finds before you install it: [llmsec.dev/reports](https://llmsec.dev/reports/).** The
+full scan report for every application in our own test cohort, byte-identical to what the tool wrote,
+regenerated on every pass. It includes the ones that withstood everything, plus a list of the members we
+hold back and why.
 
 Write your own checks as ordinary pytest tests; get SARIF / HTML / JSON / Markdown reports
 with CVSS v4.0- and risk-scored findings.
@@ -26,7 +32,7 @@ running app, the OWASP coverage map, CLI and API reference. Build locally with
 `pip install -e ".[docs]" && mkdocs serve`.
 
 🤝 **Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md). The most useful thing you can send is a bad
-first run: if you tried it and gave up, say where you stopped. Two people already have, and both
+first run: if you tried it and gave up, say where you stopped. Two people already have. Both
 reports changed the tool. Security issues in the tool itself go through
 [SECURITY.md](SECURITY.md), privately.
 
@@ -37,7 +43,7 @@ via the [Prototype Fund](https://prototypefund.de) (FKZ 16IS26S10). MIT-licensed
 See [Funding](#funding).
 
 > **Status: pre-alpha (active grant development).** All **10** OWASP LLM Top 10 (2025)
-> categories ship a real probe or scanner. None is a placeholder, and a scan that cannot
+> categories ship a real probe or scanner. None is a placeholder. A scan that cannot
 > reach one says so instead of passing it silently.
 >
 > **Known limitations** live in the [changelog](CHANGELOG.md#known-issue) and are named on the
@@ -69,8 +75,8 @@ See [Funding](#funding).
 - **Four attack mechanisms per category, not four wordings.** The application-mode LLM02 and LLM06 probes
   each run four techniques. LLM02 sends a direct request, a claimed authority, an indirect ask for a
   handover document, and an **encoded-exfiltration** request that a naive output filter waves through.
-  LLM06 sends four assertions of authority the endpoint has no way to check. No LLM02 prompt contains the secret it scores,
-  and no LLM06 prompt contains the action signature or dictates the reply format, so a finding can only
+  LLM06 sends four assertions of authority the endpoint has no way to check. No LLM02 prompt contains the secret it scores.
+  No LLM06 prompt contains the action signature or dictates the reply format, so a finding can only
   come from the application.
 - **Encoded leaks still count.** The LLM02 / LLM07 / LLM08 leak oracles **de-obfuscate** a reply before
   matching, so a secret returned base64/hex/base32/base85/ASCII85/ROT13/quoted-printable/uuencode-encoded,
@@ -109,7 +115,7 @@ llm = ScriptedAdapter(lambda req: "SECRET-LEAKED" if "key" in req.messages[-1].c
 ## Run the OWASP probe suite
 
 The packaged probe suite drives a curated red-team corpus (LLM01/02/05/06/07/09/10) through
-the adapter against a target you choose, and writes a SARIF report. A failing
+the adapter against a target you choose and writes a SARIF report. A failing
 probe is a *finding*, so a non-zero exit means the target is vulnerable. LLM01 also
 runs a red-team jailbreak set (JailbreakBench/AdvBench) scored by a refusal oracle.
 
@@ -148,7 +154,7 @@ delivered and how many the target held off, per OWASP category: in the console, 
 HTML report and as an `attacks_withstood` property in the SARIF. Without it an empty
 findings list is just silence. The report of a well-defended app reads the same as the
 report of a scan that attacked nothing. Only real probes count (a coverage assertion or a static
-scanner never inflates the number), and a probe that ran out of `--app-timeout` is neither
+scanner never inflates the number). A probe that ran out of `--app-timeout` is neither
 withstood nor a finding, because a target that stops answering must not look like one that
 resisted. See [Red-team your defense](https://docs.llmsec.dev/guides/red-team-your-defense/).
 
@@ -177,12 +183,12 @@ than a blank.
 
 ### No silent gaps
 
-**All ten** OWASP categories run on every invocation. Each ships a real probe or scanner, and a
+**All ten** OWASP categories run on every invocation. Each ships a real probe or scanner. A
 category that needs an input it wasn't given (a repo, a model path, an app marker) appears as a
 **skipped test naming the flag it needs**, never as a silent pass. Every run ends with a coverage
 footer accounting for all ten.
 
-What a category needs, and what it gets you:
+What a category needs and what it gets you:
 
 | Flag | Unlocks | What it is |
 |---|---|---|
@@ -200,7 +206,7 @@ Every flag above is documented with its semantics, defaults and failure modes in
 [CLI reference](https://docs.llmsec.dev/cli/); the app-target ones are walked through end to end in
 [Test your own app](https://docs.llmsec.dev/guides/target-app/).
 
-Three things the table cannot show, and they are the reason the coverage footer exists. A category you
+Three things the table cannot show. They are the reason the coverage footer exists. A category you
 gave nothing to is reported skipped, with the flag named. A category you *did* give something to
 still reports what it attempted and what the target withstood, so a clean row is a measurement
 rather than a silence. And if the value you named for a category never appeared in **any** reply of the
@@ -260,7 +266,7 @@ it stops answering. A probe recorded **inconclusive** because it ran out of time
 deadline, so it is counted apart and never moves that figure. Fold the two together and you
 learn how big your budget is, which we found out by doing it: our own cohort read as ten slow
 targets and forty fast ones until we took the timed-out probes back out, and then it read as
-one population. One exception, and it is ours to finish: the two **bounded LLM10** probes score
+one population. One exception is still ours to finish: the two **bounded LLM10** probes score
 a timeout as a *finding* rather than as inconclusive, so on a target that fails them the peak
 still reports the budget. See [`examples/`](examples/) for one test module per OWASP category.
 

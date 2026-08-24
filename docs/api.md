@@ -1,7 +1,7 @@
 # API reference
 
 Auto-generated from the source docstrings. The public surface is small: a unified **adapter** layer
-for targets, and a **probes** layer for attack cases, detectors and scans.
+for targets plus a **probes** layer for attack cases, detectors and scans.
 
 ## Adapters
 
@@ -67,8 +67,7 @@ white-box LLM03 supply-chain scanner, and the LLM01 red-team set.
 ### Red-team detectors
 
 The refusal oracle that scores the red-team set (inverted polarity: a target is
-a finding when it complies with a harmful request instead of refusing it), and
-its mirror image, the over-refusal oracle that flags a refusal of a *benign*
+a finding when it complies with a harmful request instead of refusing it). Its mirror image, the over-refusal oracle that flags a refusal of a *benign*
 twin (the false-refusal-rate metric, a usability signal kept out of the findings).
 
 ::: llmsectest.probes.detectors

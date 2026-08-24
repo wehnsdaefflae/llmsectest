@@ -27,7 +27,7 @@ findings, nothing else to read. So every run reports what was **delivered** and 
 ```
 
 The same figures ride along in the SARIF as a run-level `attacks_withstood` property, broken down by
-OWASP category, and the rendered HTML page leads with them. Three rules make the number worth
+OWASP category. The rendered HTML page leads with them. Three rules make the number worth
 trusting:
 
 - **Only delivered attacks count.** Coverage assertions and the static scanners (LLM03, LLM04) are not
@@ -43,9 +43,9 @@ trusting:
 
 The number is most useful over time. Wire the scan into CI (see [CI/CD
 integration](ci.md)) and compare runs: `21 withstood` becoming `17 withstood` says a defense
-regressed, and it says so even when the finding count stayed inside whatever variance you tolerate
+regressed. It says so even when the finding count stayed inside whatever variance you tolerate
 from a sampled model. That comparison is the reason the tally is per category: a defense usually
-protects one surface, and you want to see *that* surface, not a total.
+protects one surface. You want to see *that* surface, not a total.
 
 ## What "withstood" does and does not mean
 

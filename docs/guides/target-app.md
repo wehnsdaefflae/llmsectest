@@ -11,7 +11,7 @@ llmsectest --target app:https://your-app.example.com/chat
 ```
 
 LLMSecTest POSTs the **attacker turn** to your endpoint and reads the reply. It sends *only* the user
-message. Your application supplies its own system prompt, and that's the thing we want to test.
+message. Your application supplies its own system prompt. That's the thing we want to test.
 
 ### Request and response shapes
 
@@ -84,7 +84,7 @@ llmsectest --target app:http://localhost:8000/chat \
   `--app-secret`. There the secret lives in the prompt/config, here in the retrieved corpus.
 - **`--app-rag-poison`**, the marker a **poisoned document** planted in your retrieved corpus instructs
   the model to emit. Enables the **LLM08** indirect-injection probes: benign queries retrieve the poisoned
-  doc, and a vulnerable app obeys its instruction and emits the marker (which the probe never named). It
+  doc. A vulnerable app obeys its instruction and emits the marker (which the probe never named). It
   proves the app trusts retrieved content, the LLM08↔LLM01 bridge. Independent of `--app-canary`; supply
   either or both.
 
@@ -99,12 +99,12 @@ not-exercised rather than passed. Always check `llmsectest --check`.
 
 If your endpoint is unreachable, returns something that isn't the JSON shape above, or dies partway
 through a scan, those probes are recorded **inconclusive**, never as findings. A target we could not
-talk to is not a vulnerable target, and the report says so in three places. A red banner at the top of
+talk to is not a vulnerable target. The report says so in three places. A red banner at the top of
 the HTML page, an `undelivered` count in the SARIF run properties, and the console *Attacks Delivered*
 block.
 
-**The run also exits non-zero.** That's deliberate, and it's the half that makes the rest safe. A scan
-that reached nothing produces an empty findings list, and in CI that's indistinguishable from a clean
+**The run also exits non-zero.** That's deliberate. It's the half that makes the rest safe. A scan
+that reached nothing produces an empty findings list. In CI that's indistinguishable from a clean
 bill of health. `0 findings, 25 never delivered` is not a pass.
 
 A slow app is a different case. One that exceeds `--app-timeout` was reached and ran out of budget. That
@@ -120,7 +120,7 @@ after 90.0s: probe inconclusive, app endpoint http://127.0.0.1:8041/chat did not
 ```
 
 That matters because a category runs several mechanisms. `LLM02 attempted 4, inconclusive 3` is honest
-about the count, and it still leaves you guessing which three. Now you can read it off the report.
+about the count. It still leaves you guessing which three. Now you can read it off the report.
 
 **And every scan records its slowest answered probe**, whether or not anything timed out:
 
@@ -148,21 +148,21 @@ like a round number.
 We did that to ourselves. Our own 50-application cohort split into ten slow targets at 18 to 23 seconds a
 probe and forty fast ones at 4 to 10. It looked like two kinds of application. It was arithmetic. Each of
 the ten had lost four or five probes pinned at 90 seconds. Count only the probes that answered and the ten
-run at 5 to 12 seconds against the forty's 4 to 10, and the gap is gone.
+run at 5 to 12 seconds against the forty's 4 to 10. The gap is gone.
 
-One more thing fell out of that, and you want it before you read your own timeouts. On nine of the ten,
+One more thing fell out of that. You want it before you read your own timeouts. On nine of the ten,
 the probes that timed out were **consecutive**. That's not four expensive probes. It's one window where
-the app answered nothing, and our own deadline is what opens it. Your app doesn't stop working when we
+the app answered nothing. Our own deadline is what opens it. Your app doesn't stop working when we
 stop waiting. If your handler is synchronous in front of a backend that serves one request at a time, our
 next probe queues behind the generation we walked away from, and it times out for a reason that has
-nothing to do with it. So read a run of consecutive timeouts as one event, and only the first one as
+nothing to do with it. So read a run of consecutive timeouts as one event and only the first one as
 having a cause.
 
-**A rate-limited target is a third case, and it says so.** A hosted target that answers `HTTP 429` has
+**A rate-limited target is a third case. It says so.** A hosted target that answers `HTTP 429` has
 been reached, so the report does not tell you to check whether your endpoint is up. Those probes are
 recorded inconclusive in the same tally, with `rate limited by the target` as the reason and the
 provider's own `Retry-After` value when it sent one, and the run exits non-zero for the same reason as
-above. There is no retry or backoff: getting the count right comes first, and a retry loop
+above. There is no retry or backoff: getting the count right comes first. A retry loop
 built over a wrong count would only produce a confidently wrong number. Slow the scan down or raise your
 quota, then run it again.
 

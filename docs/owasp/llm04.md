@@ -70,7 +70,7 @@ not at LLMSecTest's own test file.
 ## Scope and roadmap
 
 This is the offline, zero-dependency baseline, focused on the load-time code-execution vector. A richer
-engine (ProtectAI `modelscan` / `picklescan` / `fickling`) behind an optional extra, and the training-data
+engine (ProtectAI `modelscan` / `picklescan` / `fickling`) behind an optional extra, plus the training-data
 provenance dimensions, are tracked follow-ups, mirroring how LLM03 layers the networked OSV.dev lookup on
 top of its offline structural scan.
 

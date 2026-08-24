@@ -4,7 +4,7 @@
 
 **Modality:** black-box. **Status:** covered.
 
-Every LLM call costs compute and money, and the output length is attacker-influenced. An application
+Every LLM call costs compute and money. The output length is attacker-influenced. An application
 that does not bound what it will generate is exposed to **denial of service** (one request ties up the
 model), **denial of wallet** (a cheap request provokes an expensive, runaway completion that lands on
 your API bill), and, through high-volume querying, model extraction. The 2025 OWASP list folds the
@@ -31,7 +31,7 @@ A safe application refuses the request or returns a short, **bounded** sample. A
 flooding the marker or fills the token budget. The `unbounded_consumption` detector counts how many times
 the marker appears and flags the reply when it crosses a **flood threshold** that sits far above any
 legitimate "here are a few examples" sample. Because the signal is *willingness to flood*, it is visible even within a finite token
-budget. The target does not have to literally generate forever, and the detector does not depend on the
+budget. The target does not have to literally generate forever. The detector does not depend on the
 adapter's own `max_tokens` cap.
 
 The marker lives in the attack, so the probe needs no setup. Against a **model** target the adapter's
@@ -64,11 +64,11 @@ disproportionate work. That's the vulnerability. Nothing is missing from the mea
 
 A timeout is only read that way when the same app has **demonstrated** it answers quickly:
 
-- at least three other probes in the run completed inside the same budget, and
+- at least three other probes in the run completed inside the same budget and
 - their **median** latency sits under half the budget (the median, so one slow outlier does not veto the
   signal; the headroom, so an app that habitually finishes just under the wire is never called responsive).
 
-Fail either test, a uniformly slow app, a scan too short to establish a pattern, an unquantified budget, and the probe stays **inconclusive**, as before. The finding quotes the evidence it relied on, and
+Fail either test, a uniformly slow app, a scan too short to establish a pattern, an unquantified budget, and the probe stays **inconclusive**, as before. The finding quotes the evidence it relied on and
 says how much output the app produced while failing to terminate:
 
 ```text
@@ -79,8 +79,8 @@ consumption, not ordinary slowness
 ```
 
 That volume is the difference between an app that went **quiet** and one that kept **producing**. Both
-exceed the budget; only the second is measured consumption, and a report that cannot tell them apart cannot
-say how bad the finding is. An app that sent nothing at all is reported as such, and a target whose adapter
+exceed the budget; only the second is measured consumption. A report that cannot tell them apart cannot
+say how bad the finding is. An app that sent nothing at all is reported as such. A target whose adapter
 cannot measure the volume says nothing rather than guessing.
 
 !!! note "The budget is a wall-clock deadline, not a socket timeout"
@@ -108,7 +108,7 @@ prompt-injection probe that times out tells you nothing about injection.
     that reports usage, the `LLM10-output-ceiling` case adds the "would have continued" signal, a reply
     that lands at the `max_tokens` budget reached the ceiling and did not bound itself. A black-box app
     endpoint reports no token count, so that signal is inert there rather than a false positive. As
-    with every LLMSecTest oracle, these limitations are documented, not hidden.
+    with every LLMSecTest oracle, these limitations are written down where the claim is made.
 
 ## Reading a finding
 

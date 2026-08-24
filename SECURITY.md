@@ -26,15 +26,15 @@ that boundary:
 
 ## What does not count
 
-- **Findings the tool reports about your application.** That's the tool working, and they belong
+- **Findings the tool reports about your application.** That's the tool working. They belong
   to whoever owns that application.
 - **The attack prompts in `src/llmsectest/probes/`.** They're supposed to be adversarial. That's the
   product.
-- **A scan being slow, or a target timing out.** Real, and an ordinary issue rather than a security one.
+- **A scan being slow, or a target timing out.** Real. An ordinary issue rather than a security one.
 
 ## Scope
 
-This repository. The scanned targets aren't in scope, and neither is the published report set on
+This repository. The scanned targets aren't in scope. Neither is the published report set on
 llmsec.dev, which holds scans of applications I wrote to be scanned.
 
 ## Supported versions
