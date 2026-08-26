@@ -321,7 +321,14 @@ class RiskScoringEngine:
                 "Review remediation steps for these categories."
             )
 
-        if not recommendations:
+        if statistics.get("undelivered"):
+            # This block used to fall through to "posture is acceptable" on a run where
+            # nothing was answered, which is the one sentence such a run cannot support.
+            recommendations.append(
+                f"{statistics['undelivered']} probe(s) never reached the target. Re-run "
+                "before drawing any conclusion: this scan did not test what it reports on."
+            )
+        elif not recommendations:
             recommendations.append(
                 "Security posture is acceptable. Continue monitoring for changes."
             )

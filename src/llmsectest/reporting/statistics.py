@@ -181,12 +181,19 @@ def calculate_statistics(results: list[TestResult]) -> dict:
     failed = sum(1 for r in results if r.outcome == "failed")
     skipped = sum(1 for r in results if r.outcome == "skipped")
     total_duration = sum(r.duration for r in results)
+    # Probes that never reached the target. Carried in the one statistics dict every
+    # generator reads, because every consumer that judged a run on `failed` alone reached
+    # the same wrong verdict independently (2026-08-26).
+    undelivered = sum(
+        1 for r in results if r.properties.get("llmsec_undelivered") is not None
+    )
 
     stats = {
         "total": total,
         "passed": passed,
         "failed": failed,
         "skipped": skipped,
+        "undelivered": undelivered,
         "pass_rate": round((passed / total * 100), 2) if total > 0 else 0,
         "fail_rate": round((failed / total * 100), 2) if total > 0 else 0,
         "total_duration": round(total_duration, 3),

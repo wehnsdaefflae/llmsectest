@@ -10,7 +10,34 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ## [Unreleased]
 
+### Fixed
+
+- **2026-08-26**: the console summary **contradicted the exit code it was printing beside**. On a scan
+  where probes never reached the target, the status line read `PASSED`, the posture line read
+  *Security posture is STRONG - all tests passing*, the risk recommendation read *Security posture is
+  acceptable*, and the footer read *Exit code: 0 (all tests passed)*, while the process exited **1** and
+  a `SCAN INCOMPLETE` banner four lines below said the results did not describe the application. All
+  four were computed from the failure count alone, which cannot see a probe that never arrived. The
+  status now reads `INCOMPLETE`, no posture is claimed, the recommendation asks for a re-run, and the
+  exit-code line says 1. The undelivered count travels in the shared statistics dictionary, so a
+  consumer cannot reach the old verdict by recomputing it.
+
+
+- **2026-08-25**: the **GitHub Actions example in the CI guide ran the scan twice**. One run wrote the
+  SARIF that gets uploaded to code scanning. A second, separate run decided whether the build
+  passes.
+  Probes are model-driven, so those two runs can disagree, which left the uploaded report describing a
+  different scan from the one that failed the build. The job now scans once and re-reads
+  `steps.scan.outcome`, so the report and the verdict are the same run. The example also waits for the
+  application to answer before scanning, since without that a copy-paste user's first result was our
+  honesty guarantee firing on an app that had not finished booting.
+
 ### Changed
+
+- **2026-08-25**: the CI guide opens with the offline path (`pip install llmsectest` then
+  `llmsectest --target demo-defended`, no key, no GPU, no network) and gains a section on what a
+  non-zero exit means, because **undelivered probes exit non-zero too** and a reader who does not know
+  that reads "could not reach your app" as "your app is vulnerable".
 
 - **2026-08-24**: a leaked secret's evidence now says whether the match was **verbatim** or survived
   only after casefolding, rendered as `(via casefold)` beside the finding. A filter with a

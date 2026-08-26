@@ -30,10 +30,18 @@ class Colors:
     RESET = "\033[0m"
 
 
-def _assess_security_posture(stats: dict) -> str:
-    """Assess overall security posture based on test results."""
+def _assess_security_posture(stats: dict, undelivered: int = 0) -> str:
+    """Assess overall security posture based on test results.
+
+    ``undelivered`` is the number of probes that never reached the target. It can only
+    ever *remove* the clean verdict, never add one: a run that lost probes has not shown
+    the application is strong, it has failed to ask. Before 2026-08-26 this function saw
+    only ``stats["failed"]``, so a scan where every probe timed out printed *posture is
+    STRONG, all tests passing* directly above the banner saying the results do not
+    describe the target.
+    """
     if stats["failed"] == 0:
-        return "strong"
+        return "incomplete" if undelivered else "strong"
     critical_failed = stats["by_severity"].get("critical", {}).get("failed", 0)
     high_failed = stats["by_severity"].get("high", {}).get("failed", 0)
     if critical_failed > 0:
@@ -101,7 +109,13 @@ def generate_console_summary(
         stats["by_severity"].get("critical", {}).get("failed", 0) +
         stats["by_severity"].get("high", {}).get("failed", 0)
     )
-    security_posture = _assess_security_posture(stats)
+    # Probes that never reached the target. The plugin already refuses to exit 0 on these
+    # and prints a SCAN INCOMPLETE banner; this block used to contradict both, three lines
+    # at a time, because it read only the failure count (2026-08-26).
+    undelivered = sum(
+        1 for r in results if r.properties.get("llmsec_undelivered") is not None
+    )
+    security_posture = _assess_security_posture(stats, undelivered)
 
     # Color helpers
     c = Colors if show_colors else type('NoColor', (), {k: '' for k in dir(Colors) if not k.startswith('_')})()
@@ -116,7 +130,13 @@ def generate_console_summary(
     lines.append("")
 
     # Quick status indicator
-    if stats["failed"] == 0:
+    if stats["failed"] == 0 and undelivered:
+        # Not PASSED and not FAILED: we did not get an answer, so we have no verdict to
+        # give. The third state is the whole honesty guarantee, and the headline is where
+        # a reader looks first.
+        status = f"{c.YELLOW}{c.BOLD}INCOMPLETE{c.RESET}"
+        status_icon = f"{c.YELLOW}[?]{c.RESET}"
+    elif stats["failed"] == 0:
         status = f"{c.GREEN}{c.BOLD}PASSED{c.RESET}"
         status_icon = f"{c.GREEN}[OK]{c.RESET}"
     elif critical_high_failures > 0:
@@ -302,6 +322,8 @@ def generate_console_summary(
     # Security posture assessment
     posture_messages = {
         "strong": f"{c.GREEN}Security posture is STRONG - all tests passing{c.RESET}",
+        "incomplete": (f"{c.YELLOW}No posture to report - {undelivered} probe(s) never reached "
+                       f"the target, so nothing here describes it{c.RESET}"),
         "critical": f"{c.RED}CRITICAL issues detected - immediate action required{c.RESET}",
         "needs_attention": f"{c.YELLOW}High severity issues detected - prioritize remediation{c.RESET}",
         "moderate": f"{c.YELLOW}Some issues detected but manageable{c.RESET}",
@@ -317,6 +339,12 @@ def generate_console_summary(
     lines.append(f"{c.BOLD}{'='*70}{c.RESET}")
     if stats["failed"] > 0:
         lines.append(f"  {c.RED}Exit code: 1 (failures detected){c.RESET}")
+    elif undelivered:
+        # The process really does exit 1 here (the plugin sets it on the same condition).
+        # This line said 0 until 2026-08-26, which made it the only line in the output that
+        # a reader could check against reality and find false.
+        lines.append(
+            f"  {c.YELLOW}Exit code: 1 ({undelivered} probe(s) never delivered){c.RESET}")
     else:
         lines.append(f"  {c.GREEN}Exit code: 0 (all tests passed){c.RESET}")
     lines.append("")

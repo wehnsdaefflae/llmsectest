@@ -163,7 +163,10 @@ unreachable, replies with something that isn't JSON, or dies partway through, th
 recorded **inconclusive** and the run **exits non-zero**. Both halves matter, because an empty findings
 list from a scan that reached nothing would otherwise pass CI as a clean bill of health. The count
 appears as a banner on the HTML page, an `undelivered` property in the SARIF, and a line in the
-console summary. A slow app is different. You reached it, so raise `--app-timeout` instead. So
+console summary, and the summary also **withholds its verdict** rather than reporting a good one:
+the status reads `INCOMPLETE` instead of `PASSED`, no security posture is claimed, and the exit-code
+line says 1. A run that did not get an answer has not shown your application is sound, it failed to
+ask. A slow app is different. You reached it, so raise `--app-timeout` instead. So
 is a **rate-limited** one: a hosted target answering `HTTP 429` was reached too, so those probes are
 inconclusive and named as throttled rather than as unreachable, with the provider's own `Retry-After`
 where it sent one. This holds for **every** `--target`, local or hosted, and that is a checked

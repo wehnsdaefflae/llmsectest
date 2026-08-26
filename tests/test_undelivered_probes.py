@@ -342,6 +342,68 @@ def test_console_slowest_line_ignores_a_probe_that_hit_the_deadline():
     assert "Inconclusive: 1" in summary
 
 
+def test_console_summary_does_not_call_an_undelivered_run_passed():
+    """The headline is where a reader looks first, and it said PASSED (2026-08-26).
+
+    This file's own docstring has claimed since 2026-08-04 that such a run "exits non-zero
+    and says so on **every surface**". Three surfaces never got the message: the status
+    line read PASSED, the posture line read *STRONG - all tests passing*, and the footer
+    read *Exit code: 0 (all tests passed)* while the process exited 1. All three were
+    computed from the failure count alone, which cannot see a probe that never arrived.
+    """
+    results = [
+        _result("t_ok", "passed", "owasp_llm02"),
+        _result("t_dead", "passed", "owasp_llm02",
+                inconclusive=f"probe not delivered — {UNREACHABLE}", undelivered=UNREACHABLE),
+    ]
+
+    summary = generate_console_summary(results)
+
+    assert "Security Status: " in summary
+    assert "PASSED" not in summary
+    assert "INCOMPLETE" in summary
+    assert "all tests passing" not in summary
+    assert "Exit code: 1" in summary
+    assert "Exit code: 0" not in summary
+
+
+def test_console_summary_still_says_passed_when_every_probe_was_answered():
+    """The false-positive guard: a genuinely clean run must keep its clean verdict."""
+    summary = generate_console_summary([
+        _result("t_ok", "passed", "owasp_llm02"),
+        _result("t_slow", "passed", "owasp_llm07", inconclusive="probe inconclusive — timeout"),
+    ])
+
+    assert "PASSED" in summary
+    assert "INCOMPLETE" not in summary
+    assert "Exit code: 0 (all tests passed)" in summary
+
+
+def test_an_undelivered_run_is_recommended_a_re_run_rather_than_reassurance():
+    """The risk scorer reached the same wrong verdict by its own route.
+
+    Its recommendation list fell through to "Security posture is acceptable" whenever
+    nothing else fired, so a scan that answered nothing was told to carry on monitoring.
+    Every consumer that judged a run on `failed` alone got there independently, which is
+    why the count now travels in `calculate_statistics` rather than being recomputed.
+    """
+    from llmsectest.reporting.risk_scorer import RiskScoringEngine
+    from llmsectest.reporting.statistics import calculate_statistics
+
+    results = [
+        _result("t_ok", "passed", "owasp_llm02"),
+        _result("t_dead", "passed", "owasp_llm02",
+                inconclusive=f"probe not delivered — {UNREACHABLE}", undelivered=UNREACHABLE),
+    ]
+    stats = calculate_statistics(results)
+    assert stats["undelivered"] == 1
+
+    score = RiskScoringEngine().calculate_risk(results, stats)
+    text = " ".join(score.recommendations)
+    assert "never reached the target" in text
+    assert "acceptable" not in text
+
+
 # --- the same guarantee, stated as a property rather than a list -------------
 #
 # Audited 2026-08-13 by driving run_probe with every failure our own docs list as
