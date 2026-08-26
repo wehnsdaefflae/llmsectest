@@ -1156,6 +1156,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#fixed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#changed" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1167,7 +1178,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fixed" class="md-nav__link">
+  <a href="#fixed_1" class="md-nav__link">
     <span class="md-ellipsis">
       
         Fixed
@@ -1206,7 +1217,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#fixed_1" class="md-nav__link">
+  <a href="#fixed_2" class="md-nav__link">
     <span class="md-ellipsis">
       
         Fixed
@@ -1228,7 +1239,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fixed_2" class="md-nav__link">
+  <a href="#fixed_3" class="md-nav__link">
     <span class="md-ellipsis">
       
         Fixed
@@ -1250,7 +1261,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fixed_3" class="md-nav__link">
+  <a href="#fixed_4" class="md-nav__link">
     <span class="md-ellipsis">
       
         Fixed
@@ -1305,7 +1316,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fixed_4" class="md-nav__link">
+  <a href="#fixed_5" class="md-nav__link">
     <span class="md-ellipsis">
       
         Fixed
@@ -1349,7 +1360,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fixed_5" class="md-nav__link">
+  <a href="#fixed_6" class="md-nav__link">
     <span class="md-ellipsis">
       
         Fixed
@@ -1410,7 +1421,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fixed_6" class="md-nav__link">
+  <a href="#fixed_7" class="md-nav__link">
     <span class="md-ellipsis">
       
         Fixed
@@ -1472,6 +1483,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#fixed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#changed" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1483,7 +1505,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fixed" class="md-nav__link">
+  <a href="#fixed_1" class="md-nav__link">
     <span class="md-ellipsis">
       
         Fixed
@@ -1522,7 +1544,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#fixed_1" class="md-nav__link">
+  <a href="#fixed_2" class="md-nav__link">
     <span class="md-ellipsis">
       
         Fixed
@@ -1544,7 +1566,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fixed_2" class="md-nav__link">
+  <a href="#fixed_3" class="md-nav__link">
     <span class="md-ellipsis">
       
         Fixed
@@ -1566,7 +1588,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fixed_3" class="md-nav__link">
+  <a href="#fixed_4" class="md-nav__link">
     <span class="md-ellipsis">
       
         Fixed
@@ -1621,7 +1643,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fixed_4" class="md-nav__link">
+  <a href="#fixed_5" class="md-nav__link">
     <span class="md-ellipsis">
       
         Fixed
@@ -1665,7 +1687,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fixed_5" class="md-nav__link">
+  <a href="#fixed_6" class="md-nav__link">
     <span class="md-ellipsis">
       
         Fixed
@@ -1726,7 +1748,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fixed_6" class="md-nav__link">
+  <a href="#fixed_7" class="md-nav__link">
     <span class="md-ellipsis">
       
         Fixed
@@ -1769,17 +1791,49 @@
 <code>0.2.0</code> is the first one on PyPI, so <code>pip install llmsectest</code> works from 2026-08-21. The
 forward-looking plan is the <a href="https://llmsec.dev/#roadmap">roadmap</a>.</p>
 <h2 id="unreleased"><a href="https://github.com/wehnsdaefflae/llmsectest/compare/v0.1.0...HEAD">Unreleased</a><a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
+<h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Permanent link">&para;</a></h3>
+<ul>
+<li>
+<p><strong>2026-08-26</strong>: the console summary <strong>contradicted the exit code it was printing beside</strong>. On a scan
+  where probes never reached the target, the status line read <code>PASSED</code>, the posture line read
+  <em>Security posture is STRONG - all tests passing</em>, the risk recommendation read <em>Security posture is
+  acceptable</em>, and the footer read <em>Exit code: 0 (all tests passed)</em>, while the process exited <strong>1</strong> and
+  a <code>SCAN INCOMPLETE</code> banner four lines below said the results did not describe the application. All
+  four were computed from the failure count alone, which cannot see a probe that never arrived. The
+  status now reads <code>INCOMPLETE</code>, no posture is claimed, the recommendation asks for a re-run, and the
+  exit-code line says 1. The undelivered count travels in the shared statistics dictionary, so a
+  consumer cannot reach the old verdict by recomputing it.</p>
+</li>
+<li>
+<p><strong>2026-08-25</strong>: the <strong>GitHub Actions example in the CI guide ran the scan twice</strong>. One run wrote the
+  SARIF that gets uploaded to code scanning. A second, separate run decided whether the build
+  passes.
+  Probes are model-driven, so those two runs can disagree, which left the uploaded report describing a
+  different scan from the one that failed the build. The job now scans once and re-reads
+  <code>steps.scan.outcome</code>, so the report and the verdict are the same run. The example also waits for the
+  application to answer before scanning, since without that a copy-paste user's first result was our
+  honesty guarantee firing on an app that had not finished booting.</p>
+</li>
+</ul>
 <h3 id="changed">Changed<a class="headerlink" href="#changed" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>2026-08-24</strong>: a leaked secret's evidence now says whether the match was <strong>verbatim</strong> or survived
+<li>
+<p><strong>2026-08-25</strong>: the CI guide opens with the offline path (<code>pip install llmsectest</code> then
+  <code>llmsectest --target demo-defended</code>, no key, no GPU, no network) and gains a section on what a
+  non-zero exit means, because <strong>undelivered probes exit non-zero too</strong> and a reader who does not know
+  that reads "could not reach your app" as "your app is vulnerable".</p>
+</li>
+<li>
+<p><strong>2026-08-24</strong>: a leaked secret's evidence now says whether the match was <strong>verbatim</strong> or survived
   only after casefolding, rendered as <code>(via casefold)</code> beside the finding. A filter with a
   case-sensitive level and a case-insensitive one used to read identically in a report, so neither
   could be pinned as a control for the other. Contributed by
   <a href="https://github.com/Aditya-k63">@Aditya-k63</a> in
   <a href="https://github.com/wehnsdaefflae/llmsectest/pull/8">#8</a>, closing
-  <a href="https://github.com/wehnsdaefflae/llmsectest/issues/5">#5</a>. The project's first outside pull request.</li>
+  <a href="https://github.com/wehnsdaefflae/llmsectest/issues/5">#5</a>. The project's first outside pull request.</p>
+</li>
 </ul>
-<h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_1">Fixed<a class="headerlink" href="#fixed_1" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>2026-08-24</strong> <code>docs/owasp/llm08.md</code> told the reader to reproduce the defense matrix with a script
   that ships only in a private repository. It now says how to reproduce the same four-row shape against
@@ -1798,7 +1852,7 @@ forward-looking plan is the <a href="https://llmsec.dev/#roadmap">roadmap</a>.</
 endpoint, the undelivered-probe honesty guarantee and its widenings, the de-obfuscating leak
 oracles, the CycloneDX SBOM, and the reporting work that came out of scanning 50 applications
 a day and publishing every report.</p>
-<h3 id="fixed_1">Fixed<a class="headerlink" href="#fixed_1" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_2">Fixed<a class="headerlink" href="#fixed_2" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>CI ran 23 fewer tests than it reported on and had done since the openai adapter was written.</strong>
   <code>pip install -e ".[dev,cvss]"</code> did not install <code>openai</code>, so every test guarded by
@@ -1834,7 +1888,7 @@ a day and publishing every report.</p>
   credential incidental to the job the assistant exists for. A fifth mechanism of that shape is the top
   open item on the probe corpus. (2026-08-20)</li>
 </ul>
-<h3 id="fixed_2">Fixed<a class="headerlink" href="#fixed_2" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_3">Fixed<a class="headerlink" href="#fixed_3" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>A probe cut off at the deadline no longer counts toward how fast the target answers.</strong> The run-level
   <code>latency</code> property averaged every timing together, including the probes pinned at <code>--app-timeout</code>, which
@@ -1896,7 +1950,7 @@ a day and publishing every report.</p>
   as having appeared, because most applications hand their system prompt over on request and their prompt
   is where the grammar is written down. (2026-08-10)</li>
 </ul>
-<h3 id="fixed_3">Fixed<a class="headerlink" href="#fixed_3" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_4">Fixed<a class="headerlink" href="#fixed_4" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>A target that only rate-limited you is no longer published as a vulnerable one.</strong> A hosted provider
   answering <code>HTTP 429</code> raises a rate-limit exception. That exception matched nothing in the
@@ -2122,7 +2176,7 @@ a day and publishing every report.</p>
   <a href="https://wehnsdaefflae.github.io/llmsectest/guides/red-team-your-defense/">Red-team your defense</a>.
   (2026-07-31)</li>
 </ul>
-<h3 id="fixed_4">Fixed<a class="headerlink" href="#fixed_4" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_5">Fixed<a class="headerlink" href="#fixed_5" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong><code>--app-timeout</code> now bounds the whole request, so a <em>streaming</em> app can no longer run past it.</strong> The
   budget was handed to <code>urllib</code>, whose <code>timeout</code> bounds a single socket <strong>operation</strong>, not the request. An
@@ -2386,7 +2440,7 @@ a day and publishing every report.</p>
   <strong>6/10</strong> OWASP categories. Without <code>--repo</code>, LLM03 reports itself skipped (needs a repo), never a
   silent pass. (2026-06-10)</li>
 </ul>
-<h3 id="fixed_5">Fixed<a class="headerlink" href="#fixed_5" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_6">Fixed<a class="headerlink" href="#fixed_6" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>An incomplete OSV.dev batch response is now reported instead of quietly shrinking the scan
   (<code>--osv</code>, OWASP LLM03).</strong> OSV answers one result per query, in order, and the scan paired the two by
@@ -2540,7 +2594,7 @@ a day and publishing every report.</p>
 <li>SARIF <code>security-severity</code> now carries the real CVSS v4.0 base score instead of a flat severity
   placeholder. (2026-06-09)</li>
 </ul>
-<h3 id="fixed_6">Fixed<a class="headerlink" href="#fixed_6" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_7">Fixed<a class="headerlink" href="#fixed_7" title="Permanent link">&para;</a></h3>
 <ul>
 <li>CLI: a space-separated option value (e.g. <code>--report-dir tmp</code>) was mistaken for a positional test path
   and silently skipped the packaged suite. (2026-06-09)</li>
