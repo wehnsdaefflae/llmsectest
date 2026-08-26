@@ -10,6 +10,12 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ## [Unreleased]
 
+- **2026-08-27** Reworded the voided-attempts note in every report. It read "cannot count as
+  withstood, the secret was disclosed, by a different probe", a comma splice printed at the foot
+  of every rendered report and stored in every SARIF; it now reads "A different probe got the
+  secret out, so these attempts cannot count as withstood." Wording only: the voiding rule, the
+  counts and the SARIF field names are unchanged.
+
 ### Fixed
 
 - **2026-08-26**: the console summary **contradicted the exit code it was printing beside**. On a scan
