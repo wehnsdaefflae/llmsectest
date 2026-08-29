@@ -179,6 +179,21 @@ NO_TRANSPORT_PROVIDERS = {"mock": "answers in-process, no endpoint"}
 INHERITS_OPENAI_COMPLETE = {"ollama", "lmstudio"}
 
 
+#: Target specs that ``resolve_target`` accepts without going through the registry at all,
+#: with the file that proves each one translates its own failures. Added 2026-08-28: the
+#: check below used to enumerate ``available_providers()``, and ``app:<url>`` is not in the
+#: registry, so **the one path every real third-party cohort member is scanned through was
+#: outside the world this test reasons about**. Its handling could have been deleted and
+#: this file would still have passed. That is a filter the checker chose standing in for
+#: the whole set, which is the shape of most defects this project has had.
+NON_REGISTRY_SPECS = {
+    "app:": "AppEndpointAdapter — tests/test_application_targets.py",
+    "demo": "ScriptedAdapter, answers in-process",
+    "demo-vulnerable": "ScriptedAdapter, answers in-process",
+    "demo-defended": "ScriptedAdapter, answers in-process",
+}
+
+
 def test_every_registered_provider_is_covered_here():
     """No silent gaps: a new provider needs a case, an inheritance note, or an exemption.
 
@@ -197,6 +212,52 @@ def test_every_registered_provider_is_covered_here():
         "transport failure), list it in INHERITS_OPENAI_COMPLETE, or exempt it in "
         "NO_TRANSPORT_PROVIDERS with the reason"
     )
+
+
+def test_the_registry_is_not_the_whole_set_of_target_paths():
+    """Every branch of ``resolve_target`` is accounted for, not only the registry ones.
+
+    Read the resolver's source and require that each literal target spec it special-cases
+    before falling through to ``get_adapter`` appears in ``NON_REGISTRY_SPECS``. Reading
+    the function rather than calling it is deliberate: a new branch is a new way to reach
+    a target, and it has to be declared here even when standing one up needs a network.
+    """
+    import inspect
+    import re
+
+    from llmsectest.probes.demo import resolve_target
+
+    source = inspect.getsource(resolve_target)
+    # every quoted literal on a line that branches on the spec, before ``provider:model``
+    literals = set()
+    for line in source.splitlines():
+        stripped = line.strip()
+        # `if` and `elif` both, because the first cut read only `if ` and an `elif` branch
+        # slipped straight past it: the enumerating test's own world was a filter it chose,
+        # one level in from the defect it was written to close. Found 2026-08-28 by adding
+        # a fake `elif` branch and watching this pass.
+        if not re.match(r"(el)?if\b", stripped) or "spec" not in stripped:
+            continue
+        literals |= set(re.findall(r'"([^"]*)"', stripped))
+    literals.discard("")
+    assert literals, "the resolver stopped branching on literal specs; re-read it"
+
+    undeclared = literals - set(NON_REGISTRY_SPECS)
+    assert not undeclared, (
+        f"resolve_target reaches a target through {sorted(undeclared)} and this file does "
+        "not mention it, so nothing here asserts that path never turns a failed request "
+        "into a finding. Declare it in NON_REGISTRY_SPECS with where it is proven"
+    )
+
+
+def test_the_app_endpoint_path_is_reachable_and_declared():
+    """The declaration above is worth nothing if the spec it names no longer resolves."""
+    from llmsectest.adapters.app_endpoint import AppEndpointAdapter
+    from llmsectest.probes.demo import resolve_target
+
+    adapter = resolve_target("app:http://127.0.0.1:9/chat")
+    assert isinstance(adapter, AppEndpointAdapter)
+    assert adapter.provider not in available_providers()
 
 
 # --- the contract ------------------------------------------------------------
@@ -635,7 +696,7 @@ def test_a_headers_object_that_does_not_behave_like_a_mapping_is_survived():
     nothing raised while obtaining the reply becomes a finding, and that has to hold for the
     code reading the reply's metadata too.
     """
-    from llmsectest.adapters.base import _retry_after_seconds
+    from llmsectest.adapters.base import retry_after_seconds
 
     class _Hostile:
         def get(self, _key):
@@ -643,16 +704,16 @@ def test_a_headers_object_that_does_not_behave_like_a_mapping_is_survived():
 
     exc = RateLimitError("slow down")
     exc.response = types.SimpleNamespace(headers=_Hostile())
-    assert _retry_after_seconds(exc) is None
+    assert retry_after_seconds(exc) is None
 
     exc.response = types.SimpleNamespace(headers=object())
-    assert _retry_after_seconds(exc) is None
+    assert retry_after_seconds(exc) is None
 
 
 def test_a_non_numeric_retry_after_is_dropped_rather_than_guessed():
     """The HTTP-date form is legal and we deliberately do not parse it."""
-    from llmsectest.adapters.base import _retry_after_seconds
+    from llmsectest.adapters.base import retry_after_seconds
 
     exc = RateLimitError("slow down")
     exc.response = types.SimpleNamespace(headers={"retry-after": "Wed, 21 Oct 2026 07:28:00 GMT"})
-    assert _retry_after_seconds(exc) is None
+    assert retry_after_seconds(exc) is None

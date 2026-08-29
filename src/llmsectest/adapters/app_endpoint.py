@@ -26,11 +26,14 @@ import urllib.request
 
 from .base import (
     AdapterError,
+    AdapterThrottleError,
     AdapterTimeoutError,
     CompletionRequest,
     CompletionResponse,
     LLMAdapter,
     Role,
+    is_rate_limit_error,
+    retry_after_seconds,
 )
 
 _AUTODETECT = ("reply", "response", "output", "message", "content", "text", "answer")
@@ -128,6 +131,16 @@ class AppEndpointAdapter(LLMAdapter):
                 payload = json.loads(self._read_within_deadline(resp, deadline).decode())
         except TimeoutError as exc:
             raise self._timeout_error() from exc
+        except urllib.error.HTTPError as exc:
+            # An HTTPError is a URLError subclass, so the branch below used to swallow it
+            # and every status came out of a report as "unreachable". The guarantee held —
+            # an AdapterError is inconclusive and never a finding — but the *reason* was
+            # wrong on three of the five ways this endpoint can fail, and the reason is
+            # what an operator acts on. Measured on 2026-08-28 by driving the real CLI at
+            # a server answering 429, 500 and 401: all three read "unreachable: HTTP Error
+            # …", so the advice was "check your URL" for a throttle, an outage and a bad
+            # token alike. This is the path every third-party cohort member runs through.
+            raise self._http_error(exc) from exc
         except urllib.error.URLError as exc:  # pragma: no cover - network
             # A connect-phase timeout surfaces as URLError(reason=timeout); keep it a
             # timeout (not a generic "unreachable") so a slow endpoint is handled the
@@ -194,6 +207,38 @@ class AppEndpointAdapter(LLMAdapter):
             received += len(chunk)
             if received > _MAX_BODY_BYTES:
                 raise self._volume_error(received)
+
+    def _http_error(self, exc: urllib.error.HTTPError) -> AdapterError:
+        """An answered request that refused us, named by what the application actually said.
+
+        Both returns stay inside the ``AdapterError`` family, so the honesty guarantee is
+        untouched: the probe is inconclusive, it is never a finding, and the run exits
+        non-zero. Only the operator's next move changes, which is the whole point of
+        separating these — a 429 is a budget to raise, a 401 is a token to fix, a 500 is
+        the application's own log to read, and none of them is a URL to check.
+
+        A 429 becomes :class:`AdapterThrottleError` with the ``Retry-After`` the app sent,
+        the same class the SDK-backed adapters raise, so a throttled application and a
+        throttled hosted model are one case downstream instead of two.
+        """
+        status = exc.code
+        if is_rate_limit_error(exc):
+            retry_after = retry_after_seconds(exc)
+            hint = (
+                f" It asked us to retry after {retry_after:g}s."
+                if retry_after is not None
+                else ""
+            )
+            return AdapterThrottleError(
+                f"app endpoint {self.endpoint} rate-limited the request (HTTP 429).{hint} "
+                f"No answer was returned, so nothing was scored",
+                retry_after=retry_after,
+            )
+        return AdapterError(
+            f"app endpoint {self.endpoint} answered HTTP {status} ({exc.reason}) instead "
+            f"of a reply, so nothing was scored. The endpoint was reached: this is the "
+            f"application refusing or failing, not an unreachable URL"
+        )
 
     def _timeout_error(self, bytes_received: int | None = None) -> AdapterTimeoutError:
         if bytes_received:

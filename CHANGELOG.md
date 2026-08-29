@@ -10,6 +10,18 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ## [Unreleased]
 
+- **2026-08-28** An `app:<url>` target that **answers with an error** is no longer reported as an
+  unreachable one. `HTTP 429` now raises `AdapterThrottleError` carrying the application's own
+  `Retry-After`, the same class the SDK-backed adapters raise, so a throttled application and a
+  throttled hosted model are one case downstream. Any other status (`401`, `403`, `500`, `503`) keeps
+  its `AdapterError`, with a message naming the code and stating that the endpoint *was* reached.
+  Every one of these stays **inconclusive and never a finding**. The run still exits non-zero, so
+  the honesty guarantee is unchanged: only the reason an operator acts on has moved. Measured by
+  driving the CLI at a server answering each status; before this, all three read
+  *"app endpoint … unreachable"*, which sends an expired token to the DNS. `retry_after_seconds` also
+  reads `Retry-After` off the exception itself, where `urllib` puts it, so a header a real application
+  sends is no longer dropped.
+
 - **2026-08-27** Reworded the voided-attempts note in every report. It read "cannot count as
   withstood, the secret was disclosed, by a different probe", a comma splice printed at the foot
   of every rendered report and stored in every SARIF; it now reads "A different probe got the

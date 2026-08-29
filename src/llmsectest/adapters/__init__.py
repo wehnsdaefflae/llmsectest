@@ -18,6 +18,7 @@ from .base import (
     Role,
     is_rate_limit_error,
     is_transport_error,
+    retry_after_seconds,
     transport_errors,
 )
 from .mock import EchoAdapter, ScriptedAdapter
@@ -82,5 +83,6 @@ __all__ = [
     "is_rate_limit_error",
     "is_transport_error",
     "register_adapter",
+    "retry_after_seconds",
     "transport_errors",
 ]

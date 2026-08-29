@@ -196,14 +196,22 @@ def is_rate_limit_error(exc: BaseException) -> bool:
     return http_status(exc) == 429
 
 
-def _retry_after_seconds(exc: BaseException) -> float | None:
+def retry_after_seconds(exc: BaseException) -> float | None:
     """The provider's ``Retry-After`` header in seconds, when it sent one.
 
     Only the delta-seconds form is read. The HTTP-date form is legal too, but turning it
     into a wait needs the response clock, and a wrong number here is worse than none: it
     would go into a report as advice.
+
+    Two places are read, because SDKs disagree about where the response goes.
+    ``openai``/``anthropic`` hang a ``response`` object off the exception; the stdlib's
+    ``urllib.error.HTTPError`` *is* the response and carries ``headers`` directly, which is
+    the shape the ``app:<url>`` adapter raises. Reading only the first spelling silently
+    dropped every ``Retry-After`` a real application sends us.
     """
     headers = getattr(getattr(exc, "response", None), "headers", None)
+    if headers is None:
+        headers = getattr(exc, "headers", None)
     if headers is None:
         return None
     try:
@@ -262,9 +270,9 @@ def transport_errors(provider: str, endpoint: str) -> Iterator[None]:
         yield
     except Exception as exc:  # broad on purpose: re-raised below unless we translate it
         if is_rate_limit_error(exc):
-            retry_after = _retry_after_seconds(exc)
+            retry_after = retry_after_seconds(exc)
             hint = (
-                f" the target asked us to retry after {retry_after:g}s;"
+                f" It asked us to retry after {retry_after:g}s."
                 if retry_after is not None
                 else ""
             )

@@ -166,13 +166,17 @@ appears as a banner on the HTML page, an `undelivered` property in the SARIF, an
 console summary, and the summary also **withholds its verdict** rather than reporting a good one:
 the status reads `INCOMPLETE` instead of `PASSED`, no security posture is claimed, and the exit-code
 line says 1. A run that did not get an answer has not shown your application is sound, it failed to
-ask. A slow app is different. You reached it, so raise `--app-timeout` instead. So
-is a **rate-limited** one: a hosted target answering `HTTP 429` was reached too, so those probes are
-inconclusive and named as throttled rather than as unreachable, with the provider's own `Retry-After`
-where it sent one. This holds for **every** `--target`, local or hosted, and that is a checked
-property rather than a promise: each provider's adapter has to translate its own transport failures
-and its own throttle, so a test pins that every provider we ship does both (see [Author your own
-security tests](https://docs.llmsec.dev/guides/authoring/) if you add one of your own).
+ask. A slow app is different. You reached it, so raise `--app-timeout` instead.
+
+**A target that answers is never called unreachable.** An endpoint that replies `HTTP 429` was
+reached, so its probes are inconclusive and named as **throttled**, carrying the target's own
+`Retry-After` where it sent one, because that is a quota to raise rather than a URL to check. Any
+other refusal (`401`, `403`, `500`) is inconclusive too, and the reason names the status and says the
+endpoint answered, so an expired token does not read as a wrong address. This holds for **every**
+`--target`, hosted, local or `app:<url>`, and it is a checked property rather than a promise: a test reads
+the target resolver's own branches and fails when a new kind of target is added without a case (see
+[Author your own security tests](https://docs.llmsec.dev/guides/authoring/) if you add one of your
+own).
 
 **Browse a report as HTML.** `--render-sarif <file.sarif>` turns any SARIF v2.1.0
 report, one of ours or any other tool's, into a single self-contained HTML page

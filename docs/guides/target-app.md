@@ -111,6 +111,14 @@ A slow app is a different case. One that exceeds `--app-timeout` was reached and
 is also inconclusive, but it doesn't fail the run, raise the budget instead. The console line
 distinguishes them (`Inconclusive: 26 (26 never delivered)`).
 
+**An app that answers with an error is a third case. The report says which.** If your endpoint
+replies `HTTP 429` the probe is recorded as **throttled**, with your app's own `Retry-After` when it
+sends one, because the fix is a quota rather than a URL. Any other refusal (`401` on an expired token,
+`403` from a gateway in front of the app, `500` from the app itself) is inconclusive as well, and the
+reason names the status and says the endpoint *was* reached. That distinction matters when you are
+scanning through an auth layer: `app endpoint … answered HTTP 401 (Unauthorized)` sends you to your
+token, where `unreachable` would send you to your DNS.
+
 **Every inconclusive probe is named.** The reason recorded for each one starts with the probe's own id
 and technique, so the report says which attacks you did not get an answer for:
 
