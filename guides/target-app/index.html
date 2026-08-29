@@ -1439,6 +1439,13 @@ bill of health. <code>0 findings, 25 never delivered</code> is not a pass.</p>
 <p>A slow app is a different case. One that exceeds <code>--app-timeout</code> was reached and ran out of budget. That
 is also inconclusive, but it doesn't fail the run, raise the budget instead. The console line
 distinguishes them (<code>Inconclusive: 26 (26 never delivered)</code>).</p>
+<p><strong>An app that answers with an error is a third case. The report says which.</strong> If your endpoint
+replies <code>HTTP 429</code> the probe is recorded as <strong>throttled</strong>, with your app's own <code>Retry-After</code> when it
+sends one, because the fix is a quota rather than a URL. Any other refusal (<code>401</code> on an expired token,
+<code>403</code> from a gateway in front of the app, <code>500</code> from the app itself) is inconclusive as well, and the
+reason names the status and says the endpoint <em>was</em> reached. That distinction matters when you are
+scanning through an auth layer: <code>app endpoint … answered HTTP 401 (Unauthorized)</code> sends you to your
+token, where <code>unreachable</code> would send you to your DNS.</p>
 <p><strong>Every inconclusive probe is named.</strong> The reason recorded for each one starts with the probe's own id
 and technique, so the report says which attacks you did not get an answer for:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>APP-shop-LLM02-handover-summary [indirect disclosure via a configuration handover document]

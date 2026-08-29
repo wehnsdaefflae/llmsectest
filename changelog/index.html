@@ -1791,6 +1791,28 @@
 <code>0.2.0</code> is the first one on PyPI, so <code>pip install llmsectest</code> works from 2026-08-21. The
 forward-looking plan is the <a href="https://llmsec.dev/#roadmap">roadmap</a>.</p>
 <h2 id="unreleased"><a href="https://github.com/wehnsdaefflae/llmsectest/compare/v0.1.0...HEAD">Unreleased</a><a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
+<ul>
+<li>
+<p><strong>2026-08-28</strong> An <code>app:&lt;url&gt;</code> target that <strong>answers with an error</strong> is no longer reported as an
+  unreachable one. <code>HTTP 429</code> now raises <code>AdapterThrottleError</code> carrying the application's own
+  <code>Retry-After</code>, the same class the SDK-backed adapters raise, so a throttled application and a
+  throttled hosted model are one case downstream. Any other status (<code>401</code>, <code>403</code>, <code>500</code>, <code>503</code>) keeps
+  its <code>AdapterError</code>, with a message naming the code and stating that the endpoint <em>was</em> reached.
+  Every one of these stays <strong>inconclusive and never a finding</strong>. The run still exits non-zero, so
+  the honesty guarantee is unchanged: only the reason an operator acts on has moved. Measured by
+  driving the CLI at a server answering each status; before this, all three read
+  <em>"app endpoint … unreachable"</em>, which sends an expired token to the DNS. <code>retry_after_seconds</code> also
+  reads <code>Retry-After</code> off the exception itself, where <code>urllib</code> puts it, so a header a real application
+  sends is no longer dropped.</p>
+</li>
+<li>
+<p><strong>2026-08-27</strong> Reworded the voided-attempts note in every report. It read "cannot count as
+  withstood, the secret was disclosed, by a different probe", a comma splice printed at the foot
+  of every rendered report and stored in every SARIF; it now reads "A different probe got the
+  secret out, so these attempts cannot count as withstood." Wording only: the voiding rule, the
+  counts and the SARIF field names are unchanged.</p>
+</li>
+</ul>
 <h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Permanent link">&para;</a></h3>
 <ul>
 <li>
