@@ -18,6 +18,7 @@ llmsectest --sbom [<out.json>] --repo <path>
 | `--osv` | With `--repo`: also query [OSV.dev](https://osv.dev) for **known CVEs** in every exactly-pinned (`==X.Y.Z`) dependency (networked, free, no API key). Off by default so the scan stays offline/deterministic; any non-run state (not requested, nothing pinned, lookup failed) appears as an explicit skip reason. |
 | `--sbom [<out.json>]` | With `--repo`: write a **CycloneDX 1.6 JSON SBOM** of the project's declared dependencies (one PURL-identified component each) and exit. An exact pin (`==X.Y.Z`) is carried into the component `version` + a fully-qualified PURL (`pkg:pypi/name@version`); a range/unpinned dependency is left version-less with its raw constraint recorded as a property. So the SBOM is only ever as precise as the manifests allow, never asserting a version a manifest did not pin. Built dependency-free from the stdlib. Writes `results/<repo>.cdx.json` unless a path is given. |
 | `--model-scan <path>` | Add the white-box **LLM04 (data and model poisoning)** scan of the serialized model files under that path. Walks each pickle's opcode stream (stdlib `pickletools`, never unpickling) and flags imports of code-execution primitives (`os.system`, `subprocess`, `builtins.eval`, nested `pickle`/`torch.load`, reflection gadgets) that would run on load, across raw pickles, PyTorch `.pt`/`.pth`/`.ckpt` zips and numpy object arrays. Offline and deterministic; a clean weights file does not false-positive. |
+| `--vector-store <path>` | Add the white-box **LLM08 (vector and embedding weaknesses)** embedding-inversion exposure scan of a persisted vector store. Reads Chroma sqlite through a read-only URI, JSON and JSONL stores including the LlamaIndex shape, and FAISS `index.pkl` sidecars whose strings come off the `pickletools` opcode stream (never unpickled). Reports plaintext filed beside the vectors, a credential shape in the stored corpus, the embedding space being recorded, source-identifying per-vector metadata, and a world-readable store file. It does not run an inversion, which needs a trained inverter per embedding space; it measures what a reader of the store gets without one. A store of vectors and ids alone reports clean. |
 | `--redteam-set <csv>` | Run the **LLM01 red-team** module against the JailbreakBench [JBB-Behaviors](https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors) CSV at this path (the 100-behaviour benchmark; columns `Index,Goal,Target,Behavior,Category,Source`). A target is a finding when it **complies** with a harmful request instead of refusing (refusal oracle). Without the flag, a built-in starter set runs so an offline scan still exercises the oracle. |
 | `--redteam-benign [<csv>]` | Measure **over-refusal**: run the JBB **benign twins** (harmless requests matched to the harmful behaviours) through the over-refusal oracle and report the target's **false-refusal rate**. Bare uses a built-in benign set; pass JBB's `benign-behaviors.csv` for the full 100. Over-refusing is a usability defect rather than a vulnerability, so it is reported separately and never enters the SARIF findings or the exit code. |
 | `--app-prompt <text-or-file>` | With `--target app:<url>`: the app's **own system prompt** (inline text, or a path to a file holding it), unlocks **LLM07** leakage detection, since we then know what a leaked instruction looks like. |
@@ -76,9 +77,10 @@ black-box: LLM01, LLM05, LLM09 and LLM10 (a bounded repetition-flood probe) alwa
 **LLM07/LLM02/LLM06/LLM08 join them when you pass
 `--app-prompt` / `--app-secret` / `--app-action` / `--app-canary` / `--app-rag-poison`**, each category
 whose input is missing is reported as skipped with the flag that would enable it (LLM04 is white-box,
-enabled by `--model-scan`). LLM08 has two enabling markers: `--app-canary` (retrieval exposure) and
-`--app-rag-poison` (indirect injection via a poisoned retrieved document). `llmsectest --check` prints the
-same map with each category's CVSS score.
+enabled by `--model-scan`). LLM08 has three enabling flags: `--app-canary` (retrieval exposure),
+`--app-rag-poison` (indirect injection via a poisoned retrieved document) and `--vector-store`
+(embedding-inversion exposure, white-box and offline). `llmsectest --check` prints the same map with
+each category's CVSS score.
 
 ## Exit code
 

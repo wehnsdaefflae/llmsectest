@@ -63,7 +63,7 @@ See [Funding](#funding).
 | LLM05 improper output handling | asks the app to emit active payloads; a raw echo is the finding | black-box |
 | LLM06 excessive agency | four unverifiable authority claims, scored on a real invocation | black-box |
 | LLM07 system prompt leakage | extraction attacks against the app's own prompt | black-box |
-| LLM08 vector and embedding weaknesses | for RAG apps: *retrieval exposure* + *indirect injection via a poisoned retrieved document* | black-box |
+| LLM08 vector and embedding weaknesses | for RAG apps: *retrieval exposure* + *indirect injection via a poisoned retrieved document*; offline, an *embedding-inversion exposure* scan of a persisted vector store (`--vector-store`) | black-box + white-box |
 | LLM09 misinformation | asks about entities that provably do not exist; confabulation is the finding | black-box |
 | LLM10 unbounded consumption | repetition-flood and output-amplification probes, with an output-token cost figure | black-box |
 
@@ -87,7 +87,7 @@ See [Funding](#funding).
   target's **false-refusal rate**, a usability signal that's kept out of the security findings and the exit code.
 - **One adapter for every target.** OpenAI, Anthropic, HuggingFace, and local Ollama / LM Studio, plus a
   running application at its own HTTP endpoint (`--target app:<url>`).
-- **Next up.** More depth. The white-box LLM08 dimensions and a classifier refusal oracle. The modules
+- **Next up.** More depth. Embedding-store poisoning, multi-tenant retrieval isolation, a classifier refusal oracle. The modules
   under [`examples/`](examples/) show the reporting pipeline across all ten categories with deterministic
   mock fixtures.
 
@@ -207,6 +207,7 @@ What a category needs and what it gets you:
 | `--app-rag-poison <marker>` | LLM08 indirect injection | the marker a planted poisoned document tells the model to emit |
 | `--repo <path>` | LLM03 | dependency manifests to scan (add `--osv` for known CVEs, `--sbom` for CycloneDX) |
 | `--model-scan <path>` | LLM04 | serialized model files, read as pickle opcodes and never unpickled |
+| `--vector-store <path>` | LLM08 embedding-inversion exposure | a persisted vector store (Chroma sqlite, JSON store, FAISS sidecar), read offline and never unpickled |
 | `--redteam-set <csv>` | LLM01 depth | the JailbreakBench 100-behaviour corpus (`--redteam-benign` adds the over-refusal rate) |
 
 Every flag above is documented with its semantics, defaults and failure modes in the

@@ -35,7 +35,7 @@ target, run `llmsectest --check` to see the live map.
 | LLM05 | Improper Output Handling | black-box (or white-box) |
 | LLM06 | Excessive Agency | black-box (or white-box) |
 | LLM07 | System Prompt Leakage | **black-box**, prompt extraction |
-| LLM08 | Vector and Embedding Weaknesses | **black-box**, your RAG app (`--app-canary` / `--app-rag-poison`) |
+| LLM08 | Vector and Embedding Weaknesses | **black-box**, your RAG app (`--app-canary` / `--app-rag-poison`); white-box, your vector store (`--vector-store`) |
 | LLM09 | Misinformation | **black-box**, nonexistent-entity confabulation |
 | LLM10 | Unbounded Consumption | **black-box**, flood / output amplification |
 
@@ -46,8 +46,9 @@ target, run `llmsectest --check` to see the live map.
 !!! note "Status"
     Pre-alpha (active grant development). All **10/10** OWASP LLM Top 10 (2025) categories ship today:
     black-box probes for **LLM01/02/05/06/07/09/10**, white-box scanners for **LLM03 (supply chain)**
-    (`--repo`) and **LLM04 (data and model poisoning)** (`--model-scan`), and black-box **LLM08 (vector &
-    embedding weaknesses)** RAG probes. What remains to do is depth rather than breadth. Coverage claims here always
+    (`--repo`) and **LLM04 (data and model poisoning)** (`--model-scan`), and **LLM08 (vector &
+    embedding weaknesses)** both ways, black-box RAG probes plus an offline embedding-inversion
+    exposure scan of a persisted store (`--vector-store`). What remains to do is depth rather than breadth. Coverage claims here always
     match what the tool does, see `llmsectest --check`.
 
 !!! warning "Which edition and why not the newer one"

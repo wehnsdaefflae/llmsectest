@@ -26,6 +26,13 @@ from .corpus import (
     covered_categories,
     get_corpus,
 )
+from .vectorstore import (
+    VectorStoreFinding,
+    discover_vector_stores,
+    scan_vector_store,
+    scan_vector_stores,
+    unreadable_stores,
+)
 from .demo import (
     defended_demo_adapter,
     resolve_target,
@@ -79,6 +86,7 @@ __all__ = [
     "Dependency",
     "FalseRefusalReport",
     "ModelPoisonFinding",
+    "VectorStoreFinding",
     "OsvScanResult",
     "ProbeCase",
     "ProbeOutcome",
@@ -95,6 +103,10 @@ __all__ = [
     "cases_for",
     "collect_dependencies",
     "covered_categories",
+    "discover_vector_stores",
+    "scan_vector_store",
+    "scan_vector_stores",
+    "unreadable_stores",
     "defended_demo_adapter",
     "discover_manifests",
     "discover_model_files",

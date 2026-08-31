@@ -17,6 +17,7 @@ Examples:
     python -m llmsectest --repo . --osv                    # + known-CVE lookup via OSV.dev
     python -m llmsectest --sbom --repo .                   # write a CycloneDX SBOM of the deps
     python -m llmsectest --model-scan models/              # add the LLM04 model-poisoning scan
+    python -m llmsectest --vector-store storage/           # add the LLM08 embedding-inversion scan
     python -m llmsectest --redteam-set jbb/harmful-behaviors.csv  # 100 JailbreakBench prompts (LLM01)
     python -m llmsectest --redteam-benign                  # + measure over-refusal (built-in twins)
     python -m llmsectest --redteam-benign jbb/benign-behaviors.csv  # over-refusal vs the 100 JBB twins
@@ -96,8 +97,10 @@ _TESTABILITY = {
     "owasp_llm05": ("black-box", None),
     "owasp_llm06": ("black-box", None),
     "owasp_llm07": ("black-box", None),
-    "owasp_llm08": ("black-box", ("requires --target app:<url> + --app-canary (RAG retrieval canary) "
-                                  "and/or --app-rag-poison (poisoned-document marker)")),
+    "owasp_llm08": ("black-box + white-box",
+                    ("requires --target app:<url> + --app-canary (RAG retrieval canary) "
+                     "and/or --app-rag-poison (poisoned-document marker), or "
+                     "--vector-store <path> for the offline embedding-inversion scan")),
     "owasp_llm09": ("black-box", None),
     "owasp_llm10": ("black-box", None),
 }
@@ -109,6 +112,12 @@ _TESTABILITY = {
 _SCANNER_INPUT = {
     "owasp_llm03": (envvars.REPO, "needs --repo <path> to scan dependency manifests"),
     "owasp_llm04": (envvars.MODEL_SCAN, "needs --model-scan <path> to scan model files"),
+    # LLM08 is the one category with both a black-box and a white-box route, so it is
+    # in this table *and* in APP_ONLY_CATEGORIES. The footer reads both before calling
+    # it skipped: reporting "needs an app target" on a run that scanned a vector store
+    # would be a coverage map contradicting the scan printed above it.
+    "owasp_llm08": (envvars.VECTOR_STORE,
+                    "needs --vector-store <path> to scan a persisted vector store"),
 }
 
 
@@ -149,6 +158,9 @@ def check_coverage():
     print("queries OSV.dev for known CVEs in exactly-pinned versions (networked, no key).")
     print("LLM04: --model-scan <path> scans serialized model files (pickle/PyTorch-zip/")
     print("numpy) offline for code-execution imports that run on load (a poisoned model).")
+    print("LLM08: --vector-store <path> scans a persisted vector store (Chroma sqlite,")
+    print("JSON stores, FAISS sidecars) for how much of the corpus a reader of the store")
+    print("gets without inverting anything. Offline, and the sidecar is never unpickled.")
     print("LLM01: --redteam-set <csv> runs the full JailbreakBench harmful set; "
           "--redteam-benign")
     print("[<csv>] measures the over-refusal (false-refusal) rate over the benign twins.")
@@ -364,10 +376,11 @@ def _print_coverage_footer(target: str | None) -> None:
                 scanner_env, scanner_hint = _SCANNER_INPUT.get(m, (None, None))
                 if m in SCANNER_CATEGORIES and not os.environ.get(scanner_env):
                     skipped.append((m, scanner_hint))
-                elif m in APP_ONLY_CATEGORIES:
+                elif m in APP_ONLY_CATEGORIES and not os.environ.get(scanner_env or ""):
                     skipped.append((m, ("needs a RAG application target, "
                                         "--target app:<url> with --app-canary "
-                                        "and/or --app-rag-poison")))
+                                        "and/or --app-rag-poison, or --vector-store "
+                                        "<path> for the offline scan")))
                 else:
                     exercised.append(m)
             else:
@@ -435,6 +448,7 @@ def _print_over_refusal(target: str | None, path: str | None) -> None:
 def run_suite(args: list, target: str | None, repo: str | None = None,
               osv: bool = False, redteam_set: str | None = None,
               model_scan: str | None = None,
+              vector_store: str | None = None,
               app_prompt: str | None = None,
               app_secret: str | None = None,
               app_actions: tuple[str, ...] = (),
@@ -451,6 +465,9 @@ def run_suite(args: list, target: str | None, repo: str | None = None,
     repo's exactly-pinned dependency versions (networked, opt-in).
     ``model_scan`` (from ``--model-scan``) enables the white-box LLM04 data/model-
     poisoning scan over the serialized model files under that path (offline).
+    ``vector_store`` (from ``--vector-store``) enables the white-box LLM08 embedding-
+    inversion exposure scan over a persisted vector store (offline, stdlib only, and
+    it never unpickles a sidecar it reads).
     ``redteam_set`` (from ``--redteam-set``) points the LLM01 red-team module at
     a JailbreakBench JBB-Behaviors CSV; without it the built-in starter set runs.
     ``app_prompt``/``app_secret``/``app_actions``/``app_canary``/``app_rag_poison``
@@ -475,6 +492,7 @@ def run_suite(args: list, target: str | None, repo: str | None = None,
         envvars.REPO: repo,
         envvars.OSV: "1" if osv else None,
         envvars.MODEL_SCAN: model_scan,
+        envvars.VECTOR_STORE: vector_store,
         envvars.REDTEAM_SET: redteam_set,
         envvars.APP_PROMPT: app_prompt,
         envvars.APP_SECRET: app_secret,
@@ -660,6 +678,7 @@ def main():
     args, repo = _extract_opt(args, "--repo")
     args, osv = _extract_flag(args, "--osv")
     args, model_scan = _extract_opt(args, "--model-scan")
+    args, vector_store = _extract_opt(args, "--vector-store")
     args, redteam_set = _extract_opt(args, "--redteam-set")
     args, redteam_benign, redteam_benign_set = _extract_opt_flag(args, "--redteam-benign")
     args, app_prompt = _extract_opt(args, "--app-prompt")
@@ -711,6 +730,7 @@ def main():
 
     return run_suite(args, target, repo, osv, redteam_set=redteam_set,
                      model_scan=model_scan,
+                     vector_store=vector_store,
                      app_prompt=app_prompt, app_secret=app_secret,
                      app_actions=tuple(app_actions), app_canary=app_canary,
                      app_rag_poison=app_rag_poison, app_timeout=app_timeout,

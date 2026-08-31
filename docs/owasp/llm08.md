@@ -3,15 +3,18 @@
 > Flaws in how a RAG system generates, stores, retrieves or access-controls embeddings let an attacker
 > leak indexed content, retrieve another tenant's data, poison retrieval, or invert embeddings back to text.
 
-**Modality:** black-box (retrieval exposure + RAG indirect injection). **Status:** covered (two dimensions).
+**Modality:** black-box (retrieval exposure + RAG indirect injection) and white-box (embedding-inversion
+exposure). **Status:** covered (three dimensions).
 
-!!! note "Two black-box dimensions ship; white-box dimensions tracked"
-    Retrieval exposure and RAG indirect injection are the black-box dimensions and ship now. The
-    **white-box** dimensions, embedding/data poisoning, multi-tenant namespace isolation, and embedding
-    inversion, need the vector store's internals (or a controlled multi-tenant fixture) and are a tracked
-    later increment. As always, they are reported as *not exercised* with a reason, never silently passed:
-    with neither `--app-canary` nor `--app-rag-poison` (or against a bare model, which has no retrieval
-    corpus) the LLM08 module skips with an explicit message naming both flags.
+!!! note "Three dimensions ship; two are still tracked"
+    Retrieval exposure and RAG indirect injection are black-box and need a running application.
+    Embedding-inversion exposure is white-box and needs only a path to the persisted store, so it runs
+    offline with no application at all. The two still tracked are **embedding/data poisoning** of the
+    store and **multi-tenant namespace isolation**, which needs a controlled multi-tenant fixture. As
+    always, a dimension that did not run is reported as *not exercised* with a reason, never silently
+    passed: with neither `--app-canary` nor `--app-rag-poison` (or against a bare model, which has no
+    retrieval corpus) the black-box half skips naming both flags, and without `--vector-store` the
+    white-box half skips naming that one.
 
 
 Retrieval-Augmented Generation (RAG) bolts a vector store and a retriever onto an LLM so it can answer
@@ -89,6 +92,52 @@ layer, the **LLM08↔LLM01 bridge** (LLM01 is the same oracle against an instruc
 llmsectest --target app:http://localhost:8000/chat \
     --app-rag-poison "RAG-POISON-3b9d"                # enable LLM08 indirect-injection probes
 ```
+
+### Dimension 3, embedding-inversion exposure (`--vector-store`)
+
+White-box and offline. It needs no application at all. Point it at the directory or file your RAG
+system persists its vectors to:
+
+```bash
+llmsectest --vector-store storage/                    # scan a persisted store
+llmsectest --vector-store storage/chroma.sqlite3      # or one file
+llmsectest --target app:http://localhost:8000/chat --app-canary CANARY --vector-store storage/
+```
+
+**It does not invert your embeddings.** The scanner's own docstring says so. Embedding inversion is real: published work
+recovers a large share of a short passage from its vector alone, when the embedding model is public.
+Running one needs a trained inverter for that particular embedding space, a GPU, and a corpus to train
+on. Nothing that ships in a CI job carries that, so a tool claiming to invert your store would be
+claiming something it cannot do.
+
+What it does instead is ask the question inversion asks and answer it from the store. **How much of the
+corpus does somebody with read access to this directory get?** In most deployments the answer is all of
+it, with no inversion involved, because the store keeps the text next to the vector it was made from.
+
+| finding | severity | what it means |
+|---|---|---|
+| plaintext beside vectors | high | the same file or table holds the embeddings and their source text. Read access to the store is read access to the corpus. |
+| sensitive text stored | high | the stored corpus matches a credential shape (private key block, AWS key id, GitHub or Slack token, an `api_key = …` assignment). The store is holding material above its usual classification. |
+| embedding model disclosed | medium | the store records the embedding space it was built with. That is what tells an attacker which inverter to bring. |
+| metadata identifies the source | medium | per-vector metadata carries paths, document ids, authors or tenant keys. Knowing *which* document a vector came from is frequently the whole objective. |
+| world-readable store | medium | the store file grants read to group or other, so everything above is available to every local account. Raised only when there is something to read. |
+
+Formats read, with the standard library and nothing else: **Chroma** sqlite (opened through a read-only
+URI, so a scan cannot write to the store it inspects), **JSON and JSONL** stores including the shape
+LlamaIndex writes, and **FAISS `index.pkl` sidecars**.
+
+!!! warning "A sidecar is never unpickled"
+    A FAISS sidecar holds the docstore, so its strings are your corpus. Loading it to read them would
+    execute whatever else the file holds, which is precisely the attack the
+    [LLM04](llm04.md) scanner exists to find. The strings come off the `pickletools` opcode stream
+    instead. A test fails the build if `pickle.load` is ever reached.
+
+A store that keeps only vectors and ids produces no finding. That is the shape worth aiming for. A
+scanner that cannot report it clean is one nobody can use to show they fixed something.
+
+Store formats that need a reader we do not ship (LanceDB, Parquet, Qdrant snapshots) are **named in the
+skip reason** rather than passed over. They hold the same plaintext this scan looks for. A store
+nobody opened must not read as a store with no findings.
 
 ### Does a defense change the result?
 

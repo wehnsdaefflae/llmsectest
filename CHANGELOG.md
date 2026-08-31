@@ -10,6 +10,26 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ## [Unreleased]
 
+- **2026-08-31** **LLM08 gains a white-box dimension: `--vector-store <path>` scans a persisted
+  vector store for embedding-inversion exposure.** Offline, standard library only, no model load.
+  It does not run an inversion and says so in its own docstring: inverting an embedding needs a
+  trained inverter for that embedding space, which nothing shipping in CI can carry. It asks the
+  question inversion asks, from the store, and in most deployments the answer is that the plaintext
+  is filed beside the vector it was made from, so nothing needs inverting. Five findings: plaintext
+  beside vectors (`high`), a credential shape in the stored corpus (`high`), the embedding space
+  recorded in the store (`medium`, which is what tells an attacker which inverter to bring),
+  source-identifying per-vector metadata (`medium`), and a world-readable store file (`medium`,
+  raised only when there is something to read). Reads Chroma sqlite (read-only URI), the LlamaIndex
+  and generic JSON/JSONL shapes, and FAISS `index.pkl` sidecars. **A sidecar is never unpickled**:
+  its string constants come off the `pickletools` opcode stream, the way the LLM04 scanner reads a
+  weights file, because loading a pickle to find out whether it holds your corpus runs whatever else
+  it holds. A test asserts that, by failing if `pickle.load` is ever called. Store formats needing a
+  reader we do not ship (LanceDB, Parquet, Qdrant) are **named in the skip reason** rather than
+  passed over, so a store nobody opened cannot read as a store with no findings. A store holding
+  only vectors and ids reports clean, the shape worth aiming for. `--check` and the coverage footer
+  now list LLM08 as `black-box + white-box`. A bare-model run that passes `--vector-store` exercises
+  it. 25 tests.
+
 - **2026-08-28** An `app:<url>` target that **answers with an error** is no longer reported as an
   unreachable one. `HTTP 429` now raises `AdapterThrottleError` carrying the application's own
   `Retry-After`, the same class the SDK-backed adapters raise, so a throttled application and a

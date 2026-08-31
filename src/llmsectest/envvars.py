@@ -13,6 +13,7 @@ CLI option → environment variable:
 ``--repo <path>``           :data:`REPO`
 ``--osv``                   :data:`OSV` (``"1"`` when requested)
 ``--model-scan <path>``     :data:`MODEL_SCAN`
+``--vector-store <path>``   :data:`VECTOR_STORE`
 ``--redteam-set <csv>``     :data:`REDTEAM_SET`
 ``--app-prompt <text>``     :data:`APP_PROMPT`
 ``--app-secret <value>``    :data:`APP_SECRET`
@@ -31,6 +32,7 @@ TARGET = "LLMSECTEST_TARGET"
 REPO = "LLMSECTEST_REPO"
 OSV = "LLMSECTEST_OSV"
 MODEL_SCAN = "LLMSECTEST_MODEL_SCAN"
+VECTOR_STORE = "LLMSECTEST_VECTOR_STORE"
 REDTEAM_SET = "LLMSECTEST_REDTEAM_SET"
 APP_PROMPT = "LLMSECTEST_APP_PROMPT"
 APP_SECRET = "LLMSECTEST_APP_SECRET"
