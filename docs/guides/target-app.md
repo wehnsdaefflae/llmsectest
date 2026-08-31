@@ -145,7 +145,7 @@ The word *answered* is doing work. A probe recorded inconclusive because it ran 
 timeout, so it never enters the mean or the peak. It gets `probes_unfinished` and `unfinished_seconds`
 instead. Fold the two together and the mean stops describing your app and starts describing your budget.
 
-There is one exception and we would rather name it than let you find it. The two **bounded LLM10** probes
+There is one exception. The two **bounded LLM10** probes
 score a timeout as a finding, because a request for explicitly finite output that eats the whole budget is
 the vulnerability. Those probes are not inconclusive, so they land in the answered population and can set
 `peak_seconds` to your budget. On our own cohort that is 13 targets of 51, every one of them an LLM10
