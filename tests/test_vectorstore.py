@@ -139,6 +139,33 @@ def test_the_embedding_space_being_recorded_is_a_medium_finding(tmp_path):
     assert "hnsw:space=cosine" in disclosed[0].evidence
 
 
+def test_a_space_with_a_public_inverter_is_graded_higher(tmp_path):
+    """The severity turns on whether an attacker has to train an inverter or call one.
+
+    `vec2text` ships pre-trained correctors for ada-002 and GTR-base and for nothing
+    else, checked against its README on 2026-08-31. A store built on one of those is a
+    library call from reconstruction; a store on `all-MiniLM-L6-v2` is a training run.
+    """
+    store = _chroma(tmp_path / "chroma.sqlite3", documents=["a chunk"],
+                    collection_meta=[("embedding_model", "text-embedding-ada-002")])
+    disclosed = [f for f in scan_vector_store(store, root=tmp_path)
+                 if f.technique == "embedding model disclosed"]
+    assert len(disclosed) == 1
+    assert disclosed[0].severity == "high"
+    assert "trains nothing" in disclosed[0].evidence
+
+
+def test_a_space_with_no_public_inverter_stays_medium(tmp_path):
+    """And says the training cost out loud, so nobody reads medium as safe."""
+    store = _chroma(tmp_path / "chroma.sqlite3", documents=["a chunk"],
+                    collection_meta=[("embedding_model", "all-MiniLM-L6-v2")])
+    disclosed = [f for f in scan_vector_store(store, root=tmp_path)
+                 if f.technique == "embedding model disclosed"]
+    assert len(disclosed) == 1
+    assert disclosed[0].severity == "medium"
+    assert "training one" in disclosed[0].evidence
+
+
 def test_source_identifying_metadata_is_reported_separately(tmp_path):
     store = _chroma(tmp_path / "chroma.sqlite3",
                     documents=["a chunk"],

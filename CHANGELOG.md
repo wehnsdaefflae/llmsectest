@@ -17,7 +17,8 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
   question inversion asks, from the store, and in most deployments the answer is that the plaintext
   is filed beside the vector it was made from, so nothing needs inverting. Five findings: plaintext
   beside vectors (`high`), a credential shape in the stored corpus (`high`), the embedding space
-  recorded in the store (`medium`, which is what tells an attacker which inverter to bring),
+  recorded in the store (`medium`, or `high` when a published pre-trained inverter already covers
+  that space, since then the reconstruction is a library call rather than a training run),
   source-identifying per-vector metadata (`medium`), and a world-readable store file (`medium`,
   raised only when there is something to read). Reads Chroma sqlite (read-only URI), the LlamaIndex
   and generic JSON/JSONL shapes, and FAISS `index.pkl` sidecars. **A sidecar is never unpickled**:

@@ -23,11 +23,13 @@ What it flags, per store:
 * **sensitive text stored** (``high``) — stored text or metadata matches a
   credential or key shape. The corpus itself carries a secret, so the store is
   holding material at a higher classification than a vector index usually gets.
-* **embedding model disclosed** (``medium``) — the store records which embedding
-  model or space produced the vectors. That is what an inversion attack needs
-  first: an attacker holding a vector dump for a *named public* model can obtain
-  or train an inverter for exactly that space, where an unlabelled dump costs
-  them a guess.
+* **embedding model disclosed** (``medium``, ``high`` when a public inverter
+  already covers that space) — the store records which embedding model or space
+  produced the vectors. That is what an inversion attack needs first. The severity
+  turns on whether somebody has to train an inverter or can call one:
+  :data:`PUBLICLY_INVERTIBLE_SPACES` holds the spaces ``vec2text`` ships a
+  pre-trained corrector for, and a store built on one of those is a library call
+  away from reconstruction.
 * **metadata identifies the source** (``medium``) — per-vector metadata carries
   file paths, document ids, authors or tenant keys. Recovering *which* document a
   vector came from is often the whole attack, and no inversion is involved.
@@ -102,6 +104,20 @@ _SECRET_PATTERNS = (
     ("OpenAI-style API key", re.compile(r"\bsk-[A-Za-z0-9]{20,}\b")),
     ("assigned secret", re.compile(
         r"(?i)\b(?:api[_-]?key|secret|password|passwd|token)\b\s*[:=]\s*\S{8,}")),
+)
+
+#: Embedding spaces a *published, pre-trained* inverter already covers, so an attacker
+#: holding a dump of them does not have to train anything. Read off the `vec2text`
+#: README on 2026-08-31, which is the reference implementation for this attack: its
+#: `load_pretrained_corrector` ships correctors for OpenAI's ada-002 and for GTR-base,
+#: and every other space in its documentation is something you train yourself. Kept
+#: short and dated on purpose. A list of "models that sound invertible" would be a guess
+#: presented as a severity.
+PUBLICLY_INVERTIBLE_SPACES = (
+    "text-embedding-ada-002",
+    "gtr-base",
+    "gtr-t5-base",
+    "sentence-transformers/gtr-t5-base",
 )
 
 #: How much stored text to read per store. A vector store is routinely gigabytes,
@@ -400,17 +416,29 @@ def scan_vector_store(path: Path, root: Path | None = None) -> list[VectorStoreF
             ))
 
     if vectors and models:
+        joined = "; ".join(models[:3])
+        haystack = " ".join(models).lower()
+        known = [s for s in PUBLICLY_INVERTIBLE_SPACES if s.lower() in haystack]
+        if known:
+            evidence = (
+                f"the store records the embedding space it was built with ({joined}), "
+                f"and {known[0]} is a space a published pre-trained inverter already "
+                f"covers. An attacker who copies these vectors trains nothing: the "
+                f"reconstruction is a library call."
+            )
+        else:
+            evidence = (
+                f"the store records the embedding space it was built with ({joined}). "
+                f"That is what tells an attacker which inverter to bring. No public "
+                f"pre-trained inverter is known here for this space, so inverting it "
+                f"would mean training one, which is a cost rather than a defence."
+            )
         findings.append(VectorStoreFinding(
             id=f"vectorstore-model-disclosed-{_slug(where)}",
-            severity="medium",
+            severity="high" if known else "medium",
             store_file=where,
             technique="embedding model disclosed",
-            evidence=(
-                f"the store records the embedding space it was built with "
-                f"({'; '.join(models[:3])}). An attacker who copies the vectors knows "
-                f"which inverter to bring, and public inversion models exist for the "
-                f"common open embedding models."
-            ),
+            evidence=evidence,
             recommendation=(
                 "Classify a vector dump at the same level as the corpus. Naming the "
                 "model is useful to your own operators, so the fix is the access "

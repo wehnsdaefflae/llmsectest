@@ -118,7 +118,7 @@ it, with no inversion involved, because the store keeps the text next to the vec
 |---|---|---|
 | plaintext beside vectors | high | the same file or table holds the embeddings and their source text. Read access to the store is read access to the corpus. |
 | sensitive text stored | high | the stored corpus matches a credential shape (private key block, AWS key id, GitHub or Slack token, an `api_key = …` assignment). The store is holding material above its usual classification. |
-| embedding model disclosed | medium | the store records the embedding space it was built with. That is what tells an attacker which inverter to bring. |
+| embedding model disclosed | medium, **high** when a public inverter covers that space | the store records the embedding space it was built with. That is what tells an attacker which inverter to bring. `vec2text` ships pre-trained correctors for OpenAI's `text-embedding-ada-002` and for GTR-base and for nothing else (checked against its README on 2026-08-31), so a store on one of those is a library call from reconstruction while a store on `all-MiniLM-L6-v2` is a training run. The finding says which case you are in. |
 | metadata identifies the source | medium | per-vector metadata carries paths, document ids, authors or tenant keys. Knowing *which* document a vector came from is frequently the whole objective. |
 | world-readable store | medium | the store file grants read to group or other, so everything above is available to every local account. Raised only when there is something to read. |
 
