@@ -26,13 +26,6 @@ from .corpus import (
     covered_categories,
     get_corpus,
 )
-from .vectorstore import (
-    VectorStoreFinding,
-    discover_vector_stores,
-    scan_vector_store,
-    scan_vector_stores,
-    unreadable_stores,
-)
 from .demo import (
     defended_demo_adapter,
     resolve_target,
@@ -75,6 +68,13 @@ from .supplychain import (
     pinned_version,
     scan_dependencies,
 )
+from .vectorstore import (
+    VectorStoreFinding,
+    discover_vector_stores,
+    scan_vector_store,
+    scan_vector_stores,
+    unreadable_stores,
+)
 
 __all__ = [
     "ALL_CATEGORIES",
@@ -86,13 +86,13 @@ __all__ = [
     "Dependency",
     "FalseRefusalReport",
     "ModelPoisonFinding",
-    "VectorStoreFinding",
     "OsvScanResult",
     "ProbeCase",
     "ProbeOutcome",
     "RedTeamBehavior",
     "SupplyChainFinding",
     "TargetResponsiveness",
+    "VectorStoreFinding",
     "app_cases",
     "app_coverage",
     "app_name_from_endpoint",
@@ -103,13 +103,10 @@ __all__ = [
     "cases_for",
     "collect_dependencies",
     "covered_categories",
-    "discover_vector_stores",
-    "scan_vector_store",
-    "scan_vector_stores",
-    "unreadable_stores",
     "defended_demo_adapter",
     "discover_manifests",
     "discover_model_files",
+    "discover_vector_stores",
     "get_corpus",
     "get_detector",
     "load_benign_set",
@@ -125,5 +122,8 @@ __all__ = [
     "scan_known_vulnerabilities",
     "scan_model_file",
     "scan_model_files",
+    "scan_vector_store",
+    "scan_vector_stores",
+    "unreadable_stores",
     "vulnerable_demo_adapter",
 ]

@@ -302,16 +302,16 @@ def test_a_faiss_sidecar_is_read_without_being_unpickled(tmp_path, monkeypatch):
     monkeypatch.setattr(pickle_module, "loads", refuse)
     monkeypatch.setattr(pickle_module, "load", refuse)
 
-    _sidecar(tmp_path, ["Internal memo: the Frankfurt office closes in Q1, do not "
-                        "circulate this outside the leadership team."])
+    _sidecar(tmp_path, [("Internal memo: the Frankfurt office closes in Q1, do not "
+                         "circulate this outside the leadership team.")])
     findings = scan_vector_stores(tmp_path)
     assert "plaintext beside vectors" in _ids(findings)
 
 
 def test_a_sidecar_with_no_faiss_index_beside_it_holds_no_vectors(tmp_path):
     """Without the index there is nothing to invert, so the pickle is just a file."""
-    _sidecar(tmp_path, ["Internal memo: the Frankfurt office closes in Q1, and this "
-                        "is long enough to be read as a chunk of a corpus."])
+    _sidecar(tmp_path, [("Internal memo: the Frankfurt office closes in Q1, and this "
+                         "is long enough to be read as a chunk of a corpus.")])
     (tmp_path / "index.faiss").unlink()
     assert scan_vector_stores(tmp_path) == []
 
