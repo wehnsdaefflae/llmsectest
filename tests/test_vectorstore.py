@@ -260,6 +260,25 @@ def test_a_json_store_of_vectors_and_ids_only_is_clean(tmp_path):
     assert scan_vector_store(store, root=tmp_path) == []
 
 
+def test_a_jsonl_store_is_found_by_a_directory_walk(tmp_path):
+    """It was not, until 2026-08-31, while the skip message listed JSONL among the
+    formats it had looked for. `.json` stays name-matched, because globbing the most
+    common configuration extension would read a `package.json` as a corpus."""
+    (tmp_path / "store.jsonl").write_text(
+        json.dumps({"embedding": [0.1] * 16,
+                    "text": "Q3 forecast: we miss plan by 14 percent.",
+                    "source": "/srv/kb/q3.md"}) + "\n", encoding="utf-8")
+    assert [p.name for p in discover_vector_stores(tmp_path)] == ["store.jsonl"]
+    assert "plaintext beside vectors" in _ids(scan_vector_stores(tmp_path))
+
+
+def test_an_ordinary_json_config_beside_a_store_is_still_not_walked(tmp_path):
+    """The other side of that asymmetry, so the fix cannot widen into the corpus."""
+    (tmp_path / "package.json").write_text(
+        json.dumps({"embeddings": [[0.1] * 16], "documents": ["not a corpus"]}))
+    assert discover_vector_stores(tmp_path) == []
+
+
 def test_malformed_json_is_survived(tmp_path):
     (tmp_path / "docstore.json").write_text("{not json", encoding="utf-8")
     assert scan_vector_stores(tmp_path) == []
@@ -303,8 +322,18 @@ def test_a_truncated_sidecar_is_survived(tmp_path):
     assert scan_vector_stores(tmp_path) == []
 
 
-def test_the_sidecar_reader_walks_opcodes(tmp_path):
-    """Pins the mechanism, so a future rewrite cannot quietly switch to loading."""
+def test_the_fixture_really_is_a_pickle_carrying_its_strings_as_opcodes(tmp_path):
+    """A fixture check, not a guarantee about the reader.
+
+    It was called `test_the_sidecar_reader_walks_opcodes` and said it pinned the
+    mechanism, which it cannot: it walks the fixture with `pickletools` inside the test
+    and never calls the reader at all, so rewriting `_read_pickle_strings` to use
+    `pickle.load` would leave it green. Renamed on 2026-08-31 by a fresh-context reader.
+    What it is good for is the other half: if this fails, the sibling test below is
+    passing over a file that was never a pickle. **The safety property is pinned by
+    `test_a_faiss_sidecar_is_read_without_being_unpickled`**, which makes `pickle.load`
+    raise and still expects a finding.
+    """
     pkl = _sidecar(tmp_path, ["a" * 50])
     with pkl.open("rb") as fh:
         names = {op.name for op, _arg, _pos in pickletools.genops(fh)}

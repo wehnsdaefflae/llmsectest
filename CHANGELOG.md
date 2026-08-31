@@ -29,7 +29,10 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
   passed over, so a store nobody opened cannot read as a store with no findings. A store holding
   only vectors and ids reports clean, the shape worth aiming for. `--check` and the coverage footer
   now list LLM08 as `black-box + white-box`. A bare-model run that passes `--vector-store` exercises
-  it. 25 tests.
+  it. A `.jsonl` store under a directory was invisible to discovery on the day this shipped, while
+  five surfaces listed JSONL among the formats it reads; a fresh-context reader built one and ran
+  it. `.jsonl` is matched by suffix now, `.json` stays matched by store name, since globbing the
+  commonest configuration extension would read a `package.json` as a corpus. 29 tests.
 
 - **2026-08-28** An `app:<url>` target that **answers with an error** is no longer reported as an
   unreachable one. `HTTP 429` now raises `AdapterThrottleError` carrying the application's own

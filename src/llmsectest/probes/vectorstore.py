@@ -42,7 +42,9 @@ Formats read, standard library only, no network and no model load:
   ``embedding_metadata``, ``collection_metadata``.
 * **JSON / JSONL** — LlamaIndex's simple store (``default__vector_store.json``,
   ``docstore.json``) and the generic ``{"embeddings": [...], "documents": [...]}``
-  shape written by scripts and notebooks.
+  shape written by scripts and notebooks. A directory walk finds ``.json`` stores by
+  the names in :data:`JSON_NAMES` and ``.jsonl`` by suffix; any single file works when
+  its path is passed directly.
 * **FAISS sidecar pickles** — ``index.pkl`` beside an ``index.faiss``. **Never
   unpickled.** The opcode stream is walked with :mod:`pickletools` exactly as
   :mod:`llmsectest.probes.modelpoison` walks a weights file, and the string
@@ -158,11 +160,21 @@ def discover_vector_stores(root: Path) -> list[Path]:
 
     A single file path is accepted as well as a directory, so ``--vector-store
     chroma.sqlite3`` works without the caller knowing our discovery rules.
+
+    **The asymmetry between ``.json`` and ``.jsonl`` is deliberate and it caught us out.**
+    A directory walk matches ``.json`` only by the store names in :data:`JSON_NAMES`,
+    because `.json` is the most common configuration extension there is and globbing it
+    would read a `package.json` as a corpus. `.jsonl` is matched by **suffix**: JSON Lines
+    is not a configuration format, so the file being there is signal on its own. Until
+    2026-08-31 neither was matched by suffix, so a `.jsonl` store under a directory was
+    invisible while the skip message listed JSONL among the things it had looked for.
+    Found by a fresh-context reader who built one and ran this.
     """
     if root.is_file():
         return [root] if _kind(root) else []
     names = {n.lower() for n in CHROMA_NAMES + JSON_NAMES + PICKLE_SIDECAR_NAMES}
-    return sorted(p for p in root.rglob("*") if p.is_file() and p.name.lower() in names)
+    return sorted(p for p in root.rglob("*") if p.is_file()
+                  and (p.name.lower() in names or p.suffix.lower() == ".jsonl"))
 
 
 def _kind(path: Path) -> str:
