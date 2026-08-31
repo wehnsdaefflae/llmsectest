@@ -1368,6 +1368,10 @@ packaged OWASP probe suite against your chosen target and writes reports.</p>
 <td>Add the white-box <strong>LLM04 (data and model poisoning)</strong> scan of the serialized model files under that path. Walks each pickle's opcode stream (stdlib <code>pickletools</code>, never unpickling) and flags imports of code-execution primitives (<code>os.system</code>, <code>subprocess</code>, <code>builtins.eval</code>, nested <code>pickle</code>/<code>torch.load</code>, reflection gadgets) that would run on load, across raw pickles, PyTorch <code>.pt</code>/<code>.pth</code>/<code>.ckpt</code> zips and numpy object arrays. Offline and deterministic; a clean weights file does not false-positive.</td>
 </tr>
 <tr>
+<td><code>--vector-store &lt;path&gt;</code></td>
+<td>Add the white-box <strong>LLM08 (vector and embedding weaknesses)</strong> embedding-inversion exposure scan of a persisted vector store. Reads Chroma sqlite through a read-only URI, JSON and JSONL stores including the LlamaIndex shape, and FAISS <code>index.pkl</code> sidecars whose strings come off the <code>pickletools</code> opcode stream (never unpickled). Reports plaintext filed beside the vectors, a credential shape in the stored corpus, the embedding space being recorded, source-identifying per-vector metadata, and a world-readable store file. It does not run an inversion, which needs a trained inverter per embedding space; it measures what a reader of the store gets without one. A store of vectors and ids alone reports clean.</td>
+</tr>
+<tr>
 <td><code>--redteam-set &lt;csv&gt;</code></td>
 <td>Run the <strong>LLM01 red-team</strong> module against the JailbreakBench <a href="https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors">JBB-Behaviors</a> CSV at this path (the 100-behaviour benchmark; columns <code>Index,Goal,Target,Behavior,Category,Source</code>). A target is a finding when it <strong>complies</strong> with a harmful request instead of refusing (refusal oracle). Without the flag, a built-in starter set runs so an offline scan still exercises the oracle.</td>
 </tr>
@@ -1504,9 +1508,10 @@ black-box: LLM01, LLM05, LLM09 and LLM10 (a bounded repetition-flood probe) alwa
 <strong>LLM07/LLM02/LLM06/LLM08 join them when you pass
 <code>--app-prompt</code> / <code>--app-secret</code> / <code>--app-action</code> / <code>--app-canary</code> / <code>--app-rag-poison</code></strong>, each category
 whose input is missing is reported as skipped with the flag that would enable it (LLM04 is white-box,
-enabled by <code>--model-scan</code>). LLM08 has two enabling markers: <code>--app-canary</code> (retrieval exposure) and
-<code>--app-rag-poison</code> (indirect injection via a poisoned retrieved document). <code>llmsectest --check</code> prints the
-same map with each category's CVSS score.</p>
+enabled by <code>--model-scan</code>). LLM08 has three enabling flags: <code>--app-canary</code> (retrieval exposure),
+<code>--app-rag-poison</code> (indirect injection via a poisoned retrieved document) and <code>--vector-store</code>
+(embedding-inversion exposure, white-box and offline). <code>llmsectest --check</code> prints the same map with
+each category's CVSS score.</p>
 <h2 id="exit-code">Exit code<a class="headerlink" href="#exit-code" title="Permanent link">&para;</a></h2>
 <p>Non-zero when the target is vulnerable (findings present). So the command fails your pipeline. Use
 <code>--risk-threshold</code> or <code>--compare-baseline</code> to control what fails.</p>

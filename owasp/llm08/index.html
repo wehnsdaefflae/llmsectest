@@ -1051,6 +1051,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#dimension-3-embedding-inversion-exposure-vector-store" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dimension 3, embedding-inversion exposure (--vector-store)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#does-a-defense-change-the-result" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1313,6 +1324,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#dimension-3-embedding-inversion-exposure-vector-store" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dimension 3, embedding-inversion exposure (--vector-store)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#does-a-defense-change-the-result" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1375,15 +1397,18 @@
 <p>Flaws in how a RAG system generates, stores, retrieves or access-controls embeddings let an attacker
 leak indexed content, retrieve another tenant's data, poison retrieval, or invert embeddings back to text.</p>
 </blockquote>
-<p><strong>Modality:</strong> black-box (retrieval exposure + RAG indirect injection). <strong>Status:</strong> covered (two dimensions).</p>
+<p><strong>Modality:</strong> black-box (retrieval exposure + RAG indirect injection) and white-box (embedding-inversion
+exposure). <strong>Status:</strong> covered (three dimensions).</p>
 <div class="admonition note">
-<p class="admonition-title">Two black-box dimensions ship; white-box dimensions tracked</p>
-<p>Retrieval exposure and RAG indirect injection are the black-box dimensions and ship now. The
-<strong>white-box</strong> dimensions, embedding/data poisoning, multi-tenant namespace isolation, and embedding
-inversion, need the vector store's internals (or a controlled multi-tenant fixture) and are a tracked
-later increment. As always, they are reported as <em>not exercised</em> with a reason, never silently passed:
-with neither <code>--app-canary</code> nor <code>--app-rag-poison</code> (or against a bare model, which has no retrieval
-corpus) the LLM08 module skips with an explicit message naming both flags.</p>
+<p class="admonition-title">Three dimensions ship; two are still tracked</p>
+<p>Retrieval exposure and RAG indirect injection are black-box and need a running application.
+Embedding-inversion exposure is white-box and needs only a path to the persisted store, so it runs
+offline with no application at all. The two still tracked are <strong>embedding/data poisoning</strong> of the
+store and <strong>multi-tenant namespace isolation</strong>, which needs a controlled multi-tenant fixture. As
+always, a dimension that did not run is reported as <em>not exercised</em> with a reason, never silently
+passed: with neither <code>--app-canary</code> nor <code>--app-rag-poison</code> (or against a bare model, which has no
+retrieval corpus) the black-box half skips naming both flags, and without <code>--vector-store</code> the
+white-box half skips naming that one.</p>
 </div>
 <p>Retrieval-Augmented Generation (RAG) bolts a vector store and a retriever onto an LLM so it can answer
 from your documents. That retrieval layer is a new attack surface: if it surfaces confidential indexed
@@ -1449,6 +1474,72 @@ layer, the <strong>LLM08↔LLM01 bridge</strong> (LLM01 is the same oracle again
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span>--app-rag-poison<span class="w"> </span><span class="s2">&quot;RAG-POISON-3b9d&quot;</span><span class="w">                </span><span class="c1"># enable LLM08 indirect-injection probes</span>
 </code></pre></div>
+<h3 id="dimension-3-embedding-inversion-exposure-vector-store">Dimension 3, embedding-inversion exposure (<code>--vector-store</code>)<a class="headerlink" href="#dimension-3-embedding-inversion-exposure-vector-store" title="Permanent link">&para;</a></h3>
+<p>White-box and offline. It needs no application at all. Point it at the directory or file your RAG
+system persists its vectors to:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>llmsectest<span class="w"> </span>--vector-store<span class="w"> </span>storage/<span class="w">                    </span><span class="c1"># scan a persisted store</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>llmsectest<span class="w"> </span>--vector-store<span class="w"> </span>storage/chroma.sqlite3<span class="w">      </span><span class="c1"># or one file</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat<span class="w"> </span>--app-canary<span class="w"> </span>CANARY<span class="w"> </span>--vector-store<span class="w"> </span>storage/
+</code></pre></div>
+<p><strong>It does not invert your embeddings.</strong> The scanner's own docstring says so. Embedding inversion is real: published work
+recovers a large share of a short passage from its vector alone, when the embedding model is public.
+Running one needs a trained inverter for that particular embedding space, a GPU, and a corpus to train
+on. Nothing that ships in a CI job carries that, so a tool claiming to invert your store would be
+claiming something it cannot do.</p>
+<p>What it does instead is ask the question inversion asks and answer it from the store. <strong>How much of the
+corpus does somebody with read access to this directory get?</strong> In most deployments the answer is all of
+it, with no inversion involved, because the store keeps the text next to the vector it was made from.</p>
+<table>
+<thead>
+<tr>
+<th>finding</th>
+<th>severity</th>
+<th>what it means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>plaintext beside vectors</td>
+<td>high</td>
+<td>the same file or table holds the embeddings and their source text. Read access to the store is read access to the corpus.</td>
+</tr>
+<tr>
+<td>sensitive text stored</td>
+<td>high</td>
+<td>the stored corpus matches a credential shape (private key block, AWS key id, GitHub or Slack token, an <code>api_key = …</code> assignment). The store is holding material above its usual classification.</td>
+</tr>
+<tr>
+<td>embedding model disclosed</td>
+<td>medium, <strong>high</strong> when a public inverter covers that space</td>
+<td>the store records the embedding space it was built with. That is what tells an attacker which inverter to bring. <code>vec2text</code> ships pre-trained correctors for OpenAI's <code>text-embedding-ada-002</code> and for GTR-base and for nothing else (checked against its README on 2026-08-31), so a store on one of those is a library call from reconstruction while a store on <code>all-MiniLM-L6-v2</code> is a training run. The finding says which case you are in.</td>
+</tr>
+<tr>
+<td>metadata identifies the source</td>
+<td>medium</td>
+<td>per-vector metadata carries paths, document ids, authors or tenant keys. Knowing <em>which</em> document a vector came from is frequently the whole objective.</td>
+</tr>
+<tr>
+<td>world-readable store</td>
+<td>medium</td>
+<td>the store file grants read to group or other, so everything above is available to every local account. Raised only when there is something to read.</td>
+</tr>
+</tbody>
+</table>
+<p>Formats read, with the standard library and nothing else: <strong>Chroma</strong> sqlite (opened through a read-only
+URI, so a scan cannot write to the store it inspects), <strong>JSON and JSONL</strong> stores including the shape
+LlamaIndex writes, and <strong>FAISS <code>index.pkl</code> sidecars</strong>.</p>
+<div class="admonition warning">
+<p class="admonition-title">A sidecar is never unpickled</p>
+<p>A FAISS sidecar holds the docstore, so its strings are your corpus. Loading it to read them would
+execute whatever else the file holds, which is precisely the attack the
+<a href="../llm04/">LLM04</a> scanner exists to find. The strings come off the <code>pickletools</code> opcode stream
+instead. A test fails the build if <code>pickle.load</code> is ever reached.</p>
+</div>
+<p>A store that keeps only vectors and ids produces no finding. That is the shape worth aiming for. A
+scanner that cannot report it clean is one nobody can use to show they fixed something.</p>
+<p>Store formats that need a reader we do not ship (LanceDB, Parquet, Qdrant snapshots) are <strong>named in the
+skip reason</strong> rather than passed over. They hold the same plaintext this scan looks for. A store
+nobody opened must not read as a store with no findings.</p>
 <h3 id="does-a-defense-change-the-result">Does a defense change the result?<a class="headerlink" href="#does-a-defense-change-the-result" title="Permanent link">&para;</a></h3>
 <p>Yes, but only one kind does. Against a poisoned retrieved document, an undefended app obeyed 3 of 3
 injections; a persona telling it to distrust retrieved text got that to 2 of 3; adding spotlighting

@@ -1328,7 +1328,7 @@ target, run <code>llmsectest --check</code> to see the live map.</p>
 <tr>
 <td>LLM08</td>
 <td>Vector and Embedding Weaknesses</td>
-<td><strong>black-box</strong>, your RAG app (<code>--app-canary</code> / <code>--app-rag-poison</code>)</td>
+<td><strong>black-box</strong>, your RAG app (<code>--app-canary</code> / <code>--app-rag-poison</code>); white-box, your vector store (<code>--vector-store</code>)</td>
 </tr>
 <tr>
 <td>LLM09</td>
@@ -1349,8 +1349,9 @@ target, run <code>llmsectest --check</code> to see the live map.</p>
 <p class="admonition-title">Status</p>
 <p>Pre-alpha (active grant development). All <strong>10/10</strong> OWASP LLM Top 10 (2025) categories ship today:
 black-box probes for <strong>LLM01/02/05/06/07/09/10</strong>, white-box scanners for <strong>LLM03 (supply chain)</strong>
-(<code>--repo</code>) and <strong>LLM04 (data and model poisoning)</strong> (<code>--model-scan</code>), and black-box <strong>LLM08 (vector &amp;
-embedding weaknesses)</strong> RAG probes. What remains to do is depth rather than breadth. Coverage claims here always
+(<code>--repo</code>) and <strong>LLM04 (data and model poisoning)</strong> (<code>--model-scan</code>), and <strong>LLM08 (vector &amp;
+embedding weaknesses)</strong> both ways, black-box RAG probes plus an offline embedding-inversion
+exposure scan of a persisted store (<code>--vector-store</code>). What remains to do is depth rather than breadth. Coverage claims here always
 match what the tool does, see <code>llmsectest --check</code>.</p>
 </div>
 <div class="admonition warning">
