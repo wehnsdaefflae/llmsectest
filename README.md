@@ -209,6 +209,8 @@ What a category needs and what it gets you:
 | `--model-scan <path>` | LLM04 | serialized model files, read as pickle opcodes and never unpickled |
 | `--vector-store <path>` | LLM08 embedding-inversion exposure | a persisted vector store (Chroma sqlite, JSON store, FAISS sidecar), read offline and never unpickled |
 | `--app-stress <N>` | every app case, under load | one simultaneous wave of N requests per case, reporting only a guardrail that held at one request and failed at N. No default: the target is somebody else's running app, so absence of the flag means absence of traffic |
+| `--redteam-generate <N>` | LLM01 breadth | N model-composed variants of each authored case, validated before they run, added to the authored corpus rather than replacing it |
+| `--render-pdf <file.sarif>` | any SARIF | a PDF report written directly, with no rendering dependency (see below) |
 | `--redteam-set <csv>` | LLM01 depth | the JailbreakBench 100-behaviour corpus (`--redteam-benign` adds the over-refusal rate) |
 
 Every flag above is documented with its semantics, defaults and failure modes in the

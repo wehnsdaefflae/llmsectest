@@ -218,6 +218,20 @@ class SARIFGenerator:
                 latency["unfinished_seconds"] = round(sum(unfinished), 1)
             properties["latency"] = latency
 
+        # Run-level generation tally. What matters here is the *rejected* count, not
+        # the accepted one: a generator that quietly discarded half its output would
+        # shrink the attack surface run over run while every report still said "no
+        # findings", which is indistinguishable from a target that got safer. The reasons
+        # come with it, since "12 rejected" is a number and "12 rejected, all of them for
+        # dropping the marker" is a diagnosis.
+        generation = [
+            str(r.properties["llmsec_generation"])
+            for r in results
+            if r.properties.get("llmsec_generation") is not None
+        ]
+        if generation:
+            properties["generated_attacks"] = generation[0]
+
         # Run-level concurrent-load tally. Without it the stress pass is legible only
         # through its failures: a `regressed` verdict travels in the assertion message,
         # while `held` and `inconclusive` produce a passing test and say nothing, so a

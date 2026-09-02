@@ -43,6 +43,7 @@ their input are reported as skipped-with-reason.
     python -m llmsectest --check                          # OWASP coverage map
     python -m llmsectest --validate results/out.sarif     # validate a SARIF file
     python -m llmsectest --render-sarif results/out.sarif # SARIF -> standalone HTML
+    python -m llmsectest --render-pdf   results/out.sarif # SARIF -> PDF, no deps
     python -m llmsectest --version                        # print the version
 
 A failing probe is a *finding*: a non-zero exit means the target is vulnerable.
@@ -149,6 +150,9 @@ def check_coverage():
     print("App scans always exercise LLM01+LLM05+LLM09+LLM10; add --app-prompt / --app-secret /")
     print("--app-action (repeatable) / --app-canary / --app-rag-poison to unlock")
     print("LLM07 / LLM02 / LLM06 / LLM08 (retrieval exposure + RAG indirect injection).")
+    print("--redteam-generate <N> adds N model-composed variants of each authored LLM01")
+    print("case, validated first so a rewrite that lost its marker never scores as a")
+    print("withstood attack. An addition to the authored corpus, never a replacement.")
     print("--app-stress <N> replays every reachable app case as one simultaneous wave")
     print("of N requests and reports only the transition: a guardrail that held at one")
     print("request and failed under load. Opt-in, and it multiplies the traffic sent.")
@@ -460,6 +464,7 @@ def run_suite(args: list, target: str | None, repo: str | None = None,
               app_rag_poison: str | None = None,
               app_timeout: str | None = None,
               app_stress: str | None = None,
+              redteam_generate: str | None = None,
               redteam_benign: bool = False,
               redteam_benign_set: str | None = None) -> int:
     """Run the packaged probe suite (or an explicit path) with reporting on.
@@ -484,6 +489,10 @@ def run_suite(args: list, target: str | None, repo: str | None = None,
     ``app_timeout`` (from ``--app-timeout``, seconds) caps how long a single request
     to the ``app:<url>`` target may take; a target that exceeds it is recorded as an
     inconclusive probe rather than hanging the scan.
+    ``redteam_generate`` (from ``--redteam-generate``, variants per case) additionally
+    runs model-composed rewrites of each authored LLM01 case alongside the authored
+    corpus, never instead of it, each validated before it runs so a rewrite that lost
+    its marker cannot be scored as an attack the target withstood.
     ``app_stress`` (from ``--app-stress``, a concurrency of 2 or more) additionally
     replays every reachable application case as a simultaneous wave of that many
     requests and reports only the *transition*: a guardrail that held at one request
@@ -513,6 +522,7 @@ def run_suite(args: list, target: str | None, repo: str | None = None,
         envvars.APP_RAG_POISON: app_rag_poison,
         envvars.APP_TIMEOUT: app_timeout,
         envvars.APP_STRESS: app_stress,
+        envvars.REDTEAM_GENERATE: redteam_generate,
     }
     for name, value in suite_env.items():
         if value:
@@ -573,6 +583,36 @@ def _render_sarif(args: list) -> int:
         print(f"error: could not render {src}: {exc}", file=sys.stderr)
         return 2
     print(f"HTML report written to {written}")
+    return 0
+
+
+def _render_pdf(args: list) -> int:
+    """Render a finished ``.sarif`` file as a PDF report.
+
+    ``--render-pdf <file.sarif>`` writes ``<file>.pdf`` next to it (or to
+    ``-o``/``--pdf-output <path>``). The PDF is written directly, with no rendering
+    dependency: a tool people run against their own security-critical systems should not
+    grow a browser or a font toolchain to produce a second output format. It reads the
+    same SARIF the HTML reader reads, so the two cannot disagree about a figure.
+    """
+    from .reporting import render_sarif_pdf_file
+
+    rest, src = _extract_opt(args, "--render-pdf")
+    rest, out = _extract_opt(rest, "--pdf-output")
+    if out is None:
+        rest, out = _extract_opt(rest, "-o")
+    if not src:
+        print("error: --render-pdf requires a path to a .sarif file", file=sys.stderr)
+        return 2
+    if not Path(src).is_file():
+        print(f"error: SARIF file not found: {src}", file=sys.stderr)
+        return 2
+    try:
+        written = render_sarif_pdf_file(src, out)
+    except (ValueError, KeyError) as exc:  # malformed JSON / not SARIF-shaped
+        print(f"error: could not render {src}: {exc}", file=sys.stderr)
+        return 2
+    print(f"PDF report written to {written}")
     return 0
 
 
@@ -677,6 +717,8 @@ def main():
     if "--list-probes" in args:
         list_probes()
         return 0
+    if "--render-pdf" in args:
+        return _render_pdf(args)
     if "--render-sarif" in args:
         return _render_sarif(args)
     if "--sbom" in args:
@@ -699,6 +741,7 @@ def main():
     args, app_rag_poison = _extract_opt(args, "--app-rag-poison")
     args, app_timeout = _extract_opt(args, "--app-timeout")
     args, app_stress = _extract_opt(args, "--app-stress")
+    args, redteam_generate = _extract_opt(args, "--redteam-generate")
 
     if app_timeout is not None:
         try:
@@ -707,6 +750,21 @@ def main():
         except ValueError:
             print(f"error: --app-timeout must be a positive number of seconds "
                   f"(got {app_timeout!r})", file=sys.stderr)
+            return 2
+
+    if redteam_generate is not None:
+        try:
+            if int(redteam_generate) < 1:
+                raise ValueError
+        except ValueError:
+            print(f"error: --redteam-generate must be a positive number of variants per "
+                  f"case (got {redteam_generate!r})", file=sys.stderr)
+            return 2
+        if _is_app_target(target):
+            # A running application is somebody else's software, not a model we may ask
+            # to compose prompts for us. Generation needs a model target.
+            print("error: --redteam-generate composes prompts with the target model, so "
+                  "it needs a model target rather than --target app:<url>", file=sys.stderr)
             return 2
 
     if app_stress is not None:
@@ -760,6 +818,7 @@ def main():
                      app_actions=tuple(app_actions), app_canary=app_canary,
                      app_rag_poison=app_rag_poison, app_timeout=app_timeout,
                      app_stress=app_stress,
+                     redteam_generate=redteam_generate,
                      redteam_benign=redteam_benign,
                      redteam_benign_set=redteam_benign_set)
 

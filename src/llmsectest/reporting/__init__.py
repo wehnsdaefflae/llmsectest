@@ -12,6 +12,7 @@ from .cvss import CVSSScore, cvss_for_category, score_vector
 from .models import TestResult
 from .risk_scorer import RiskScore, RiskScoringEngine
 from .sarif_html import render_sarif_file, render_sarif_html
+from .sarif_pdf import render_sarif_pdf, render_sarif_pdf_file
 from .sbom import build_cyclonedx, render_sbom_json, write_sbom
 from .statistics import attack_tally, calculate_statistics, get_coverage_gaps
 
@@ -28,6 +29,8 @@ __all__ = [
     "get_coverage_gaps",
     "render_sarif_file",
     "render_sarif_html",
+    "render_sarif_pdf",
+    "render_sarif_pdf_file",
     "render_sbom_json",
     "score_vector",
     "validate_sarif",

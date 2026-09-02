@@ -22,6 +22,7 @@ CLI option → environment variable:
 ``--app-rag-poison <mark>`` :data:`APP_RAG_POISON`
 ``--app-timeout <seconds>`` :data:`APP_TIMEOUT`
 ``--app-stress <N>``        :data:`APP_STRESS`
+``--redteam-generate <N>``  :data:`REDTEAM_GENERATE`
 ==========================  ==========================
 """
 
@@ -42,6 +43,7 @@ APP_CANARY = "LLMSECTEST_APP_CANARY"
 APP_RAG_POISON = "LLMSECTEST_APP_RAG_POISON"
 APP_TIMEOUT = "LLMSECTEST_APP_TIMEOUT"
 APP_STRESS = "LLMSECTEST_APP_STRESS"
+REDTEAM_GENERATE = "LLMSECTEST_REDTEAM_GENERATE"
 
 # Joins the repeatable ``--app-action`` values into the single APP_ACTIONS
 # variable. The ASCII unit separator cannot appear in a tool/action signature,
@@ -97,3 +99,18 @@ def app_stress_from_env() -> int | None:
     except (TypeError, ValueError):
         return None
     return value if value >= 2 else None
+
+
+def redteam_generate_from_env() -> int:
+    """How many model-composed variants to add per authored seed, or ``0``.
+
+    Zero when unset or unparseable, so the authored corpus runs alone unless somebody
+    asked for more. A generator nobody requested would make two runs incomparable for a
+    reason the operator never chose.
+    """
+    raw = os.environ.get(REDTEAM_GENERATE, "")
+    try:
+        value = int(raw)
+    except (TypeError, ValueError):
+        return 0
+    return value if value > 0 else 0
