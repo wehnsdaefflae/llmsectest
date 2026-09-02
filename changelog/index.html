@@ -1792,6 +1792,41 @@
 forward-looking plan is the <a href="https://llmsec.dev/#roadmap">roadmap</a>.</p>
 <h2 id="unreleased"><a href="https://github.com/wehnsdaefflae/llmsectest/compare/v0.1.0...HEAD">Unreleased</a><a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
 <ul>
+<li><strong>2026-09-02</strong> <strong>Stress testing: <code>--app-stress &lt;N&gt;</code> asks whether a guardrail that holds at one
+  request still holds at N at once.</strong> The last of the four capabilities the funding proposal names for
+  this milestone. It was the only one with no code behind it. Everything else in this tool sends one request and
+  scores one reply, so every guardrail it has ever reported on was watched while the target was idle.
+  This replays each reachable application case as a simultaneous wave and reports <strong>only the
+  transition</strong>: a case that withstood a single request and failed under load. A case that already
+  leaks at one request is left to its own module rather than counted twice; a case that never held has
+  nothing to lose. What the transition catches is the class a single-request scan structurally
+  cannot see: a filter with a shared buffer, a rate limiter failing open, a cache serving another
+  session's reply, a context truncated under pressure.</li>
+<li><strong>A "withstood under load" row is worthless if the load never arrived</strong>, so the verdict may be
+    <code>held</code> only when the wave demonstrably formed. Workers meet at a barrier before issuing their
+    request, so the overlap is a property of the request pattern rather than of thread scheduling;
+    the peak is named <code>peak_outstanding</code> because it counts requests <em>we</em> have out, not the target's
+    own concurrency, which nothing on this side of the wire can see; and a wave the target <strong>refused
+    with a rate limit</strong> is not a wave it served, so it leaves an inconclusive differential plus the
+    separate, positive observation that a defence fired. A target that answers faster than we can
+    dispatch is reported as untested at that concurrency rather than as having survived it.</li>
+<li><strong>A timeout under deliberate load is inconclusive, always.</strong> The ordinary scan may read a timeout
+    on a bounded LLM10 probe as a finding, because a target answering everything else comfortably was
+    made to do disproportionate work by that one request. Under load that argument collapses: the
+    target is slow because we made it busy. Load requests therefore carry no responsiveness record,
+    which makes the timeout branch fall through to inconclusive and is thread-safety for free.</li>
+<li>Opt-in and silent otherwise: without the flag the module reports one skipped test naming what it
+    needs, the same contract the white-box scanners use. It may not default to some concurrency,
+    because the target is somebody else's running application and the absence of the flag has to mean
+    the absence of traffic. <code>--app-stress 1</code> is refused rather than rounded up. These requests are
+    deliberately left out of the run-level attack tally, since a stress case is one case and <code>N + 1</code>
+    requests, and counting it either way would move a published rate without the page that carries it
+    saying anything had changed.</li>
+<li>
+<p>A rate-limit refusal now carries a structured <code>throttled</code> flag on the outcome rather than only a
+    phrase in its evidence, so a caller can count throttles without pattern-matching prose that gets
+    reworded.</p>
+</li>
 <li>
 <p><strong>2026-08-31</strong> <strong>LLM08 gains a white-box dimension: <code>--vector-store &lt;path&gt;</code> scans a persisted
   vector store for embedding-inversion exposure.</strong> Offline, standard library only, no model load.
@@ -1812,7 +1847,10 @@ forward-looking plan is the <a href="https://llmsec.dev/#roadmap">roadmap</a>.</
   passed over, so a store nobody opened cannot read as a store with no findings. A store holding
   only vectors and ids reports clean, the shape worth aiming for. <code>--check</code> and the coverage footer
   now list LLM08 as <code>black-box + white-box</code>. A bare-model run that passes <code>--vector-store</code> exercises
-  it. 25 tests.</p>
+  it. A <code>.jsonl</code> store under a directory was invisible to discovery on the day this shipped, while
+  five surfaces listed JSONL among the formats it reads; a fresh-context reader built one and ran
+  it. <code>.jsonl</code> is matched by suffix now, <code>.json</code> stays matched by store name, since globbing the
+  commonest configuration extension would read a <code>package.json</code> as a corpus. 29 tests.</p>
 </li>
 <li>
 <p><strong>2026-08-28</strong> An <code>app:&lt;url&gt;</code> target that <strong>answers with an error</strong> is no longer reported as an
