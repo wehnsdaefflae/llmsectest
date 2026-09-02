@@ -149,6 +149,9 @@ def check_coverage():
     print("App scans always exercise LLM01+LLM05+LLM09+LLM10; add --app-prompt / --app-secret /")
     print("--app-action (repeatable) / --app-canary / --app-rag-poison to unlock")
     print("LLM07 / LLM02 / LLM06 / LLM08 (retrieval exposure + RAG indirect injection).")
+    print("--app-stress <N> replays every reachable app case as one simultaneous wave")
+    print("of N requests and reports only the transition: a guardrail that held at one")
+    print("request and failed under load. Opt-in, and it multiplies the traffic sent.")
     print("--app-timeout <seconds> caps each app request (a slow endpoint is recorded")
     print("as inconclusive, not left to hang the scan), except on the two bounded LLM10")
     print("probes, where exhausting the budget is itself the finding, provided the app")
@@ -329,6 +332,7 @@ _APP_SUITE_MODULES = (
     "test_llm05_improper_output_handling.py",
     "test_llm09_misinformation.py",  # LLM09: does the app confabulate a nonexistent entity? (black-box, bounded)
     "test_llm10_unbounded_consumption.py",  # LLM10: does the app flood on demand? (black-box, *bounded* app probe)
+    "test_llm10_stress.py",  # LLM10 under concurrent load; self-skips without --app-stress
     "test_application_mode.py",  # LLM02/06/07 from dev-supplied inputs; skips otherwise
     "test_llm08_vector_embedding.py",  # LLM08 retrieval exposure; self-skips without --app-canary
     "test_llm03_supply_chain.py",  # white-box repo scan; self-skips without --repo
@@ -455,6 +459,7 @@ def run_suite(args: list, target: str | None, repo: str | None = None,
               app_canary: str | None = None,
               app_rag_poison: str | None = None,
               app_timeout: str | None = None,
+              app_stress: str | None = None,
               redteam_benign: bool = False,
               redteam_benign_set: str | None = None) -> int:
     """Run the packaged probe suite (or an explicit path) with reporting on.
@@ -479,6 +484,11 @@ def run_suite(args: list, target: str | None, repo: str | None = None,
     ``app_timeout`` (from ``--app-timeout``, seconds) caps how long a single request
     to the ``app:<url>`` target may take; a target that exceeds it is recorded as an
     inconclusive probe rather than hanging the scan.
+    ``app_stress`` (from ``--app-stress``, a concurrency of 2 or more) additionally
+    replays every reachable application case as a simultaneous wave of that many
+    requests and reports only the *transition*: a guardrail that held at one request
+    and failed under load. Opt-in, because it multiplies the traffic this scan sends
+    to somebody else's application by that factor.
     ``redteam_benign`` (from ``--redteam-benign``) additionally measures the
     target's **false-refusal rate** over the JBB benign twins after the security
     suite, a usability metric reported separately, never a SARIF finding.
@@ -502,6 +512,7 @@ def run_suite(args: list, target: str | None, repo: str | None = None,
         envvars.APP_CANARY: app_canary,
         envvars.APP_RAG_POISON: app_rag_poison,
         envvars.APP_TIMEOUT: app_timeout,
+        envvars.APP_STRESS: app_stress,
     }
     for name, value in suite_env.items():
         if value:
@@ -687,6 +698,7 @@ def main():
     args, app_canary = _extract_opt(args, "--app-canary")
     args, app_rag_poison = _extract_opt(args, "--app-rag-poison")
     args, app_timeout = _extract_opt(args, "--app-timeout")
+    args, app_stress = _extract_opt(args, "--app-stress")
 
     if app_timeout is not None:
         try:
@@ -695,6 +707,18 @@ def main():
         except ValueError:
             print(f"error: --app-timeout must be a positive number of seconds "
                   f"(got {app_timeout!r})", file=sys.stderr)
+            return 2
+
+    if app_stress is not None:
+        # Rejected rather than rounded up: a caller who typed 1 asked for no load, and
+        # quietly running two concurrent requests against their application instead
+        # would be sending traffic nobody authorised.
+        try:
+            if int(app_stress) < 2:
+                raise ValueError
+        except ValueError:
+            print(f"error: --app-stress must be an integer concurrency of 2 or more "
+                  f"(got {app_stress!r})", file=sys.stderr)
             return 2
 
     if redteam_set and not _is_existing_file(redteam_set):
@@ -708,10 +732,11 @@ def main():
         return 2
 
     if (app_prompt or app_secret or app_actions or app_canary or app_rag_poison
-            or app_timeout) and not _is_app_target(target):
+            or app_timeout or app_stress) and not _is_app_target(target):
         # Silently ignoring an app input would be a silent coverage gap.
         print("error: --app-prompt/--app-secret/--app-action/--app-canary/--app-rag-poison/"
-              "--app-timeout describe a running application and require --target app:<url> "
+              "--app-timeout/--app-stress describe a running application and require "
+              "--target app:<url> "
               f"(got {target or 'the offline demo'})", file=sys.stderr)
         return 2
     if app_prompt and _is_existing_file(app_prompt):
@@ -734,6 +759,7 @@ def main():
                      app_prompt=app_prompt, app_secret=app_secret,
                      app_actions=tuple(app_actions), app_canary=app_canary,
                      app_rag_poison=app_rag_poison, app_timeout=app_timeout,
+                     app_stress=app_stress,
                      redteam_benign=redteam_benign,
                      redteam_benign_set=redteam_benign_set)
 

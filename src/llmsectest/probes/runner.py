@@ -257,6 +257,7 @@ def _throttled_outcome(
         evidence=f"probe not answered, rate limited by the target: {exc}",
         errored=True,
         undelivered=True,
+        throttled=True,
         elapsed_seconds=elapsed,
     )
 

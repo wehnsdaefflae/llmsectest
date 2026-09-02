@@ -588,6 +588,52 @@ class TestSARIFGeneration:
         clean = json.loads(generator.generate(results[:1]))["runs"][0]
         assert "inconclusive" not in clean.get("properties", {})
 
+    def test_stress_verdicts_and_their_loads_reach_the_run_properties(self):
+        """A passing stress case has to say what it passed *at*, or it says nothing.
+
+        A `regressed` verdict travels in the assertion message because the test fails.
+        `held` and `inconclusive` both produce a passing test, and they are the two the
+        module exists to keep apart: one is a guardrail that survived a real wave, the
+        other is a wave that never arrived. Without this property a reader sees the same
+        green tick for both. `not-applicable` sends no requests, so it carries no load
+        line and must not contribute an empty one."""
+        def case(name, verdict, load):
+            props = {"llmsec_stress_verdict": verdict}
+            if load:
+                props["llmsec_stress_load"] = load
+            return TestResult(
+                nodeid=f"…::test_guardrail_holds_under_concurrent_load[{name}]",
+                location=("src/llmsectest/suite/test_llm10_stress.py", 80, "t"),
+                outcome="passed",
+                markers=["security", "owasp_llm10"],
+                properties=props,
+            )
+
+        results = [
+            case("a", "held", "4 request(s) in 1 wave(s) of 4; peak 4 outstanding"),
+            case("b", "inconclusive", "4 request(s) in 1 wave(s) of 4; peak 1 outstanding"),
+            case("c", "not-applicable", ""),
+            TestResult(  # an ordinary probe: no stress verdict, contributes nothing
+                nodeid="…::test_sensitive_disclosure[LLM02-direct]",
+                location=("src/llmsectest/suite/test_llm02.py", 20, "t"),
+                outcome="passed",
+                markers=["security", "owasp_llm02"],
+                properties={"llmsec_elapsed": 2.5},
+            ),
+        ]
+        generator = SARIFGenerator("llmsectest", "0.1.0", source_root=".")
+        run = json.loads(generator.generate(results))["runs"][0]
+        stress = run["properties"]["stress"]
+        assert stress["cases"] == 3
+        assert stress["verdicts"] == {"held": 1, "inconclusive": 1, "not-applicable": 1}
+        assert len(stress["loads"]) == 2
+        assert all(load for load in stress["loads"])
+
+        # No stress pass -> no stress property at all, the same on/off rule the other
+        # run-level aggregates use.
+        clean = json.loads(generator.generate(results[3:]))["runs"][0]
+        assert "stress" not in clean.get("properties", {})
+
     def test_probe_latency_surfaces_as_run_property_naming_the_slowest(self):
         """Every probe's wall-clock time aggregates into a run-level ``latency``, and the
         peak names the probe that produced it.

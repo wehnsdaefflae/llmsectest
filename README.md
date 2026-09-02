@@ -65,7 +65,7 @@ See [Funding](#funding).
 | LLM07 system prompt leakage | extraction attacks against the app's own prompt | black-box |
 | LLM08 vector and embedding weaknesses | for RAG apps: *retrieval exposure* + *indirect injection via a poisoned retrieved document*; offline, an *embedding-inversion exposure* scan of a persisted vector store (`--vector-store`) | black-box + white-box |
 | LLM09 misinformation | asks about entities that provably do not exist; confabulation is the finding | black-box |
-| LLM10 unbounded consumption | repetition-flood and output-amplification probes, with an output-token cost figure | black-box |
+| LLM10 unbounded consumption | repetition-flood and output-amplification probes, with an output-token cost figure; under **concurrent load** (`--app-stress`), whether a guardrail that held at one request still holds at N | black-box |
 
 ### Beyond the category map
 
@@ -208,6 +208,7 @@ What a category needs and what it gets you:
 | `--repo <path>` | LLM03 | dependency manifests to scan (add `--osv` for known CVEs, `--sbom` for CycloneDX) |
 | `--model-scan <path>` | LLM04 | serialized model files, read as pickle opcodes and never unpickled |
 | `--vector-store <path>` | LLM08 embedding-inversion exposure | a persisted vector store (Chroma sqlite, JSON store, FAISS sidecar), read offline and never unpickled |
+| `--app-stress <N>` | every app case, under load | one simultaneous wave of N requests per case, reporting only a guardrail that held at one request and failed at N. No default: the target is somebody else's running app, so absence of the flag means absence of traffic |
 | `--redteam-set <csv>` | LLM01 depth | the JailbreakBench 100-behaviour corpus (`--redteam-benign` adds the over-refusal rate) |
 
 Every flag above is documented with its semantics, defaults and failure modes in the

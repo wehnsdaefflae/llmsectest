@@ -21,6 +21,7 @@ CLI option → environment variable:
 ``--app-canary <value>``    :data:`APP_CANARY`
 ``--app-rag-poison <mark>`` :data:`APP_RAG_POISON`
 ``--app-timeout <seconds>`` :data:`APP_TIMEOUT`
+``--app-stress <N>``        :data:`APP_STRESS`
 ==========================  ==========================
 """
 
@@ -40,6 +41,7 @@ APP_ACTIONS = "LLMSECTEST_APP_ACTIONS"
 APP_CANARY = "LLMSECTEST_APP_CANARY"
 APP_RAG_POISON = "LLMSECTEST_APP_RAG_POISON"
 APP_TIMEOUT = "LLMSECTEST_APP_TIMEOUT"
+APP_STRESS = "LLMSECTEST_APP_STRESS"
 
 # Joins the repeatable ``--app-action`` values into the single APP_ACTIONS
 # variable. The ASCII unit separator cannot appear in a tool/action signature,
@@ -79,3 +81,19 @@ def app_timeout_from_env() -> float | None:
     except (TypeError, ValueError):
         return None
     return value if value > 0 else None
+
+
+def app_stress_from_env() -> int | None:
+    """The requested stress concurrency for an ``app:<url>`` target, if set.
+
+    Returns ``None`` when unset or unparseable, which leaves the stress suite
+    **skipped with a reason** rather than silently running at some default concurrency.
+    A load test nobody asked for is a load test against somebody else's application, so
+    the absence of the flag has to mean absence of load and never a fallback value.
+    """
+    raw = os.environ.get(APP_STRESS, "")
+    try:
+        value = int(raw)
+    except (TypeError, ValueError):
+        return None
+    return value if value >= 2 else None

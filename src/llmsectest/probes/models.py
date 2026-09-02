@@ -85,6 +85,15 @@ class ProbeOutcome:
     #: :meth:`~llmsectest.plugin.SARIFPlugin.pytest_sessionfinish`), because
     #: "0 findings, 25 undelivered" is not a pass.
     undelivered: bool = False
+    #: True when the target refused this request with a **rate limit**. Always implies
+    #: :attr:`undelivered`, since a throttled request was never answered; the extra bit is
+    #: that the refusal was the target's own defence firing rather than anything being
+    #: broken. It exists as a flag rather than as a phrase in ``evidence`` because a
+    #: caller has to be able to *count* throttles: a stress run that was rate limited did
+    #: not measure the load it asked for, and deciding that by searching the evidence for
+    #: the words "rate limited" would silently start counting zero the first time somebody
+    #: reworded the sentence. See :func:`~llmsectest.probes.stress.run_load`.
+    throttled: bool = False
     #: Wall-clock seconds the probe took, measured around the adapter call. Recorded
     #: for a timed-out probe too (there it is the budget that was exhausted), which is
     #: what lets one scan tell a target's ordinary latency apart from a request that

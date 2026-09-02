@@ -10,6 +10,40 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ## [Unreleased]
 
+- **2026-09-02** **Stress testing: `--app-stress <N>` asks whether a guardrail that holds at one
+  request still holds at N at once.** The last of the four capabilities the funding proposal names for
+  this milestone. It was the only one with no code behind it. Everything else in this tool sends one request and
+  scores one reply, so every guardrail it has ever reported on was watched while the target was idle.
+  This replays each reachable application case as a simultaneous wave and reports **only the
+  transition**: a case that withstood a single request and failed under load. A case that already
+  leaks at one request is left to its own module rather than counted twice; a case that never held has
+  nothing to lose. What the transition catches is the class a single-request scan structurally
+  cannot see: a filter with a shared buffer, a rate limiter failing open, a cache serving another
+  session's reply, a context truncated under pressure.
+  - **A "withstood under load" row is worthless if the load never arrived**, so the verdict may be
+    `held` only when the wave demonstrably formed. Workers meet at a barrier before issuing their
+    request, so the overlap is a property of the request pattern rather than of thread scheduling;
+    the peak is named `peak_outstanding` because it counts requests *we* have out, not the target's
+    own concurrency, which nothing on this side of the wire can see; and a wave the target **refused
+    with a rate limit** is not a wave it served, so it leaves an inconclusive differential plus the
+    separate, positive observation that a defence fired. A target that answers faster than we can
+    dispatch is reported as untested at that concurrency rather than as having survived it.
+  - **A timeout under deliberate load is inconclusive, always.** The ordinary scan may read a timeout
+    on a bounded LLM10 probe as a finding, because a target answering everything else comfortably was
+    made to do disproportionate work by that one request. Under load that argument collapses: the
+    target is slow because we made it busy. Load requests therefore carry no responsiveness record,
+    which makes the timeout branch fall through to inconclusive and is thread-safety for free.
+  - Opt-in and silent otherwise: without the flag the module reports one skipped test naming what it
+    needs, the same contract the white-box scanners use. It may not default to some concurrency,
+    because the target is somebody else's running application and the absence of the flag has to mean
+    the absence of traffic. `--app-stress 1` is refused rather than rounded up. These requests are
+    deliberately left out of the run-level attack tally, since a stress case is one case and `N + 1`
+    requests, and counting it either way would move a published rate without the page that carries it
+    saying anything had changed.
+  - A rate-limit refusal now carries a structured `throttled` flag on the outcome rather than only a
+    phrase in its evidence, so a caller can count throttles without pattern-matching prose that gets
+    reworded.
+
 - **2026-08-31** **LLM08 gains a white-box dimension: `--vector-store <path>` scans a persisted
   vector store for embedding-inversion exposure.** Offline, standard library only, no model load.
   It does not run an inversion and says so in its own docstring: inverting an embedding needs a

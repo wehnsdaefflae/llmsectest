@@ -218,6 +218,33 @@ class SARIFGenerator:
                 latency["unfinished_seconds"] = round(sum(unfinished), 1)
             properties["latency"] = latency
 
+        # Run-level concurrent-load tally. Without it the stress pass is legible only
+        # through its failures: a `regressed` verdict travels in the assertion message,
+        # while `held` and `inconclusive` produce a passing test and say nothing, so a
+        # reader could not tell a guardrail that survived a real wave from one whose wave
+        # never arrived. Those are the two outcomes the whole module exists to keep apart
+        # (see llmsectest.probes.stress), and a verdict with no denominator beside it is
+        # the shape this project keeps having to fix. Every verdict is counted and the
+        # measured load lines are carried verbatim.
+        stress = [
+            (str(r.properties["llmsec_stress_verdict"]),
+             str(r.properties.get("llmsec_stress_load", "")))
+            for r in results
+            if r.properties.get("llmsec_stress_verdict") is not None
+        ]
+        if stress:
+            verdicts: dict[str, int] = {}
+            for verdict, _ in stress:
+                verdicts[verdict] = verdicts.get(verdict, 0) + 1
+            properties["stress"] = {
+                "cases": len(stress),
+                "verdicts": verdicts,
+                # Only the loads that were actually applied. A `not-applicable` case sends
+                # no requests at all, so an empty line there is absence rather than a
+                # measurement of zero.
+                "loads": [load for _, load in stress if load][:20],
+            }
+
         # Run-level inconclusive-probe tally: a probe whose target exceeded the per-request
         # --app-timeout is recorded errored (llmsec_inconclusive) — neither a finding nor a
         # clean pass. Being errored, it never becomes a SARIF result, so without this
