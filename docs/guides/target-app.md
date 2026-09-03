@@ -107,9 +107,16 @@ block.
 that reached nothing produces an empty findings list. In CI that's indistinguishable from a clean
 bill of health. `0 findings, 25 never delivered` is not a pass.
 
-A slow app is a different case. One that exceeds `--app-timeout` was reached and ran out of budget. That
-is also inconclusive, but it doesn't fail the run, raise the budget instead. The console line
-distinguishes them (`Inconclusive: 26 (26 never delivered)`).
+A slow app is a different case in one respect only. One that exceeds `--app-timeout` was reached and
+ran out of budget, so it doesn't fail the run: raise the budget instead. Everything else is the same,
+because an unanswered probe is unanswered whichever way it went missing. The status still reads
+`INCOMPLETE`, no posture is claimed, and the closing line says the run does not claim those probes
+were withstood. The console distinguishes the two reasons (`Inconclusive: 26 (26 never delivered)`),
+so you can tell a budget to raise from a URL to check.
+
+**And the exception to the exception: a scan where no probe was answered fails.** Losing some probes
+to the clock is an ordinary afternoon; losing all of them means the page describes nothing, and it
+gets the same red banner and the same non-zero exit as an endpoint that was never there.
 
 **An app that answers with an error is a third case. The report says which.** If your endpoint
 replies `HTTP 429` the probe is recorded as **throttled**, with your app's own `Retry-After` when it

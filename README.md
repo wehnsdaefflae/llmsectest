@@ -162,11 +162,18 @@ resisted. See [Red-team your defense](https://docs.llmsec.dev/guides/red-team-yo
 unreachable, replies with something that isn't JSON, or dies partway through, those probes are
 recorded **inconclusive** and the run **exits non-zero**. Both halves matter, because an empty findings
 list from a scan that reached nothing would otherwise pass CI as a clean bill of health. The count
-appears as a banner on the HTML page, an `undelivered` property in the SARIF, and a line in the
-console summary, and the summary also **withholds its verdict** rather than reporting a good one:
-the status reads `INCOMPLETE` instead of `PASSED`, no security posture is claimed, and the exit-code
-line says 1. A run that did not get an answer has not shown your application is sound, it failed to
-ask. A slow app is different. You reached it, so raise `--app-timeout` instead.
+appears as a banner on the HTML page, an `undelivered` property in the SARIF and a line in the console
+summary.
+
+**A probe that timed out is just as unanswered. The verdict follows the answer rather than the
+reason there wasn't one.** Any run holding an inconclusive probe **withholds its verdict**: the status
+reads `INCOMPLETE` instead of `PASSED` and no security posture is claimed, whether the probe never
+arrived or ran out of time. The exit code is where the two part company, deliberately. Losing four
+probes of fifty to a slow afternoon should not fail your build, so a run that answered some and
+lost others exits 0 while saying in as many words that it does not claim the lost ones were withstood.
+A run that got **no** answer at all exits non-zero, because a scan of nothing is not a pass. So a slow
+app is still worth a higher `--app-timeout`. You reached it. The probes you lost are the ones you
+would rather have had.
 
 **A target that answers is never called unreachable.** An endpoint that replies `HTTP 429` was
 reached, so its probes are inconclusive and named as **throttled**, carrying the target's own
