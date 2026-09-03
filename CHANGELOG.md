@@ -10,6 +10,27 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ## [Unreleased]
 
+- **2026-09-03** **A target that answers nothing is no longer reported as one that passed.** Driven
+  through the real CLI against an endpoint that accepts every request and never replies, the run
+  printed `Security Status: PASSED`, *"Security posture is acceptable. Continue monitoring for
+  changes."* and exit 0, over 23 probes it had not got a word out of. The counts underneath were
+  right throughout: 0 findings, 23 inconclusive. Every sentence a reader reads was not.
+  - **The cause was a subset standing in for the set it belonged to.** The verdict machinery keyed
+    on `llmsec_undelivered`, which a transport failure sets and a timeout does not, so the headline,
+    the security posture, the risk recommendation, the closing exit line and the report's own banner
+    all read the transport-failure subset of "the probe came back without an answer". The superset
+    travels in `calculate_statistics` as `inconclusive` now and all five read it.
+  - **The exit code deliberately does not move where probes were merely lost.** A scan that answered
+    some and lost others exits 0 and says in as many words that it does not claim the lost ones were
+    withstood. A scan where **no** probe was answered exits non-zero, because a report over nothing
+    is not a pass. The threshold is zero answers rather than a ratio, since a ratio is a number
+    somebody picks and zero follows from what the run can say.
+  - **The rendered report leads with a banner in that case**, instead of leaving a reader to put
+    `23 probe(s) inconclusive` and `0/23 attacks withstood` together above an empty findings list.
+  - The README and the app-target guide scoped this guarantee to a target that could not be reached
+    and then said a slow app is a different case. Both now state the property instead of the list,
+    which is what let the gap sit unnoticed: the promise was written around the failures it covered.
+
 - **2026-09-02** **Attack prompts a small local model composes (`--redteam-generate <N>`), which
   makes the last false sentence in the public write-up true.** The post said small local models
   write the attack prompts; they did not, every case being an authored `ProbeCase`. Rather than

@@ -115,7 +115,7 @@ were withstood. The console distinguishes the two reasons (`Inconclusive: 26 (26
 so you can tell a budget to raise from a URL to check.
 
 **And the exception to the exception: a scan where no probe was answered fails.** Losing some probes
-to the clock is an ordinary afternoon; losing all of them means the page describes nothing, and it
+to the clock is an ordinary afternoon. Losing all of them means the page describes nothing, so it
 gets the same red banner and the same non-zero exit as an endpoint that was never there.
 
 **An app that answers with an error is a third case. The report says which.** If your endpoint
