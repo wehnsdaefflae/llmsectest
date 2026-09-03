@@ -79,6 +79,38 @@ llmsectest --sbom --repo .                            # write results/<repo>.cdx
 llmsectest --sbom sbom.cdx.json --repo path/to/app    # explicit output path
 ```
 
+## What a real run looks like
+
+Here is the scan against LLMSecTest's own repository, since a worked example on somebody else's code
+would be a claim about them.
+
+```console
+$ llmsectest --repo code --osv
+LLM03    Supply Chain                            8     1     7
+
+E  [version range has no upper bound] anthropic (pyproject.toml): 'anthropic' specifies '>=0.39'
+   with no upper bound, admitting an unvetted future major release.
+   -> Add an upper bound (e.g. 'anthropic>=X,<Y') or pin exactly.
+... the same for cvss, httpx, huggingface-hub, mkdocstrings, openai and pytest
+
+SKIPPED  LLM03 known-CVE lookup: no exactly-pinned (==X.Y.Z) dependencies to query, OSV can only
+         attribute advisories to a concrete version
+```
+
+Two things in that output are worth more than the seven findings.
+
+The first is that our own project fails its own scan. Every one of those seven is a lower bound with
+no ceiling. That is an ordinary way to write a `pyproject.toml`. It is also a real exposure, because
+the next major release of any of them arrives unreviewed.
+
+The second is the skipped line. We asked for the CVE lookup and it did not run, because nothing in
+this repository is pinned to an exact version and OSV can only attribute an advisory to a concrete
+one. A scan that answered *no known vulnerabilities* there would have been describing our version
+syntax rather than our dependencies. **A category we could not measure is reported as not measured,
+never as clean**. The run names the flag that would have measured it. The application scans carry
+the same property. It is also why the exit code is worth reading. This run exits non-zero on the seven
+findings; a run that had produced nothing but that skipped line would tell you it had tested nothing.
+
 ## Reading a finding
 
 A finding names the technique, the package, the manifest it came from, the evidence and a concrete

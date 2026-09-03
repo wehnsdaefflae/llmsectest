@@ -689,3 +689,31 @@ def test_the_exit_line_matches_the_exit_code_when_nothing_was_answered():
     ])
     assert "Exit code: 0 (1 probe(s) inconclusive" in one_probe_lost
     assert "Exit code: 1" not in one_probe_lost
+
+
+def test_the_rendered_report_leads_with_a_banner_when_nothing_was_answered():
+    """The report a reader opens must not need two small numbers read together.
+
+    Until 2026-09-03 the only banner of its kind fired on `undelivered`. A scan whose every
+    probe timed out rendered with no banner at all: a meta line saying *"23 probe(s)
+    inconclusive"* beside *"0/23 attacks withstood"*, above a page with no findings on it.
+    That page is a scan of nothing, and working it out was left to the reader.
+    """
+    from llmsectest.reporting.sarif_html import _nothing_answered_banner
+
+    every = _nothing_answered_banner(
+        {"count": 23, "reasons": ["LLM01-direct-override: timed out after 5.0s"]},
+        {"attempted": 23, "withstood": 0},
+    )
+    assert "none of the 23 probe(s) were answered" in every
+    assert "timed out after 5.0s" in every
+
+    # Four lost out of twenty-three is an ordinary pass and keeps the meta line it has.
+    some = _nothing_answered_banner({"count": 4, "reasons": []}, {"attempted": 23})
+    assert some == ""
+
+    # And a foreign or malformed SARIF degrades to nothing rather than raising, like every
+    # other property this renderer reads out of a file it did not write.
+    assert _nothing_answered_banner(None, {"attempted": 3}) == ""
+    assert _nothing_answered_banner({"count": "many"}, {"attempted": 3}) == ""
+    assert _nothing_answered_banner({"count": 3}, {"attempted": 0}) == ""

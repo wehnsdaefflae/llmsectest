@@ -406,6 +406,41 @@ footer { max-width:1000px; margin:0 auto; padding:0 22px 40px; color:var(--muted
 """
 
 
+def _nothing_answered_banner(inconclusive: object, tally: object) -> str:
+    """Warn when no probe was answered, for a reason other than never arriving.
+
+    `_undelivered_banner` below leads the page when probes never reached the target, and
+    until 2026-09-03 it was the only banner of its kind. A run whose every probe **timed
+    out** reached the target, was recorded inconclusive throughout, and rendered with no
+    banner at all: a meta line reading *"23 probe(s) inconclusive"* beside *"0/23 attacks
+    withstood"*, above a page with no findings on it. That page is a scan of nothing and
+    the reader has to work that out from two small numbers.
+
+    Fires only when the inconclusive count covers every attempted probe, so an ordinary
+    pass that lost four probes to the clock still gets the meta line rather than a banner.
+    Type-guarded like every other foreign field here.
+    """
+    if not isinstance(inconclusive, dict) or not isinstance(tally, dict):
+        return ""
+    count, attempted = inconclusive.get("count"), tally.get("attempted")
+    if not isinstance(count, int) or not isinstance(attempted, int):
+        return ""
+    if attempted < 1 or count < attempted:
+        return ""
+    reasons = [str(r) for r in _as_list(inconclusive.get("reasons"))][:5]
+    items = "".join(f"<li>{_esc(r)}</li>" for r in reasons)
+    detail = f"<ul>{items}</ul>" if items else ""
+    return (
+        '<section class="void">'
+        f'<div class="h">⚠ Scan incomplete ,  none of the {_esc(attempted)} probe(s) were '
+        "answered</div>"
+        "<p>Every attack came back without a reply, so this page reports on nothing. An "
+        "empty findings list here is silence rather than a result. The reasons below say "
+        "what happened to each one.</p>"
+        f"{detail}</section>"
+    )
+
+
 def _undelivered_banner(undelivered: object) -> str:
     """Warn, above everything else, that this report does not describe a target.
 
@@ -593,7 +628,11 @@ def render_sarif_html(doc: dict, *, source_name: str | None = None,
     # The subset of those that never reached the target at all. It leads the page rather
     # than sitting in the meta line, because it invalidates everything below it.
     undelivered = _props(first_run).get("undelivered")
-    banner = (_undelivered_banner(undelivered)
+    lost = _undelivered_banner(undelivered)
+    # Only when the one above stayed quiet: a run whose every probe never arrived satisfies
+    # both conditions, and two banners saying the same thing above one page is noise.
+    lost = lost or _nothing_answered_banner(inc, _props(first_run).get("attacks_withstood"))
+    banner = (lost
               + _secret_exposed_banner(_props(first_run).get("secret_exposed"))
               + _unconfirmed_marker_banner(_props(first_run).get("unconfirmed_markers")))
     # Attacks the target withstood ,  the positive evidence that turns an empty
