@@ -187,6 +187,16 @@ def calculate_statistics(results: list[TestResult]) -> dict:
     undelivered = sum(
         1 for r in results if r.properties.get("llmsec_undelivered") is not None
     )
+    # And the superset it is a subset of: every probe that came back without an answer,
+    # a timeout as much as a transport failure. Carried here for the same reason
+    # `undelivered` is (2026-08-26) and because keying the verdict on the subset alone
+    # reproduced that bug on the other branch: on 2026-09-03 a target that answered
+    # nothing at all, every probe timing out, printed PASSED, "security posture is
+    # acceptable" and exit 0. The comment above the fix described the timeout case; the
+    # code counted transport failures.
+    inconclusive = sum(
+        1 for r in results if r.properties.get("llmsec_inconclusive") is not None
+    )
 
     stats = {
         "total": total,
@@ -194,6 +204,7 @@ def calculate_statistics(results: list[TestResult]) -> dict:
         "failed": failed,
         "skipped": skipped,
         "undelivered": undelivered,
+        "inconclusive": inconclusive,
         "pass_rate": round((passed / total * 100), 2) if total > 0 else 0,
         "fail_rate": round((failed / total * 100), 2) if total > 0 else 0,
         "total_duration": round(total_duration, 3),

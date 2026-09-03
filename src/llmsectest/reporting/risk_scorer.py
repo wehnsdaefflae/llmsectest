@@ -321,12 +321,18 @@ class RiskScoringEngine:
                 "Review remediation steps for these categories."
             )
 
-        if statistics.get("undelivered"):
+        if statistics.get("inconclusive"):
             # This block used to fall through to "posture is acceptable" on a run where
             # nothing was answered, which is the one sentence such a run cannot support.
+            # It keyed on `undelivered` until 2026-09-03, so it went on saying exactly that
+            # over a target where every probe timed out: the transport-failure subset was
+            # zero and the superset was every probe in the run.
+            lost = statistics["inconclusive"]
+            never = statistics.get("undelivered") or 0
+            where = (f" ({never} never reached the target)" if never else "")
             recommendations.append(
-                f"{statistics['undelivered']} probe(s) never reached the target. Re-run "
-                "before drawing any conclusion: this scan did not test what it reports on."
+                f"{lost} probe(s) came back without an answer{where}. Re-run before "
+                "drawing any conclusion: this scan did not test what it reports on."
             )
         elif not recommendations:
             recommendations.append(

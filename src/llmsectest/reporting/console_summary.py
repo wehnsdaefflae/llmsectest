@@ -30,18 +30,25 @@ class Colors:
     RESET = "\033[0m"
 
 
-def _assess_security_posture(stats: dict, undelivered: int = 0) -> str:
+def _assess_security_posture(stats: dict, unanswered: int = 0) -> str:
     """Assess overall security posture based on test results.
 
-    ``undelivered`` is the number of probes that never reached the target. It can only
-    ever *remove* the clean verdict, never add one: a run that lost probes has not shown
-    the application is strong, it has failed to ask. Before 2026-08-26 this function saw
-    only ``stats["failed"]``, so a scan where every probe timed out printed *posture is
-    STRONG, all tests passing* directly above the banner saying the results do not
-    describe the target.
+    ``unanswered`` is the number of probes that came back without an answer, a timeout
+    as much as a transport failure. It can only ever *remove* the clean verdict, never
+    add one: a run that lost probes has not shown the application is strong, it has
+    failed to ask. Before 2026-08-26 this function saw only ``stats["failed"]``, so a
+    scan where every probe timed out printed *posture is STRONG, all tests passing*
+    directly above the banner saying the results do not describe the target.
+
+    **That fix named the timeout case and counted a different one (found 2026-09-03).**
+    The caller passed the *undelivered* count, which is the transport-failure subset, and
+    a timeout does not set that property. So the exact scan the docstring describes, every
+    probe timing out against a target that answers nothing, went on printing STRONG for
+    another eight days. The parameter is the superset now, and it is named for what it
+    measures rather than for the branch that first needed it.
     """
     if stats["failed"] == 0:
-        return "incomplete" if undelivered else "strong"
+        return "incomplete" if unanswered else "strong"
     critical_failed = stats["by_severity"].get("critical", {}).get("failed", 0)
     high_failed = stats["by_severity"].get("high", {}).get("failed", 0)
     if critical_failed > 0:
@@ -109,13 +116,26 @@ def generate_console_summary(
         stats["by_severity"].get("critical", {}).get("failed", 0) +
         stats["by_severity"].get("high", {}).get("failed", 0)
     )
-    # Probes that never reached the target. The plugin already refuses to exit 0 on these
-    # and prints a SCAN INCOMPLETE banner; this block used to contradict both, three lines
-    # at a time, because it read only the failure count (2026-08-26).
+    # Probes that came back without an answer, and the transport-failure subset of them.
+    # The headline, the posture and the closing line all read the superset: a timed-out
+    # probe is exactly as unanswered as one that never left, and only the exit code
+    # distinguishes them (see the footer below). The plugin already refuses to exit 0 on
+    # the subset and prints a SCAN INCOMPLETE banner; this block used to contradict both,
+    # three lines at a time, because it read only the failure count (2026-08-26).
     undelivered = sum(
         1 for r in results if r.properties.get("llmsec_undelivered") is not None
     )
-    security_posture = _assess_security_posture(stats, undelivered)
+    unanswered = sum(
+        1 for r in results if r.properties.get("llmsec_inconclusive") is not None
+    )
+    # Whether *nothing* came back. The plugin fails a run on this (a scan of nothing is
+    # not a pass, whatever lost the probes), so the closing line has to know about it too:
+    # printing "Exit code: 0" beside a process that exits 1 is the same falsehood as the
+    # one removed on 2026-08-26, and it is the only line in this output a reader can check
+    # against reality without re-running the scan.
+    probes = sum(1 for r in results if r.properties.get("llmsec_probe"))
+    nothing_answered = bool(probes) and unanswered >= probes
+    security_posture = _assess_security_posture(stats, unanswered)
 
     # Color helpers
     c = Colors if show_colors else type('NoColor', (), {k: '' for k in dir(Colors) if not k.startswith('_')})()
@@ -130,7 +150,7 @@ def generate_console_summary(
     lines.append("")
 
     # Quick status indicator
-    if stats["failed"] == 0 and undelivered:
+    if stats["failed"] == 0 and unanswered:
         # Not PASSED and not FAILED: we did not get an answer, so we have no verdict to
         # give. The third state is the whole honesty guarantee, and the headline is where
         # a reader looks first.
@@ -322,8 +342,11 @@ def generate_console_summary(
     # Security posture assessment
     posture_messages = {
         "strong": f"{c.GREEN}Security posture is STRONG - all tests passing{c.RESET}",
-        "incomplete": (f"{c.YELLOW}No posture to report - {undelivered} probe(s) never reached "
-                       f"the target, so nothing here describes it{c.RESET}"),
+        "incomplete": (f"{c.YELLOW}No posture to report - {unanswered} probe(s) came back "
+                       f"without an answer"
+                       + (f", {undelivered} of them never reaching the target"
+                          if undelivered else "")
+                       + f", so nothing here describes it{c.RESET}"),
         "critical": f"{c.RED}CRITICAL issues detected - immediate action required{c.RESET}",
         "needs_attention": f"{c.YELLOW}High severity issues detected - prioritize remediation{c.RESET}",
         "moderate": f"{c.YELLOW}Some issues detected but manageable{c.RESET}",
@@ -345,6 +368,18 @@ def generate_console_summary(
         # a reader could check against reality and find false.
         lines.append(
             f"  {c.YELLOW}Exit code: 1 ({undelivered} probe(s) never delivered){c.RESET}")
+    elif nothing_answered:
+        lines.append(
+            f"  {c.YELLOW}Exit code: 1 (none of the {probes} probe(s) were answered, so "
+            f"this run says nothing about the target){c.RESET}")
+    elif unanswered:
+        # A timed-out probe does not fail the run, deliberately: ten cohort members lose
+        # four or five probes to the per-probe budget every pass, and failing on that
+        # would fail every pass. What it must not do is borrow the sentence "all tests
+        # passed", which is the claim those probes are precisely unable to support.
+        lines.append(
+            f"  {c.YELLOW}Exit code: 0 ({unanswered} probe(s) inconclusive, so this run "
+            f"does not say the target withstood them){c.RESET}")
     else:
         lines.append(f"  {c.GREEN}Exit code: 0 (all tests passed){c.RESET}")
     lines.append("")

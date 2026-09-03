@@ -368,15 +368,76 @@ def test_console_summary_does_not_call_an_undelivered_run_passed():
 
 
 def test_console_summary_still_says_passed_when_every_probe_was_answered():
-    """The false-positive guard: a genuinely clean run must keep its clean verdict."""
+    """The false-positive guard: a genuinely clean run must keep its clean verdict.
+
+    Until 2026-09-03 this guard's own fixture carried a **timed-out** probe, so the case
+    it pinned was "a probe went unanswered and the run still says PASSED" while its name
+    said every probe was answered. The fixture is clean now, which is what the name has
+    always claimed, and the timeout case has its own test below.
+    """
     summary = generate_console_summary([
         _result("t_ok", "passed", "owasp_llm02"),
-        _result("t_slow", "passed", "owasp_llm07", inconclusive="probe inconclusive — timeout"),
+        _result("t_also_ok", "passed", "owasp_llm07"),
     ])
 
     assert "PASSED" in summary
     assert "INCOMPLETE" not in summary
     assert "Exit code: 0 (all tests passed)" in summary
+
+
+def test_a_timed_out_probe_is_as_unanswered_as_one_that_never_left():
+    """A run that lost a probe to the clock may not borrow "all tests passed".
+
+    Found on 2026-09-03 by driving the real CLI at an endpoint that accepts every request
+    and answers none. Every probe timed out, and the run printed *Security Status:
+    PASSED*, *Security posture is acceptable. Continue monitoring for changes.* and exit
+    0 — over a target it had not got one word out of. The 2026-08-26 fix describes this
+    exact scan in its own docstring and then counted `llmsec_undelivered`, which a
+    timeout does not set, so the verdict was keyed on the transport-failure subset of the
+    thing it meant.
+
+    The exit code stays 0 here on purpose: ten cohort members lose four or five probes to
+    the per-probe budget every pass, and failing a run on one lost probe would fail every
+    pass. What changes is that the run stops claiming the probes it never got an answer
+    to were withstood.
+    """
+    summary = generate_console_summary([
+        _result("t_ok", "passed", "owasp_llm02"),
+        _result("t_slow", "passed", "owasp_llm07", inconclusive="probe inconclusive — timeout"),
+    ])
+
+    assert "INCOMPLETE" in summary
+    assert "Security Status: \x1b[93m\x1b[1mPASSED" not in summary
+    assert "all tests passing" not in summary
+    assert "Exit code: 0 (all tests passed)" not in summary
+    assert "1 probe(s) inconclusive" in summary
+
+
+def test_the_recommendation_over_a_timed_out_run_is_not_reassurance():
+    """The risk scorer reached the same wrong verdict by the same wrong key.
+
+    Its guard also read `undelivered`, so a run where every probe timed out fell through
+    to *"Security posture is acceptable. Continue monitoring for changes."* That is the
+    one sentence such a run cannot support, and it is the sentence the 2026-08-26 fix was
+    written to remove.
+    """
+    from llmsectest.reporting.risk_scorer import RiskScoringEngine
+    from llmsectest.reporting.statistics import calculate_statistics
+
+    results = [
+        _result("t_ok", "passed", "owasp_llm02"),
+        _result("t_slow", "passed", "owasp_llm07", inconclusive="probe inconclusive — timeout"),
+    ]
+    stats = calculate_statistics(results)
+    assert stats["inconclusive"] == 1
+    assert stats["undelivered"] == 0
+
+    score = RiskScoringEngine().calculate_risk(results, stats)
+    text = " ".join(score.recommendations)
+    assert "Security posture is acceptable" not in text
+    assert "without an answer" in text
+    # And it does not invent a transport failure that did not happen.
+    assert "never reached the target" not in text
 
 
 def test_an_undelivered_run_is_recommended_a_re_run_rather_than_reassurance():
@@ -604,3 +665,27 @@ def test_the_probe_fixture_records_the_named_reason_on_both_properties():
     # The timing of every probe is recorded too, answered or not.
     assert isinstance(props["llmsec_elapsed"], float)
     assert props["llmsec_case"] == "APP-shop-LLM02-direct"
+
+
+def test_the_exit_line_matches_the_exit_code_when_nothing_was_answered():
+    """The closing line is the only output a reader can check against reality.
+
+    The plugin fails a run in which no probe was answered, so a summary printing
+    *Exit code: 0* under it would be false in the one place falseness is checkable. That
+    is the 2026-08-26 defect exactly, and the first version of the 2026-09-03 fix
+    reintroduced it: the plugin learned the new rule and the summary did not.
+    """
+    every_probe_lost = generate_console_summary([
+        _result("t_a", "passed", "owasp_llm02", inconclusive="probe inconclusive — timeout"),
+        _result("t_b", "passed", "owasp_llm07", inconclusive="probe inconclusive — timeout"),
+    ])
+    assert "Exit code: 1 (none of the 2 probe(s) were answered" in every_probe_lost
+    assert "Exit code: 0" not in every_probe_lost
+
+    # One lost probe out of two is the other side: the run still exits 0, and says so.
+    one_probe_lost = generate_console_summary([
+        _result("t_a", "passed", "owasp_llm02"),
+        _result("t_b", "passed", "owasp_llm07", inconclusive="probe inconclusive — timeout"),
+    ])
+    assert "Exit code: 0 (1 probe(s) inconclusive" in one_probe_lost
+    assert "Exit code: 1" not in one_probe_lost

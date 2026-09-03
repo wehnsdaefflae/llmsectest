@@ -211,6 +211,33 @@ class SARIFPlugin:
                 print("=" * 70)
                 session.exitstatus = 1
 
+            # And the same refusal for a run that answered nothing by a different route.
+            # A timed-out probe is deliberately allowed not to fail the run: ten cohort
+            # members lose four or five probes to the per-probe budget every pass, and a
+            # rule that failed on one lost probe would fail every pass. But a scan where
+            # *no* probe came back is a scan of nothing, whatever lost them, and on
+            # 2026-09-03 that scan printed PASSED and exited 0 against an endpoint that
+            # accepted every request and answered none. The threshold is deliberately at
+            # zero answers rather than at a ratio: a ratio is a number somebody chose,
+            # and this one follows from what the run can say.
+            probes = [r for r in self.results if r.properties.get("llmsec_probe")]
+            unanswered = [
+                r for r in probes
+                if r.properties.get("llmsec_inconclusive") is not None
+            ]
+            if probes and len(unanswered) == len(probes) and not undelivered:
+                print("\n" + "=" * 70)
+                print(
+                    f"❌ SCAN INCOMPLETE: none of the {len(probes)} probe(s) were "
+                    "answered, so this run says nothing about the target"
+                )
+                for result in unanswered[:5]:
+                    print(f"  {result.properties['llmsec_inconclusive']}")
+                if len(unanswered) > 5:
+                    print(f"  ... and {len(unanswered) - 5} more")
+                print("=" * 70)
+                session.exitstatus = 1
+
             # Check OWASP coverage threshold
             if self.min_coverage is not None:
                 coverage = get_coverage_gaps(self.results)
