@@ -407,7 +407,7 @@ footer { max-width:1000px; margin:0 auto; padding:0 22px 40px; color:var(--muted
 
 
 def _nothing_answered_banner(inconclusive: object, tally: object) -> str:
-    """Warn when no probe was answered, for a reason other than never arriving.
+    """Warn when no probe was answered, whatever lost them.
 
     `_undelivered_banner` below leads the page when probes never reached the target, and
     until 2026-09-03 it was the only banner of its kind. A run whose every probe **timed
@@ -418,6 +418,10 @@ def _nothing_answered_banner(inconclusive: object, tally: object) -> str:
 
     Fires only when the inconclusive count covers every attempted probe, so an ordinary
     pass that lost four probes to the clock still gets the meta line rather than a banner.
+    A run whose every probe never arrived satisfies this condition too; the **caller** is
+    what suppresses the duplicate, because two banners saying the same thing above one page
+    is noise. Stated here because the first version of this docstring described that
+    suppression as if it lived in the condition below, which it does not.
     Type-guarded like every other foreign field here.
     """
     if not isinstance(inconclusive, dict) or not isinstance(tally, dict):
