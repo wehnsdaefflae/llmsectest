@@ -1838,11 +1838,22 @@
 forward-looking plan is the <a href="https://llmsec.dev/#roadmap">roadmap</a>.</p>
 <h2 id="unreleased"><a href="https://github.com/wehnsdaefflae/llmsectest/compare/v0.1.0...HEAD">Unreleased</a><a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>2026-09-04</strong> <strong>Four flags describe a real application's HTTP contract, so it needs no shim.</strong>
+<li>
+<p><strong>2026-09-04</strong> <strong>A guide to getting past a hosted platform's front door.</strong> If your application is
+  built on Langflow, Dify, Lobe Chat or similar, its chat endpoint is wrapped in an authentication
+  scheme built for that platform's own web UI, and the credential a scanner should hold is a
+  different one: the integration or Service API key the platform publishes for people building on
+  it. <code>guides/target-app.md</code> carries the pattern with three worked examples and the invocation that
+  follows. It also names the case where the assistant's system prompt lives in the browser, so a
+  directly reached endpoint has none, and says which categories still score there.</p>
+</li>
+<li>
+<p><strong>2026-09-04</strong> <strong>Four flags describe a real application's HTTP contract, so it needs no shim.</strong>
   <code>--app-request-field</code>, <code>--app-response-path</code>, <code>--app-headers</code> and <code>--app-body</code>. The adapter has
   been able to do all four since it was written. None of it was reachable without writing Python, so
   the README told people to point the scanner at their endpoint and the tool then only
-  worked on endpoints shaped like the one we had imagined.</li>
+  worked on endpoints shaped like the one we had imagined.</p>
+</li>
 <li><strong>Measured on an endpoint shaped like a real product</strong>, with a renamed input field, a bearer
     token, two envelope keys and the reply five levels down. Before: <strong>23 probes never delivered,
     <code>INCOMPLETE</code>, nothing learned about the application at all.</strong> After, with the four flags and no
