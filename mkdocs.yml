@@ -57,6 +57,7 @@ extra_css:
 
 nav:
   - Home: index.md
+  - Quickstart: quickstart.md
   - Getting started: getting-started.md
   - Guides:
       - Test your running app: guides/target-app.md

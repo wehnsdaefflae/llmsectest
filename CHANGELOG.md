@@ -10,6 +10,39 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ## [Unreleased]
 
+- **2026-09-04** **A category nothing was put to no longer renders as a category that passed.** Every
+  run collects one coverage-map assertion per OWASP category, asserting that *the tool* ships a tester
+  for it. That assertion wears the category's own marker so the map stays visible per category. It passes
+  whether or not the scan ever reached your application. Three surfaces read those results as
+  results about the target: the console table printed `LLM02 … 1 1 0` for a category no probe had been
+  sent to, the markdown table gave it ✅ and the HTML card the green border.
+  - **`OWASP Coverage: 100% (10/10)` could not print anything else**, since every category always had
+    a result. It sat in the same output as the footer saying four of ten were exercised, while
+    `--min-coverage` gated on a constant. The line now reports what the **run** exercised and agrees with that footer.
+  - **The row stays, with words instead of numbers.** A category that vanishes is a silent gap and a
+    category showing an unearned pass is worse, so a not-exercised row reads `not exercised this run`
+    on every surface. `reporting.statistics.exercised_categories` is the one definition behind it.
+  - On a pure application scan the per-category counts now sum to the attacks-delivered total on the
+    same page, which they did not before. A run that also uses a white-box scanner (`--repo`,
+    `--model-scan`, `--vector-store`) will show more, since a scanner exercises a category without
+    delivering an attack.
+  - **The compliance block was the worst instance and it is fixed the same way.**
+    `frameworks_covered` and `owasp_mapped` were built from every marker present, so a scan that
+    exercised four categories published six named frameworks and `owasp_mapped: 10` into its SARIF
+    and its HTML report. Both now count what the run exercised. A run that exercised nothing
+    publishes no compliance block at all.
+
+- **2026-09-04** **GitLab CI and Jenkins pipelines in the CI guide**, beside the GitHub Actions job.
+  GitLab uses `artifacts:reports:sarif`, with what a non-Ultimate tier gets instead said plainly;
+  Jenkins uses warnings-ng's `sarif` parser and `catchError(buildResult: 'UNSTABLE')` for teams that
+  want an amber build rather than a red one. Both scan once and read the exit code that scan produced,
+  so the archived report and the build result describe the same run.
+
+- **2026-09-04** **A quickstart page**, first in the docs nav: one command from `pip install` to a
+  rendered report against your own HTTP chat endpoint, a real captured scan, and an explanation of the
+  six category rows that stay blank until you say what your application is hiding.
+
+
 - **2026-09-03** **A target that answers nothing is no longer reported as one that passed.** Driven
   through the real CLI against an endpoint that accepts every request and never replies, the run
   printed `Security Status: PASSED`, *"Security posture is acceptable. Continue monitoring for

@@ -1,5 +1,11 @@
 # Getting started
 
+!!! tip "Have a running app and a minute?"
+
+    [**Quickstart**](quickstart.md) goes straight from `pip install` to a rendered report against
+    your own HTTP chat endpoint. This page is the wider tour: every target type, the extras and the
+    coverage map.
+
 ## Install
 
 ```bash

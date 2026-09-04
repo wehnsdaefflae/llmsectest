@@ -7,7 +7,22 @@ per-target default path, and ``--validate`` resolves the same default.
 
 from __future__ import annotations
 
+import pytest
+
 import llmsectest.__main__ as cli
+
+
+@pytest.fixture
+def existing_dir(tmp_path):
+    """A directory that exists no matter where pytest was started from.
+
+    ``_has_explicit_path`` asks the filesystem whether a token resolves, so a test of
+    it needs a token that resolves. Borrowing one from the checkout makes the test a
+    statement about the working directory as much as about the code.
+    """
+    d = tmp_path / "collectable"
+    d.mkdir()
+    return str(d)
 
 
 def test_target_slug_for_provider_spec():
@@ -59,15 +74,19 @@ def test_has_explicit_path_empty():
     assert cli._has_explicit_path([]) is False
 
 
-def test_has_explicit_path_real_positional():
-    # `tests` exists relative to the repo root (pytest cwd) -> a real test path.
-    assert cli._has_explicit_path(["tests"]) is True
+def test_has_explicit_path_real_positional(existing_dir):
+    # An existing directory is a real test path. `existing_dir` is created by the
+    # fixture rather than borrowed from the checkout: these four assertions used the
+    # literal `tests`, which exists relative to `code/` and nowhere else, so running
+    # the suite from one directory up flipped three of them and made a fourth pass for
+    # the wrong reason (found 2026-09-04).
+    assert cli._has_explicit_path([existing_dir]) is True
 
 
-def test_value_opt_value_is_not_a_path_even_if_it_exists():
-    # `--report-dir tests` consumes `tests` as the option value; despite the dir
+def test_value_opt_value_is_not_a_path_even_if_it_exists(existing_dir):
+    # `--report-dir <dir>` consumes the directory as the option value; despite the dir
     # existing it must NOT be treated as a positional path (the documented footgun).
-    assert cli._has_explicit_path(["--report-dir", "tests"]) is False
+    assert cli._has_explicit_path(["--report-dir", existing_dir]) is False
     assert cli._has_explicit_path(["--report-formats", "sarif,html"]) is False
     assert cli._has_explicit_path(["-k", "injection"]) is False
 
@@ -77,22 +96,22 @@ def test_unknown_value_is_not_a_path_when_it_does_not_exist():
     assert cli._has_explicit_path(["no_such_path_zzz"]) is False
 
 
-def test_real_positional_after_a_value_opt_is_found():
-    assert cli._has_explicit_path(["--report-dir", "tests", "tests"]) is True
+def test_real_positional_after_a_value_opt_is_found(existing_dir):
+    assert cli._has_explicit_path(["--report-dir", existing_dir, existing_dir]) is True
 
 
-def test_run_suite_keeps_packaged_suite_with_spaced_value_option(monkeypatch):
+def test_run_suite_keeps_packaged_suite_with_spaced_value_option(monkeypatch, existing_dir):
     captured = {}
     monkeypatch.setattr(cli.subprocess, "call", lambda cmd: captured.setdefault("cmd", cmd) or 0)
-    cli.run_suite(["--report-dir", "tests"], None)
+    cli.run_suite(["--report-dir", existing_dir], None)
     # The packaged suite must still be the test path (footgun fixed).
     assert str(cli.SUITE_DIR) in captured["cmd"]
 
 
-def test_run_suite_uses_explicit_path_when_given(monkeypatch):
+def test_run_suite_uses_explicit_path_when_given(monkeypatch, existing_dir):
     captured = {}
     monkeypatch.setattr(cli.subprocess, "call", lambda cmd: captured.setdefault("cmd", cmd) or 0)
-    cli.run_suite(["tests"], None)
+    cli.run_suite([existing_dir], None)
     assert str(cli.SUITE_DIR) not in captured["cmd"]
 
 

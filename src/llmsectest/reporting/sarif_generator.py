@@ -19,7 +19,7 @@ from .owasp_metadata import (
     get_owasp_markers_from_test,
     get_security_tags,
 )
-from .statistics import attack_tally
+from .statistics import attack_tally, exercised_categories
 
 
 def _as_int(value: Any) -> int | None:
@@ -107,10 +107,13 @@ class SARIFGenerator:
         }
 
         # Collect OWASP markers for compliance mapping
-        all_owasp_markers = set()
-        for result in results:
-            owasp_markers = get_owasp_markers_from_test(result.markers)
-            all_owasp_markers.update(owasp_markers)
+        # **The categories this run put to the target, never every marker present
+        # (2026-09-04).** Each run carries one coverage-map assertion per category, wearing
+        # that category's marker, so a set built from every marker was all ten on every run.
+        # This block publishes a *compliance* claim, so that read `owasp_mapped: 10` and six
+        # named frameworks into the SARIF of a scan that exercised four categories, which is
+        # the one number here somebody might paste into an audit.
+        all_owasp_markers = exercised_categories(results)
 
         # Build properties object
         properties = {}

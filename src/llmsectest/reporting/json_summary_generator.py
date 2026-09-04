@@ -123,6 +123,10 @@ class JSONSummaryGenerator:
             if category:
                 total = cat_stats["total"]
                 owasp_coverage[cat_id] = {
+                    # A consumer reading `passed: 0, failed: 0` cannot tell "nothing got
+                    # through" from "nothing was asked". Carried explicitly (2026-09-04)
+                    # rather than left to be inferred from the zeroes.
+                    "exercised": cat_stats.get("exercised", False),
                     "total_tests": total,
                     "passed": cat_stats["passed"],
                     "failed": cat_stats["failed"],

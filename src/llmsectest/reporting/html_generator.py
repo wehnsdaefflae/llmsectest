@@ -11,7 +11,7 @@ from .owasp_metadata import get_owasp_category, get_owasp_markers_from_test
 from .statistics import (
     attack_tally,
     calculate_statistics,
-    get_owasp_markers,
+    exercised_categories,
     get_test_severity,
 )
 
@@ -193,7 +193,14 @@ class HTMLReportGenerator:
             if not category:
                 continue
 
-            status_class = "owasp-passed" if cat_stats["failed"] == 0 else "owasp-failed"
+            # A category nothing was put to is neither passed nor failed. Before
+            # 2026-09-04 it took the green border and read "0 failed", which is the
+            # project's own recurring defect rendered as a card.
+            exercised = cat_stats.get("exercised", False)
+            if not exercised:
+                status_class = "owasp-not-exercised"
+            else:
+                status_class = "owasp-passed" if cat_stats["failed"] == 0 else "owasp-failed"
 
             # Build remediation steps HTML if category has failures
             remediation_html = ""
@@ -212,8 +219,10 @@ class HTMLReportGenerator:
                 <div class="owasp-header">
                     <h3>{category.id}: {category.name}</h3>
                     <div class="owasp-stats">
-                        <span class="owasp-passed-count">{cat_stats["passed"]} passed</span>
-                        <span class="owasp-failed-count">{cat_stats["failed"]} failed</span>
+                        {'<span class="owasp-not-exercised-note">not exercised this run</span>'
+                         if not exercised else
+                         f'<span class="owasp-passed-count">{cat_stats["passed"]} passed</span>'
+                         f'<span class="owasp-failed-count">{cat_stats["failed"]} failed</span>'}
                     </div>
                 </div>
                 <p class="owasp-description">{category.description}</p>
@@ -682,8 +691,14 @@ class HTMLReportGenerator:
         </section>"""
 
     def _generate_compliance_section(self, results: list[TestResult]) -> str:
-        """Generate compliance framework coverage section."""
-        all_owasp_markers = get_owasp_markers(results)
+        """Generate compliance framework coverage section.
+
+        Built from the categories the run **exercised**, for the reason spelled out in
+        `sarif_generator`: the coverage-map assertion carries every category's marker on
+        every run, so `get_owasp_markers` here claimed six frameworks and ten mapped
+        categories on a scan that exercised four (2026-09-04).
+        """
+        all_owasp_markers = exercised_categories(results)
 
         if not all_owasp_markers:
             return ""

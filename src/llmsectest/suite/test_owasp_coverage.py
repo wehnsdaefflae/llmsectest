@@ -34,10 +34,20 @@ _PARAMS = [
 
 
 @pytest.mark.security
+@pytest.mark.llmsec_coverage_map
 @pytest.mark.parametrize("marker", _PARAMS)
 def test_owasp_category_implemented(marker):
     """Each OWASP category ships a tester (probe corpus or scanner) or is
-    reported not-yet-implemented."""
+    reported not-yet-implemented.
+
+    **This asserts something about the tool, not about the target**, and it wears the
+    category's own OWASP marker so the map stays visible per category. The
+    ``llmsec_coverage_map`` mark is how the reporting layer tells the two apart: without
+    it, every category had one passing result on every run, so coverage read 100% on a
+    scan that never reached the application and the per-category table showed a clean
+    pass for categories nothing had been sent to. See
+    ``reporting.statistics.exercised_categories``.
+    """
     category = OWASP_LLM_CATEGORIES[marker]
     if marker not in covered_categories():
         pytest.skip(f"{category.id} {category.name}: "

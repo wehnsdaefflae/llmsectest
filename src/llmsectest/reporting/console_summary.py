@@ -308,6 +308,14 @@ def generate_console_summary(
             cat_stats = stats["owasp_categories"][category_id]
             category = get_owasp_category(f"owasp_{category_id.lower()}")
             name = category.name if category else "Unknown"
+            if not cat_stats.get("exercised"):
+                # The row stays so no category goes missing, and it carries words rather
+                # than numbers, because a numeric row here reads as a verdict.
+                lines.append(
+                    f"    {category_id:<8} {name:<35} "
+                    f"{c.YELLOW}{'not exercised this run':>17}{c.RESET}"
+                )
+                continue
             fail_color = c.RED if cat_stats["failed"] > 0 else ""
             lines.append(
                 f"    {category_id:<8} {name:<35} "
@@ -319,11 +327,18 @@ def generate_console_summary(
     # Coverage gap analysis
     coverage = get_coverage_gaps(results)
     if coverage["categories_untested"] > 0:
-        lines.append(f"  {c.CYAN}Coverage Gaps ({coverage['coverage_percent']}% of OWASP LLM Top 10):{c.RESET}")
+        lines.append(
+            f"  {c.CYAN}Coverage this run: {coverage['categories_tested']}/"
+            f"{coverage['total_categories']} OWASP LLM Top 10 categories exercised. "
+            f"Not exercised:{c.RESET}"
+        )
         for gap in coverage["untested"]:
             lines.append(f"    - {gap['id']}: {gap['name']}")
     else:
-        lines.append(f"  {c.GREEN}OWASP Coverage: 100% ({coverage['total_categories']}/{coverage['total_categories']} categories){c.RESET}")
+        lines.append(
+            f"  {c.GREEN}Coverage this run: all {coverage['total_categories']} OWASP LLM "
+            f"Top 10 categories exercised{c.RESET}"
+        )
     lines.append("")
 
     # Verbose mode: show failed test details

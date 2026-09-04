@@ -11,7 +11,11 @@ from .reporting.owasp_metadata import OWASP_LLM_CATEGORIES
 from .reporting.policy_config import PolicyLoader, PolicyValidator
 from .reporting.report_manager import ReportManager
 from .reporting.risk_scorer import RiskScoringEngine
-from .reporting.statistics import calculate_statistics, get_coverage_gaps
+from .reporting.statistics import (
+    COVERAGE_MAP_MARKER,
+    calculate_statistics,
+    get_coverage_gaps,
+)
 from .reporting.trend_tracker import TrendTracker
 
 
@@ -280,6 +284,13 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "severity(level): mark test severity (critical/high/medium/low/info)")
     for level in ("critical", "high", "medium", "low", "info"):
         config.addinivalue_line("markers", f"{level}: {level} severity security test")
+
+    config.addinivalue_line(
+        "markers",
+        f"{COVERAGE_MAP_MARKER}: asserts the TOOL ships a tester for a category; carries "
+        f"that category's OWASP marker but says nothing about the target, so coverage and "
+        f"the per-category table exclude it",
+    )
 
     # Register OWASP LLM Top 10 markers from metadata
     for marker, category in OWASP_LLM_CATEGORIES.items():

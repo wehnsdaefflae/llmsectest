@@ -14,6 +14,12 @@ def get_test_severity(result: TestResult) -> str:
     return "medium"
 
 
+#: The marker carried by ``suite/test_owasp_coverage.py``'s per-category assertion, which
+#: is a claim about the **tool** ("a tester ships for this category") wearing the
+#: category's own marker. Named here so the statistics layer can tell it apart from a
+#: result that says something about the **target**. See :func:`exercised_categories`.
+COVERAGE_MAP_MARKER = "llmsec_coverage_map"
+
 #: The category whose subject *is* the developer's secret. Once any reply in the run has
 #: handed that value over, no LLM02 row in the same run can honestly read "withstood",
 #: whichever probe got it out. Deliberately a single id rather than a general mechanism:
@@ -208,26 +214,52 @@ def calculate_statistics(results: list[TestResult]) -> dict:
         "pass_rate": round((passed / total * 100), 2) if total > 0 else 0,
         "fail_rate": round((failed / total * 100), 2) if total > 0 else 0,
         "total_duration": round(total_duration, 3),
-        "owasp_categories": defaultdict(lambda: {"total": 0, "failed": 0, "passed": 0, "skipped": 0}),
+        # Per category, counted over results that say something about the **target**.
+        # The coverage-map assertion carries every category's marker and passes on every
+        # run, so counting it here printed `LLM02  1  1  0` — one test, one pass, no
+        # failures — for a category no probe had been sent to, on a report whose reader
+        # has no way to know that row is about the tool. `exercised` keeps the row
+        # visible without letting it read as a verdict, which is the whole trade: a
+        # category that vanishes is a silent gap and a category that shows a pass it did
+        # not earn is worse (2026-09-04).
+        "owasp_categories": defaultdict(
+            lambda: {"total": 0, "failed": 0, "passed": 0, "skipped": 0, "exercised": False}
+        ),
         "severity_distribution": defaultdict(int),
         "by_severity": defaultdict(lambda: {"total": 0, "failed": 0, "passed": 0}),
     }
 
+    exercised = exercised_categories(results)
     for result in results:
         # Track OWASP category statistics
+        is_coverage_map = COVERAGE_MAP_MARKER in result.markers
         owasp_markers = get_owasp_markers_from_test(result.markers)
         for marker in owasp_markers:
             category = get_owasp_category(marker)
-            if category:
-                stats["owasp_categories"][category.id]["total"] += 1
-                if result.outcome == "failed":
-                    stats["owasp_categories"][category.id]["failed"] += 1
-                elif result.outcome == "passed":
-                    stats["owasp_categories"][category.id]["passed"] += 1
-                elif result.outcome == "skipped":
-                    stats["owasp_categories"][category.id]["skipped"] += 1
+            if not category:
+                continue
+            row = stats["owasp_categories"][category.id]
+            row["exercised"] = marker in exercised
+            if is_coverage_map:
+                # The row exists so the category stays on every report. Its numbers do
+                # not, because they would be the tool's own coverage assertion counted as
+                # a test of the application.
+                continue
+            row["total"] += 1
+            if result.outcome == "failed":
+                row["failed"] += 1
+            elif result.outcome == "passed":
+                row["passed"] += 1
+            elif result.outcome == "skipped":
+                row["skipped"] += 1
 
-        # Track severity distribution
+        # Track severity distribution. **Also excludes the coverage-map assertion
+        # (2026-09-04, fresh-context pass).** Those results carry no severity marker, so
+        # `get_test_severity` defaults them to medium, and ten of the fourteen "Medium"
+        # rows in an app scan's severity block were the tool asserting things about
+        # itself. A severity distribution is read as a property of the target.
+        if is_coverage_map:
+            continue
         severity = get_test_severity(result)
         stats["severity_distribution"][severity] += 1
         stats["by_severity"][severity]["total"] += 1
@@ -251,14 +283,53 @@ def get_owasp_markers(results: list[TestResult]) -> set[str]:
     return all_markers
 
 
+def exercised_categories(results: list[TestResult]) -> set[str]:
+    """The OWASP markers this run actually exercised **against its target**.
+
+    Different from :func:`get_owasp_markers`, which answers "which categories appear
+    anywhere in this result set". Two kinds of result carry an OWASP marker without
+    saying anything about the target, and both have to come out:
+
+    - **The coverage-map assertion.** ``suite/test_owasp_coverage.py`` emits one test per
+      category asserting that *the tool* ships a tester for it, and it carries the
+      category's marker so the map is visible per category. It passes on every run,
+      including a run that never reached the application, which made
+      :func:`get_coverage_gaps` structurally incapable of returning anything but 100%:
+      every category always had one passing result. ``--min-coverage`` gated on that
+      number and therefore could never fire, and one console run printed
+      *OWASP Coverage: 100% (10/10 categories)* above a footer saying four of ten were
+      exercised. Two figures for one fact, disagreeing in one output, on the surface a
+      first-time reader meets first (found 2026-09-04).
+    - **A skip.** A category whose input was never supplied reports a skip naming the flag
+      it needs. That is the honest state and it is not coverage.
+
+    So a category is exercised when at least one result carries its marker, is not the
+    coverage-map assertion, and did not skip. That covers both modalities: a delivered
+    probe and a white-box scanner run, neither of which is distinguishable here by
+    outcome alone.
+    """
+    exercised: set[str] = set()
+    for result in results:
+        if COVERAGE_MAP_MARKER in result.markers:
+            continue
+        if result.outcome == "skipped":
+            continue
+        exercised.update(get_owasp_markers_from_test(result.markers))
+    return exercised
+
+
 def get_coverage_gaps(results: list[TestResult]) -> dict:
-    """Identify OWASP LLM Top 10 categories not covered by tests.
+    """Identify OWASP LLM Top 10 categories this run did not exercise.
 
     Returns a dictionary with tested categories, untested categories,
     and coverage percentage. Essential for identifying blind spots in
     security test suites.
+
+    "Tested" means :func:`exercised_categories`: a category the run actually put
+    something to, rather than one that merely appears in the result set. Read that
+    function for why the difference is the whole point of this one.
     """
-    tested_markers = get_owasp_markers(results)
+    tested_markers = exercised_categories(results)
     all_markers = set(OWASP_LLM_CATEGORIES.keys())
 
     untested_markers = all_markers - tested_markers

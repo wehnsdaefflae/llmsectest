@@ -101,6 +101,15 @@ class MarkdownReportGenerator:
             if not category:
                 continue
 
+            if not cat_stats.get("exercised"):
+                # Not a pass. Nothing was put to the target under this category, so the
+                # cells that would hold a verdict hold a dash instead (2026-09-04).
+                owasp_section += (
+                    f"| {category.id} | {category.name} | "
+                    f"– | – | – | ⏸ Not exercised |\n"
+                )
+                continue
+
             status = "✅ Pass" if cat_stats["failed"] == 0 else "❌ Fail"
 
             owasp_section += (

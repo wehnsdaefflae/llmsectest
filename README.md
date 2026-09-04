@@ -19,6 +19,9 @@ pip install llmsectest
 llmsectest --target app:http://localhost:8000/chat --app-secret "your-canary"
 ```
 
+⏱ **One minute from here to a report: [Quickstart](https://docs.llmsec.dev/quickstart/).** What the
+two lines above print, how to read it, and why six of the ten categories stay blank on a first run.
+
 🔬 **See what it finds before you install it: [llmsec.dev/reports](https://llmsec.dev/reports/).** The
 full scan report for every application in our own test cohort, byte-identical to what the tool wrote,
 regenerated on every pass. It includes the ones that withstood everything, plus a list of the members we
