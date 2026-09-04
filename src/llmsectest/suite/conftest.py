@@ -41,7 +41,8 @@ def _locate_finding_at_target(record_property):
 
 @pytest.fixture(scope="session")
 def target_adapter():
-    return resolve_target(_target_spec(), app_timeout=envvars.app_timeout_from_env())
+    return resolve_target(_target_spec(), app_timeout=envvars.app_timeout_from_env(),
+                          app_shape=envvars.app_shape_from_env())
 
 
 @pytest.fixture(scope="session")

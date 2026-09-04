@@ -110,7 +110,11 @@ class MarkdownReportGenerator:
                 )
                 continue
 
-            status = "✅ Pass" if cat_stats["failed"] == 0 else "❌ Fail"
+            voided = cat_stats.get("voided", 0)
+            if cat_stats["failed"] == 0 and voided:
+                status = f"⚠ {voided} voided"
+            else:
+                status = "✅ Pass" if cat_stats["failed"] == 0 else "❌ Fail"
 
             owasp_section += (
                 f"| {category.id} | {category.name} | "

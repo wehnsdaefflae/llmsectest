@@ -162,7 +162,8 @@ def defended_demo_adapter() -> LLMAdapter:
     return ScriptedAdapter(lambda _req: _DEFENDED_REPLY, model="demo-defended")
 
 
-def resolve_target(spec: str, *, app_timeout: float | None = None) -> LLMAdapter:
+def resolve_target(spec: str, *, app_timeout: float | None = None,
+                   app_shape: dict | None = None) -> LLMAdapter:
     """Resolve a target spec into an adapter.
 
     Accepts the demo keywords ``demo``/``demo-vulnerable``/``demo-defended``;
@@ -176,6 +177,12 @@ def resolve_target(spec: str, *, app_timeout: float | None = None) -> LLMAdapter
     ``app_timeout`` (seconds) caps how long a single request to an ``app:<url>``
     target may take before it is treated as a timeout; it applies only to the app
     adapter and falls back to that adapter's own default when ``None``.
+
+    ``app_shape`` carries how a real application's HTTP contract differs from the
+    default one: ``request_field``, ``response_path``, ``headers`` and ``extra_body``.
+    Added 2026-09-04, because the adapter could already do all four and a user could
+    only reach them by writing Python, so every third-party application we enrolled got
+    a hand-written shim instead of a flag.
     """
     spec = (spec or "").strip()
     if spec in ("", "demo", "demo-vulnerable"):
@@ -186,6 +193,7 @@ def resolve_target(spec: str, *, app_timeout: float | None = None) -> LLMAdapter
         from ..adapters.app_endpoint import AppEndpointAdapter
 
         kwargs = {} if app_timeout is None else {"timeout": app_timeout}
+        kwargs.update(app_shape or {})
         return AppEndpointAdapter(endpoint=spec[len("app:"):], **kwargs)
     provider, sep, model = spec.partition(":")
     return get_adapter(provider, model or None) if sep else get_adapter(provider)

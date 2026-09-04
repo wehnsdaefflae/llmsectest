@@ -54,6 +54,7 @@ scanning several targets in a row doesn't silently overwrite earlier reports;
 pass ``--sarif-output`` to choose your own path.
 """
 
+import json
 import os
 import re
 import subprocess
@@ -463,6 +464,10 @@ def run_suite(args: list, target: str | None, repo: str | None = None,
               app_canary: str | None = None,
               app_rag_poison: str | None = None,
               app_timeout: str | None = None,
+              app_request_field: str | None = None,
+              app_response_path: str | None = None,
+              app_headers: str | None = None,
+              app_body: str | None = None,
               app_stress: str | None = None,
               redteam_generate: str | None = None,
               redteam_benign: bool = False,
@@ -522,6 +527,10 @@ def run_suite(args: list, target: str | None, repo: str | None = None,
         envvars.APP_RAG_POISON: app_rag_poison,
         envvars.APP_TIMEOUT: app_timeout,
         envvars.APP_STRESS: app_stress,
+        envvars.APP_REQUEST_FIELD: app_request_field,
+        envvars.APP_RESPONSE_PATH: app_response_path,
+        envvars.APP_HEADERS: app_headers,
+        envvars.APP_BODY: app_body,
         envvars.REDTEAM_GENERATE: redteam_generate,
     }
     for name, value in suite_env.items():
@@ -741,6 +750,10 @@ def main():
     args, app_rag_poison = _extract_opt(args, "--app-rag-poison")
     args, app_timeout = _extract_opt(args, "--app-timeout")
     args, app_stress = _extract_opt(args, "--app-stress")
+    args, app_request_field = _extract_opt(args, "--app-request-field")
+    args, app_response_path = _extract_opt(args, "--app-response-path")
+    args, app_headers = _extract_opt(args, "--app-headers")
+    args, app_body = _extract_opt(args, "--app-body")
     args, redteam_generate = _extract_opt(args, "--redteam-generate")
 
     if app_timeout is not None:
@@ -750,6 +763,23 @@ def main():
         except ValueError:
             print(f"error: --app-timeout must be a positive number of seconds "
                   f"(got {app_timeout!r})", file=sys.stderr)
+            return 2
+
+    for flag, raw in (("--app-headers", app_headers), ("--app-body", app_body)):
+        # Rejected here rather than inside the suite, so the message names the flag the
+        # user typed. A malformed value must never fall back to the default shape: the scan
+        # would then talk to the wrong contract, every probe would come back unanswered, and
+        # the honesty guarantee would faithfully report a whole application as unreachable.
+        if raw is None:
+            continue
+        try:
+            parsed = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            print(f"error: {flag} must be a JSON object ({exc})", file=sys.stderr)
+            return 2
+        if not isinstance(parsed, dict):
+            print(f"error: {flag} must be a JSON object, got {type(parsed).__name__}",
+                  file=sys.stderr)
             return 2
 
     if redteam_generate is not None:
@@ -818,6 +848,9 @@ def main():
                      app_actions=tuple(app_actions), app_canary=app_canary,
                      app_rag_poison=app_rag_poison, app_timeout=app_timeout,
                      app_stress=app_stress,
+                     app_request_field=app_request_field,
+                     app_response_path=app_response_path,
+                     app_headers=app_headers, app_body=app_body,
                      redteam_generate=redteam_generate,
                      redteam_benign=redteam_benign,
                      redteam_benign_set=redteam_benign_set)

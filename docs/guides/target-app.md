@@ -17,15 +17,39 @@ message. Your application supplies its own system prompt. That's the thing we wa
 
 By default the request body is `{"message": "<attacker input>"}` and the reply is auto-detected across
 common shapes: a top-level `reply` / `response` / `message` / `content` / `answer` field, or the
-OpenAI-style `choices[0].message.content`. If your app differs, configure it (Python API):
+OpenAI-style `choices[0].message.content`.
+
+**Real applications often differ. Four flags describe how.** No wrapper, no proxy, no Python:
+
+```bash
+llmsectest --target app:http://localhost:7860/api/v1/run/<flow-id> \
+  --app-request-field input_value \
+  --app-response-path 'outputs.0.outputs.0.results.message.text' \
+  --app-headers '{"Authorization": "Bearer <token>"}' \
+  --app-body '{"output_type": "chat", "input_type": "chat"}'
+```
+
+- `--app-request-field` renames the field your input goes in.
+- `--app-response-path` is a dotted path to the reply. A number in it is a list index, so
+  `outputs.0.results.message.text` walks a list and then two objects.
+- `--app-headers` is a JSON object merged over the defaults, for bearer tokens and API keys. The
+  JSON content type stays unless you replace it.
+- `--app-body` is a JSON object of fixed keys sent alongside your input, for the envelope fields
+  some products require.
+
+**A malformed value for either JSON flag is refused rather than ignored.** Falling back to the
+default shape would make every probe come back unanswered. The scan would then honestly report your
+whole application as unreachable, which is a true sentence about the wrong thing.
+
+The same four are available on the Python API if you are driving the adapter yourself:
 
 ```python
 from llmsectest.adapters.app_endpoint import AppEndpointAdapter
 
 target = AppEndpointAdapter(
     endpoint="https://your-app.example.com/v1/chat",
-    request_field="prompt",            # your app's input field
-    response_path="data.0.text",       # dotted path to the reply in the JSON
+    request_field="prompt",
+    response_path="data.0.text",
     headers={"Authorization": "Bearer <token>"},
     extra_body={"session_id": "llmsectest"},
 )

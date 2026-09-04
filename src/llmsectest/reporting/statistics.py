@@ -223,13 +223,22 @@ def calculate_statistics(results: list[TestResult]) -> dict:
         # category that vanishes is a silent gap and a category that shows a pass it did
         # not earn is worse (2026-09-04).
         "owasp_categories": defaultdict(
-            lambda: {"total": 0, "failed": 0, "passed": 0, "skipped": 0, "exercised": False}
+            lambda: {"total": 0, "failed": 0, "passed": 0, "skipped": 0, "exercised": False,
+                     "voided": 0}
         ),
         "severity_distribution": defaultdict(int),
         "by_severity": defaultdict(lambda: {"total": 0, "failed": 0, "passed": 0}),
     }
 
     exercised = exercised_categories(results)
+    # **Voided probes must not read as passes in the per-category row (2026-09-04).** A probe
+    # the target survived, in a run where some other probe got the secret out, is already
+    # counted as `voided` in the attacks block with its reason attached. The per-category
+    # table counted the same probe as a pytest pass, so one page said `LLM02  4  4  0` and
+    # the block above it said four voided. Two accounts of four probes, in one report.
+    tally = attack_tally(results) or {}
+    voided_by_cat = {cat: row.get("voided", 0)
+                     for cat, row in (tally.get("by_category") or {}).items()}
     for result in results:
         # Track OWASP category statistics
         is_coverage_map = COVERAGE_MAP_MARKER in result.markers
@@ -240,6 +249,7 @@ def calculate_statistics(results: list[TestResult]) -> dict:
                 continue
             row = stats["owasp_categories"][category.id]
             row["exercised"] = marker in exercised
+            row["voided"] = voided_by_cat.get(category.id, 0)
             if is_coverage_map:
                 # The row exists so the category stays on every report. Its numbers do
                 # not, because they would be the tool's own coverage assertion counted as

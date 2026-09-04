@@ -202,3 +202,27 @@ def test_the_json_summary_says_whether_a_category_was_exercised():
     cov = out["owasp_coverage"]
     assert cov["LLM01"]["exercised"] is True
     assert cov["LLM02"]["exercised"] is False
+
+
+def test_a_voided_probe_is_not_a_pass_in_the_category_row():
+    """Found 2026-09-04 while scanning an application through the new shape flags. The
+    attacks block said `Voided: 4` with its reason, and the per-category table said
+    `LLM02  4  4  0`. Two accounts of the same four probes in one report, and the one a
+    reader meets first was the flattering one."""
+    results = [_coverage_map_result(m) for m in ALL_MARKERS]
+    for _ in range(4):
+        r = _probe_result("owasp_llm02")
+        r.properties["llmsec_secret_configured"] = "x"
+        results.append(r)
+    leak = _probe_result("owasp_llm07")
+    leak.properties["llmsec_secret_exposed"] = "the reply carried the value"
+    results.append(leak)
+
+    stats = calculate_statistics(results)
+    llm02 = stats["owasp_categories"]["LLM02"]
+    assert llm02["voided"] == 4, stats["owasp_categories"]
+
+    out = generate_console_summary(results)
+    row = next(line for line in out.splitlines() if "LLM02" in line and "Sensitive" in line)
+    assert "4 voided" in row, row
+    assert "voided: survived a run that lost the secret" in out

@@ -317,11 +317,19 @@ def generate_console_summary(
                 )
                 continue
             fail_color = c.RED if cat_stats["failed"] > 0 else ""
+            voided = cat_stats.get("voided", 0)
+            # A voided probe is not a pass and must not sit in the Pass column, where it
+            # told a reader the opposite of the voided line in the block above (2026-09-04).
+            passed = cat_stats["passed"] - voided
+            note = f"  {c.RED}{voided} voided{c.RESET}" if voided else ""
             lines.append(
                 f"    {category_id:<8} {name:<35} "
-                f"{cat_stats['total']:>5} {cat_stats['passed']:>5} "
-                f"{fail_color}{cat_stats['failed']:>5}{c.RESET}"
+                f"{cat_stats['total']:>5} {max(passed, 0):>5} "
+                f"{fail_color}{cat_stats['failed']:>5}{c.RESET}{note}"
             )
+        if any(r.get("voided") for r in stats["owasp_categories"].values()):
+            lines.append(f"    {c.YELLOW}voided: survived a run that lost the secret to another "
+                         f"probe, so it is not a pass{c.RESET}")
         lines.append("")
 
     # Coverage gap analysis

@@ -28,6 +28,7 @@ CLI option → environment variable:
 
 from __future__ import annotations
 
+import json
 import os
 
 TARGET = "LLMSECTEST_TARGET"
@@ -43,6 +44,15 @@ APP_CANARY = "LLMSECTEST_APP_CANARY"
 APP_RAG_POISON = "LLMSECTEST_APP_RAG_POISON"
 APP_TIMEOUT = "LLMSECTEST_APP_TIMEOUT"
 APP_STRESS = "LLMSECTEST_APP_STRESS"
+#: How a real application's HTTP contract differs from the one we guessed. Added 2026-09-04:
+#: the adapter has carried `request_field`, `response_path`, `headers` and `extra_body` since
+#: it was written, and **none of them was reachable from the CLI**, so every third-party member
+#: of the cohort got a hand-written translation shim instead. Five real applications, five
+#: shims, while the README says to point the scanner at your endpoint.
+APP_REQUEST_FIELD = "LLMSECTEST_APP_REQUEST_FIELD"
+APP_RESPONSE_PATH = "LLMSECTEST_APP_RESPONSE_PATH"
+APP_HEADERS = "LLMSECTEST_APP_HEADERS"
+APP_BODY = "LLMSECTEST_APP_BODY"
 REDTEAM_GENERATE = "LLMSECTEST_REDTEAM_GENERATE"
 
 # Joins the repeatable ``--app-action`` values into the single APP_ACTIONS
@@ -83,6 +93,45 @@ def app_timeout_from_env() -> float | None:
     except (TypeError, ValueError):
         return None
     return value if value > 0 else None
+
+
+def app_shape_from_env() -> dict:
+    """How this application's HTTP contract differs from the default one.
+
+    Returns the keyword arguments `AppEndpointAdapter` takes for a non-default request or
+    response shape, leaving out anything unset so the adapter keeps its own defaults.
+
+    **Why it exists (2026-09-04).** The adapter has always been able to POST a different
+    field name, read a reply out of a dotted path, carry headers and add fixed body keys.
+    None of it was reachable without writing Python, so every real application enrolled in
+    the cohort got a bespoke shim: private-gpt speaks Anthropic `/v1/messages`, open-webui
+    has its own, Langflow wants `{input_value, output_type, input_type}` and answers with the
+    reply nested five levels down. The tool told users to point it at their endpoint and then
+    only worked on endpoints shaped like the one we imagined.
+
+    A malformed value fails loudly here rather than silently reverting to the default, since
+    a scan that quietly talked to the wrong shape would record a whole application as
+    unreachable and the honesty guarantee would report that faithfully.
+    """
+    shape: dict = {}
+    field = os.environ.get(APP_REQUEST_FIELD, "").strip()
+    if field:
+        shape["request_field"] = field
+    path = os.environ.get(APP_RESPONSE_PATH, "").strip()
+    if path:
+        shape["response_path"] = path
+    for name, key in ((APP_HEADERS, "headers"), (APP_BODY, "extra_body")):
+        raw = os.environ.get(name, "").strip()
+        if not raw:
+            continue
+        try:
+            value = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            raise SystemExit(f"{name} must be a JSON object: {exc}") from exc
+        if not isinstance(value, dict):
+            raise SystemExit(f"{name} must be a JSON object, got {type(value).__name__}")
+        shape[key] = value
+    return shape
 
 
 def app_stress_from_env() -> int | None:

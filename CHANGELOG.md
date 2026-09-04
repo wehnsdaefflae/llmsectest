@@ -10,6 +10,26 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ## [Unreleased]
 
+- **2026-09-04** **Four flags describe a real application's HTTP contract, so it needs no shim.**
+  `--app-request-field`, `--app-response-path`, `--app-headers` and `--app-body`. The adapter has
+  been able to do all four since it was written. None of it was reachable without writing Python, so
+  the README told people to point the scanner at their endpoint and the tool then only
+  worked on endpoints shaped like the one we had imagined.
+  - **Measured on an endpoint shaped like a real product**, with a renamed input field, a bearer
+    token, two envelope keys and the reply five levels down. Before: **23 probes never delivered,
+    `INCOMPLETE`, nothing learned about the application at all.** After, with the four flags and no
+    wrapper: 8 findings, 16 withstood, 6 of 10 categories exercised.
+  - A malformed value for either JSON flag is **refused**, never quietly replaced by the default.
+    Talking to the wrong contract makes every probe come back unanswered. The scan would then report a
+    whole application as unreachable, which is a true sentence about the wrong thing.
+
+- **2026-09-04** **A voided probe no longer sits in the Pass column.** A probe the target survived,
+  in a run where a different probe got the secret out, is counted as `voided` in the attacks block
+  with its reason attached. The per-category table counted the same probe as a pass, so one report
+  said `LLM02  4  4  0` while the block above it said four voided. The row carries the voided count
+  now, with a line saying what it means.
+
+
 - **2026-09-04** **A category nothing was put to no longer renders as a category that passed.** Every
   run collects one coverage-map assertion per OWASP category, asserting that *the tool* ships a tester
   for it. That assertion wears the category's own marker so the map stays visible per category. It passes
@@ -26,6 +46,10 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
     same page, which they did not before. A run that also uses a white-box scanner (`--repo`,
     `--model-scan`, `--vector-store`) will show more, since a scanner exercises a category without
     delivering an attack.
+  - **`--min-coverage` starts doing something.** It gated on a number that was always 100, so an
+    application scan exercising four of ten categories passed `--min-coverage 90`. It now measures
+    what the run exercised, which means a pipeline that already sets it may start failing. The CI
+    guide says so under its own heading.
   - **The compliance block was the worst instance and it is fixed the same way.**
     `frameworks_covered` and `owasp_mapped` were built from every marker present, so a scan that
     exercised four categories published six named frameworks and `owasp_mapped: 10` into its SARIF

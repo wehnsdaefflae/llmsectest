@@ -223,6 +223,18 @@ llmsectest --target app:http://localhost:8000/chat \
 By default any finding fails the run. Use a baseline to accept known issues and fail only on *new*
 ones, see the policy/baseline options in the [CLI reference](../cli.md).
 
+### `--min-coverage` means something now
+
+`--min-coverage <percent>` fails the build when the run exercised fewer OWASP categories than you
+asked for. **Until 2026-09-04 it could not fire**, because coverage was computed over every category
+the suite mentions and one coverage-map assertion per category ships on every run, so the number was
+always 100. It is computed over the categories the run actually put to your target now, which is what
+the flag always claimed.
+
+If you had it set, expect it to start doing something. An application scan with no optional inputs
+exercises four of ten, so `--min-coverage 50` fails such a run on purpose: the fix is to pass
+`--app-prompt`, `--app-secret`, `--app-action` or the RAG markers, which is the flag doing its job.
+
 **What each CI system can express is different. The scan's own vocabulary is the same in all
 three.** LLMSecTest has one verdict, the exit code, and everything above it is your pipeline's
 translation of it. GitHub Actions and GitLab have pass and fail; Jenkins adds `UNSTABLE` in between.
