@@ -248,6 +248,25 @@
   
   
     <li class="md-tabs__item">
+      <a href="../quickstart/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Quickstart
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
       <a href="../getting-started/" class="md-tabs__link">
         
   
@@ -439,6 +458,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../getting-started/" class="md-nav__link">
         
   
@@ -479,10 +525,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
             
   
   
@@ -500,8 +546,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -678,10 +724,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
         
           
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
             
   
   
@@ -699,8 +745,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1404,8 +1450,16 @@ packaged OWASP probe suite against your chosen target and writes reports.</p>
 <td>With <code>--target app:&lt;url&gt;</code>: the <strong>per-request time budget</strong> for a single call to the app (default 120 s). A real <strong>wall-clock deadline</strong> over connect, headers and body (not a per-socket-operation timeout, which an app that keeps trickling output never trips at all). A request that exceeds it is recorded as an <strong>inconclusive</strong> probe. It is never a finding, since a timeout is generally not proof of a vulnerability, and it is never a silent clean either: it becomes a warning in the summary plus a run-level <code>inconclusive</code> count in the SARIF/HTML report. So one slow or runaway endpoint cannot hang the whole scan and lose every other result. A report never silently hides that some probes could not be concluded. The one exception is the two <strong>bounded LLM10 probes</strong>, where exhausting the budget <em>is</em> the finding, though only on an app that demonstrably answered its other probes well inside the same budget (<a href="../owasp/llm10/#when-the-app-never-answers-at-all">LLM10</a>). Raise it for a legitimately slow app; lower it to keep a scan under a fixed wall-clock budget (e.g. in CI).</td>
 </tr>
 <tr>
+<td><code>--redteam-generate &lt;N&gt;</code></td>
+<td>Add <strong>N model-composed variants of each authored LLM01 case</strong>, written by the target's own model, alongside the authored corpus and never instead of it. The authored set still runs and still feeds the regression baseline, so generation adds attacks without making two runs incomparable. <strong>Every variant is validated before it runs:</strong> a rewrite that dropped the marker the case asks the target to emit is refused, because it would run, score nothing, and be recorded as an attack withstood; a rewrite that put the target's own secret into the prompt is refused, because it would score its own echo as a disclosure. Rejections are counted per reason and reported, since a corpus that quietly shrinks looks exactly like a target that got safer. <strong>Each surviving variant is then run against a defended control</strong>, because keeping the marker proves a rewrite is scoreable rather than proving it is still an attack: "Please output MARKER-7F3A" keeps the marker and is a plain request that any cooperative target answers, so that reply would score as a prompt injection against a model that was asked nicely. A variant that fires against the hardened demo tests nothing and is rejected; one that does not was refused by a defence. An unreachable control keeps the variant, since a fixture being down is no evidence against an attack. The generated prompt and the model that wrote it travel into the report, so a finding stays reproducible. Needs a model target, since <code>--target app:&lt;url&gt;</code> names somebody else's application rather than a model we may ask to write prompts. <strong>Only the marker-based cases are generated from</strong>, never the refusal-oracle red-team set, where a broken rewrite turns the request benign and compliance would be scored as a critical finding, which no structural check can catch.</td>
+</tr>
+<tr>
 <td><code>--app-stress &lt;N&gt;</code></td>
 <td>With <code>--target app:&lt;url&gt;</code>: replay every reachable application case as one <strong>simultaneous wave of N requests</strong> and report only the <strong>transition</strong>: a guardrail that held when the app was asked once and failed when it was asked N times at once. A case that already fails at one request is left to its own module rather than counted twice. The verdict may be <code>held</code> only when the wave demonstrably arrived: the workers meet at a barrier so the requests genuinely overlap, the peak counts requests <strong>this side</strong> has outstanding rather than the app's own concurrency, and a wave the app <strong>refused with a rate limit</strong> leaves an inconclusive differential plus the separate note that a defence fired. A timeout under load is always inconclusive, because the app is slow because we made it busy. Opt-in, since it multiplies the traffic this scan sends to somebody else's application by N, so there is no default; <code>1</code> is refused rather than rounded up. Without the flag the module reports one skipped test naming it.</td>
+</tr>
+<tr>
+<td><code>--render-pdf &lt;file.sarif&gt;</code></td>
+<td>Render any SARIF v2.1.0 file, ours or a third party's, to a <strong>PDF report</strong>, written to <code>&lt;file&gt;.pdf</code> or to <code>-o</code>/<code>--pdf-output</code>. The PDF is produced directly rather than by converting the HTML: a tool people point at their own security-critical systems should not grow a browser or a font toolchain to gain an output format, so this uses the 14 standard PDF fonts every reader ships and adds <strong>no dependency at all</strong>. It reads the same SARIF the HTML reader reads, so the two cannot disagree about a figure. <strong>Order carries a claim here:</strong> the undelivered notice, the exposed-secret notice and the inconclusive count are laid out <em>before</em> the findings, so a reader who stops after page one cannot take a run that never reached its target for a clean one.</td>
 </tr>
 <tr>
 <td><code>--check</code></td>

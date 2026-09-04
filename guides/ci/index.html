@@ -248,6 +248,25 @@
   
   
     <li class="md-tabs__item">
+      <a href="../../quickstart/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Quickstart
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
       <a href="../../getting-started/" class="md-tabs__link">
         
   
@@ -439,6 +458,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../getting-started/" class="md-nav__link">
         
   
@@ -484,10 +530,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
             
   
   
@@ -505,8 +551,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_3">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -689,6 +735,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#gitlab-ci" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GitLab CI
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#jenkins" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Jenkins
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#what-a-non-zero-exit-means" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -785,10 +853,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
         
           
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
             
   
   
@@ -806,8 +874,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1262,6 +1330,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#gitlab-ci" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GitLab CI
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#jenkins" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Jenkins
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#what-a-non-zero-exit-means" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1382,6 +1472,104 @@ passed or failed your build. <code>continue-on-error</code> plus <code>steps.sca
 verdict describing the same run.</p>
 <p>On a pull request from a fork, GitHub issues a read-only token and the upload step cannot write to
 code-scanning. Findings still show in the job log, so treat the fork case as report-only.</p>
+<h2 id="gitlab-ci">GitLab CI<a class="headerlink" href="#gitlab-ci" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">stages</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">test</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nt">llmsectest</span><span class="p">:</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="nt">stage</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">test</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">python:3.11</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="nt">script</span><span class="p">:</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pip install llmsectest</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">    </span><span class="c1"># Start your app backed by a local/test model so there are no paid calls.</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">    </span><span class="c1"># (Replace with however your app boots.)</span>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./scripts/start-test-app.sh &amp;</span>
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">      </span><span class="no">up=0</span>
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">      </span><span class="no">for _ in $(seq 1 30); do</span>
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="w">        </span><span class="no">if curl -sf http://localhost:8000/health &gt;/dev/null; then up=1; break; fi</span>
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="w">        </span><span class="no">sleep 2</span>
+<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="w">      </span><span class="no">done</span>
+<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="w">      </span><span class="no">[ &quot;$up&quot; = 1 ] || { echo &quot;the app never came up, so the scan would have nothing to test&quot;; exit 1; }</span>
+<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>
+<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a><span class="w">      </span><span class="no">llmsectest --target app:http://localhost:8000/chat \</span>
+<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a><span class="w">        </span><span class="no">--report-formats=sarif,html \</span>
+<a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a><span class="w">        </span><span class="no">--report-dir results \</span>
+<a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a><span class="w">        </span><span class="no">--sarif-output results/llmsectest.sarif \</span>
+<a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a><span class="w">        </span><span class="no">--app-timeout 60</span>
+<a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a><span class="w">  </span><span class="nt">artifacts</span><span class="p">:</span>
+<a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a><span class="w">    </span><span class="nt">when</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span>
+<a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a><span class="w">    </span><span class="nt">paths</span><span class="p">:</span>
+<a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">results/</span>
+<a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a><span class="w">    </span><span class="nt">reports</span><span class="p">:</span>
+<a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a><span class="w">      </span><span class="nt">sarif</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">results/llmsectest.sarif</span>
+</code></pre></div>
+<p><strong>One scan here too. <code>when: always</code> is what makes that possible.</strong> GitLab uploads artifacts from a
+failed job when you ask it to, so the scan's own exit code can fail the job while the report it
+produced still reaches you. There is no second invocation to disagree with the first.</p>
+<p><strong><code>reports:sarif</code> needs GitLab Ultimate</strong>, where it was generally available in 19.2 (behind the
+<code>sarif_ingestion</code> flag from 18.11). On Ultimate the findings land in the pipeline's <strong>Security</strong> tab,
+the security dashboard and the project vulnerability report. On any other tier that key is ignored and
+you still get everything under <code>paths:</code>: <code>results/llmsectest.sarif</code> and <code>results/pytest-results.html</code>
+as downloadable job artifacts. Nothing else in the job changes, so the same file works on both.</p>
+<h2 id="jenkins">Jenkins<a class="headerlink" href="#jenkins" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">pipeline</span><span class="w"> </span><span class="o">{</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="n">agent</span><span class="w"> </span><span class="n">any</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span><span class="n">stages</span><span class="w"> </span><span class="o">{</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span><span class="n">stage</span><span class="o">(</span><span class="s1">&#39;LLM security scan&#39;</span><span class="o">)</span><span class="w"> </span><span class="o">{</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">      </span><span class="n">steps</span><span class="w"> </span><span class="o">{</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">        </span><span class="n">sh</span><span class="w"> </span><span class="s1">&#39;python3 -m venv .venv &amp;&amp; .venv/bin/pip install llmsectest&#39;</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">        </span><span class="c1">// Start your app backed by a local/test model so there are no paid calls.</span>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="w">        </span><span class="n">sh</span><span class="w"> </span><span class="s1">&#39;./scripts/start-test-app.sh &amp;&#39;</span>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="w">        </span><span class="n">sh</span><span class="w"> </span><span class="s1">&#39;&#39;&#39;</span>
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="s1">          up=0</span>
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="s1">          for _ in $(seq 1 30); do</span>
+<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="s1">            if curl -sf http://localhost:8000/health &gt;/dev/null; then up=1; break; fi</span>
+<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="s1">            sleep 2</span>
+<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="s1">          done</span>
+<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a><span class="s1">          [ &quot;$up&quot; = 1 ] || { echo &quot;the app never came up, so the scan would have nothing to test&quot;; exit 1; }</span>
+<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a><span class="s1">        &#39;&#39;&#39;</span>
+<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>
+<a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a><span class="w">        </span><span class="n">catchError</span><span class="o">(</span><span class="nl">buildResult:</span><span class="w"> </span><span class="s1">&#39;UNSTABLE&#39;</span><span class="o">,</span><span class="w"> </span><span class="nl">stageResult:</span><span class="w"> </span><span class="s1">&#39;FAILURE&#39;</span><span class="o">,</span>
+<a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a><span class="w">                   </span><span class="nl">message:</span><span class="w"> </span><span class="s1">&#39;llmsectest exited non-zero: findings, or probes that never came back&#39;</span><span class="o">)</span><span class="w"> </span><span class="o">{</span>
+<a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a><span class="w">          </span><span class="n">sh</span><span class="w"> </span><span class="s1">&#39;&#39;&#39;</span>
+<a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a><span class="s1">            .venv/bin/llmsectest --target app:http://localhost:8000/chat \</span>
+<a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a><span class="s1">              --report-formats=sarif,html \</span>
+<a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a><span class="s1">              --report-dir results \</span>
+<a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a><span class="s1">              --sarif-output results/llmsectest.sarif \</span>
+<a id="__codelineno-3-28" name="__codelineno-3-28" href="#__codelineno-3-28"></a><span class="s1">              --app-timeout 60</span>
+<a id="__codelineno-3-29" name="__codelineno-3-29" href="#__codelineno-3-29"></a><span class="s1">          &#39;&#39;&#39;</span>
+<a id="__codelineno-3-30" name="__codelineno-3-30" href="#__codelineno-3-30"></a><span class="w">        </span><span class="o">}</span>
+<a id="__codelineno-3-31" name="__codelineno-3-31" href="#__codelineno-3-31"></a><span class="w">      </span><span class="o">}</span>
+<a id="__codelineno-3-32" name="__codelineno-3-32" href="#__codelineno-3-32"></a><span class="w">    </span><span class="o">}</span>
+<a id="__codelineno-3-33" name="__codelineno-3-33" href="#__codelineno-3-33"></a><span class="w">  </span><span class="o">}</span>
+<a id="__codelineno-3-34" name="__codelineno-3-34" href="#__codelineno-3-34"></a>
+<a id="__codelineno-3-35" name="__codelineno-3-35" href="#__codelineno-3-35"></a><span class="w">  </span><span class="n">post</span><span class="w"> </span><span class="o">{</span>
+<a id="__codelineno-3-36" name="__codelineno-3-36" href="#__codelineno-3-36"></a><span class="w">    </span><span class="n">always</span><span class="w"> </span><span class="o">{</span>
+<a id="__codelineno-3-37" name="__codelineno-3-37" href="#__codelineno-3-37"></a><span class="w">      </span><span class="n">archiveArtifacts</span><span class="w"> </span><span class="nl">artifacts:</span><span class="w"> </span><span class="s1">&#39;results/**&#39;</span><span class="o">,</span><span class="w"> </span><span class="nl">allowEmptyArchive:</span><span class="w"> </span><span class="kc">true</span>
+<a id="__codelineno-3-38" name="__codelineno-3-38" href="#__codelineno-3-38"></a><span class="w">      </span><span class="n">recordIssues</span><span class="w"> </span><span class="nl">tools:</span><span class="w"> </span><span class="o">[</span><span class="n">sarif</span><span class="o">(</span><span class="nl">pattern:</span><span class="w"> </span><span class="s1">&#39;results/llmsectest.sarif&#39;</span><span class="o">)]</span>
+<a id="__codelineno-3-39" name="__codelineno-3-39" href="#__codelineno-3-39"></a><span class="w">    </span><span class="o">}</span>
+<a id="__codelineno-3-40" name="__codelineno-3-40" href="#__codelineno-3-40"></a><span class="w">  </span><span class="o">}</span>
+<a id="__codelineno-3-41" name="__codelineno-3-41" href="#__codelineno-3-41"></a><span class="o">}</span>
+</code></pre></div>
+<p><code>recordIssues</code> comes from the <a href="https://plugins.jenkins.io/warnings-ng/">Warnings Next Generation</a>
+plugin, whose <code>sarif</code> parser reads any SARIF 2.1.0 file and puts the findings on the build page. The
+<code>post { always { … } }</code> block runs whatever the stage did, so the report is archived and parsed on a
+build that the scan just marked unstable.</p>
+<p><strong>Unstable or failed is one line.</strong> <code>catchError(buildResult: 'UNSTABLE')</code> turns a non-zero
+scan into an amber build rather than a red one, the idiomatic Jenkins choice while a team is still
+deciding what it wants to gate on. Drop the <code>catchError</code> wrapper and the same <code>sh</code> step fails
+the build outright. The scan runs once either way: the wrapper reads the exit code the scan already
+produced, so the archived report and the build result describe the same run.</p>
+<p>Be careful what you promise with the amber build. <strong><code>UNSTABLE</code> is a real result and nothing downstream
+treats it as success</strong>, so use it to keep a pipeline moving rather than to make a category of finding
+disappear. In particular the second case below, a scan that never reached your app, is not a softer
+version of a finding, and an amber build says nothing about whether the app is safe.</p>
 <h2 id="what-a-non-zero-exit-means">What a non-zero exit means<a class="headerlink" href="#what-a-non-zero-exit-means" title="Permanent link">&para;</a></h2>
 <p>A non-zero exit means the run is not a clean bill of health. It does <strong>not</strong> always mean the
 application is vulnerable. Two cases produce it:</p>
@@ -1397,18 +1585,26 @@ status as <code>INCOMPLETE</code> rather than <code>PASSED</code> and claims no 
 a clean bill of health on a scan that never reached your app. A timeout is the usual cause of the second one: raise
 <code>--app-timeout</code> for a legitimately slow app, or lower it to hold the scan inside a fixed CI budget.</p>
 <h2 id="report-formats">Report formats<a class="headerlink" href="#report-formats" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span>--report-formats<span class="o">=</span>sarif,html,json,markdown
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span>--report-formats<span class="o">=</span>sarif,html,json,markdown
 </code></pre></div>
 <ul>
-<li><strong>SARIF</strong>, code-scanning ingestion (GitHub, GitLab, Azure DevOps).</li>
-<li><strong>HTML</strong>, a human-readable report to attach as a build artifact.</li>
+<li><strong>SARIF</strong>, code-scanning ingestion (GitHub, GitLab Ultimate, Azure DevOps).</li>
+<li><strong>HTML</strong>, a human-readable report to attach as a build artifact. It is written to
+  <code>&lt;report-dir&gt;/pytest-results.html</code>, which is why the examples above archive the whole directory
+  rather than one file.</li>
 <li><strong>JSON</strong>, machine-readable for your own dashboards.</li>
 <li><strong>Markdown</strong>, drop into a PR comment or job summary.</li>
 </ul>
 <h2 id="gating-policy">Gating policy<a class="headerlink" href="#gating-policy" title="Permanent link">&para;</a></h2>
 <p>By default any finding fails the run. Use a baseline to accept known issues and fail only on <em>new</em>
 ones, see the policy/baseline options in the <a href="../../cli/">CLI reference</a>.</p>
+<p><strong>What each CI system can express is different. The scan's own vocabulary is the same in all
+three.</strong> LLMSecTest has one verdict, the exit code, and everything above it is your pipeline's
+translation of it. GitHub Actions and GitLab have pass and fail; Jenkins adds <code>UNSTABLE</code> in between.
+None of them has a state for <em>the scan could not reach the app</em>, so that case arrives as the same
+non-zero exit as a finding, and the log line is what tells the two apart. Whichever you wire up, read
+<a href="#what-a-non-zero-exit-means">what a non-zero exit means</a> before deciding what to make it do.</p>
 
 
 

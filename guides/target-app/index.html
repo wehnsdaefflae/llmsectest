@@ -248,6 +248,25 @@
   
   
     <li class="md-tabs__item">
+      <a href="../../quickstart/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Quickstart
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
       <a href="../../getting-started/" class="md-tabs__link">
         
   
@@ -439,6 +458,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../getting-started/" class="md-nav__link">
         
   
@@ -484,10 +530,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
             
   
   
@@ -505,8 +551,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_3">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -802,10 +848,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
         
           
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
             
   
   
@@ -823,8 +869,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1436,9 +1482,15 @@ block.</p>
 <p><strong>The run also exits non-zero.</strong> That's deliberate. It's the half that makes the rest safe. A scan
 that reached nothing produces an empty findings list. In CI that's indistinguishable from a clean
 bill of health. <code>0 findings, 25 never delivered</code> is not a pass.</p>
-<p>A slow app is a different case. One that exceeds <code>--app-timeout</code> was reached and ran out of budget. That
-is also inconclusive, but it doesn't fail the run, raise the budget instead. The console line
-distinguishes them (<code>Inconclusive: 26 (26 never delivered)</code>).</p>
+<p>A slow app is a different case in one respect only. One that exceeds <code>--app-timeout</code> was reached and
+ran out of budget, so it doesn't fail the run: raise the budget instead. Everything else is the same,
+because an unanswered probe is unanswered whichever way it went missing. The status still reads
+<code>INCOMPLETE</code>, no posture is claimed, and the closing line says the run does not claim those probes
+were withstood. The console distinguishes the two reasons (<code>Inconclusive: 26 (26 never delivered)</code>),
+so you can tell a budget to raise from a URL to check.</p>
+<p><strong>And the exception to the exception: a scan where no probe was answered fails.</strong> Losing some probes
+to the clock is an ordinary afternoon. Losing all of them means the page describes nothing, so it
+gets the same red banner and the same non-zero exit as an endpoint that was never there.</p>
 <p><strong>An app that answers with an error is a third case. The report says which.</strong> If your endpoint
 replies <code>HTTP 429</code> the probe is recorded as <strong>throttled</strong>, with your app's own <code>Retry-After</code> when it
 sends one, because the fix is a quota rather than a URL. Any other refusal (<code>401</code> on an expired token,
