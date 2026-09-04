@@ -787,6 +787,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Gating policy">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#-min-coverage-means-something-now" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --min-coverage means something now
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -1382,6 +1399,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Gating policy">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#-min-coverage-means-something-now" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --min-coverage means something now
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -1599,6 +1633,15 @@ a clean bill of health on a scan that never reached your app. A timeout is the u
 <h2 id="gating-policy">Gating policy<a class="headerlink" href="#gating-policy" title="Permanent link">&para;</a></h2>
 <p>By default any finding fails the run. Use a baseline to accept known issues and fail only on <em>new</em>
 ones, see the policy/baseline options in the <a href="../../cli/">CLI reference</a>.</p>
+<h3 id="-min-coverage-means-something-now"><code>--min-coverage</code> means something now<a class="headerlink" href="#-min-coverage-means-something-now" title="Permanent link">&para;</a></h3>
+<p><code>--min-coverage &lt;percent&gt;</code> fails the build when the run exercised fewer OWASP categories than you
+asked for. <strong>Until 2026-09-04 it could not fire</strong>, because coverage was computed over every category
+the suite mentions and one coverage-map assertion per category ships on every run, so the number was
+always 100. It is computed over the categories the run actually put to your target now, which is what
+the flag always claimed.</p>
+<p>If you had it set, expect it to start doing something. An application scan with no optional inputs
+exercises four of ten, so <code>--min-coverage 50</code> fails such a run on purpose: the fix is to pass
+<code>--app-prompt</code>, <code>--app-secret</code>, <code>--app-action</code> or the RAG markers, which is the flag doing its job.</p>
 <p><strong>What each CI system can express is different. The scan's own vocabulary is the same in all
 three.</strong> LLMSecTest has one verdict, the exit code, and everything above it is your pipeline's
 translation of it. GitHub Actions and GitLab have pass and fail; Jenkins adds <code>UNSTABLE</code> in between.

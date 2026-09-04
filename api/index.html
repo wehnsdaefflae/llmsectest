@@ -4519,8 +4519,11 @@ must surface that state instead of treating the empty <code>findings</code> as c
 
 <a href="#llmsectest.probes.resolve_target" class="headerlink" title="Permanent link">&para;</a></h3>
 <div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">resolve_target</span><span class="p">(</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">spec</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">app_timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LLMAdapter</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">spec</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="o">*</span><span class="p">,</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">app_timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">app_shape</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LLMAdapter</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -4536,6 +4539,11 @@ the relevant API key in the environment.</p>
 <p><code>app_timeout</code> (seconds) caps how long a single request to an <code>app:&lt;url&gt;</code>
 target may take before it is treated as a timeout; it applies only to the app
 adapter and falls back to that adapter's own default when <code>None</code>.</p>
+<p><code>app_shape</code> carries how a real application's HTTP contract differs from the
+default one: <code>request_field</code>, <code>response_path</code>, <code>headers</code> and <code>extra_body</code>.
+Added 2026-09-04, because the adapter could already do all four and a user could
+only reach them by writing Python, so every third-party application we enrolled got
+a hand-written shim instead of a flag.</p>
 
 
             <details class="mkdocstrings-source">
@@ -4566,33 +4574,49 @@ adapter and falls back to that adapter's own default when <code>None</code>.</p>
 <span class="normal"><a href="#__codelineno-0-188">188</a></span>
 <span class="normal"><a href="#__codelineno-0-189">189</a></span>
 <span class="normal"><a href="#__codelineno-0-190">190</a></span>
-<span class="normal"><a href="#__codelineno-0-191">191</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-165" name="__codelineno-0-165"></a><span class="k">def</span><span class="w"> </span><span class="nf">resolve_target</span><span class="p">(</span><span class="n">spec</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">app_timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LLMAdapter</span><span class="p">:</span>
-<a id="__codelineno-0-166" name="__codelineno-0-166"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Resolve a target spec into an adapter.</span>
-<a id="__codelineno-0-167" name="__codelineno-0-167"></a>
-<a id="__codelineno-0-168" name="__codelineno-0-168"></a><span class="sd">    Accepts the demo keywords ``demo``/``demo-vulnerable``/``demo-defended``;</span>
-<a id="__codelineno-0-169" name="__codelineno-0-169"></a><span class="sd">    ``app:&lt;url&gt;`` to test a **running application** by its HTTP endpoint (the</span>
-<a id="__codelineno-0-170" name="__codelineno-0-170"></a><span class="sd">    faithful black-box target — the app supplies its own system prompt); a bare</span>
-<a id="__codelineno-0-171" name="__codelineno-0-171"></a><span class="sd">    provider (``mock``); or ``provider:model`` (e.g. ``openai:gpt-4o-mini``,</span>
-<a id="__codelineno-0-172" name="__codelineno-0-172"></a><span class="sd">    or ``ollama:gemma4:e2b-it-q4_K_M`` / ``lmstudio:&lt;model&gt;`` for a local model —</span>
-<a id="__codelineno-0-173" name="__codelineno-0-173"></a><span class="sd">    no API key, no paid calls). Live providers import their SDK lazily and need</span>
-<a id="__codelineno-0-174" name="__codelineno-0-174"></a><span class="sd">    the relevant API key in the environment.</span>
-<a id="__codelineno-0-175" name="__codelineno-0-175"></a>
-<a id="__codelineno-0-176" name="__codelineno-0-176"></a><span class="sd">    ``app_timeout`` (seconds) caps how long a single request to an ``app:&lt;url&gt;``</span>
-<a id="__codelineno-0-177" name="__codelineno-0-177"></a><span class="sd">    target may take before it is treated as a timeout; it applies only to the app</span>
-<a id="__codelineno-0-178" name="__codelineno-0-178"></a><span class="sd">    adapter and falls back to that adapter&#39;s own default when ``None``.</span>
-<a id="__codelineno-0-179" name="__codelineno-0-179"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-180" name="__codelineno-0-180"></a>    <span class="n">spec</span> <span class="o">=</span> <span class="p">(</span><span class="n">spec</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-<a id="__codelineno-0-181" name="__codelineno-0-181"></a>    <span class="k">if</span> <span class="n">spec</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;demo&quot;</span><span class="p">,</span> <span class="s2">&quot;demo-vulnerable&quot;</span><span class="p">):</span>
-<a id="__codelineno-0-182" name="__codelineno-0-182"></a>        <span class="k">return</span> <span class="n">vulnerable_demo_adapter</span><span class="p">()</span>
-<a id="__codelineno-0-183" name="__codelineno-0-183"></a>    <span class="k">if</span> <span class="n">spec</span> <span class="o">==</span> <span class="s2">&quot;demo-defended&quot;</span><span class="p">:</span>
-<a id="__codelineno-0-184" name="__codelineno-0-184"></a>        <span class="k">return</span> <span class="n">defended_demo_adapter</span><span class="p">()</span>
-<a id="__codelineno-0-185" name="__codelineno-0-185"></a>    <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;app:&quot;</span><span class="p">):</span>
-<a id="__codelineno-0-186" name="__codelineno-0-186"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">..adapters.app_endpoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">AppEndpointAdapter</span>
-<a id="__codelineno-0-187" name="__codelineno-0-187"></a>
-<a id="__codelineno-0-188" name="__codelineno-0-188"></a>        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">app_timeout</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{</span><span class="s2">&quot;timeout&quot;</span><span class="p">:</span> <span class="n">app_timeout</span><span class="p">}</span>
-<a id="__codelineno-0-189" name="__codelineno-0-189"></a>        <span class="k">return</span> <span class="n">AppEndpointAdapter</span><span class="p">(</span><span class="n">endpoint</span><span class="o">=</span><span class="n">spec</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="s2">&quot;app:&quot;</span><span class="p">):],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-<a id="__codelineno-0-190" name="__codelineno-0-190"></a>    <span class="n">provider</span><span class="p">,</span> <span class="n">sep</span><span class="p">,</span> <span class="n">model</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-191" name="__codelineno-0-191"></a>    <span class="k">return</span> <span class="n">get_adapter</span><span class="p">(</span><span class="n">provider</span><span class="p">,</span> <span class="n">model</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">)</span> <span class="k">if</span> <span class="n">sep</span> <span class="k">else</span> <span class="n">get_adapter</span><span class="p">(</span><span class="n">provider</span><span class="p">)</span>
+<span class="normal"><a href="#__codelineno-0-191">191</a></span>
+<span class="normal"><a href="#__codelineno-0-192">192</a></span>
+<span class="normal"><a href="#__codelineno-0-193">193</a></span>
+<span class="normal"><a href="#__codelineno-0-194">194</a></span>
+<span class="normal"><a href="#__codelineno-0-195">195</a></span>
+<span class="normal"><a href="#__codelineno-0-196">196</a></span>
+<span class="normal"><a href="#__codelineno-0-197">197</a></span>
+<span class="normal"><a href="#__codelineno-0-198">198</a></span>
+<span class="normal"><a href="#__codelineno-0-199">199</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-165" name="__codelineno-0-165"></a><span class="k">def</span><span class="w"> </span><span class="nf">resolve_target</span><span class="p">(</span><span class="n">spec</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">app_timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-166" name="__codelineno-0-166"></a>                   <span class="n">app_shape</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LLMAdapter</span><span class="p">:</span>
+<a id="__codelineno-0-167" name="__codelineno-0-167"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Resolve a target spec into an adapter.</span>
+<a id="__codelineno-0-168" name="__codelineno-0-168"></a>
+<a id="__codelineno-0-169" name="__codelineno-0-169"></a><span class="sd">    Accepts the demo keywords ``demo``/``demo-vulnerable``/``demo-defended``;</span>
+<a id="__codelineno-0-170" name="__codelineno-0-170"></a><span class="sd">    ``app:&lt;url&gt;`` to test a **running application** by its HTTP endpoint (the</span>
+<a id="__codelineno-0-171" name="__codelineno-0-171"></a><span class="sd">    faithful black-box target — the app supplies its own system prompt); a bare</span>
+<a id="__codelineno-0-172" name="__codelineno-0-172"></a><span class="sd">    provider (``mock``); or ``provider:model`` (e.g. ``openai:gpt-4o-mini``,</span>
+<a id="__codelineno-0-173" name="__codelineno-0-173"></a><span class="sd">    or ``ollama:gemma4:e2b-it-q4_K_M`` / ``lmstudio:&lt;model&gt;`` for a local model —</span>
+<a id="__codelineno-0-174" name="__codelineno-0-174"></a><span class="sd">    no API key, no paid calls). Live providers import their SDK lazily and need</span>
+<a id="__codelineno-0-175" name="__codelineno-0-175"></a><span class="sd">    the relevant API key in the environment.</span>
+<a id="__codelineno-0-176" name="__codelineno-0-176"></a>
+<a id="__codelineno-0-177" name="__codelineno-0-177"></a><span class="sd">    ``app_timeout`` (seconds) caps how long a single request to an ``app:&lt;url&gt;``</span>
+<a id="__codelineno-0-178" name="__codelineno-0-178"></a><span class="sd">    target may take before it is treated as a timeout; it applies only to the app</span>
+<a id="__codelineno-0-179" name="__codelineno-0-179"></a><span class="sd">    adapter and falls back to that adapter&#39;s own default when ``None``.</span>
+<a id="__codelineno-0-180" name="__codelineno-0-180"></a>
+<a id="__codelineno-0-181" name="__codelineno-0-181"></a><span class="sd">    ``app_shape`` carries how a real application&#39;s HTTP contract differs from the</span>
+<a id="__codelineno-0-182" name="__codelineno-0-182"></a><span class="sd">    default one: ``request_field``, ``response_path``, ``headers`` and ``extra_body``.</span>
+<a id="__codelineno-0-183" name="__codelineno-0-183"></a><span class="sd">    Added 2026-09-04, because the adapter could already do all four and a user could</span>
+<a id="__codelineno-0-184" name="__codelineno-0-184"></a><span class="sd">    only reach them by writing Python, so every third-party application we enrolled got</span>
+<a id="__codelineno-0-185" name="__codelineno-0-185"></a><span class="sd">    a hand-written shim instead of a flag.</span>
+<a id="__codelineno-0-186" name="__codelineno-0-186"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-187" name="__codelineno-0-187"></a>    <span class="n">spec</span> <span class="o">=</span> <span class="p">(</span><span class="n">spec</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+<a id="__codelineno-0-188" name="__codelineno-0-188"></a>    <span class="k">if</span> <span class="n">spec</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;demo&quot;</span><span class="p">,</span> <span class="s2">&quot;demo-vulnerable&quot;</span><span class="p">):</span>
+<a id="__codelineno-0-189" name="__codelineno-0-189"></a>        <span class="k">return</span> <span class="n">vulnerable_demo_adapter</span><span class="p">()</span>
+<a id="__codelineno-0-190" name="__codelineno-0-190"></a>    <span class="k">if</span> <span class="n">spec</span> <span class="o">==</span> <span class="s2">&quot;demo-defended&quot;</span><span class="p">:</span>
+<a id="__codelineno-0-191" name="__codelineno-0-191"></a>        <span class="k">return</span> <span class="n">defended_demo_adapter</span><span class="p">()</span>
+<a id="__codelineno-0-192" name="__codelineno-0-192"></a>    <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;app:&quot;</span><span class="p">):</span>
+<a id="__codelineno-0-193" name="__codelineno-0-193"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">..adapters.app_endpoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">AppEndpointAdapter</span>
+<a id="__codelineno-0-194" name="__codelineno-0-194"></a>
+<a id="__codelineno-0-195" name="__codelineno-0-195"></a>        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">app_timeout</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{</span><span class="s2">&quot;timeout&quot;</span><span class="p">:</span> <span class="n">app_timeout</span><span class="p">}</span>
+<a id="__codelineno-0-196" name="__codelineno-0-196"></a>        <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">app_shape</span> <span class="ow">or</span> <span class="p">{})</span>
+<a id="__codelineno-0-197" name="__codelineno-0-197"></a>        <span class="k">return</span> <span class="n">AppEndpointAdapter</span><span class="p">(</span><span class="n">endpoint</span><span class="o">=</span><span class="n">spec</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="s2">&quot;app:&quot;</span><span class="p">):],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<a id="__codelineno-0-198" name="__codelineno-0-198"></a>    <span class="n">provider</span><span class="p">,</span> <span class="n">sep</span><span class="p">,</span> <span class="n">model</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-199" name="__codelineno-0-199"></a>    <span class="k">return</span> <span class="n">get_adapter</span><span class="p">(</span><span class="n">provider</span><span class="p">,</span> <span class="n">model</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">)</span> <span class="k">if</span> <span class="n">sep</span> <span class="k">else</span> <span class="n">get_adapter</span><span class="p">(</span><span class="n">provider</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>

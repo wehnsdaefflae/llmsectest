@@ -1838,12 +1838,35 @@
 forward-looking plan is the <a href="https://llmsec.dev/#roadmap">roadmap</a>.</p>
 <h2 id="unreleased"><a href="https://github.com/wehnsdaefflae/llmsectest/compare/v0.1.0...HEAD">Unreleased</a><a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>2026-09-04</strong> <strong>A category nothing was put to no longer renders as a category that passed.</strong> Every
+<li><strong>2026-09-04</strong> <strong>Four flags describe a real application's HTTP contract, so it needs no shim.</strong>
+  <code>--app-request-field</code>, <code>--app-response-path</code>, <code>--app-headers</code> and <code>--app-body</code>. The adapter has
+  been able to do all four since it was written. None of it was reachable without writing Python, so
+  the README told people to point the scanner at their endpoint and the tool then only
+  worked on endpoints shaped like the one we had imagined.</li>
+<li><strong>Measured on an endpoint shaped like a real product</strong>, with a renamed input field, a bearer
+    token, two envelope keys and the reply five levels down. Before: <strong>23 probes never delivered,
+    <code>INCOMPLETE</code>, nothing learned about the application at all.</strong> After, with the four flags and no
+    wrapper: 8 findings, 16 withstood, 6 of 10 categories exercised.</li>
+<li>
+<p>A malformed value for either JSON flag is <strong>refused</strong>, never quietly replaced by the default.
+    Talking to the wrong contract makes every probe come back unanswered. The scan would then report a
+    whole application as unreachable, which is a true sentence about the wrong thing.</p>
+</li>
+<li>
+<p><strong>2026-09-04</strong> <strong>A voided probe no longer sits in the Pass column.</strong> A probe the target survived,
+  in a run where a different probe got the secret out, is counted as <code>voided</code> in the attacks block
+  with its reason attached. The per-category table counted the same probe as a pass, so one report
+  said <code>LLM02  4  4  0</code> while the block above it said four voided. The row carries the voided count
+  now, with a line saying what it means.</p>
+</li>
+<li>
+<p><strong>2026-09-04</strong> <strong>A category nothing was put to no longer renders as a category that passed.</strong> Every
   run collects one coverage-map assertion per OWASP category, asserting that <em>the tool</em> ships a tester
   for it. That assertion wears the category's own marker so the map stays visible per category. It passes
   whether or not the scan ever reached your application. Three surfaces read those results as
   results about the target: the console table printed <code>LLM02 … 1 1 0</code> for a category no probe had been
-  sent to, the markdown table gave it ✅ and the HTML card the green border.</li>
+  sent to, the markdown table gave it ✅ and the HTML card the green border.</p>
+</li>
 <li><strong><code>OWASP Coverage: 100% (10/10)</code> could not print anything else</strong>, since every category always had
     a result. It sat in the same output as the footer saying four of ten were exercised, while
     <code>--min-coverage</code> gated on a constant. The line now reports what the <strong>run</strong> exercised and agrees with that footer.</li>
@@ -1854,6 +1877,10 @@ forward-looking plan is the <a href="https://llmsec.dev/#roadmap">roadmap</a>.</
     same page, which they did not before. A run that also uses a white-box scanner (<code>--repo</code>,
     <code>--model-scan</code>, <code>--vector-store</code>) will show more, since a scanner exercises a category without
     delivering an attack.</li>
+<li><strong><code>--min-coverage</code> starts doing something.</strong> It gated on a number that was always 100, so an
+    application scan exercising four of ten categories passed <code>--min-coverage 90</code>. It now measures
+    what the run exercised, which means a pipeline that already sets it may start failing. The CI
+    guide says so under its own heading.</li>
 <li>
 <p><strong>The compliance block was the worst instance and it is fixed the same way.</strong>
     <code>frameworks_covered</code> and <code>owasp_mapped</code> were built from every marker present, so a scan that
