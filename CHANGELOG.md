@@ -10,6 +10,15 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ## [Unreleased]
 
+- **2026-09-04** **A guide to getting past a hosted platform's front door.** If your application is
+  built on Langflow, Dify, Lobe Chat or similar, its chat endpoint is wrapped in an authentication
+  scheme built for that platform's own web UI, and the credential a scanner should hold is a
+  different one: the integration or Service API key the platform publishes for people building on
+  it. `guides/target-app.md` carries the pattern with three worked examples and the invocation that
+  follows. It also names the case where the assistant's system prompt lives in the browser, so a
+  directly reached endpoint has none, and says which categories still score there.
+
+
 - **2026-09-04** **Four flags describe a real application's HTTP contract, so it needs no shim.**
   `--app-request-field`, `--app-response-path`, `--app-headers` and `--app-body`. The adapter has
   been able to do all four since it was written. None of it was reachable without writing Python, so

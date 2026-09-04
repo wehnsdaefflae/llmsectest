@@ -55,6 +55,39 @@ target = AppEndpointAdapter(
 )
 ```
 
+## Getting past your platform's front door
+
+If your application is built on a hosted platform rather than written from scratch, its chat endpoint
+is usually wrapped in an authentication scheme built for that platform's own web UI. Three real
+examples, all met while enrolling them into our test cohort:
+
+| Platform | What the browser sends | What a scanner should use |
+|---|---|---|
+| Langflow | a session bearer token from `/api/v1/auto_login` | an API key from `/api/v1/api_key/` |
+| Dify | a console login whose password field is encrypted | the per-app **Service API** key, `app-…` |
+| Lobe Chat | `X-Lobe-Chat-Auth`, a XOR-obfuscated base64 JSON blob | server-side provider config, or its server-database mode |
+
+**Reach for the integration credential rather than the browser's.** Every one of these platforms
+publishes a machine path, because they all want people building on them, and it is a different door
+from the one the UI walks through. Look for *API keys*, *Service API* or *integrations* in the app's
+own settings. It is a one-time manual step per application.
+
+Once you hold that credential the rest is the four flags above:
+
+```bash
+llmsectest --target app:https://your-platform/v1/chat-messages \
+  --app-headers '{"Authorization": "Bearer app-xxxxxxxx"}' \
+  --app-request-field query \
+  --app-body '{"inputs": {}, "response_mode": "blocking", "user": "llmsectest"}'
+```
+
+**One thing to check before you read the results.** On some platforms the assistant's system prompt
+lives in the browser rather than on the server. It is sent with each request. There, an endpoint
+reached directly has no system prompt at all, so anything scored against a value you planted in one
+(LLM02, LLM06, LLM07) has nothing to find. The scan says so, reporting those as `unconfirmed` or not
+exercised. The categories carrying their own marker in the attack, LLM01, LLM05, LLM09 and LLM10,
+score normally either way.
+
 ## No paid calls: back your app with a local model
 
 Run your app in a test configuration whose LLM backend points at a **local** model (e.g. Ollama or
