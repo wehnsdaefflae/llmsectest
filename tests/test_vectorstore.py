@@ -180,6 +180,17 @@ def test_source_identifying_metadata_is_reported_separately(tmp_path):
     ("-----BEGIN RSA PRIVATE KEY-----", "private key block"),
     ("AKIAIOSFODNN7EXAMPLE", "AWS access key id"),
     ("api_key = hunter2hunter2", "assigned secret"),
+    # The four `sk-` shapes. The first is the only one the pattern matched until
+    # 2026-09-05; the rest are what is issued now, with either separator.
+    #
+    # Stripe's `sk_live_<24+>` is the same shape and is deliberately **not** written here:
+    # GitHub push protection blocks a commit containing one, even a fabricated one, which
+    # is a second opinion that this pattern matches keys people really lose. The underscore
+    # branch is covered by the fourth case instead.
+    ("sk-abcdefghij0123456789ABCDEFGH", "sk-prefixed API key"),
+    ("sk-proj-9f2a7c4e1b8d3a6f0c5e2b9d7a4f1c8e", "sk-prefixed API key"),
+    ("sk-svcacct-9f2a7c4e1b8d3a6f0c5e2b9d7a4f1c8e", "sk-prefixed API key"),
+    ("sk_admin_9f2a7c4e1b8d3a6f0c5e2b9d7a4f1c8e", "sk-prefixed API key"),
 ])
 def test_a_credential_in_the_indexed_corpus_is_a_high_finding(tmp_path, secret, label):
     store = _chroma(tmp_path / "chroma.sqlite3",
@@ -197,6 +208,8 @@ def test_ordinary_prose_is_not_read_as_a_credential(tmp_path):
     store = _chroma(tmp_path / "chroma.sqlite3", documents=[
         "The password policy requires rotation every 90 days. Ask IT for a token.",
         "Our secret sauce is that we answer the phone.",
+        # The widened `sk-` body must still refuse a hyphenated ordinary word (2026-09-05).
+        "Ask the sk-team-lead for access before you file the ticket.",
     ])
     findings = scan_vector_store(store, root=tmp_path)
     assert not [f for f in findings if f.technique == "sensitive text stored"]

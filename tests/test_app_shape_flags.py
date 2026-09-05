@@ -16,6 +16,7 @@ flags and no shim: 8 findings, 16 withstood, 6 of 10 categories exercised.
 from __future__ import annotations
 
 import json
+import pathlib
 
 import pytest
 
@@ -73,3 +74,24 @@ def test_the_shape_is_ignored_for_a_non_app_target(monkeypatch):
     monkeypatch.setenv(envvars.APP_REQUEST_FIELD, "input_value")
     a = resolve_target("demo-defended", app_shape=envvars.app_shape_from_env())
     assert a is not None
+
+
+def test_every_app_flag_the_cli_accepts_is_in_its_own_help():
+    """The flags above shipped on 2026-09-04 and `--help` never named one of them.
+
+    `--help` is a hand-written docstring, so a flag added to `main()` reaches users only
+    if somebody also remembers the prose. Six had not been: the four shape flags plus
+    `--app-timeout` and `--app-stress`. Found 2026-09-05 by diffing the flags `main()`
+    extracts against the text it prints, which is the derivation this pins.
+    """
+    import re
+
+    from llmsectest import __main__ as entry
+
+    source = pathlib.Path(entry.__file__).read_text(encoding="utf-8")
+    accepted = set(re.findall(r'_extract\w*\(args, "(--app-[a-z-]+)"', source))
+    assert accepted, "the extraction pattern stopped matching, so this test reads nothing"
+    undocumented = sorted(f for f in accepted if f not in (entry.__doc__ or ""))
+    assert not undocumented, (
+        f"accepted on the command line and absent from --help: {undocumented}"
+    )

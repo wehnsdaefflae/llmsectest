@@ -103,7 +103,13 @@ _SECRET_PATTERNS = (
     ("AWS access key id", re.compile(r"\bAKIA[0-9A-Z]{16}\b")),
     ("GitHub token", re.compile(r"\bgh[pousr]_[A-Za-z0-9]{36,}\b")),
     ("Slack token", re.compile(r"\bxox[abprs]-[A-Za-z0-9-]{10,}\b")),
-    ("OpenAI-style API key", re.compile(r"\bsk-[A-Za-z0-9]{20,}\b")),
+    # The body accepts one `-` or `_` separated segment before the random run, because
+    # `sk-` followed by 20 straight alphanumerics is the *legacy* OpenAI shape and nothing
+    # else. Every key OpenAI issues today is `sk-proj-`, `sk-svcacct-` or `sk-admin-`, and
+    # Stripe's is `sk_live_`, so the old pattern matched none of them. Found 2026-09-05 by
+    # the assigned re-derivation, which planted `sk-live-...` in a store and got no
+    # finding; this branch had also never been exercised by a test (2026-09-05).
+    ("sk-prefixed API key", re.compile(r"\bsk[-_](?:[A-Za-z0-9]+[-_])?[A-Za-z0-9]{20,}\b")),
     ("assigned secret", re.compile(
         r"(?i)\b(?:api[_-]?key|secret|password|passwd|token)\b\s*[:=]\s*\S{8,}")),
 )

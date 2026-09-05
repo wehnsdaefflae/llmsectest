@@ -38,6 +38,17 @@ in the app's retrieved corpus) for retrieval-exposure probes and
 ``--app-rag-poison`` (the marker a planted poisoned document tells the app to emit)
 for indirect-prompt-injection-via-retrieved-document probes. Categories without
 their input are reported as skipped-with-reason.
+
+Endpoints that neither read ``{"message": ...}`` nor answer in an OpenAI-compatible
+shape are described with four more flags instead of a wrapper script:
+``--app-request-field`` (the body field your endpoint reads the prompt from),
+``--app-response-path`` (a dotted path to the reply in the response body, list indices
+included, e.g. ``choices.0.message.content``), ``--app-headers`` and ``--app-body``
+(JSON objects merged into the headers and the request body of every probe). Two more
+bound the scan itself: ``--app-timeout <seconds>`` is a wall-clock deadline per
+request, after which the probe is inconclusive and never a finding, and
+``--app-stress <N>`` replays every reachable app case as one simultaneous wave of N
+requests to find a guardrail that holds once and fails under load.
     python -m llmsectest --report-formats=sarif,html,json,markdown
     python -m llmsectest --list-probes                    # list the corpus
     python -m llmsectest --check                          # OWASP coverage map
