@@ -1,0 +1,53 @@
+name: codeql
+
+# Code scanning on our own source, for two reasons that are one piece of work.
+#
+# The first is the ordinary one: this repository is a security tool and had no
+# static analysis of its own beyond ruff.
+#
+# The second is issue #6. `--render-sarif` renders any producer's SARIF, and the
+# fixtures cover bandit, ruff and semgrep. CodeQL is the fourth producer and every
+# one added so far has disagreed with the others about `taxa`, rule metadata or
+# location shapes. The fixture that closes #6 is this workflow's own output, so the
+# file under test comes from our own analysis rather than from a stranger's
+# download whose provenance we could not state.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "0 7 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [python, actions]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: github/codeql-action/init@v4
+        with:
+          language: ${{ matrix.language }}
+          queries: security-and-quality
+      - uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:${{ matrix.language }}"
+          # Keep the .sarif on the run, so the file we render in the test suite is
+          # the same artifact GitHub ingested rather than a re-export of it.
+          upload: always
+          output: sarif-results
+      - uses: actions/upload-artifact@v4
+        with:
+          name: codeql-sarif-${{ matrix.language }}
+          path: sarif-results
