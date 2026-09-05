@@ -12,7 +12,7 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ### Documentation
 
-- **A clean report and an unconfigured target look the same, and nothing said so.**
+- **A clean report and an unconfigured target look the same. Nothing said so.**
   `--app-secret`, `--app-action` and `--app-canary` are observed only when the value comes back
   in a reply, so an application that resisted everything and an application that never received
   the system prompt produce the same rows. The target-app guide now carries *Prove your prompt
