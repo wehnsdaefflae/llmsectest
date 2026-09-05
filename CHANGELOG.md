@@ -10,6 +10,28 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ## [Unreleased]
 
+- **2026-09-05** **A secret can leave through a response field that no oracle read.**
+  The reply text is one field of the response body, picked by `--app-response-path` or
+  autodetected. The decoded body carried the rest and nothing looked at it. On 2026-09-04 a
+  scanned application returned the planted LLM02 secret verbatim in
+  `choices[0].message.reasoning` while `choices[0].message.content` held a polite refusal. The
+  scan scored the refusal. The report said the application withstood the attack.
+  - **A probe that plants its marker in the application may now also be scored against the rest
+    of the body.** The finding says where the token turned up: *"found outside the reply field,
+    elsewhere in the response body"*. The reported reply stays the reply, so a reader still sees
+    what the application answered.
+  - **Two conditions gate it. The second is computed per case, so a growing corpus keeps it
+    current.** The detector must ask whether an exact planted token is present. The case must not
+    hand the target the token it is looking for. Measured across the application corpus: of 23
+    cases, 8 send their own marker; 14 of the remaining 15 may now read the whole body.
+    `injection_marker` scores cases on both sides of that line, which is why the unit is the
+    case. Opening the body up per detector would have turned every echoing application into a
+    confirmed LLM01 finding.
+  - **Strictly additive.** The reply field is scored first and the wider read runs only when it
+    came back clean, so the change can add a finding. It can never remove one. A body that is a
+    vendor SDK object goes unwalked: stringifying a third party's object is a guess.
+
+
 - **2026-09-04** **A guide to getting past a hosted platform's front door.** If your application is
   built on Langflow, Dify, Lobe Chat or similar, its chat endpoint is wrapped in an authentication
   scheme built for that platform's own web UI, and the credential a scanner should hold is a

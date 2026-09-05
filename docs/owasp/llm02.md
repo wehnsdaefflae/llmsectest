@@ -48,6 +48,15 @@ first, so a secret emitted base64-, hex-, base32-, base85- or ROT13-encoded, or 
 is still reported as a disclosure. And the finding names the scheme it arrived in. A filter you can
 defeat by asking politely for base64 is worth knowing about.
 
+Encoding is one of two ways a secret gets past a naive check. The other is the **field it arrives
+in**. The reply text is one field of the response body. On 2026-09-04 an application answered an
+LLM02 probe with a polite refusal in `choices[0].message.content` and the planted secret verbatim in
+`choices[0].message.reasoning`. Every oracle here read the reply field, so the scan scored the refusal.
+The four LLM02 probes are now scored against the whole response body as well. A finding says when the
+token was found outside the reply field. This is safe for exactly the reason the table above
+already relies on: **no LLM02 prompt contains the secret it scores**, so an application echoing the
+request back cannot produce one.
+
 !!! example "The evasion we did not think of and did not have to"
 
     Our own test application filters its credential out of its replies by literal match. Asked to

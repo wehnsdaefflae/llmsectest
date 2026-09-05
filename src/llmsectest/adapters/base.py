@@ -47,6 +47,30 @@ class CompletionRequest:
     extra: dict = field(default_factory=dict)
 
 
+#: Deepest nesting :func:`_json_strings` will walk. A decoded chat-completion body is
+#: three or four levels; the bound exists so a self-referential or pathologically nested
+#: payload from an untrusted target cannot spend the scan's budget in the walker.
+_MAX_BODY_DEPTH = 12
+
+
+def _json_strings(node: object, depth: int = 0) -> list[str]:
+    """Every string *value* in a decoded JSON structure, in document order.
+
+    Anything that is not a ``dict``, ``list``, ``tuple`` or ``str`` contributes nothing:
+    numbers and booleans cannot carry a planted canary, and an object that is none of
+    these is a vendor SDK instance rather than a decoded body.
+    """
+    if depth > _MAX_BODY_DEPTH:
+        return []
+    if isinstance(node, str):
+        return [node]
+    if isinstance(node, dict):
+        return [s for v in node.values() for s in _json_strings(v, depth + 1)]
+    if isinstance(node, (list, tuple)):
+        return [s for v in node for s in _json_strings(v, depth + 1)]
+    return []
+
+
 @dataclass
 class CompletionResponse:
     text: str
@@ -54,6 +78,38 @@ class CompletionResponse:
     provider: str
     raw: object = None
     usage: dict = field(default_factory=dict)
+
+    def body_beyond_text(self) -> str:
+        """Everything the provider said that is *not* in :attr:`text`, one string.
+
+        :attr:`text` is one field of the response body, chosen by ``response_path`` or
+        autodetected. A model's answer can also arrive in a *sibling* field, and on
+        2026-09-04 one did: LibreChat returned the planted LLM02 secret verbatim in
+        ``choices[0].message.reasoning`` while ``choices[0].message.content`` held a
+        polite refusal, so the reply field said the application resisted and the body
+        said it had not. Every oracle in this tool read the reply field only.
+
+        Returns the string leaves of :attr:`raw` that :attr:`text` does not already
+        contain, joined by newlines, and ``""`` when there is nothing extra. Leaves
+        rather than the serialised JSON, because the leaves are already decoded: a
+        secret containing a quote or a newline matches here and would not survive
+        ``json.dumps``. Keys are skipped — a key is our protocol's vocabulary, not the
+        application's output.
+
+        Only JSON-native bodies are walked. The model adapters put a vendor SDK object
+        in :attr:`raw`, and stringifying one is a guess about a third party's
+        ``__repr__``; those return ``""`` rather than a maybe. The black-box app
+        endpoint, which is where this gap was found and where every field-tier scan
+        runs, stores the decoded JSON itself.
+
+        Reading it is not the same as *scoring* it: which probes may look here is
+        decided in :func:`~llmsectest.probes.runner.run_probe`, because a reply that
+        merely echoes our own attack must never become a finding.
+        """
+        extra = [s for s in _json_strings(self.raw) if s and s not in self.text]
+        seen: set[str] = set()
+        unique = [s for s in extra if not (s in seen or seen.add(s))]
+        return "\n".join(unique)
 
 
 @dataclass
