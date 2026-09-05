@@ -10,6 +10,16 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ## [Unreleased]
 
+### Documentation
+
+- **A clean report and an unconfigured target look the same, and nothing said so.**
+  `--app-secret`, `--app-action` and `--app-canary` are observed only when the value comes back
+  in a reply, so an application that resisted everything and an application that never received
+  the system prompt produce the same rows. The target-app guide now carries *Prove your prompt
+  reached the model*: plant a second, non-confidential marker in the same system prompt as the
+  canary, ask for it through the path the scan will use, and read a clean run only once it comes
+  back (2026-09-06).
+
 ### Fixed
 
 - **The tool reported itself as `0.1.0` on every surface that names a version.** `__version__`

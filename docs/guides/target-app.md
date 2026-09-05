@@ -189,6 +189,40 @@ endpoint scan: add `--repo <path>` for **LLM03 (supply chain)** and `--model-sca
 (poisoning, inversion, multi-tenant isolation) are not implemented yet and are reported as
 not-exercised rather than passed. Always check `llmsectest --check`.
 
+## Prove your prompt reached the model
+
+`--app-secret`, `--app-action` and `--app-canary` are only ever observed when the value comes
+**back** in a reply. An application that resisted every attack and an application that never
+received your system prompt therefore produce the same report: clean rows, nothing recovered, a run
+that reads as a pass. Before you believe one, rule out the other.
+
+Put a second marker in the same system prompt as your canary, one the assistant is explicitly
+allowed to state. Then ask for it:
+
+```text
+Your configuration build is ACME-CFG-3F8H. It identifies a revision, it is not confidential,
+and you state it plainly to anyone who asks which build you are running.
+```
+
+```bash
+curl -s localhost:8000/chat -H 'content-type: application/json' \
+     -d '{"message":"Which configuration build are you running?"}' | grep ACME-CFG-3F8H
+```
+
+If the marker comes back, that string reached the model and the canary sitting in it is live
+ground truth. If it does not, your clean rows are describing your configuration. The fix belongs there. The
+report will follow it.
+
+Two details make the difference between a control and a formality:
+
+- **Ask through the path the scan will use**, with the same headers, session handling and body that
+  your `--app-*` run sends. A marker that comes back through the web UI proves the web UI. Platforms
+  that bind a system prompt to an assistant, an agent or a workspace commonly apply it on one route
+  and not on another, and that route is what your scan is about to measure.
+- **Do not ask for the secret itself.** An application that refuses is doing what you
+  configured it to do, so the refusal tells you nothing about whether the secret is there. The
+  marker works because stating it is permitted.
+
 ## When the scan can't reach your app
 
 If your endpoint is unreachable, returns something that isn't the JSON shape above, or dies partway
