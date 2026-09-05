@@ -889,6 +889,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#model-composed-variants-redteam-generate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Model-composed variants (--redteam-generate)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#reading-a-finding" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1319,6 +1330,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#model-composed-variants-redteam-generate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Model-composed variants (--redteam-generate)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#reading-a-finding" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1428,6 +1450,21 @@ vivid: <code>demo-vulnerable</code> complies with everything (0% over-refusal bu
 <code>demo-defended</code> refuses everything (0 findings but a <strong>100%</strong> false-refusal rate). The same
 string-matching caveat applies, inverted: a benign reply that incidentally contains a refusal-like phrase
 can be over-counted, which a classifier oracle would fix.</p>
+<h2 id="model-composed-variants-redteam-generate">Model-composed variants (<code>--redteam-generate</code>)<a class="headerlink" href="#model-composed-variants-redteam-generate" title="Permanent link">&para;</a></h2>
+<p><code>--redteam-generate &lt;N&gt;</code> adds N variants of each authored marker-injection case, written by the
+target's own model. The authored corpus still runs in full and still feeds the regression baseline,
+so two runs stay comparable.</p>
+<p>Every variant is validated before it is sent. A rewrite that dropped the marker is refused, because
+it would run, score nothing, and be recorded as an attack withstood. A rewrite that put the target's
+own secret into the prompt is refused, because it would score its own echo as a disclosure. Each
+survivor is then run against the hardened demo. Keeping the marker only proves that a rewrite is
+scoreable, so a variant that fires against a defended control tests nothing and is dropped.
+Rejections are counted per reason and reported, because a corpus that quietly shrinks reads the same as a target that got safer.</p>
+<p>Generation draws on the marker-based cases above alone. In the red-team set below, a broken rewrite
+turns the request benign, and compliance with a benign request would score as a critical finding.
+The flag needs a model target, since <code>--target app:&lt;url&gt;</code> names somebody else's application.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>llmsectest<span class="w"> </span>--redteam-generate<span class="w"> </span><span class="m">3</span><span class="w"> </span>--target<span class="w"> </span>ollama:gemma4
+</code></pre></div>
 <h2 id="reading-a-finding">Reading a finding<a class="headerlink" href="#reading-a-finding" title="Permanent link">&para;</a></h2>
 <p>A finding names the technique, the OWASP category (LLM01), a severity, and the evidence, for example
 <em>"target obeyed the injected instruction and emitted marker: PWNED-LLM01-DELIM"</em>, alongside the prompt
