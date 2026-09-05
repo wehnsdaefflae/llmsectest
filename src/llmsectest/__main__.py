@@ -400,6 +400,18 @@ def _is_app_target(target: str | None) -> bool:
     return bool(target) and target.startswith("app:")
 
 
+#: pytest exit codes that mean the suite produced no result, keyed to what to tell the
+#: reader. Exit 0 (clean) and exit 1 (findings, which is the normal outcome of a scan that
+#: worked) both leave the coverage footer alone; these four are the ones where printing a
+#: coverage line would be a claim about a run that did not happen.
+_SUITE_DID_NOT_RUN = {
+    2: "the run was interrupted before it finished",
+    3: "pytest hit an internal error",
+    4: "pytest rejected the command line above, so no probe was sent",
+    5: "no tests were collected",
+}
+
+
 def _print_coverage_footer(target: str | None) -> None:
     """Surface which OWASP categories this run did and did not exercise, so a
     category is never silently left untested."""
@@ -620,6 +632,20 @@ def run_suite(args: list, target: str | None, repo: str | None = None,
     print(f"\nTarget: {target or f'{DEFAULT_TARGET} (offline demo)'}")
     print(f"Running: {' '.join(cmd)}\n")
     rc = subprocess.call(cmd)
+    if rc in _SUITE_DID_NOT_RUN:
+        # The footer is computed from the inputs this run was CONFIGURED with, never from
+        # what the suite did, so it says the same thing whether every probe ran or none
+        # did. Found 2026-09-05 by reading the tool's own output cold: a mistyped option
+        # made pytest exit 4 without collecting anything, and stdout still ended
+        # "Coverage this run, 7/10 OWASP categories exercised. No silent gaps". That is
+        # this project's own recurring defect pointed at its console: a run nothing was
+        # put to rendering as one that passed. A finding is a failing test and exits 1,
+        # so 1 keeps the footer; these four codes mean the suite never produced a result.
+        print("\n" + "-" * 68)
+        print(f"No coverage to report: {_SUITE_DID_NOT_RUN[rc]} (pytest exit {rc}). "
+              "Nothing above this line was measured against the target.")
+        print("-" * 68)
+        return rc
     _print_coverage_footer(target)
     if redteam_benign:
         _print_over_refusal(target, redteam_benign_set)
@@ -772,12 +798,28 @@ def main():
         print(__doc__)
         return 0
     if "--version" in args:
+        # `__version__` rather than the installed metadata, because the two are computed
+        # independently and disagreed on 2026-09-05: in an editable checkout the metadata
+        # is frozen at `pip install -e` time, so it reported 0.1.0 while the code being
+        # imported was 0.3.0. The version a scan should be attributed to is the code that
+        # ran, which is what `__version__` is and what the SARIF driver version and the
+        # HTML report header already carry. The metadata is still printed when it differs,
+        # because that difference means a stale editable install and nothing else says so.
         from importlib.metadata import PackageNotFoundError, version
 
+        from . import __version__
+
         try:
-            print(f"llmsectest {version('llmsectest')}")
+            installed = version("llmsectest")
         except PackageNotFoundError:
-            print("llmsectest (not installed, running from source)")
+            installed = None
+        if installed is None:
+            print(f"llmsectest {__version__} (not installed, running from source)")
+        elif installed != __version__:
+            print(f"llmsectest {__version__} "
+                  f"(installed metadata says {installed}: re-run `pip install -e .`)")
+        else:
+            print(f"llmsectest {__version__}")
         return 0
     if "--check" in args:
         check_coverage()

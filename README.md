@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/wehnsdaefflae/llmsectest/actions/workflows/ci.yml/badge.svg)](https://github.com/wehnsdaefflae/llmsectest/actions/workflows/ci.yml)
 [![docs](https://github.com/wehnsdaefflae/llmsectest/actions/workflows/docs.yml/badge.svg)](https://docs.llmsec.dev)
-[![license: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![license: MIT](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/wehnsdaefflae/llmsectest/blob/main/LICENSE)
 
 Your LLM application can be talked into ignoring its instructions, into repeating a secret it
 was told to keep, or into acting on an instruction hidden in a document it retrieved. Your
@@ -34,12 +34,12 @@ with CVSS v4.0- and risk-scored findings.
 running app, the OWASP coverage map, CLI and API reference. Build locally with
 `pip install -e ".[docs]" && mkdocs serve`.
 
-🤝 **Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md). The most useful thing you can send is a bad
+🤝 **Contributing:** [CONTRIBUTING.md](https://github.com/wehnsdaefflae/llmsectest/blob/main/CONTRIBUTING.md). The most useful thing you can send is a bad
 first run: if you tried it and gave up, say where you stopped. Two people already have. Both
 reports changed the tool. Security issues in the tool itself go through
-[SECURITY.md](SECURITY.md), privately.
+[SECURITY.md](https://github.com/wehnsdaefflae/llmsectest/blob/main/SECURITY.md), privately.
 
-📝 **What's new:** see the [changelog](CHANGELOG.md) (also on the [docs site](https://docs.llmsec.dev/changelog/)); the forward plan is the [roadmap](https://llmsec.dev/#roadmap).
+📝 **What's new:** see the [changelog](https://github.com/wehnsdaefflae/llmsectest/blob/main/CHANGELOG.md) (also on the [docs site](https://docs.llmsec.dev/changelog/)); the forward plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 Funded by the German Federal Ministry of Research, Technology and Space (BMFTR)
 via the [Prototype Fund](https://prototypefund.de) (FKZ 16IS26S10). MIT-licensed.
@@ -49,7 +49,7 @@ See [Funding](#funding).
 > categories ship a real probe or scanner. None is a placeholder. A scan that cannot
 > reach one says so instead of passing it silently.
 >
-> **Known limitations** live in the [changelog](CHANGELOG.md#known-issue) and are named on the
+> **Known limitations** live in the [changelog](https://github.com/wehnsdaefflae/llmsectest/blob/main/CHANGELOG.md#known-issue) and are named on the
 > category's own page as they are found. One is open today:
 > [LLM06](https://docs.llmsec.dev/owasp/llm06/) reports only what your application emits, so on an
 > application that describes an action in prose rather than emitting the signature you passed, a
@@ -98,7 +98,7 @@ See [Funding](#funding).
 - **One adapter for every target.** OpenAI, Anthropic, HuggingFace, and local Ollama / LM Studio, plus a
   running application at its own HTTP endpoint (`--target app:<url>`).
 - **Next up.** More depth. Embedding-store poisoning, multi-tenant retrieval isolation, a classifier refusal oracle. The modules
-  under [`examples/`](examples/) show the reporting pipeline across all ten categories with deterministic
+  under [`examples/`](https://github.com/wehnsdaefflae/llmsectest/tree/main/examples) show the reporting pipeline across all ten categories with deterministic
   mock fixtures.
 
 ## The unified adapter
@@ -296,7 +296,7 @@ learn how big your budget is, which we found out by doing it: our own cohort rea
 targets and forty fast ones until we took the timed-out probes back out, and then it read as
 one population. One exception is still ours to finish: the two **bounded LLM10** probes score
 a timeout as a *finding* rather than as inconclusive, so on a target that fails them the peak
-still reports the budget. See [`examples/`](examples/) for one test module per OWASP category.
+still reports the budget. See [`examples/`](https://github.com/wehnsdaefflae/llmsectest/tree/main/examples) for one test module per OWASP category.
 
 ## Install
 

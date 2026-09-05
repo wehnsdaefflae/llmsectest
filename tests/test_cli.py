@@ -25,6 +25,21 @@ def existing_dir(tmp_path):
     return str(d)
 
 
+def _record(captured: dict):
+    """A ``subprocess.call`` stand-in that records the command and returns a real exit code.
+
+    The seven call sites here used to pass ``lambda cmd: captured.setdefault("cmd", cmd) or 0``,
+    which returns the *list* it just stored, because ``setdefault`` returns the value and a
+    non-empty list is truthy. Every one of them was handing ``run_suite`` a list where the
+    contract is an int, and nothing noticed for as long as nothing downstream read the code.
+    The 2026-09-05 footer guard read it and seven tests raised ``TypeError``.
+    """
+    def call(cmd) -> int:
+        captured.setdefault("cmd", cmd)
+        return 0
+    return call
+
+
 def test_target_slug_for_provider_spec():
     assert cli.target_slug("openai:gpt-4o-mini") == "openai-gpt-4o-mini"
     assert cli.target_slug("anthropic:claude-3-5-haiku") == "anthropic-claude-3-5-haiku"
@@ -55,14 +70,14 @@ def test_extract_target_pulls_value_out_of_args():
 
 def test_run_suite_injects_per_target_sarif_path(monkeypatch):
     captured = {}
-    monkeypatch.setattr(cli.subprocess, "call", lambda cmd: captured.setdefault("cmd", cmd) or 0)
+    monkeypatch.setattr(cli.subprocess, "call", _record(captured))
     cli.run_suite([], "openai:gpt-4o-mini")
     assert "--sarif-output=results/openai-gpt-4o-mini.sarif" in captured["cmd"]
 
 
 def test_run_suite_respects_explicit_sarif_output(monkeypatch):
     captured = {}
-    monkeypatch.setattr(cli.subprocess, "call", lambda cmd: captured.setdefault("cmd", cmd) or 0)
+    monkeypatch.setattr(cli.subprocess, "call", _record(captured))
     cli.run_suite(["--sarif-output=custom/out.sarif"], "demo-defended")
     sarif_opts = [a for a in captured["cmd"] if a.startswith("--sarif-output")]
     assert sarif_opts == ["--sarif-output=custom/out.sarif"]
@@ -102,7 +117,7 @@ def test_real_positional_after_a_value_opt_is_found(existing_dir):
 
 def test_run_suite_keeps_packaged_suite_with_spaced_value_option(monkeypatch, existing_dir):
     captured = {}
-    monkeypatch.setattr(cli.subprocess, "call", lambda cmd: captured.setdefault("cmd", cmd) or 0)
+    monkeypatch.setattr(cli.subprocess, "call", _record(captured))
     cli.run_suite(["--report-dir", existing_dir], None)
     # The packaged suite must still be the test path (footgun fixed).
     assert str(cli.SUITE_DIR) in captured["cmd"]
@@ -110,21 +125,21 @@ def test_run_suite_keeps_packaged_suite_with_spaced_value_option(monkeypatch, ex
 
 def test_run_suite_uses_explicit_path_when_given(monkeypatch, existing_dir):
     captured = {}
-    monkeypatch.setattr(cli.subprocess, "call", lambda cmd: captured.setdefault("cmd", cmd) or 0)
+    monkeypatch.setattr(cli.subprocess, "call", _record(captured))
     cli.run_suite([existing_dir], None)
     assert str(cli.SUITE_DIR) not in captured["cmd"]
 
 
 def test_run_suite_shows_skip_reasons(monkeypatch):
     captured = {}
-    monkeypatch.setattr(cli.subprocess, "call", lambda cmd: captured.setdefault("cmd", cmd) or 0)
+    monkeypatch.setattr(cli.subprocess, "call", _record(captured))
     cli.run_suite([], None)
     assert "-rs" in captured["cmd"]  # skip reasons ("not yet implemented") always print
 
 
 def test_app_target_scopes_modules_and_keeps_all_ten_coverage(monkeypatch):
     captured = {}
-    monkeypatch.setattr(cli.subprocess, "call", lambda cmd: captured.setdefault("cmd", cmd) or 0)
+    monkeypatch.setattr(cli.subprocess, "call", _record(captured))
     cli.run_suite([], "app:http://localhost:8000/chat")
     cmd = captured["cmd"]
     # the all-10 coverage module runs, so unimplemented categories still surface
@@ -347,7 +362,7 @@ def test_app_prompt_accepts_a_file_path(monkeypatch, tmp_path):
 
 def test_app_target_runs_application_mode_module(monkeypatch):
     captured = {}
-    monkeypatch.setattr(cli.subprocess, "call", lambda cmd: captured.setdefault("cmd", cmd) or 0)
+    monkeypatch.setattr(cli.subprocess, "call", _record(captured))
     cli.run_suite([], "app:http://localhost:8000/chat")
     assert any("test_application_mode.py" in a for a in captured["cmd"])
 
@@ -377,3 +392,32 @@ def test_is_existing_file_handles_long_inline_value(tmp_path):
     f.write_text("You are a helpful assistant.")
     assert cli._is_existing_file(str(f)) is True
     assert cli._is_existing_file(str(tmp_path / "nope.txt")) is False
+
+
+# --- the coverage footer is a claim, so it may only follow a run that happened ---------
+#
+# Found 2026-09-05 by fresh-eyes on the tool's own console output. A mistyped option makes
+# pytest exit 4 before collecting anything, and stdout still ended with "Coverage this run,
+# 7/10 OWASP categories exercised. No silent gaps". The footer is computed from the
+# configured inputs, so it reads identically whether every probe ran or none did.
+
+def test_coverage_footer_is_printed_when_the_suite_reported(monkeypatch, capsys):
+    """Exit 1 is a scan that worked and found something, so the footer still belongs."""
+    monkeypatch.setattr(cli.subprocess, "call", lambda cmd: 1)
+    assert cli.run_suite([], None) == 1
+    out = capsys.readouterr().out
+    assert "Coverage this run" in out
+    assert "No coverage to report" not in out
+
+
+@pytest.mark.parametrize("rc", sorted(cli._SUITE_DID_NOT_RUN))
+def test_no_coverage_claim_when_the_suite_never_ran(monkeypatch, capsys, rc):
+    monkeypatch.setattr(cli.subprocess, "call", lambda cmd: rc)
+    assert cli.run_suite([], None) == rc
+    out = capsys.readouterr().out
+    assert "Coverage this run" not in out, (
+        f"pytest exit {rc} means the suite produced no result, and the footer claimed "
+        "coverage anyway"
+    )
+    assert "No coverage to report" in out
+    assert f"pytest exit {rc}" in out
