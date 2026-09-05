@@ -11,6 +11,13 @@ on:
   schedule:
     - cron: "0 6 * * 1"
 
+# The default token is read-only unless a job asks for more. CodeQL's
+# actions/missing-workflow-permissions flagged both jobs here on 2026-09-05:
+# with no block at all a job inherits whatever the repository default is,
+# which is a property of the settings page rather than of this file.
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest

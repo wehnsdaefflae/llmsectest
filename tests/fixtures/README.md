@@ -88,3 +88,43 @@ semgrep --config tests/fixtures/semgrep-cwe-rules.yaml --sarif --metrics=off \
 `eval`) are committed alongside, so the fixture is reproducible without inventing the
 inputs. Semgrep itself is **not** a project dependency: it is installed ad hoc only
 when the fixture is regenerated, exactly as ruff and Bandit are for theirs.
+
+## `codeql-2.26.4.sarif`
+
+A **genuine SARIF v2.1.0 report from CodeQL 2.26.4**, and the fourth producer here,
+asked for by issue #6 on the reasoning that every producer added so far disagreed with
+the others about rule metadata. This one disagrees furthest, in three ways, all of which
+were rendering defects when it first went through:
+
+1. **It declares no rules on `tool.driver` at all.** Every query pack is a
+   `tool.extensions` entry (a `toolComponent`) carrying its own `rules`, reached from a
+   result through `rule.toolComponent.index`. The renderer read the driver alone, so its
+   rule map for a CodeQL report was empty and every finding lost its name, description,
+   help, CWE and severity score.
+2. **The human title is in `shortDescription`.** CodeQL sets `name` to the id, so a
+   finding was headed `actions/artifact-poisoning/critical` rather than "Artifact
+   poisoning". Semgrep fills the same field with `Semgrep Finding: <id>`, which is why a
+   short description quoting the rule id back is not treated as a name.
+3. **The pack is 199 rules, and the 12 findings cite 8 of them.** A glossary of every
+   declared rule buried the twelve under 191 queries that found nothing, so the glossary
+   carries what the driver declared plus what a finding cites.
+
+It is also the first fixture with `codeFlows`, real dataflow paths through several
+files, which is most of its size.
+
+The scan is of **this repository**, at commit `f7ae000` on `main`, by the `codeql`
+workflow in `.github/workflows/`, so its provenance is stated rather than borrowed.
+Regenerated with:
+
+```
+gh api repos/wehnsdaefflae/llmsectest/code-scanning/analyses/<id> \
+   -H "Accept: application/sarif+json" > codeql-2.26.4.sarif
+```
+
+**One edit is applied afterwards and it is mechanical**: rules that no result cites are
+removed from each `tool.extensions[].rules`, and every `result.rule.index` is renumbered
+to match, which takes the file from 933 KB to 84 KB. Nothing else is changed, and the
+serialization is the compact form GitHub serves.
+`test_the_codeql_fixture_is_a_valid_reduction_of_what_github_served` re-checks that
+every remaining index resolves to the rule its result names, because the renderer keys
+rules by id and would not notice a renumbering mistake.

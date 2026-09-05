@@ -334,6 +334,70 @@ def test_renders_real_bandit_sarif_end_to_end():
     assert "/home/" not in html and "file://" not in html
 
 
+def test_renders_real_codeql_sarif_end_to_end():
+    """CodeQL, the fourth producer, and the one whose shape broke three assumptions.
+
+    Issue #6 asked for it on the grounds that every producer added so far disagreed
+    with the others about rule metadata. This one disagrees hardest: it declares **no**
+    rules on ``tool.driver`` at all. Each query pack is a ``tool.extensions`` entry
+    carrying its own, and before 2026-09-05 the renderer read the driver alone, so a
+    CodeQL report came out with every finding titled by its raw query path and no CWE,
+    no severity score and no description anywhere on the page.
+    """
+    doc = json.loads((_FIXTURES / "codeql-2.26.4.sarif").read_text(encoding="utf-8"))
+    html = render_sarif_html(doc, source_name="codeql-2.26.4.sarif")
+
+    assert html.startswith("<!DOCTYPE html>")
+    assert html.rstrip().endswith("</html>")
+    assert "CodeQL" in html and "2.26.4" in html
+
+    # All twelve findings, no OWASP metadata, so one "Other" group.
+    assert 'class="big">12</span>' in html
+
+    # Rule metadata reached the page from ``tool.extensions``, which is the fix.
+    assert "Clear-text storage of sensitive information" in html   # shortDescription as title
+    assert "Workflow does not contain permissions" in html
+    assert "CWE-312" in html and "CWE-275" in html                 # properties.tags
+    assert "CVSS 7.5" in html                                      # security-severity
+    assert "py/clear-text-storage-sensitive-data" not in html      # the raw id is not a title
+
+    # Locations and levels survive; no machine paths leak.
+    assert "sev-high" in html and "sev-medium" in html
+    assert ".github/workflows/ci.yml:16" in html
+    assert "/home/" not in html and "file://" not in html
+
+
+def test_the_codeql_glossary_lists_the_rules_that_fired():
+    """A query pack is not a rule reference for a report of twelve findings.
+
+    CodeQL ships its whole pack: 199 rules, of which these 12 findings cite 8. Listing
+    every one buried the twelve under 191 queries that found nothing, which is why the
+    glossary carries the driver's declared rules plus the rules a finding cites. Our own reports declare
+    on the driver, so a category we tested and did not trip still appears in them.
+    """
+    doc = json.loads((_FIXTURES / "codeql-2.26.4.sarif").read_text(encoding="utf-8"))
+    html = render_sarif_html(doc, source_name="codeql-2.26.4.sarif")
+    cited = {r["ruleId"] for r in doc["runs"][0]["results"]}
+    assert 0 < html.count('<details class="rule">') == len(cited)
+
+
+def test_the_codeql_fixture_is_a_valid_reduction_of_what_github_served():
+    """The fixture drops rules no result cites, so its remaining indices must resolve.
+
+    This is the one edit applied to the download (see ``fixtures/README.md``). A
+    renumbering mistake would leave a result pointing at another rule, and every
+    assertion above would still pass, because the renderer keys rules by id.
+    """
+    doc = json.loads((_FIXTURES / "codeql-2.26.4.sarif").read_text(encoding="utf-8"))
+    run = doc["runs"][0]
+    extensions = run["tool"]["extensions"]
+    assert not run["tool"]["driver"].get("rules"), "CodeQL declares no driver rules"
+    for result in run["results"]:
+        ref = result["rule"]
+        rules = extensions[ref["toolComponent"]["index"]]["rules"]
+        assert rules[ref["index"]]["id"] == ref["id"] == result["ruleId"]
+
+
 def test_render_sarif_file_on_real_bandit_fixture(tmp_path):
     """The file entry point renders the real Bandit fixture to disk with its CWEs."""
     out = render_sarif_file(_FIXTURES / "bandit-1.9.4.sarif", tmp_path / "bandit.html")

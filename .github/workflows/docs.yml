@@ -8,6 +8,14 @@ on:
     paths: ["docs/**", "mkdocs.yml", "src/llmsectest/**"]
   workflow_dispatch: {}
 
+# The default token is read-only unless a job asks for more. CodeQL's
+# actions/missing-workflow-permissions flagged the `build` job below on
+# 2026-09-05; `deploy` was already declaring its own. With no block at all a
+# job inherits whatever the repository default is, which is a property of the
+# settings page rather than of this file.
+permissions:
+  contents: read
+
 jobs:
   # Always validate the docs build (strict catches broken refs + autodoc).
   build:

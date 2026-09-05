@@ -91,6 +91,10 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with: { name: dist, path: dist/ }
-      - uses: pypa/gh-action-pypi-publish@release/v1
+      # Pinned to a commit rather than to the moving `release/v1` branch: this step
+      # holds the OIDC token that can publish to PyPI under our name, so it is the
+      # one action here where a silent upstream change matters most. The SHA is the
+      # head of `release/v1` on 2026-09-05, which is the commit tagged v1.14.2.
+      - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33
         with:
           skip-existing: true

@@ -175,8 +175,28 @@ def _fixes_of(result: dict) -> list[str]:
 
 
 def _rule_index(run: dict) -> dict[str, dict]:
-    driver = _as_dict(_as_dict(run.get("tool")).get("driver"))
-    return {r.get("id"): r for r in _as_list(driver.get("rules")) if isinstance(r, dict)}
+    """Every rule the run's tool declares, wherever the producer put it.
+
+    Most tools declare their rules on ``tool.driver``. CodeQL declares none there: each
+    query pack is a ``tool.extensions`` entry (a ``toolComponent`` in the spec) carrying
+    its own ``rules``, which a result reaches through ``rule.toolComponent.index``.
+    Reading the driver alone returned an EMPTY map for the most widely deployed SARIF
+    producer there is, so every CodeQL finding rendered under its raw id with no name,
+    no description, no help text, no CWE and no severity fallback. Found 2026-09-05 by
+    rendering this repository's own CodeQL run (issue #6).
+
+    Ids are unique across an analysis, so one flat map is enough and the index numbers
+    need not be followed. The driver wins a collision: a tool that declares a rule in
+    both places means the one it named itself.
+    """
+    tool = _as_dict(run.get("tool"))
+    components = [*_as_list(tool.get("extensions")), tool.get("driver")]
+    index: dict[str, dict] = {}
+    for component in components:
+        for rule in _as_list(_as_dict(component).get("rules")):
+            if isinstance(rule, dict) and rule.get("id"):
+                index[rule["id"]] = rule
+    return index
 
 
 # --- HTML pieces ---------------------------------------------------------------
@@ -208,6 +228,14 @@ def _title_of(result: dict, rule: dict) -> str:
         if isinstance(candidate, str) and candidate and candidate != rule.get("id"):
             return candidate
     ident = rule.get("id") or result.get("ruleId") or ""
+    # CodeQL sets ``name`` to the id and writes the human title in ``shortDescription``
+    # ("Artifact poisoning" for ``actions/artifact-poisoning/critical``), so its findings
+    # read as raw query paths without this. Semgrep fills the same field with "Semgrep
+    # Finding: <id>", which says less than the shortened id does, so a short description
+    # quoting the id back is not a name.
+    short = _as_dict(rule.get("shortDescription")).get("text")
+    if isinstance(short, str) and short and isinstance(ident, str) and ident not in short:
+        return short
     if not isinstance(ident, str) or not ident:
         return "finding"
     tail = ident.rsplit(".", 1)[-1]
@@ -601,16 +629,30 @@ def render_sarif_html(doc: dict, *, source_name: str | None = None,
 
     # Collect (result, rule) across all runs. Every field access is type-guarded so
     # a malformed third-party run/result (wrong JSON type) is skipped, not fatal.
+    # The glossary is a reference for this report, so it carries the rules the tool
+    # DECLARED plus any rule a finding actually cites. The distinction earns its keep on
+    # CodeQL, whose runs carry no driver rules and pull in a whole query pack through
+    # `tool.extensions`: on this repository that is 199 rules for 12 findings that cite
+    # 8 of them, so listing all of them would bury the twelve under 191 queries that
+    # found nothing.
+    # Producers that describe their own rule set on the driver (ours, bandit, ruff,
+    # semgrep) are unaffected, which is why a category we test and did not trip still
+    # appears in our own reports.
     findings: list[tuple[dict, dict]] = []
-    all_rules: dict[str, dict] = {}
+    glossary_rules: dict[str, dict] = {}
     for run in runs:
         run = _as_dict(run)
         rules = _rule_index(run)
-        all_rules.update({k: v for k, v in rules.items() if k})
+        declared = _as_dict(_as_dict(run.get("tool")).get("driver")).get("rules")
+        glossary_rules.update({r["id"]: r for r in _as_list(declared)
+                               if isinstance(r, dict) and r.get("id")})
         for result in _as_list(run.get("results")):
             if not isinstance(result, dict):
                 continue  # a non-object result carries no renderable finding
-            findings.append((result, rules.get(result.get("ruleId"), {})))
+            rule = rules.get(result.get("ruleId"), {})
+            if rule.get("id"):
+                glossary_rules[rule["id"]] = rule
+            findings.append((result, rule))
 
     generated = generated or datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")
     # Run-level denial-of-wallet cost (real provider output-token spend), when present.
@@ -687,7 +729,7 @@ def render_sarif_html(doc: dict, *, source_name: str | None = None,
         body.append(f'<h2 class="cat">{_esc(label)} '
                     f'<span class="cnt">· {len(items)}</span></h2>')
         body.extend(_finding_card(result, rule) for result, rule in items)
-    body.append(_rules_glossary(all_rules))
+    body.append(_rules_glossary(glossary_rules))
 
     title = f"LLMSecTest SARIF report, {source_name}" if source_name else "LLMSecTest SARIF report"
     return (

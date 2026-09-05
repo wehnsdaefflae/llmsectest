@@ -21,12 +21,22 @@ Examples:
     python -m llmsectest --redteam-set jbb/harmful-behaviors.csv  # 100 JailbreakBench prompts (LLM01)
     python -m llmsectest --redteam-benign                  # + measure over-refusal (built-in twins)
     python -m llmsectest --redteam-benign jbb/benign-behaviors.csv  # over-refusal vs the 100 JBB twins
+    python -m llmsectest --redteam-generate 3             # + 3 model-composed variants per LLM01 case
     python -m llmsectest --target app:http://localhost:8000 \\
         --app-prompt prompt.txt --app-secret "sk-canary-123" \\
         --app-action "ACTION: refund(" --app-action "ACTION: delete_user(" \\
         --app-canary "INTERNAL-DOC-CANARY-7f2a" \\
         --app-rag-poison "RAG-POISON-MARKER-3b9d"
                           # deeper app scan: the dev-supplied inputs unlock LLM07/02/06/08
+    python -m llmsectest --report-formats=sarif,html,json,markdown
+    python -m llmsectest --list-probes                    # list the corpus
+    python -m llmsectest --check                          # OWASP coverage map
+    python -m llmsectest --validate results/out.sarif     # validate a SARIF file
+    python -m llmsectest --render-sarif results/out.sarif # SARIF -> standalone HTML
+                          # --html-output <path>, or -o, chooses where it lands
+    python -m llmsectest --render-pdf   results/out.sarif # SARIF -> PDF, no deps
+                          # --pdf-output <path>, or -o, chooses where it lands
+    python -m llmsectest --version                        # print the version
 
 Application scans (``--target app:<url>``) always exercise LLM01 + LLM05 + LLM09 +
 LLM10 black-box. Optional inputs unlock the remaining black-box categories:
@@ -49,13 +59,6 @@ bound the scan itself: ``--app-timeout <seconds>`` is a wall-clock deadline per
 request, after which the probe is inconclusive and never a finding, and
 ``--app-stress <N>`` replays every reachable app case as one simultaneous wave of N
 requests to find a guardrail that holds once and fails under load.
-    python -m llmsectest --report-formats=sarif,html,json,markdown
-    python -m llmsectest --list-probes                    # list the corpus
-    python -m llmsectest --check                          # OWASP coverage map
-    python -m llmsectest --validate results/out.sarif     # validate a SARIF file
-    python -m llmsectest --render-sarif results/out.sarif # SARIF -> standalone HTML
-    python -m llmsectest --render-pdf   results/out.sarif # SARIF -> PDF, no deps
-    python -m llmsectest --version                        # print the version
 
 A failing probe is a *finding*: a non-zero exit means the target is vulnerable.
 With no --target, the suite runs against a built-in offline demo app.
