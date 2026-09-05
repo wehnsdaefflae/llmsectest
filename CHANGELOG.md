@@ -13,8 +13,8 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 ### Fixed
 
 - **The tool reported itself as `0.1.0` on every surface that names a version.** `__version__`
-  had not moved since the first tagged release on 2026-06-10, and it is what the SARIF carries
-  as `tool.driver.version` and what the HTML report puts in its header, so every stored report
+  had not moved since the first tagged release on 2026-06-10. It is what the SARIF carries as
+  `tool.driver.version` and what the HTML report puts in its header, so every stored report
   named a version that never scanned anything. It now tracks `pyproject.toml`, pinned by
   `tests/test_version_is_one_number.py` (2026-09-05).
 - **`--version` printed the installed metadata, which is frozen at `pip install -e` time.** In a
@@ -27,9 +27,9 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
   anything still ended the output with `Coverage this run, 7/10 OWASP categories exercised. No
   silent gaps`. Exit codes 2, 3, 4 and 5 now print what went wrong instead. A finding is a
   failing test and exits 1, so a scan that worked keeps its footer (2026-09-05).
-- **Six links in `README.md` resolved only inside the repository.** The same file is the package
-  description on PyPI, where `LICENSE`, `CONTRIBUTING.md`, `SECURITY.md`, `CHANGELOG.md` and
-  `examples/` all answered 404. They are absolute now, pinned by `tests/test_readme_links.py`
+- **Seven links in `README.md`, naming six relative targets, resolved only inside the repository.**
+  The same file is the package description on PyPI, where the five files they name (`LICENSE`,
+  `CONTRIBUTING.md`, `SECURITY.md`, `CHANGELOG.md`, `examples/`) all answered 404. They are absolute now, pinned by `tests/test_readme_links.py`
   (2026-09-05).
 
 ## [0.3.0] - 2026-09-05

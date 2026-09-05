@@ -19,9 +19,11 @@ side of the fix:
   rewriting a relative link into a ``blob/main`` URL trades a PyPI 404 for a repository
   404 unless something watches the path.
 
-Both assert a floor on what they inspected. A sweep that silently matched nothing reads
-exactly like a sweep that found nothing wrong, which is the defect
-``test_cli_help_and_coverage_map.py`` was written about.
+Both assert a floor on what they inspected, and the second one had to be changed to make that
+sentence true: it skipped when it matched nothing, which reads exactly like a sweep that found
+nothing wrong. That is the defect ``test_cli_help_and_coverage_map.py`` was written about, and it
+was in this file's own second test until a fresh-context pass on 2026-09-05 read the docstring
+against the code.
 """
 
 from __future__ import annotations
@@ -29,8 +31,6 @@ from __future__ import annotations
 import pathlib
 import re
 import tomllib
-
-import pytest
 
 _ROOT = pathlib.Path(__file__).resolve().parents[1]
 _PYPROJECT = _ROOT / "pyproject.toml"
@@ -47,6 +47,10 @@ _LINK = re.compile(r"\[(?:[^\[\]]|\[[^\]]*\])*\]\(([^)\s]+)\)")
 #: the file grows, and a test that has to be edited whenever a sentence is added stops
 #: being read.
 _MIN_LINKS = 20
+
+#: The five distinct paths the README links to inside this repository, a floor for the same
+#: reason ``_MIN_LINKS`` is one.
+_MIN_REPO_LINKS = 5
 
 _REPO_URL = "https://github.com/wehnsdaefflae/llmsectest"
 _INTO_REPO = re.compile(re.escape(_REPO_URL) + r"/(?:blob|tree)/main/([^)#\s]+)")
@@ -90,8 +94,11 @@ def test_no_relative_links_in_the_packaged_readme() -> None:
 def test_links_into_this_repository_name_a_real_path() -> None:
     """The other half of the trade: an absolute path may not rot silently."""
     paths = sorted(set(_INTO_REPO.findall(_readme().read_text(encoding="utf-8"))))
-    if not paths:
-        pytest.skip("the README carries no blob/main or tree/main link to check")
+    assert len(paths) >= _MIN_REPO_LINKS, (
+        f"only {len(paths)} link(s) into this repository matched, under the {_MIN_REPO_LINKS} the "
+        "README carried when this test was written: the pattern has stopped seeing them, so a "
+        "clean result here would mean nothing"
+    )
     missing = [p for p in paths if not (_ROOT / p).exists()]
     assert not missing, (
         f"the README links to {missing} at {_REPO_URL}, and no such path is in this "
