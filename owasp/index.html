@@ -1340,9 +1340,9 @@ part a coverage table cannot carry, what a clean result does <em>not</em> tell y
 </tr>
 <tr>
 <td><a href="llm08/">LLM08 Vector and Embedding Weaknesses</a></td>
-<td>black-box, requires <code>--app-canary</code> and/or <code>--app-rag-poison</code> (RAG)</td>
+<td>black-box, requires <code>--app-canary</code> and/or <code>--app-rag-poison</code> (RAG); white-box, requires <code>--vector-store</code></td>
 <td>7.1 High</td>
-<td>✅ probes</td>
+<td>✅ probes + scan</td>
 </tr>
 <tr>
 <td><a href="llm09/">LLM09 Misinformation</a></td>
@@ -1370,10 +1370,11 @@ white-box categories run from a path you provide: <strong>LLM03 (supply chain)</
 manifests with <code>--repo &lt;path&gt;</code> (see the <a href="llm03/">LLM03 deep-dive</a>); <strong>LLM04 (data and model poisoning)</strong>
 scans the project's serialized model files with <code>--model-scan &lt;path&gt;</code>, flagging load-time code-execution
 in pickle/PyTorch artifacts (see the <a href="llm04/">LLM04 deep-dive</a>). <strong>LLM08 (vector &amp; embedding weaknesses)</strong>
-ships two black-box dimensions, retrieval exposure and indirect injection via a poisoned retrieved
-document, for RAG apps (see the <a href="llm08/">LLM08 deep-dive</a>); <strong>LLM09 (misinformation)</strong> ships black-box
-confabulation probes (see the <a href="llm09/">LLM09 deep-dive</a>). What remains is <em>depth</em>, LLM08's white-box
-dimensions and a classifier refusal oracle, not breadth.</p>
+ships three dimensions for RAG apps: retrieval exposure and indirect injection via a poisoned
+retrieved document, both black-box, plus the white-box embedding-inversion-exposure scan of a persisted
+store with <code>--vector-store &lt;path&gt;</code> (see the <a href="llm08/">LLM08 deep-dive</a>); <strong>LLM09 (misinformation)</strong> ships
+black-box confabulation probes (see the <a href="llm09/">LLM09 deep-dive</a>). What remains is <em>depth</em>: embedding
+poisoning, multi-tenant isolation, inversion itself, plus a classifier refusal oracle.</p>
 <h2 id="testing-a-real-application-black-box">Testing a real application (black-box)<a class="headerlink" href="#testing-a-real-application-black-box" title="Permanent link">&para;</a></h2>
 <p>When you point LLMSecTest at a running app (<code>--target app:&lt;url&gt;</code>, or the <code>run_app_scan</code> API on the app's
 system prompt), it tests <strong>only what black-box access can reach</strong>, and reports the rest, never
@@ -1394,10 +1395,11 @@ a silent pass:</p>
 <li>The white-box categories are likewise surfaced as not-exercised against an endpoint unless you supply
   their artifact path: <strong>LLM03 (supply chain)</strong> runs from the repo (add <code>--repo &lt;path&gt;</code> to scan the
   dependency manifests alongside the endpoint probes) and <strong>LLM04 (data and model poisoning)</strong> runs from
-  the model files (add <code>--model-scan &lt;path&gt;</code>). LLM08's <em>white-box</em> dimensions (embedding poisoning,
-  multi-tenant isolation, inversion) remain not-exercised, its two
-  black-box dimensions (retrieval exposure + indirect injection via a poisoned retrieved document) ship
-  now (see the <a href="llm08/">LLM08 deep-dive</a>).</li>
+  the model files (add <code>--model-scan &lt;path&gt;</code>). <strong>LLM08</strong> runs from the persisted store with
+  <code>--vector-store &lt;path&gt;</code>, which measures how much of the corpus a reader of the store recovers with no
+  inversion, alongside its two black-box dimensions, retrieval exposure and indirect injection via a
+  poisoned retrieved document (see the <a href="llm08/">LLM08 deep-dive</a>). Embedding poisoning, multi-tenant
+  isolation and inversion itself remain not-exercised.</li>
 </ul>
 <p>Every scan prints a coverage footer accounting for <strong>all ten</strong> categories, so the report never overstates
 what was tested.</p>

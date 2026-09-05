@@ -1320,10 +1320,11 @@
 </code></pre></div>
 <p>A failing probe is a <strong>finding</strong>, so a non-zero exit fails your pipeline when your app is vulnerable.</p>
 <h2 id="why">Why<a class="headerlink" href="#why" title="Permanent link">&para;</a></h2>
-<p>With LLMs in real products, users face new risks, prompt injection, sensitive-data disclosure and
-unsafe output handling are common, well-documented failure modes. Developers in finance and healthcare lack an open, CI-ready way to
-check their LLM apps against a recognized standard. LLMSecTest is that, MIT-licensed and fully
-open-source, built on <code>pytest</code> so it fits the tools developers already use.</p>
+<p>LLM applications fail in ways an ordinary test suite never looks for. Prompt injection,
+sensitive-data disclosure and unsafe output handling are common, well-documented failure modes. A
+team shipping an assistant in finance or healthcare has no open, CI-ready way to check one against a
+recognized standard. LLMSecTest is that check: MIT-licensed, fully open-source, built on <code>pytest</code> so
+it fits the tools developers already use.</p>
 <h2 id="what-it-tests">What it tests<a class="headerlink" href="#what-it-tests" title="Permanent link">&para;</a></h2>
 <p>The OWASP LLM Top 10 spans two testing modalities. LLMSecTest is honest about which apply to a given
 target, run <code>llmsectest --check</code> to see the live map.</p>
