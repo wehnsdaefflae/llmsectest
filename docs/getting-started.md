@@ -1,5 +1,7 @@
 # Getting started
 
+--8<-- "_release.md"
+
 !!! tip "Have a running app and a minute?"
 
     [**Quickstart**](quickstart.md) goes straight from `pip install` to a rendered report against

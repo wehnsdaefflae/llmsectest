@@ -1,5 +1,7 @@
 # CI/CD integration
 
+--8<-- "_release.md"
+
 LLMSecTest exits non-zero when it finds a vulnerability and writes a **SARIF v2.1.0** report, so it
 plugs into any pipeline and into GitHub/GitLab code-scanning.
 

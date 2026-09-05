@@ -1,5 +1,7 @@
 # Quickstart
 
+--8<-- "_release.md"
+
 You have an HTTP chat endpoint with an LLM behind it. You want to know what gets through. This page
 goes from nothing to a rendered report in about a minute, then tells you what the report does not
 cover.

@@ -300,9 +300,9 @@ still reports the budget. See [`examples/`](examples/) for one test module per O
 
 ## Install
 
-On PyPI since 0.2.0. The core install pulls in `pytest` and nothing else; provider SDKs and
-custom CVSS scoring are optional extras.
-come with the first PyPI release). Substitute your extras in the `[...]`:
+`pip install llmsectest` gets you the current release; `llmsectest --version` says which one
+you have. The core pulls in `pytest` and nothing else. Provider SDKs and custom CVSS scoring
+are optional extras; substitute yours in the `[...]`:
 
 ```bash
 pip install llmsectest                              # core

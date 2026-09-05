@@ -10,6 +10,16 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ## [Unreleased]
 
+*Nothing since 0.3.0.*
+
+## [0.3.0] - 2026-09-05
+
+Published to PyPI from the repository's own release workflow under Trusted Publishing, so the
+upload carries a short-lived OIDC credential and no long-lived token exists anywhere. It was cut
+because the documentation had run ahead of the release a reader installs: `pip install
+llmsectest` gave 0.2.0, and 0.2.0 answered `unrecognized arguments` to flags the guides used in
+their worked commands. Everything below arrived after the 0.2.0 upload of 2026-08-21.
+
 - **2026-09-05** **A secret can leave through a response field that no oracle read.**
   The reply text is one field of the response body, picked by `--app-response-path` or
   autodetected. The decoded body carried the rest and nothing looked at it. On 2026-09-04 a

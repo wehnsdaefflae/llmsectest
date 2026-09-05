@@ -1,5 +1,7 @@
 # Test your running application
 
+--8<-- "_release.md"
+
 This is the point of LLMSecTest: test the **application**, not a bare model. When you target your
 app's own endpoint, its real system prompt, guardrails, RAG context and tools are all exercised. So a
 finding reflects how your app behaves under attack.

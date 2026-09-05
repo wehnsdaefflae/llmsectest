@@ -23,6 +23,13 @@ theme:
       primary: indigo
       toggle: { icon: material/brightness-4, name: Switch to light mode }
 
+hooks:
+  - docs_hooks.py
+
+# `_release.md` is the generated banner every flag page includes, never a page of its own.
+not_in_nav: |
+  _release.md
+
 plugins:
   - search
   - mkdocstrings:

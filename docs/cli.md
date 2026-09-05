@@ -1,5 +1,7 @@
 # CLI reference
 
+--8<-- "_release.md"
+
 LLMSecTest installs a `llmsectest` console script (equivalently `python -m llmsectest`). It runs the
 packaged OWASP probe suite against your chosen target and writes reports.
 

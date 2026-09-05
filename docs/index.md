@@ -1,5 +1,7 @@
 # LLMSecTest
 
+--8<-- "_release.md"
+
 **Pytest-native security testing for LLM _applications_, mapped to the [OWASP LLM Top 10 (2025)](https://genai.owasp.org/llm-top-10/).**
 
 LLMSecTest tests **applications that use an LLM** (a system prompt, guardrails, RAG, and tools around a model) rather than bare models, for the security risks in the OWASP Top 10 for LLM Applications, and emits
