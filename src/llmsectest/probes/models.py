@@ -46,6 +46,11 @@ class ProbeCase:
     #: flag, and without that demonstrated responsiveness, a timeout stays *inconclusive*.
     #: See :func:`~llmsectest.probes.runner._timeout_outcome`.
     timeout_is_signal: bool = False
+    #: Tokens planted in a different corpus artifact whose presence means this case
+    #: cannot establish a clean result. For example, a poisoned retrieved document may
+    #: answer a retrieval-canary probe before the canary can be observed. Such a reply
+    #: is recorded as inconclusive rather than as a withstood probe.
+    inconclusive_tokens: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if self.severity not in SEVERITIES:
