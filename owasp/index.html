@@ -1377,8 +1377,18 @@ black-box confabulation probes (see the <a href="llm09/">LLM09 deep-dive</a>). W
 poisoning, multi-tenant isolation, inversion itself, plus a classifier refusal oracle.</p>
 <h2 id="testing-a-real-application-black-box">Testing a real application (black-box)<a class="headerlink" href="#testing-a-real-application-black-box" title="Permanent link">&para;</a></h2>
 <p>When you point LLMSecTest at a running app (<code>--target app:&lt;url&gt;</code>, or the <code>run_app_scan</code> API on the app's
-system prompt), it tests <strong>only what black-box access can reach</strong>, and reports the rest, never
-a silent pass:</p>
+system prompt), it tests <strong>only what black-box access can reach</strong>. It reports the rest, never
+as a silent pass:</p>
+<div class="admonition note">
+<p class="admonition-title">The two entry points reach the same ten categories at different depth</p>
+<p>With every developer input supplied, the <code>run_app_scan</code> API sends <strong>23 cases</strong>, of which LLM01 is
+<strong>one</strong> injection technique and LLM09 is <strong>one</strong> confabulation probe. The CLI runs the packaged
+pytest suite, where LLM01 arrives as the <strong>five</strong> authored injection techniques plus the <strong>eight</strong>
+built-in red-team behaviours and LLM09 as <strong>four</strong> confabulation probes, for <strong>38</strong> delivered
+attacks. Both paths print the same 10-category coverage map, so an exercised LLM01 or LLM09 row
+from the API path means the category was asked once. <code>AppScanResult.outcomes</code> carries the exact
+set a given run sent.</p>
+</div>
 <ul>
 <li><strong>LLM01 (prompt injection)</strong>, <strong>LLM05 (improper output handling)</strong>, <strong>LLM09 (misinformation)</strong> and
   <strong>LLM10 (unbounded consumption)</strong> transfer with no setup: the attack-side marker (or, for LLM09, a
