@@ -22,6 +22,8 @@ CLI option → environment variable:
 ``--app-rag-poison <mark>`` :data:`APP_RAG_POISON`
 ``--app-timeout <seconds>`` :data:`APP_TIMEOUT`
 ``--app-stress <N>``        :data:`APP_STRESS`
+``--app-session-field <p>`` :data:`APP_SESSION_FIELD`
+``--app-session-init <j>``  :data:`APP_SESSION_INIT`
 ``--redteam-generate <N>``  :data:`REDTEAM_GENERATE`
 ==========================  ==========================
 """
@@ -53,6 +55,13 @@ APP_REQUEST_FIELD = "LLMSECTEST_APP_REQUEST_FIELD"
 APP_RESPONSE_PATH = "LLMSECTEST_APP_RESPONSE_PATH"
 APP_HEADERS = "LLMSECTEST_APP_HEADERS"
 APP_BODY = "LLMSECTEST_APP_BODY"
+#: Where a per-probe session value goes, and where it comes from. Added 2026-09-05: the
+#: adapter sent one fixed body per probe, so an application that binds its persona, its
+#: knowledge base or its tools to a *conversation* could be scanned with a persona or with
+#: independent probes, never both. Measured on khoj, and the same shape holds for LibreChat,
+#: Dify and RAGFlow, where we happened to have a route around it.
+APP_SESSION_FIELD = "LLMSECTEST_APP_SESSION_FIELD"
+APP_SESSION_INIT = "LLMSECTEST_APP_SESSION_INIT"
 REDTEAM_GENERATE = "LLMSECTEST_REDTEAM_GENERATE"
 
 # Joins the repeatable ``--app-action`` values into the single APP_ACTIONS
@@ -112,6 +121,11 @@ def app_shape_from_env() -> dict:
     A malformed value fails loudly here rather than silently reverting to the default, since
     a scan that quietly talked to the wrong shape would record a whole application as
     unreachable and the honesty guarantee would report that faithfully.
+
+    ``session_field`` and ``session_init`` (2026-09-05) carry the per-probe session value:
+    where it goes into the request body, and optionally the request that obtains it. Unset,
+    every probe shares whatever session the application defaults to, which is what the
+    adapter did for its whole life.
     """
     shape: dict = {}
     field = os.environ.get(APP_REQUEST_FIELD, "").strip()
@@ -120,7 +134,11 @@ def app_shape_from_env() -> dict:
     path = os.environ.get(APP_RESPONSE_PATH, "").strip()
     if path:
         shape["response_path"] = path
-    for name, key in ((APP_HEADERS, "headers"), (APP_BODY, "extra_body")):
+    session_field = os.environ.get(APP_SESSION_FIELD, "").strip()
+    if session_field:
+        shape["session_field"] = session_field
+    for name, key in ((APP_HEADERS, "headers"), (APP_BODY, "extra_body"),
+                      (APP_SESSION_INIT, "session_init")):
         raw = os.environ.get(name, "").strip()
         if not raw:
             continue

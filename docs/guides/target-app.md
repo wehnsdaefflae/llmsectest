@@ -55,6 +55,41 @@ target = AppEndpointAdapter(
 )
 ```
 
+### Applications that scope a chat to a conversation
+
+Some applications hang the persona, the knowledge base or the tool set off a **conversation**. Point
+every probe at one conversation and each attack sees the ones before it, so a refusal or a leak early
+on changes what every later probe measures. That is then a property of the scan. Two flags give each
+probe a conversation of its own.
+
+**When your application accepts an id you choose:**
+
+```bash
+llmsectest --target app:http://localhost:3000/api/chat \
+  --app-session-field conversation_id
+```
+
+A fresh UUID goes into that body field for every probe. It costs no extra request. Most applications
+need only this. The field takes a dotted path, so `metadata.session.id` reaches a nested envelope.
+
+**When only the application may create one:**
+
+```bash
+llmsectest --target app:http://localhost:42110/api/chat \
+  --app-session-field conversation_id \
+  --app-session-init '{"url": "/api/sessions", "response_path": "conversation_id"}'
+```
+
+Before each probe LLMSecTest sends that request, reads the value at `response_path` out of the reply
+and carries it into the field `--app-session-field` names. A relative `url` resolves against your
+endpoint; `method` (default `POST`), `headers` and `body` are optional. An unknown key in the JSON is
+refused, so a misspelled `response_path` cannot quietly leave the scan auto-detecting some other
+field.
+
+**A session step that fails is inconclusive.** It never scores as a finding. It never scores as
+an LLM10 timeout either. An application that never answered a setup request has said nothing about
+how it bounds the work of a probe it never received.
+
 ## Getting past your platform's front door
 
 If your application is built on a hosted platform rather than written from scratch, its chat endpoint

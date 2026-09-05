@@ -80,6 +80,27 @@ vivid: `demo-vulnerable` complies with everything (0% over-refusal but many find
 string-matching caveat applies, inverted: a benign reply that incidentally contains a refusal-like phrase
 can be over-counted, which a classifier oracle would fix.
 
+## Model-composed variants (`--redteam-generate`)
+
+`--redteam-generate <N>` adds N variants of each authored marker-injection case, written by the
+target's own model. The authored corpus still runs in full and still feeds the regression baseline,
+so two runs stay comparable.
+
+Every variant is validated before it is sent. A rewrite that dropped the marker is refused, because
+it would run, score nothing, and be recorded as an attack withstood. A rewrite that put the target's
+own secret into the prompt is refused, because it would score its own echo as a disclosure. Each
+survivor is then run against the hardened demo. Keeping the marker only proves that a rewrite is
+scoreable, so a variant that fires against a defended control tests nothing and is dropped.
+Rejections are counted per reason and reported, because a corpus that quietly shrinks reads the same as a target that got safer.
+
+Generation draws on the marker-based cases above alone. In the red-team set below, a broken rewrite
+turns the request benign, and compliance with a benign request would score as a critical finding.
+The flag needs a model target, since `--target app:<url>` names somebody else's application.
+
+```bash
+llmsectest --redteam-generate 3 --target ollama:gemma4
+```
+
 ## Reading a finding
 
 A finding names the technique, the OWASP category (LLM01), a severity, and the evidence, for example

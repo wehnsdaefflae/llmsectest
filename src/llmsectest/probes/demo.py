@@ -179,7 +179,9 @@ def resolve_target(spec: str, *, app_timeout: float | None = None,
     adapter and falls back to that adapter's own default when ``None``.
 
     ``app_shape`` carries how a real application's HTTP contract differs from the
-    default one: ``request_field``, ``response_path``, ``headers`` and ``extra_body``.
+    default one: ``request_field``, ``response_path``, ``headers``, ``extra_body``
+    and, since 2026-09-05, ``session_field``/``session_init`` for applications that key
+    their persona or retrieval on a conversation.
     Added 2026-09-04, because the adapter could already do all four and a user could
     only reach them by writing Python, so every third-party application we enrolled got
     a hand-written shim instead of a flag.

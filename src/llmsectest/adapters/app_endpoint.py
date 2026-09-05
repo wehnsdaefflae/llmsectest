@@ -14,6 +14,11 @@ shapes (``reply``/``response``/``message``/``content`` or OpenAI-style
 The per-request budget is a **wall-clock deadline**, not just a socket timeout —
 see :meth:`AppEndpointAdapter._read_within_deadline` for why that distinction
 decides whether a runaway app is caught at all.
+
+Applications that bind a persona, a knowledge base or a tool set to a
+**conversation** need one more thing: a session value that changes per probe. See
+:meth:`AppEndpointAdapter._session_value` for the two shapes that takes and why a
+scan without it measures the wrong thing.
 """
 
 from __future__ import annotations
@@ -22,7 +27,9 @@ import contextlib
 import json
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
+import uuid
 
 from .base import (
     AdapterError,
@@ -62,12 +69,24 @@ def _extract(data: object, path: str | None) -> str:
     if path:
         cur: object = data
         for part in path.split("."):
-            if isinstance(cur, list):
-                cur = cur[int(part)]
-            elif isinstance(cur, dict):
-                cur = cur[part]
-            else:
-                raise AdapterError(f"response path {path!r} does not match the reply JSON")
+            # A path that misses is named, whatever it missed on. Until 2026-09-05 only
+            # the "walked into a scalar" branch was, so a mistyped key raised a bare
+            # KeyError and the operator read `KeyError: 'conversaton_id'` where the answer
+            # is that their path does not match this application's reply. `run_probe`'s
+            # broad floor kept it inconclusive throughout, so this is the message rather
+            # than the guarantee.
+            try:
+                if isinstance(cur, list):
+                    cur = cur[int(part)]
+                elif isinstance(cur, dict):
+                    cur = cur[part]
+                else:
+                    raise KeyError(part)
+            except (KeyError, IndexError, ValueError) as exc:
+                raise AdapterError(
+                    f"response path {path!r} does not match the reply JSON (stopped at "
+                    f"{part!r})"
+                ) from exc
         return str(cur)
     if isinstance(data, str):
         return data
@@ -86,6 +105,36 @@ def _extract(data: object, path: str | None) -> str:
     )
 
 
+def _place(body: dict, path: str, value: str) -> None:
+    """Write ``value`` into ``body`` at a dotted ``path``, creating the objects on the way.
+
+    The same dotted convention :func:`_extract` reads a reply out of, used in the other
+    direction, so an application that answers at ``choices.0.message.content`` and wants its
+    session at ``metadata.conversation_id`` is described in one vocabulary. List indices are
+    not accepted here: reading past one is unambiguous, while writing into one would have to
+    invent how long the list is.
+    """
+    parts = path.split(".")
+    cur = body
+    for part in parts[:-1]:
+        if part.isdigit():
+            raise AdapterError(
+                f"session field {path!r} indexes a list at {part!r}; a session value is "
+                "placed into named fields only"
+            )
+        nxt = cur.get(part)
+        if not isinstance(nxt, dict):
+            nxt = {}
+            cur[part] = nxt
+        cur = nxt
+    if parts[-1].isdigit():
+        raise AdapterError(
+            f"session field {path!r} indexes a list at {parts[-1]!r}; a session value is "
+            "placed into named fields only"
+        )
+    cur[parts[-1]] = value
+
+
 class AppEndpointAdapter(LLMAdapter):
     """Drive a running LLM application via its HTTP chat endpoint."""
 
@@ -100,19 +149,31 @@ class AppEndpointAdapter(LLMAdapter):
         headers: dict[str, str] | None = None,
         extra_body: dict[str, object] | None = None,
         timeout: float = 120.0,
+        session_field: str | None = None,
+        session_init: dict[str, object] | None = None,
     ):
         super().__init__(model or endpoint)
         if not endpoint:
             raise AdapterError("AppEndpointAdapter needs the application's endpoint URL")
+        if session_init is not None and not session_field:
+            raise AdapterError(
+                "session_init describes where a session value comes from; session_field "
+                "says where it goes into the request body, and without it the value "
+                "obtained would be thrown away"
+            )
         self.endpoint = endpoint
         self.request_field = request_field
         self.response_path = response_path
         self.headers = {"Content-Type": "application/json", **(headers or {})}
         self.extra_body = extra_body or {}
         self.timeout = timeout
+        self.session_field = session_field
+        self.session_init = None if session_init is None else dict(session_init)
 
     def complete(self, request: CompletionRequest) -> CompletionResponse:
         body = {self.request_field: _last_user(request), **self.extra_body}
+        if self.session_field:
+            _place(body, self.session_field, self._session_value())
         req = urllib.request.Request(
             self.endpoint,
             data=json.dumps(body).encode(),
@@ -156,6 +217,89 @@ class AppEndpointAdapter(LLMAdapter):
             provider=self.provider,
             raw=payload,
         )
+
+    def _session_value(self) -> str:
+        """A session value for **this probe**, minted here or issued by the application.
+
+        **The defect this exists for (2026-09-05, measured on khoj v1.42.10).** The adapter
+        sends one POST per probe with one fixed body, so an application that binds a
+        persona, a knowledge base or a tool set to a *conversation* left a scan two wrong
+        choices. Pointing every probe at one conversation lets each attack see the ones
+        before it, so a refusal or a leak early on changes what every later probe measures,
+        which is a property of the scan and not of the application. Asking the application
+        for a fresh conversation instead, on khoj's only isolation flag, dropped the persona
+        and scanned a default assistant that holds none of the app's own instructions.
+
+        Two shapes, and the cheaper one covers most applications:
+
+        * **client-minted** (``session_init`` unset). A fresh UUID per probe, written into
+          the field the application reads. No extra request, so a 28-probe scan still makes
+          28 requests. Every application that accepts a caller-supplied conversation or
+          session id needs only this.
+        * **server-issued** (``session_init`` set). One request to the application before
+          each probe, with a dotted path into its reply naming the value to carry. The shape
+          for applications where only the application can create a conversation.
+
+        A failure here is a plain :class:`AdapterError`, never an
+        :class:`AdapterTimeoutError`: a slow or broken session setup is inconclusive, and
+        must never be scored as the target failing to bound its per-request work.
+        """
+        if self.session_init is None:
+            return uuid.uuid4().hex
+        spec = self.session_init
+        unknown = set(spec) - {"url", "method", "headers", "body", "response_path"}
+        if unknown:
+            # Loud, because the alternative is a scan that silently used a different
+            # session shape from the one described and reported the numbers anyway.
+            raise AdapterError(
+                f"session_init has unknown key(s) {sorted(unknown)}; it takes url, method, "
+                "headers, body and response_path"
+            )
+        raw_url = str(spec.get("url") or "")
+        if not raw_url:
+            raise AdapterError("session_init needs a 'url' to ask for a session")
+        if not spec.get("response_path"):
+            # Named rather than auto-detected. The reply-shape auto-detection reads
+            # `message`/`content`/`text`, which a session response very plausibly also
+            # carries, so guessing here would take "created" for a conversation id and
+            # every probe would run against the application's default session with the
+            # numbers reported as if the session had been set.
+            raise AdapterError(
+                "session_init needs a 'response_path' naming the session value in the "
+                "reply; the reply-shape auto-detection reads a chat answer and would "
+                "take the wrong field here"
+            )
+        url = urllib.parse.urljoin(self.endpoint, raw_url)
+        body = spec.get("body")
+        req = urllib.request.Request(
+            url,
+            data=None if body is None else json.dumps(body).encode(),
+            headers={**self.headers, **(spec.get("headers") or {})},  # type: ignore[dict-item]
+            method=str(spec.get("method") or "POST").upper(),
+        )
+        deadline = time.monotonic() + self.timeout
+        try:
+            with urllib.request.urlopen(req, timeout=self.timeout) as resp:
+                payload = json.loads(self._read_within_deadline(resp, deadline).decode())
+        except (AdapterError, urllib.error.URLError, TimeoutError,
+                json.JSONDecodeError) as exc:
+            raise AdapterError(
+                f"session setup at {url} failed before the probe was sent ({exc}), so "
+                "nothing was scored. This is the session step, not the chat endpoint"
+            ) from exc
+        try:
+            value = _extract(payload, str(spec["response_path"]))
+        except AdapterError as exc:
+            raise AdapterError(
+                f"session setup at {url} answered, but its reply carries no session value "
+                f"({exc}); name it with response_path"
+            ) from exc
+        if not value:
+            raise AdapterError(
+                f"session setup at {url} returned an empty session value, so every probe "
+                "would share the application's default session"
+            )
+        return value
 
     def _read_within_deadline(self, resp: object, deadline: float) -> bytes:
         """Read the response body under a real wall-clock deadline.

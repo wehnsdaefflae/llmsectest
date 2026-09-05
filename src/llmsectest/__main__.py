@@ -28,6 +28,10 @@ Examples:
         --app-canary "INTERNAL-DOC-CANARY-7f2a" \\
         --app-rag-poison "RAG-POISON-MARKER-3b9d"
                           # deeper app scan: the dev-supplied inputs unlock LLM07/02/06/08
+    python -m llmsectest --target app:http://localhost:42110/api/chat \\
+        --app-session-field conversation_id \\
+        --app-session-init '{"url": "/api/sessions", "response_path": "conversation_id"}'
+                          # an app whose persona hangs off a conversation: one per probe
     python -m llmsectest --report-formats=sarif,html,json,markdown
     python -m llmsectest --list-probes                    # list the corpus
     python -m llmsectest --check                          # OWASP coverage map
@@ -54,7 +58,12 @@ shape are described with four more flags instead of a wrapper script:
 ``--app-request-field`` (the body field your endpoint reads the prompt from),
 ``--app-response-path`` (a dotted path to the reply in the response body, list indices
 included, e.g. ``choices.0.message.content``), ``--app-headers`` and ``--app-body``
-(JSON objects merged into the headers and the request body of every probe). Two more
+(JSON objects merged into the headers and the request body of every probe).
+Applications that hang their persona, knowledge base or tools off a *conversation* need
+a session value that changes per probe: ``--app-session-field`` (a dotted path in the
+request body where it goes) mints a fresh id here, and ``--app-session-init`` (a JSON
+object naming a ``url``, optional ``method``/``headers``/``body`` and a
+``response_path``) asks the application for one instead. Two others
 bound the scan itself: ``--app-timeout <seconds>`` is a wall-clock deadline per
 request, after which the probe is inconclusive and never a finding, and
 ``--app-stress <N>`` replays every reachable app case as one simultaneous wave of N
@@ -171,6 +180,11 @@ def check_coverage():
     print("--app-stress <N> replays every reachable app case as one simultaneous wave")
     print("of N requests and reports only the transition: a guardrail that held at one")
     print("request and failed under load. Opt-in, and it multiplies the traffic sent.")
+    print("--app-session-field <path> gives every probe its own session id in that body")
+    print("field; --app-session-init <json> asks the app for one first (url, method,")
+    print("headers, body, response_path). Without them every probe shares one session,")
+    print("so an app whose persona hangs off a conversation is scanned with a persona")
+    print("or with independent probes, never both.")
     print("--app-timeout <seconds> caps each app request (a slow endpoint is recorded")
     print("as inconclusive, not left to hang the scan), except on the two bounded LLM10")
     print("probes, where exhausting the budget is itself the finding, provided the app")
@@ -482,6 +496,8 @@ def run_suite(args: list, target: str | None, repo: str | None = None,
               app_response_path: str | None = None,
               app_headers: str | None = None,
               app_body: str | None = None,
+              app_session_field: str | None = None,
+              app_session_init: str | None = None,
               app_stress: str | None = None,
               redteam_generate: str | None = None,
               redteam_benign: bool = False,
@@ -517,6 +533,11 @@ def run_suite(args: list, target: str | None, repo: str | None = None,
     requests and reports only the *transition*: a guardrail that held at one request
     and failed under load. Opt-in, because it multiplies the traffic this scan sends
     to somebody else's application by that factor.
+    ``app_session_field``/``app_session_init`` (from ``--app-session-field``/
+    ``--app-session-init``) give every probe its own session with the application, so a
+    scan of an app whose persona, knowledge base or tools hang off a *conversation* keeps
+    both the persona and probe independence. Unset, all probes share whatever session the
+    application defaults to.
     ``redteam_benign`` (from ``--redteam-benign``) additionally measures the
     target's **false-refusal rate** over the JBB benign twins after the security
     suite, a usability metric reported separately, never a SARIF finding.
@@ -545,6 +566,8 @@ def run_suite(args: list, target: str | None, repo: str | None = None,
         envvars.APP_RESPONSE_PATH: app_response_path,
         envvars.APP_HEADERS: app_headers,
         envvars.APP_BODY: app_body,
+        envvars.APP_SESSION_FIELD: app_session_field,
+        envvars.APP_SESSION_INIT: app_session_init,
         envvars.REDTEAM_GENERATE: redteam_generate,
     }
     for name, value in suite_env.items():
@@ -768,6 +791,8 @@ def main():
     args, app_response_path = _extract_opt(args, "--app-response-path")
     args, app_headers = _extract_opt(args, "--app-headers")
     args, app_body = _extract_opt(args, "--app-body")
+    args, app_session_field = _extract_opt(args, "--app-session-field")
+    args, app_session_init = _extract_opt(args, "--app-session-init")
     args, redteam_generate = _extract_opt(args, "--redteam-generate")
 
     if app_timeout is not None:
@@ -779,7 +804,8 @@ def main():
                   f"(got {app_timeout!r})", file=sys.stderr)
             return 2
 
-    for flag, raw in (("--app-headers", app_headers), ("--app-body", app_body)):
+    for flag, raw in (("--app-headers", app_headers), ("--app-body", app_body),
+                      ("--app-session-init", app_session_init)):
         # Rejected here rather than inside the suite, so the message names the flag the
         # user typed. A malformed value must never fall back to the default shape: the scan
         # would then talk to the wrong contract, every probe would come back unanswered, and
@@ -795,6 +821,14 @@ def main():
             print(f"error: {flag} must be a JSON object, got {type(parsed).__name__}",
                   file=sys.stderr)
             return 2
+
+    if app_session_init and not app_session_field:
+        # Caught here as well as in the adapter, so the message names the flag the user
+        # typed rather than surfacing from inside the suite subprocess.
+        print("error: --app-session-init says where a session value comes from and "
+              "--app-session-field says where it goes into the request body; without the "
+              "second the value obtained would be thrown away", file=sys.stderr)
+        return 2
 
     if redteam_generate is not None:
         try:
@@ -865,6 +899,8 @@ def main():
                      app_request_field=app_request_field,
                      app_response_path=app_response_path,
                      app_headers=app_headers, app_body=app_body,
+                     app_session_field=app_session_field,
+                     app_session_init=app_session_init,
                      redteam_generate=redteam_generate,
                      redteam_benign=redteam_benign,
                      redteam_benign_set=redteam_benign_set)
