@@ -112,6 +112,21 @@ def test_the_sweep_that_finds_the_options_found_some():
     for opt in ("--app-action", "--sarif-output", "--check"):
         assert opt in accepted, f"{opt} is live and the sweep no longer sees it"
 
+def test_help_has_a_worked_example_for_custom_app_request_shapes():
+    """The four flags are most useful together for a non-OpenAI-compatible endpoint."""
+    examples = (cli.__doc__ or "").split("Application scans", maxsplit=1)[0]
+    assert (
+        "python -m llmsectest --target app:http://localhost:7860/api/v1/run/<flow-id>"
+        in examples
+    )
+    for option in (
+        "--app-request-field",
+        "--app-response-path",
+        "--app-headers",
+        "--app-body",
+    ):
+        assert option in examples
+
 
 @pytest.mark.parametrize("marker", sorted(cli._TESTABILITY))
 def test_the_docs_coverage_map_agrees_with_check_about_white_box(marker):

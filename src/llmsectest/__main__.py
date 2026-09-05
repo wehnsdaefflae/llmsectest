@@ -28,6 +28,12 @@ Examples:
         --app-canary "INTERNAL-DOC-CANARY-7f2a" \\
         --app-rag-poison "RAG-POISON-MARKER-3b9d"
                           # deeper app scan: the dev-supplied inputs unlock LLM07/02/06/08
+    python -m llmsectest --target app:http://localhost:7860/api/v1/run/<flow-id> \\
+        --app-request-field input_value \\
+        --app-response-path 'outputs.0.outputs.0.results.message.text' \\
+        --app-headers '{"Authorization": "Bearer <token>"}' \\
+        --app-body '{"output_type": "chat", "input_type": "chat"}'
+                          # non-OpenAI endpoint: customise the request and reply shapes
     python -m llmsectest --target app:http://localhost:42110/api/chat \\
         --app-session-field conversation_id \\
         --app-session-init '{"url": "/api/sessions", "response_path": "conversation_id"}'
