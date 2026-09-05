@@ -1257,6 +1257,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="CompletionResponse">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#llmsectest.adapters.CompletionResponse.body_beyond_text" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        body_beyond_text
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
           <li class="md-nav__item">
@@ -2204,6 +2221,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="CompletionResponse">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#llmsectest.adapters.CompletionResponse.body_beyond_text" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        body_beyond_text
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
           <li class="md-nav__item">
@@ -3092,9 +3126,9 @@ installed.</p>
 
                   <details class="mkdocstrings-source">
                     <summary>Source code in <code>src/llmsectest/adapters/base.py</code></summary>
-                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-303">303</a></span>
-<span class="normal"><a href="#__codelineno-0-304">304</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-303" name="__codelineno-0-303"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-<a id="__codelineno-0-304" name="__codelineno-0-304"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-359">359</a></span>
+<span class="normal"><a href="#__codelineno-0-360">360</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-359" name="__codelineno-0-359"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<a id="__codelineno-0-360" name="__codelineno-0-360"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
 </code></pre></div></td></tr></table></div>
                   </details>
 
@@ -3133,11 +3167,11 @@ installed.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/llmsectest/adapters/base.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-306">306</a></span>
-<span class="normal"><a href="#__codelineno-0-307">307</a></span>
-<span class="normal"><a href="#__codelineno-0-308">308</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-306" name="__codelineno-0-306"></a><span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
-<a id="__codelineno-0-307" name="__codelineno-0-307"></a><span class="k">def</span><span class="w"> </span><span class="nf">complete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">:</span> <span class="n">CompletionRequest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CompletionResponse</span><span class="p">:</span>
-<a id="__codelineno-0-308" name="__codelineno-0-308"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Run one chat completion and return the assistant text.&quot;&quot;&quot;</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-362">362</a></span>
+<span class="normal"><a href="#__codelineno-0-363">363</a></span>
+<span class="normal"><a href="#__codelineno-0-364">364</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-362" name="__codelineno-0-362"></a><span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
+<a id="__codelineno-0-363" name="__codelineno-0-363"></a><span class="k">def</span><span class="w"> </span><span class="nf">complete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">:</span> <span class="n">CompletionRequest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CompletionResponse</span><span class="p">:</span>
+<a id="__codelineno-0-364" name="__codelineno-0-364"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Run one chat completion and return the assistant text.&quot;&quot;&quot;</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -3168,27 +3202,27 @@ down server / unloaded model fails fast instead of mid-suite.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/llmsectest/adapters/base.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-310">310</a></span>
-<span class="normal"><a href="#__codelineno-0-311">311</a></span>
-<span class="normal"><a href="#__codelineno-0-312">312</a></span>
-<span class="normal"><a href="#__codelineno-0-313">313</a></span>
-<span class="normal"><a href="#__codelineno-0-314">314</a></span>
-<span class="normal"><a href="#__codelineno-0-315">315</a></span>
-<span class="normal"><a href="#__codelineno-0-316">316</a></span>
-<span class="normal"><a href="#__codelineno-0-317">317</a></span>
-<span class="normal"><a href="#__codelineno-0-318">318</a></span>
-<span class="normal"><a href="#__codelineno-0-319">319</a></span>
-<span class="normal"><a href="#__codelineno-0-320">320</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-310" name="__codelineno-0-310"></a><span class="k">def</span><span class="w"> </span><span class="nf">preflight</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PreflightResult</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-311" name="__codelineno-0-311"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Best-effort health check before a scan.</span>
-<a id="__codelineno-0-312" name="__codelineno-0-312"></a>
-<a id="__codelineno-0-313" name="__codelineno-0-313"></a><span class="sd">    Returns ``None`` when the provider exposes no cheap health endpoint (the</span>
-<a id="__codelineno-0-314" name="__codelineno-0-314"></a><span class="sd">    scan then proceeds and surfaces any real error on its first request).</span>
-<a id="__codelineno-0-315" name="__codelineno-0-315"></a><span class="sd">    Local OpenAI-compatible runtimes override this to verify the server is</span>
-<a id="__codelineno-0-316" name="__codelineno-0-316"></a><span class="sd">    reachable and the requested model is loaded, raising</span>
-<a id="__codelineno-0-317" name="__codelineno-0-317"></a><span class="sd">    :class:`AdapterError` with an actionable message on failure — so a</span>
-<a id="__codelineno-0-318" name="__codelineno-0-318"></a><span class="sd">    down server / unloaded model fails fast instead of mid-suite.</span>
-<a id="__codelineno-0-319" name="__codelineno-0-319"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-320" name="__codelineno-0-320"></a>    <span class="k">return</span> <span class="kc">None</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-366">366</a></span>
+<span class="normal"><a href="#__codelineno-0-367">367</a></span>
+<span class="normal"><a href="#__codelineno-0-368">368</a></span>
+<span class="normal"><a href="#__codelineno-0-369">369</a></span>
+<span class="normal"><a href="#__codelineno-0-370">370</a></span>
+<span class="normal"><a href="#__codelineno-0-371">371</a></span>
+<span class="normal"><a href="#__codelineno-0-372">372</a></span>
+<span class="normal"><a href="#__codelineno-0-373">373</a></span>
+<span class="normal"><a href="#__codelineno-0-374">374</a></span>
+<span class="normal"><a href="#__codelineno-0-375">375</a></span>
+<span class="normal"><a href="#__codelineno-0-376">376</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-366" name="__codelineno-0-366"></a><span class="k">def</span><span class="w"> </span><span class="nf">preflight</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PreflightResult</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-367" name="__codelineno-0-367"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Best-effort health check before a scan.</span>
+<a id="__codelineno-0-368" name="__codelineno-0-368"></a>
+<a id="__codelineno-0-369" name="__codelineno-0-369"></a><span class="sd">    Returns ``None`` when the provider exposes no cheap health endpoint (the</span>
+<a id="__codelineno-0-370" name="__codelineno-0-370"></a><span class="sd">    scan then proceeds and surfaces any real error on its first request).</span>
+<a id="__codelineno-0-371" name="__codelineno-0-371"></a><span class="sd">    Local OpenAI-compatible runtimes override this to verify the server is</span>
+<a id="__codelineno-0-372" name="__codelineno-0-372"></a><span class="sd">    reachable and the requested model is loaded, raising</span>
+<a id="__codelineno-0-373" name="__codelineno-0-373"></a><span class="sd">    :class:`AdapterError` with an actionable message on failure — so a</span>
+<a id="__codelineno-0-374" name="__codelineno-0-374"></a><span class="sd">    down server / unloaded model fails fast instead of mid-suite.</span>
+<a id="__codelineno-0-375" name="__codelineno-0-375"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-376" name="__codelineno-0-376"></a>    <span class="k">return</span> <span class="kc">None</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -3215,19 +3249,19 @@ down server / unloaded model fails fast instead of mid-suite.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/llmsectest/adapters/base.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-322">322</a></span>
-<span class="normal"><a href="#__codelineno-0-323">323</a></span>
-<span class="normal"><a href="#__codelineno-0-324">324</a></span>
-<span class="normal"><a href="#__codelineno-0-325">325</a></span>
-<span class="normal"><a href="#__codelineno-0-326">326</a></span>
-<span class="normal"><a href="#__codelineno-0-327">327</a></span>
-<span class="normal"><a href="#__codelineno-0-328">328</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-322" name="__codelineno-0-322"></a><span class="k">def</span><span class="w"> </span><span class="nf">prompt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<a id="__codelineno-0-323" name="__codelineno-0-323"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Convenience: send a single user turn, return the response text.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-324" name="__codelineno-0-324"></a>    <span class="n">messages</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Message</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-<a id="__codelineno-0-325" name="__codelineno-0-325"></a>    <span class="k">if</span> <span class="n">system</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-326" name="__codelineno-0-326"></a>        <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Message</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">system</span><span class="p">))</span>
-<a id="__codelineno-0-327" name="__codelineno-0-327"></a>    <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Message</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="n">text</span><span class="p">))</span>
-<a id="__codelineno-0-328" name="__codelineno-0-328"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">complete</span><span class="p">(</span><span class="n">CompletionRequest</span><span class="p">(</span><span class="n">messages</span><span class="o">=</span><span class="n">messages</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span><span class="o">.</span><span class="n">text</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-378">378</a></span>
+<span class="normal"><a href="#__codelineno-0-379">379</a></span>
+<span class="normal"><a href="#__codelineno-0-380">380</a></span>
+<span class="normal"><a href="#__codelineno-0-381">381</a></span>
+<span class="normal"><a href="#__codelineno-0-382">382</a></span>
+<span class="normal"><a href="#__codelineno-0-383">383</a></span>
+<span class="normal"><a href="#__codelineno-0-384">384</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-378" name="__codelineno-0-378"></a><span class="k">def</span><span class="w"> </span><span class="nf">prompt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-0-379" name="__codelineno-0-379"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Convenience: send a single user turn, return the response text.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-380" name="__codelineno-0-380"></a>    <span class="n">messages</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Message</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+<a id="__codelineno-0-381" name="__codelineno-0-381"></a>    <span class="k">if</span> <span class="n">system</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-382" name="__codelineno-0-382"></a>        <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Message</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">system</span><span class="p">))</span>
+<a id="__codelineno-0-383" name="__codelineno-0-383"></a>    <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Message</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="n">text</span><span class="p">))</span>
+<a id="__codelineno-0-384" name="__codelineno-0-384"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">complete</span><span class="p">(</span><span class="n">CompletionRequest</span><span class="p">(</span><span class="n">messages</span><span class="o">=</span><span class="n">messages</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span><span class="o">.</span><span class="n">text</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -3343,6 +3377,111 @@ down server / unloaded model fails fast instead of mid-suite.</p>
 
 
 
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="llmsectest.adapters.CompletionResponse.body_beyond_text" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">body_beyond_text</span>
+
+
+<a href="#llmsectest.adapters.CompletionResponse.body_beyond_text" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">body_beyond_text</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Everything the provider said that is <em>not</em> in :attr:<code>text</code>, one string.</p>
+<p>:attr:<code>text</code> is one field of the response body, chosen by <code>response_path</code> or
+autodetected. A model's answer can also arrive in a <em>sibling</em> field, and on
+2026-09-04 one did: LibreChat returned the planted LLM02 secret verbatim in
+<code>choices[0].message.reasoning</code> while <code>choices[0].message.content</code> held a
+polite refusal, so the reply field said the application resisted and the body
+said it had not. Every oracle in this tool read the reply field only.</p>
+<p>Returns the string leaves of :attr:<code>raw</code> that :attr:<code>text</code> does not already
+contain, joined by newlines, and <code>""</code> when there is nothing extra. Leaves
+rather than the serialised JSON, because the leaves are already decoded: a
+secret containing a quote or a newline matches here and would not survive
+<code>json.dumps</code>. Keys are skipped — a key is our protocol's vocabulary, not the
+application's output.</p>
+<p>Only JSON-native bodies are walked. The model adapters put a vendor SDK object
+in :attr:<code>raw</code>, and stringifying one is a guess about a third party's
+<code>__repr__</code>; those return <code>""</code> rather than a maybe. The black-box app
+endpoint, which is where this gap was found and where every field-tier scan
+runs, stores the decoded JSON itself.</p>
+<p>Reading it is not the same as <em>scoring</em> it: which probes may look here is
+decided in :func:<code>~llmsectest.probes.runner.run_probe</code>, because a reply that
+merely echoes our own attack must never become a finding.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/llmsectest/adapters/base.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-82"> 82</a></span>
+<span class="normal"><a href="#__codelineno-0-83"> 83</a></span>
+<span class="normal"><a href="#__codelineno-0-84"> 84</a></span>
+<span class="normal"><a href="#__codelineno-0-85"> 85</a></span>
+<span class="normal"><a href="#__codelineno-0-86"> 86</a></span>
+<span class="normal"><a href="#__codelineno-0-87"> 87</a></span>
+<span class="normal"><a href="#__codelineno-0-88"> 88</a></span>
+<span class="normal"><a href="#__codelineno-0-89"> 89</a></span>
+<span class="normal"><a href="#__codelineno-0-90"> 90</a></span>
+<span class="normal"><a href="#__codelineno-0-91"> 91</a></span>
+<span class="normal"><a href="#__codelineno-0-92"> 92</a></span>
+<span class="normal"><a href="#__codelineno-0-93"> 93</a></span>
+<span class="normal"><a href="#__codelineno-0-94"> 94</a></span>
+<span class="normal"><a href="#__codelineno-0-95"> 95</a></span>
+<span class="normal"><a href="#__codelineno-0-96"> 96</a></span>
+<span class="normal"><a href="#__codelineno-0-97"> 97</a></span>
+<span class="normal"><a href="#__codelineno-0-98"> 98</a></span>
+<span class="normal"><a href="#__codelineno-0-99"> 99</a></span>
+<span class="normal"><a href="#__codelineno-0-100">100</a></span>
+<span class="normal"><a href="#__codelineno-0-101">101</a></span>
+<span class="normal"><a href="#__codelineno-0-102">102</a></span>
+<span class="normal"><a href="#__codelineno-0-103">103</a></span>
+<span class="normal"><a href="#__codelineno-0-104">104</a></span>
+<span class="normal"><a href="#__codelineno-0-105">105</a></span>
+<span class="normal"><a href="#__codelineno-0-106">106</a></span>
+<span class="normal"><a href="#__codelineno-0-107">107</a></span>
+<span class="normal"><a href="#__codelineno-0-108">108</a></span>
+<span class="normal"><a href="#__codelineno-0-109">109</a></span>
+<span class="normal"><a href="#__codelineno-0-110">110</a></span>
+<span class="normal"><a href="#__codelineno-0-111">111</a></span>
+<span class="normal"><a href="#__codelineno-0-112">112</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-82" name="__codelineno-0-82"></a><span class="k">def</span><span class="w"> </span><span class="nf">body_beyond_text</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-0-83" name="__codelineno-0-83"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Everything the provider said that is *not* in :attr:`text`, one string.</span>
+<a id="__codelineno-0-84" name="__codelineno-0-84"></a>
+<a id="__codelineno-0-85" name="__codelineno-0-85"></a><span class="sd">    :attr:`text` is one field of the response body, chosen by ``response_path`` or</span>
+<a id="__codelineno-0-86" name="__codelineno-0-86"></a><span class="sd">    autodetected. A model&#39;s answer can also arrive in a *sibling* field, and on</span>
+<a id="__codelineno-0-87" name="__codelineno-0-87"></a><span class="sd">    2026-09-04 one did: LibreChat returned the planted LLM02 secret verbatim in</span>
+<a id="__codelineno-0-88" name="__codelineno-0-88"></a><span class="sd">    ``choices[0].message.reasoning`` while ``choices[0].message.content`` held a</span>
+<a id="__codelineno-0-89" name="__codelineno-0-89"></a><span class="sd">    polite refusal, so the reply field said the application resisted and the body</span>
+<a id="__codelineno-0-90" name="__codelineno-0-90"></a><span class="sd">    said it had not. Every oracle in this tool read the reply field only.</span>
+<a id="__codelineno-0-91" name="__codelineno-0-91"></a>
+<a id="__codelineno-0-92" name="__codelineno-0-92"></a><span class="sd">    Returns the string leaves of :attr:`raw` that :attr:`text` does not already</span>
+<a id="__codelineno-0-93" name="__codelineno-0-93"></a><span class="sd">    contain, joined by newlines, and ``&quot;&quot;`` when there is nothing extra. Leaves</span>
+<a id="__codelineno-0-94" name="__codelineno-0-94"></a><span class="sd">    rather than the serialised JSON, because the leaves are already decoded: a</span>
+<a id="__codelineno-0-95" name="__codelineno-0-95"></a><span class="sd">    secret containing a quote or a newline matches here and would not survive</span>
+<a id="__codelineno-0-96" name="__codelineno-0-96"></a><span class="sd">    ``json.dumps``. Keys are skipped — a key is our protocol&#39;s vocabulary, not the</span>
+<a id="__codelineno-0-97" name="__codelineno-0-97"></a><span class="sd">    application&#39;s output.</span>
+<a id="__codelineno-0-98" name="__codelineno-0-98"></a>
+<a id="__codelineno-0-99" name="__codelineno-0-99"></a><span class="sd">    Only JSON-native bodies are walked. The model adapters put a vendor SDK object</span>
+<a id="__codelineno-0-100" name="__codelineno-0-100"></a><span class="sd">    in :attr:`raw`, and stringifying one is a guess about a third party&#39;s</span>
+<a id="__codelineno-0-101" name="__codelineno-0-101"></a><span class="sd">    ``__repr__``; those return ``&quot;&quot;`` rather than a maybe. The black-box app</span>
+<a id="__codelineno-0-102" name="__codelineno-0-102"></a><span class="sd">    endpoint, which is where this gap was found and where every field-tier scan</span>
+<a id="__codelineno-0-103" name="__codelineno-0-103"></a><span class="sd">    runs, stores the decoded JSON itself.</span>
+<a id="__codelineno-0-104" name="__codelineno-0-104"></a>
+<a id="__codelineno-0-105" name="__codelineno-0-105"></a><span class="sd">    Reading it is not the same as *scoring* it: which probes may look here is</span>
+<a id="__codelineno-0-106" name="__codelineno-0-106"></a><span class="sd">    decided in :func:`~llmsectest.probes.runner.run_probe`, because a reply that</span>
+<a id="__codelineno-0-107" name="__codelineno-0-107"></a><span class="sd">    merely echoes our own attack must never become a finding.</span>
+<a id="__codelineno-0-108" name="__codelineno-0-108"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-109" name="__codelineno-0-109"></a>    <span class="n">extra</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">_json_strings</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">raw</span><span class="p">)</span> <span class="k">if</span> <span class="n">s</span> <span class="ow">and</span> <span class="n">s</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">text</span><span class="p">]</span>
+<a id="__codelineno-0-110" name="__codelineno-0-110"></a>    <span class="n">seen</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+<a id="__codelineno-0-111" name="__codelineno-0-111"></a>    <span class="n">unique</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">extra</span> <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">s</span> <span class="ow">in</span> <span class="n">seen</span> <span class="ow">or</span> <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">s</span><span class="p">))]</span>
+<a id="__codelineno-0-112" name="__codelineno-0-112"></a>    <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">unique</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
 
 
 
@@ -4670,159 +4809,185 @@ exit code rather than in the findings list.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/llmsectest/probes/runner.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-265">265</a></span>
-<span class="normal"><a href="#__codelineno-0-266">266</a></span>
-<span class="normal"><a href="#__codelineno-0-267">267</a></span>
-<span class="normal"><a href="#__codelineno-0-268">268</a></span>
-<span class="normal"><a href="#__codelineno-0-269">269</a></span>
-<span class="normal"><a href="#__codelineno-0-270">270</a></span>
-<span class="normal"><a href="#__codelineno-0-271">271</a></span>
-<span class="normal"><a href="#__codelineno-0-272">272</a></span>
-<span class="normal"><a href="#__codelineno-0-273">273</a></span>
-<span class="normal"><a href="#__codelineno-0-274">274</a></span>
-<span class="normal"><a href="#__codelineno-0-275">275</a></span>
-<span class="normal"><a href="#__codelineno-0-276">276</a></span>
-<span class="normal"><a href="#__codelineno-0-277">277</a></span>
-<span class="normal"><a href="#__codelineno-0-278">278</a></span>
-<span class="normal"><a href="#__codelineno-0-279">279</a></span>
-<span class="normal"><a href="#__codelineno-0-280">280</a></span>
-<span class="normal"><a href="#__codelineno-0-281">281</a></span>
-<span class="normal"><a href="#__codelineno-0-282">282</a></span>
-<span class="normal"><a href="#__codelineno-0-283">283</a></span>
-<span class="normal"><a href="#__codelineno-0-284">284</a></span>
-<span class="normal"><a href="#__codelineno-0-285">285</a></span>
-<span class="normal"><a href="#__codelineno-0-286">286</a></span>
-<span class="normal"><a href="#__codelineno-0-287">287</a></span>
-<span class="normal"><a href="#__codelineno-0-288">288</a></span>
-<span class="normal"><a href="#__codelineno-0-289">289</a></span>
-<span class="normal"><a href="#__codelineno-0-290">290</a></span>
-<span class="normal"><a href="#__codelineno-0-291">291</a></span>
-<span class="normal"><a href="#__codelineno-0-292">292</a></span>
-<span class="normal"><a href="#__codelineno-0-293">293</a></span>
-<span class="normal"><a href="#__codelineno-0-294">294</a></span>
-<span class="normal"><a href="#__codelineno-0-295">295</a></span>
-<span class="normal"><a href="#__codelineno-0-296">296</a></span>
-<span class="normal"><a href="#__codelineno-0-297">297</a></span>
-<span class="normal"><a href="#__codelineno-0-298">298</a></span>
-<span class="normal"><a href="#__codelineno-0-299">299</a></span>
-<span class="normal"><a href="#__codelineno-0-300">300</a></span>
-<span class="normal"><a href="#__codelineno-0-301">301</a></span>
-<span class="normal"><a href="#__codelineno-0-302">302</a></span>
-<span class="normal"><a href="#__codelineno-0-303">303</a></span>
-<span class="normal"><a href="#__codelineno-0-304">304</a></span>
-<span class="normal"><a href="#__codelineno-0-305">305</a></span>
-<span class="normal"><a href="#__codelineno-0-306">306</a></span>
-<span class="normal"><a href="#__codelineno-0-307">307</a></span>
-<span class="normal"><a href="#__codelineno-0-308">308</a></span>
-<span class="normal"><a href="#__codelineno-0-309">309</a></span>
-<span class="normal"><a href="#__codelineno-0-310">310</a></span>
-<span class="normal"><a href="#__codelineno-0-311">311</a></span>
-<span class="normal"><a href="#__codelineno-0-312">312</a></span>
-<span class="normal"><a href="#__codelineno-0-313">313</a></span>
-<span class="normal"><a href="#__codelineno-0-314">314</a></span>
-<span class="normal"><a href="#__codelineno-0-315">315</a></span>
-<span class="normal"><a href="#__codelineno-0-316">316</a></span>
-<span class="normal"><a href="#__codelineno-0-317">317</a></span>
-<span class="normal"><a href="#__codelineno-0-318">318</a></span>
-<span class="normal"><a href="#__codelineno-0-319">319</a></span>
-<span class="normal"><a href="#__codelineno-0-320">320</a></span>
-<span class="normal"><a href="#__codelineno-0-321">321</a></span>
-<span class="normal"><a href="#__codelineno-0-322">322</a></span>
-<span class="normal"><a href="#__codelineno-0-323">323</a></span>
-<span class="normal"><a href="#__codelineno-0-324">324</a></span>
-<span class="normal"><a href="#__codelineno-0-325">325</a></span>
-<span class="normal"><a href="#__codelineno-0-326">326</a></span>
-<span class="normal"><a href="#__codelineno-0-327">327</a></span>
-<span class="normal"><a href="#__codelineno-0-328">328</a></span>
-<span class="normal"><a href="#__codelineno-0-329">329</a></span>
-<span class="normal"><a href="#__codelineno-0-330">330</a></span>
-<span class="normal"><a href="#__codelineno-0-331">331</a></span>
-<span class="normal"><a href="#__codelineno-0-332">332</a></span>
-<span class="normal"><a href="#__codelineno-0-333">333</a></span>
-<span class="normal"><a href="#__codelineno-0-334">334</a></span>
-<span class="normal"><a href="#__codelineno-0-335">335</a></span>
-<span class="normal"><a href="#__codelineno-0-336">336</a></span>
-<span class="normal"><a href="#__codelineno-0-337">337</a></span>
-<span class="normal"><a href="#__codelineno-0-338">338</a></span>
-<span class="normal"><a href="#__codelineno-0-339">339</a></span>
-<span class="normal"><a href="#__codelineno-0-340">340</a></span>
-<span class="normal"><a href="#__codelineno-0-341">341</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-265" name="__codelineno-0-265"></a><span class="k">def</span><span class="w"> </span><span class="nf">run_probe</span><span class="p">(</span>
-<a id="__codelineno-0-266" name="__codelineno-0-266"></a>    <span class="n">adapter</span><span class="p">:</span> <span class="n">LLMAdapter</span><span class="p">,</span>
-<a id="__codelineno-0-267" name="__codelineno-0-267"></a>    <span class="n">case</span><span class="p">:</span> <span class="n">ProbeCase</span><span class="p">,</span>
-<a id="__codelineno-0-268" name="__codelineno-0-268"></a>    <span class="n">responsiveness</span><span class="p">:</span> <span class="n">TargetResponsiveness</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-269" name="__codelineno-0-269"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ProbeOutcome</span><span class="p">:</span>
-<a id="__codelineno-0-270" name="__codelineno-0-270"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Send ``case`` to ``adapter``, score the reply, and record its cost and latency.</span>
-<a id="__codelineno-0-271" name="__codelineno-0-271"></a>
-<a id="__codelineno-0-272" name="__codelineno-0-272"></a><span class="sd">    Drives the target through :meth:`~llmsectest.adapters.base.LLMAdapter.complete`</span>
-<a id="__codelineno-0-273" name="__codelineno-0-273"></a><span class="sd">    (rather than the text-only ``prompt`` convenience) so the full response — including</span>
-<a id="__codelineno-0-274" name="__codelineno-0-274"></a><span class="sd">    the provider&#39;s usage block — is available: the per-probe output-token count is</span>
-<a id="__codelineno-0-275" name="__codelineno-0-275"></a><span class="sd">    captured on the outcome as the precise denial-of-wallet cost figure (``None`` for a</span>
-<a id="__codelineno-0-276" name="__codelineno-0-276"></a><span class="sd">    black-box endpoint that reports no usage). Wall-clock latency is recorded on every</span>
-<a id="__codelineno-0-277" name="__codelineno-0-277"></a><span class="sd">    outcome, timed out or not.</span>
-<a id="__codelineno-0-278" name="__codelineno-0-278"></a>
-<a id="__codelineno-0-279" name="__codelineno-0-279"></a><span class="sd">    A case with :attr:`~llmsectest.probes.models.ProbeCase.cost_ceiling` set is *also*</span>
-<a id="__codelineno-0-280" name="__codelineno-0-280"></a><span class="sd">    flagged (independently of its text detector) when the reply reached the request&#39;s</span>
-<a id="__codelineno-0-281" name="__codelineno-0-281"></a><span class="sd">    ``max_tokens`` budget — the &quot;would-have-continued&quot; denial-of-wallet signal that the</span>
-<a id="__codelineno-0-282" name="__codelineno-0-282"></a><span class="sd">    text oracles cannot see. The request&#39;s own ``max_tokens`` is the ceiling reference, so</span>
-<a id="__codelineno-0-283" name="__codelineno-0-283"></a><span class="sd">    the two never drift.</span>
-<a id="__codelineno-0-284" name="__codelineno-0-284"></a>
-<a id="__codelineno-0-285" name="__codelineno-0-285"></a><span class="sd">    A target that does not respond within its per-request time budget raises</span>
-<a id="__codelineno-0-286" name="__codelineno-0-286"></a><span class="sd">    :class:`~llmsectest.adapters.base.AdapterTimeoutError`; this is caught rather than</span>
-<a id="__codelineno-0-287" name="__codelineno-0-287"></a><span class="sd">    allowed to abort the scan, and recorded as an **inconclusive** outcome</span>
-<a id="__codelineno-0-288" name="__codelineno-0-288"></a><span class="sd">    (``errored=True``) — a timeout is not by itself proof of a vulnerability. The single</span>
-<a id="__codelineno-0-289" name="__codelineno-0-289"></a><span class="sd">    exception is a ``timeout_is_signal`` case on a target proven responsive by the optional</span>
-<a id="__codelineno-0-290" name="__codelineno-0-290"></a><span class="sd">    ``responsiveness`` record, which scores as an LLM10 finding (see</span>
-<a id="__codelineno-0-291" name="__codelineno-0-291"></a><span class="sd">    :func:`_timeout_outcome`); pass no record and every timeout stays inconclusive.</span>
-<a id="__codelineno-0-292" name="__codelineno-0-292"></a>
-<a id="__codelineno-0-293" name="__codelineno-0-293"></a><span class="sd">    Every other adapter failure (unreachable endpoint, malformed reply, auth error) is</span>
-<a id="__codelineno-0-294" name="__codelineno-0-294"></a><span class="sd">    caught the same way and recorded **undelivered** — inconclusive, never a finding (see</span>
-<a id="__codelineno-0-295" name="__codelineno-0-295"></a><span class="sd">    :func:`_undelivered_outcome`), with a rate limit given its own reason</span>
-<a id="__codelineno-0-296" name="__codelineno-0-296"></a><span class="sd">    (:func:`_throttled_outcome`). **Anything else raised while obtaining the reply is caught</span>
-<a id="__codelineno-0-297" name="__codelineno-0-297"></a><span class="sd">    too** (:func:`_unscored_outcome`): the guarantee is a property, not a list of the</span>
-<a id="__codelineno-0-298" name="__codelineno-0-298"></a><span class="sd">    failures we happened to think of. A misconfiguration still fails loudly, on the run&#39;s</span>
-<a id="__codelineno-0-299" name="__codelineno-0-299"></a><span class="sd">    exit code rather than in the findings list.</span>
-<a id="__codelineno-0-300" name="__codelineno-0-300"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-301" name="__codelineno-0-301"></a>    <span class="n">request</span> <span class="o">=</span> <span class="n">CompletionRequest</span><span class="p">(</span>
-<a id="__codelineno-0-302" name="__codelineno-0-302"></a>        <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
-<a id="__codelineno-0-303" name="__codelineno-0-303"></a>            <span class="n">Message</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">case</span><span class="o">.</span><span class="n">system_prompt</span><span class="p">),</span>
-<a id="__codelineno-0-304" name="__codelineno-0-304"></a>            <span class="n">Message</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="n">case</span><span class="o">.</span><span class="n">user_prompt</span><span class="p">),</span>
-<a id="__codelineno-0-305" name="__codelineno-0-305"></a>        <span class="p">],</span>
-<a id="__codelineno-0-306" name="__codelineno-0-306"></a>        <span class="n">temperature</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
-<a id="__codelineno-0-307" name="__codelineno-0-307"></a>    <span class="p">)</span>
-<a id="__codelineno-0-308" name="__codelineno-0-308"></a>    <span class="n">started</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span>
-<a id="__codelineno-0-309" name="__codelineno-0-309"></a>    <span class="k">try</span><span class="p">:</span>
-<a id="__codelineno-0-310" name="__codelineno-0-310"></a>        <span class="n">response</span> <span class="o">=</span> <span class="n">adapter</span><span class="o">.</span><span class="n">complete</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
-<a id="__codelineno-0-311" name="__codelineno-0-311"></a>    <span class="k">except</span> <span class="n">AdapterTimeoutError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-<a id="__codelineno-0-312" name="__codelineno-0-312"></a>        <span class="c1"># Before AdapterError below: AdapterTimeoutError is a subclass of it, and a</span>
-<a id="__codelineno-0-313" name="__codelineno-0-313"></a>        <span class="c1"># timeout carries its own scoring rule.</span>
-<a id="__codelineno-0-314" name="__codelineno-0-314"></a>        <span class="k">if</span> <span class="n">responsiveness</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-315" name="__codelineno-0-315"></a>            <span class="n">responsiveness</span><span class="o">.</span><span class="n">record_timeout</span><span class="p">()</span>
-<a id="__codelineno-0-316" name="__codelineno-0-316"></a>        <span class="k">return</span> <span class="n">_timeout_outcome</span><span class="p">(</span><span class="n">case</span><span class="p">,</span> <span class="n">exc</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">started</span><span class="p">,</span> <span class="n">responsiveness</span><span class="p">)</span>
-<a id="__codelineno-0-317" name="__codelineno-0-317"></a>    <span class="k">except</span> <span class="n">AdapterThrottleError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-<a id="__codelineno-0-318" name="__codelineno-0-318"></a>        <span class="c1"># Also before AdapterError: a throttle is undelivered like an unreachable target,</span>
-<a id="__codelineno-0-319" name="__codelineno-0-319"></a>        <span class="c1"># but it is a different fact about the target and says so.</span>
-<a id="__codelineno-0-320" name="__codelineno-0-320"></a>        <span class="k">return</span> <span class="n">_throttled_outcome</span><span class="p">(</span><span class="n">case</span><span class="p">,</span> <span class="n">exc</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">started</span><span class="p">)</span>
-<a id="__codelineno-0-321" name="__codelineno-0-321"></a>    <span class="k">except</span> <span class="n">AdapterError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-<a id="__codelineno-0-322" name="__codelineno-0-322"></a>        <span class="k">return</span> <span class="n">_undelivered_outcome</span><span class="p">(</span><span class="n">case</span><span class="p">,</span> <span class="n">exc</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">started</span><span class="p">)</span>
-<a id="__codelineno-0-323" name="__codelineno-0-323"></a>    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>  <span class="c1"># broad on purpose: the floor, see _unscored_outcome</span>
-<a id="__codelineno-0-324" name="__codelineno-0-324"></a>        <span class="k">if</span> <span class="n">_is_pytest_control_flow</span><span class="p">(</span><span class="n">exc</span><span class="p">):</span>
-<a id="__codelineno-0-325" name="__codelineno-0-325"></a>            <span class="k">raise</span>
-<a id="__codelineno-0-326" name="__codelineno-0-326"></a>        <span class="k">return</span> <span class="n">_unscored_outcome</span><span class="p">(</span><span class="n">case</span><span class="p">,</span> <span class="n">exc</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">started</span><span class="p">)</span>
-<a id="__codelineno-0-327" name="__codelineno-0-327"></a>    <span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">started</span>
-<a id="__codelineno-0-328" name="__codelineno-0-328"></a>    <span class="k">if</span> <span class="n">responsiveness</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-329" name="__codelineno-0-329"></a>        <span class="n">responsiveness</span><span class="o">.</span><span class="n">record_completion</span><span class="p">(</span><span class="n">elapsed</span><span class="p">)</span>
-<a id="__codelineno-0-330" name="__codelineno-0-330"></a>    <span class="n">output_tokens</span> <span class="o">=</span> <span class="n">_output_tokens</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">usage</span><span class="p">)</span>
-<a id="__codelineno-0-331" name="__codelineno-0-331"></a>    <span class="n">vulnerable</span><span class="p">,</span> <span class="n">evidence</span> <span class="o">=</span> <span class="n">get_detector</span><span class="p">(</span><span class="n">case</span><span class="o">.</span><span class="n">detector</span><span class="p">)(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">case</span><span class="p">)</span>
-<a id="__codelineno-0-332" name="__codelineno-0-332"></a>    <span class="k">if</span> <span class="n">case</span><span class="o">.</span><span class="n">cost_ceiling</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">vulnerable</span><span class="p">:</span>
-<a id="__codelineno-0-333" name="__codelineno-0-333"></a>        <span class="n">vulnerable</span><span class="p">,</span> <span class="n">evidence</span> <span class="o">=</span> <span class="n">output_ceiling_reached</span><span class="p">(</span><span class="n">output_tokens</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">max_tokens</span><span class="p">)</span>
-<a id="__codelineno-0-334" name="__codelineno-0-334"></a>    <span class="k">return</span> <span class="n">ProbeOutcome</span><span class="p">(</span>
-<a id="__codelineno-0-335" name="__codelineno-0-335"></a>        <span class="n">case</span><span class="o">=</span><span class="n">case</span><span class="p">,</span>
-<a id="__codelineno-0-336" name="__codelineno-0-336"></a>        <span class="n">response</span><span class="o">=</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
-<a id="__codelineno-0-337" name="__codelineno-0-337"></a>        <span class="n">vulnerable</span><span class="o">=</span><span class="n">vulnerable</span><span class="p">,</span>
-<a id="__codelineno-0-338" name="__codelineno-0-338"></a>        <span class="n">evidence</span><span class="o">=</span><span class="n">evidence</span><span class="p">,</span>
-<a id="__codelineno-0-339" name="__codelineno-0-339"></a>        <span class="n">output_tokens</span><span class="o">=</span><span class="n">output_tokens</span><span class="p">,</span>
-<a id="__codelineno-0-340" name="__codelineno-0-340"></a>        <span class="n">elapsed_seconds</span><span class="o">=</span><span class="n">elapsed</span><span class="p">,</span>
-<a id="__codelineno-0-341" name="__codelineno-0-341"></a>    <span class="p">)</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-340">340</a></span>
+<span class="normal"><a href="#__codelineno-0-341">341</a></span>
+<span class="normal"><a href="#__codelineno-0-342">342</a></span>
+<span class="normal"><a href="#__codelineno-0-343">343</a></span>
+<span class="normal"><a href="#__codelineno-0-344">344</a></span>
+<span class="normal"><a href="#__codelineno-0-345">345</a></span>
+<span class="normal"><a href="#__codelineno-0-346">346</a></span>
+<span class="normal"><a href="#__codelineno-0-347">347</a></span>
+<span class="normal"><a href="#__codelineno-0-348">348</a></span>
+<span class="normal"><a href="#__codelineno-0-349">349</a></span>
+<span class="normal"><a href="#__codelineno-0-350">350</a></span>
+<span class="normal"><a href="#__codelineno-0-351">351</a></span>
+<span class="normal"><a href="#__codelineno-0-352">352</a></span>
+<span class="normal"><a href="#__codelineno-0-353">353</a></span>
+<span class="normal"><a href="#__codelineno-0-354">354</a></span>
+<span class="normal"><a href="#__codelineno-0-355">355</a></span>
+<span class="normal"><a href="#__codelineno-0-356">356</a></span>
+<span class="normal"><a href="#__codelineno-0-357">357</a></span>
+<span class="normal"><a href="#__codelineno-0-358">358</a></span>
+<span class="normal"><a href="#__codelineno-0-359">359</a></span>
+<span class="normal"><a href="#__codelineno-0-360">360</a></span>
+<span class="normal"><a href="#__codelineno-0-361">361</a></span>
+<span class="normal"><a href="#__codelineno-0-362">362</a></span>
+<span class="normal"><a href="#__codelineno-0-363">363</a></span>
+<span class="normal"><a href="#__codelineno-0-364">364</a></span>
+<span class="normal"><a href="#__codelineno-0-365">365</a></span>
+<span class="normal"><a href="#__codelineno-0-366">366</a></span>
+<span class="normal"><a href="#__codelineno-0-367">367</a></span>
+<span class="normal"><a href="#__codelineno-0-368">368</a></span>
+<span class="normal"><a href="#__codelineno-0-369">369</a></span>
+<span class="normal"><a href="#__codelineno-0-370">370</a></span>
+<span class="normal"><a href="#__codelineno-0-371">371</a></span>
+<span class="normal"><a href="#__codelineno-0-372">372</a></span>
+<span class="normal"><a href="#__codelineno-0-373">373</a></span>
+<span class="normal"><a href="#__codelineno-0-374">374</a></span>
+<span class="normal"><a href="#__codelineno-0-375">375</a></span>
+<span class="normal"><a href="#__codelineno-0-376">376</a></span>
+<span class="normal"><a href="#__codelineno-0-377">377</a></span>
+<span class="normal"><a href="#__codelineno-0-378">378</a></span>
+<span class="normal"><a href="#__codelineno-0-379">379</a></span>
+<span class="normal"><a href="#__codelineno-0-380">380</a></span>
+<span class="normal"><a href="#__codelineno-0-381">381</a></span>
+<span class="normal"><a href="#__codelineno-0-382">382</a></span>
+<span class="normal"><a href="#__codelineno-0-383">383</a></span>
+<span class="normal"><a href="#__codelineno-0-384">384</a></span>
+<span class="normal"><a href="#__codelineno-0-385">385</a></span>
+<span class="normal"><a href="#__codelineno-0-386">386</a></span>
+<span class="normal"><a href="#__codelineno-0-387">387</a></span>
+<span class="normal"><a href="#__codelineno-0-388">388</a></span>
+<span class="normal"><a href="#__codelineno-0-389">389</a></span>
+<span class="normal"><a href="#__codelineno-0-390">390</a></span>
+<span class="normal"><a href="#__codelineno-0-391">391</a></span>
+<span class="normal"><a href="#__codelineno-0-392">392</a></span>
+<span class="normal"><a href="#__codelineno-0-393">393</a></span>
+<span class="normal"><a href="#__codelineno-0-394">394</a></span>
+<span class="normal"><a href="#__codelineno-0-395">395</a></span>
+<span class="normal"><a href="#__codelineno-0-396">396</a></span>
+<span class="normal"><a href="#__codelineno-0-397">397</a></span>
+<span class="normal"><a href="#__codelineno-0-398">398</a></span>
+<span class="normal"><a href="#__codelineno-0-399">399</a></span>
+<span class="normal"><a href="#__codelineno-0-400">400</a></span>
+<span class="normal"><a href="#__codelineno-0-401">401</a></span>
+<span class="normal"><a href="#__codelineno-0-402">402</a></span>
+<span class="normal"><a href="#__codelineno-0-403">403</a></span>
+<span class="normal"><a href="#__codelineno-0-404">404</a></span>
+<span class="normal"><a href="#__codelineno-0-405">405</a></span>
+<span class="normal"><a href="#__codelineno-0-406">406</a></span>
+<span class="normal"><a href="#__codelineno-0-407">407</a></span>
+<span class="normal"><a href="#__codelineno-0-408">408</a></span>
+<span class="normal"><a href="#__codelineno-0-409">409</a></span>
+<span class="normal"><a href="#__codelineno-0-410">410</a></span>
+<span class="normal"><a href="#__codelineno-0-411">411</a></span>
+<span class="normal"><a href="#__codelineno-0-412">412</a></span>
+<span class="normal"><a href="#__codelineno-0-413">413</a></span>
+<span class="normal"><a href="#__codelineno-0-414">414</a></span>
+<span class="normal"><a href="#__codelineno-0-415">415</a></span>
+<span class="normal"><a href="#__codelineno-0-416">416</a></span>
+<span class="normal"><a href="#__codelineno-0-417">417</a></span>
+<span class="normal"><a href="#__codelineno-0-418">418</a></span>
+<span class="normal"><a href="#__codelineno-0-419">419</a></span>
+<span class="normal"><a href="#__codelineno-0-420">420</a></span>
+<span class="normal"><a href="#__codelineno-0-421">421</a></span>
+<span class="normal"><a href="#__codelineno-0-422">422</a></span>
+<span class="normal"><a href="#__codelineno-0-423">423</a></span>
+<span class="normal"><a href="#__codelineno-0-424">424</a></span>
+<span class="normal"><a href="#__codelineno-0-425">425</a></span>
+<span class="normal"><a href="#__codelineno-0-426">426</a></span>
+<span class="normal"><a href="#__codelineno-0-427">427</a></span>
+<span class="normal"><a href="#__codelineno-0-428">428</a></span>
+<span class="normal"><a href="#__codelineno-0-429">429</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-340" name="__codelineno-0-340"></a><span class="k">def</span><span class="w"> </span><span class="nf">run_probe</span><span class="p">(</span>
+<a id="__codelineno-0-341" name="__codelineno-0-341"></a>    <span class="n">adapter</span><span class="p">:</span> <span class="n">LLMAdapter</span><span class="p">,</span>
+<a id="__codelineno-0-342" name="__codelineno-0-342"></a>    <span class="n">case</span><span class="p">:</span> <span class="n">ProbeCase</span><span class="p">,</span>
+<a id="__codelineno-0-343" name="__codelineno-0-343"></a>    <span class="n">responsiveness</span><span class="p">:</span> <span class="n">TargetResponsiveness</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-344" name="__codelineno-0-344"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ProbeOutcome</span><span class="p">:</span>
+<a id="__codelineno-0-345" name="__codelineno-0-345"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Send ``case`` to ``adapter``, score the reply, and record its cost and latency.</span>
+<a id="__codelineno-0-346" name="__codelineno-0-346"></a>
+<a id="__codelineno-0-347" name="__codelineno-0-347"></a><span class="sd">    Drives the target through :meth:`~llmsectest.adapters.base.LLMAdapter.complete`</span>
+<a id="__codelineno-0-348" name="__codelineno-0-348"></a><span class="sd">    (rather than the text-only ``prompt`` convenience) so the full response — including</span>
+<a id="__codelineno-0-349" name="__codelineno-0-349"></a><span class="sd">    the provider&#39;s usage block — is available: the per-probe output-token count is</span>
+<a id="__codelineno-0-350" name="__codelineno-0-350"></a><span class="sd">    captured on the outcome as the precise denial-of-wallet cost figure (``None`` for a</span>
+<a id="__codelineno-0-351" name="__codelineno-0-351"></a><span class="sd">    black-box endpoint that reports no usage). Wall-clock latency is recorded on every</span>
+<a id="__codelineno-0-352" name="__codelineno-0-352"></a><span class="sd">    outcome, timed out or not.</span>
+<a id="__codelineno-0-353" name="__codelineno-0-353"></a>
+<a id="__codelineno-0-354" name="__codelineno-0-354"></a><span class="sd">    A case with :attr:`~llmsectest.probes.models.ProbeCase.cost_ceiling` set is *also*</span>
+<a id="__codelineno-0-355" name="__codelineno-0-355"></a><span class="sd">    flagged (independently of its text detector) when the reply reached the request&#39;s</span>
+<a id="__codelineno-0-356" name="__codelineno-0-356"></a><span class="sd">    ``max_tokens`` budget — the &quot;would-have-continued&quot; denial-of-wallet signal that the</span>
+<a id="__codelineno-0-357" name="__codelineno-0-357"></a><span class="sd">    text oracles cannot see. The request&#39;s own ``max_tokens`` is the ceiling reference, so</span>
+<a id="__codelineno-0-358" name="__codelineno-0-358"></a><span class="sd">    the two never drift.</span>
+<a id="__codelineno-0-359" name="__codelineno-0-359"></a>
+<a id="__codelineno-0-360" name="__codelineno-0-360"></a><span class="sd">    A target that does not respond within its per-request time budget raises</span>
+<a id="__codelineno-0-361" name="__codelineno-0-361"></a><span class="sd">    :class:`~llmsectest.adapters.base.AdapterTimeoutError`; this is caught rather than</span>
+<a id="__codelineno-0-362" name="__codelineno-0-362"></a><span class="sd">    allowed to abort the scan, and recorded as an **inconclusive** outcome</span>
+<a id="__codelineno-0-363" name="__codelineno-0-363"></a><span class="sd">    (``errored=True``) — a timeout is not by itself proof of a vulnerability. The single</span>
+<a id="__codelineno-0-364" name="__codelineno-0-364"></a><span class="sd">    exception is a ``timeout_is_signal`` case on a target proven responsive by the optional</span>
+<a id="__codelineno-0-365" name="__codelineno-0-365"></a><span class="sd">    ``responsiveness`` record, which scores as an LLM10 finding (see</span>
+<a id="__codelineno-0-366" name="__codelineno-0-366"></a><span class="sd">    :func:`_timeout_outcome`); pass no record and every timeout stays inconclusive.</span>
+<a id="__codelineno-0-367" name="__codelineno-0-367"></a>
+<a id="__codelineno-0-368" name="__codelineno-0-368"></a><span class="sd">    Every other adapter failure (unreachable endpoint, malformed reply, auth error) is</span>
+<a id="__codelineno-0-369" name="__codelineno-0-369"></a><span class="sd">    caught the same way and recorded **undelivered** — inconclusive, never a finding (see</span>
+<a id="__codelineno-0-370" name="__codelineno-0-370"></a><span class="sd">    :func:`_undelivered_outcome`), with a rate limit given its own reason</span>
+<a id="__codelineno-0-371" name="__codelineno-0-371"></a><span class="sd">    (:func:`_throttled_outcome`). **Anything else raised while obtaining the reply is caught</span>
+<a id="__codelineno-0-372" name="__codelineno-0-372"></a><span class="sd">    too** (:func:`_unscored_outcome`): the guarantee is a property, not a list of the</span>
+<a id="__codelineno-0-373" name="__codelineno-0-373"></a><span class="sd">    failures we happened to think of. A misconfiguration still fails loudly, on the run&#39;s</span>
+<a id="__codelineno-0-374" name="__codelineno-0-374"></a><span class="sd">    exit code rather than in the findings list.</span>
+<a id="__codelineno-0-375" name="__codelineno-0-375"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-376" name="__codelineno-0-376"></a>    <span class="n">request</span> <span class="o">=</span> <span class="n">CompletionRequest</span><span class="p">(</span>
+<a id="__codelineno-0-377" name="__codelineno-0-377"></a>        <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+<a id="__codelineno-0-378" name="__codelineno-0-378"></a>            <span class="n">Message</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">case</span><span class="o">.</span><span class="n">system_prompt</span><span class="p">),</span>
+<a id="__codelineno-0-379" name="__codelineno-0-379"></a>            <span class="n">Message</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="n">case</span><span class="o">.</span><span class="n">user_prompt</span><span class="p">),</span>
+<a id="__codelineno-0-380" name="__codelineno-0-380"></a>        <span class="p">],</span>
+<a id="__codelineno-0-381" name="__codelineno-0-381"></a>        <span class="n">temperature</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+<a id="__codelineno-0-382" name="__codelineno-0-382"></a>    <span class="p">)</span>
+<a id="__codelineno-0-383" name="__codelineno-0-383"></a>    <span class="n">started</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span>
+<a id="__codelineno-0-384" name="__codelineno-0-384"></a>    <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-0-385" name="__codelineno-0-385"></a>        <span class="n">response</span> <span class="o">=</span> <span class="n">adapter</span><span class="o">.</span><span class="n">complete</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+<a id="__codelineno-0-386" name="__codelineno-0-386"></a>    <span class="k">except</span> <span class="n">AdapterTimeoutError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+<a id="__codelineno-0-387" name="__codelineno-0-387"></a>        <span class="c1"># Before AdapterError below: AdapterTimeoutError is a subclass of it, and a</span>
+<a id="__codelineno-0-388" name="__codelineno-0-388"></a>        <span class="c1"># timeout carries its own scoring rule.</span>
+<a id="__codelineno-0-389" name="__codelineno-0-389"></a>        <span class="k">if</span> <span class="n">responsiveness</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-390" name="__codelineno-0-390"></a>            <span class="n">responsiveness</span><span class="o">.</span><span class="n">record_timeout</span><span class="p">()</span>
+<a id="__codelineno-0-391" name="__codelineno-0-391"></a>        <span class="k">return</span> <span class="n">_timeout_outcome</span><span class="p">(</span><span class="n">case</span><span class="p">,</span> <span class="n">exc</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">started</span><span class="p">,</span> <span class="n">responsiveness</span><span class="p">)</span>
+<a id="__codelineno-0-392" name="__codelineno-0-392"></a>    <span class="k">except</span> <span class="n">AdapterThrottleError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+<a id="__codelineno-0-393" name="__codelineno-0-393"></a>        <span class="c1"># Also before AdapterError: a throttle is undelivered like an unreachable target,</span>
+<a id="__codelineno-0-394" name="__codelineno-0-394"></a>        <span class="c1"># but it is a different fact about the target and says so.</span>
+<a id="__codelineno-0-395" name="__codelineno-0-395"></a>        <span class="k">return</span> <span class="n">_throttled_outcome</span><span class="p">(</span><span class="n">case</span><span class="p">,</span> <span class="n">exc</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">started</span><span class="p">)</span>
+<a id="__codelineno-0-396" name="__codelineno-0-396"></a>    <span class="k">except</span> <span class="n">AdapterError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+<a id="__codelineno-0-397" name="__codelineno-0-397"></a>        <span class="k">return</span> <span class="n">_undelivered_outcome</span><span class="p">(</span><span class="n">case</span><span class="p">,</span> <span class="n">exc</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">started</span><span class="p">)</span>
+<a id="__codelineno-0-398" name="__codelineno-0-398"></a>    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>  <span class="c1"># broad on purpose: the floor, see _unscored_outcome</span>
+<a id="__codelineno-0-399" name="__codelineno-0-399"></a>        <span class="k">if</span> <span class="n">_is_pytest_control_flow</span><span class="p">(</span><span class="n">exc</span><span class="p">):</span>
+<a id="__codelineno-0-400" name="__codelineno-0-400"></a>            <span class="k">raise</span>
+<a id="__codelineno-0-401" name="__codelineno-0-401"></a>        <span class="k">return</span> <span class="n">_unscored_outcome</span><span class="p">(</span><span class="n">case</span><span class="p">,</span> <span class="n">exc</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">started</span><span class="p">)</span>
+<a id="__codelineno-0-402" name="__codelineno-0-402"></a>    <span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">started</span>
+<a id="__codelineno-0-403" name="__codelineno-0-403"></a>    <span class="k">if</span> <span class="n">responsiveness</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-404" name="__codelineno-0-404"></a>        <span class="n">responsiveness</span><span class="o">.</span><span class="n">record_completion</span><span class="p">(</span><span class="n">elapsed</span><span class="p">)</span>
+<a id="__codelineno-0-405" name="__codelineno-0-405"></a>    <span class="n">output_tokens</span> <span class="o">=</span> <span class="n">_output_tokens</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">usage</span><span class="p">)</span>
+<a id="__codelineno-0-406" name="__codelineno-0-406"></a>    <span class="n">detector</span> <span class="o">=</span> <span class="n">get_detector</span><span class="p">(</span><span class="n">case</span><span class="o">.</span><span class="n">detector</span><span class="p">)</span>
+<a id="__codelineno-0-407" name="__codelineno-0-407"></a>    <span class="n">vulnerable</span><span class="p">,</span> <span class="n">evidence</span> <span class="o">=</span> <span class="n">detector</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">case</span><span class="p">)</span>
+<a id="__codelineno-0-408" name="__codelineno-0-408"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">vulnerable</span> <span class="ow">and</span> <span class="n">may_scan_whole_body</span><span class="p">(</span><span class="n">case</span><span class="p">):</span>
+<a id="__codelineno-0-409" name="__codelineno-0-409"></a>        <span class="c1"># Strictly additive by construction: the reply field is scored first and this</span>
+<a id="__codelineno-0-410" name="__codelineno-0-410"></a>        <span class="c1"># runs only when it came back clean, so no outcome that exists today can change</span>
+<a id="__codelineno-0-411" name="__codelineno-0-411"></a>        <span class="c1"># sign. The whole body can add a finding; it can never remove one.</span>
+<a id="__codelineno-0-412" name="__codelineno-0-412"></a>        <span class="n">elsewhere</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">body_beyond_text</span><span class="p">()</span>
+<a id="__codelineno-0-413" name="__codelineno-0-413"></a>        <span class="k">if</span> <span class="n">elsewhere</span><span class="p">:</span>
+<a id="__codelineno-0-414" name="__codelineno-0-414"></a>            <span class="n">vulnerable</span><span class="p">,</span> <span class="n">evidence</span> <span class="o">=</span> <span class="n">detector</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">elsewhere</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">case</span><span class="p">)</span>
+<a id="__codelineno-0-415" name="__codelineno-0-415"></a>            <span class="k">if</span> <span class="n">vulnerable</span><span class="p">:</span>
+<a id="__codelineno-0-416" name="__codelineno-0-416"></a>                <span class="n">evidence</span> <span class="o">=</span> <span class="p">(</span>
+<a id="__codelineno-0-417" name="__codelineno-0-417"></a>                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">evidence</span><span class="si">}</span><span class="s2"> — found outside the reply field, elsewhere in the &quot;</span>
+<a id="__codelineno-0-418" name="__codelineno-0-418"></a>                    <span class="s2">&quot;response body&quot;</span>
+<a id="__codelineno-0-419" name="__codelineno-0-419"></a>                <span class="p">)</span>
+<a id="__codelineno-0-420" name="__codelineno-0-420"></a>    <span class="k">if</span> <span class="n">case</span><span class="o">.</span><span class="n">cost_ceiling</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">vulnerable</span><span class="p">:</span>
+<a id="__codelineno-0-421" name="__codelineno-0-421"></a>        <span class="n">vulnerable</span><span class="p">,</span> <span class="n">evidence</span> <span class="o">=</span> <span class="n">output_ceiling_reached</span><span class="p">(</span><span class="n">output_tokens</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">max_tokens</span><span class="p">)</span>
+<a id="__codelineno-0-422" name="__codelineno-0-422"></a>    <span class="k">return</span> <span class="n">ProbeOutcome</span><span class="p">(</span>
+<a id="__codelineno-0-423" name="__codelineno-0-423"></a>        <span class="n">case</span><span class="o">=</span><span class="n">case</span><span class="p">,</span>
+<a id="__codelineno-0-424" name="__codelineno-0-424"></a>        <span class="n">response</span><span class="o">=</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
+<a id="__codelineno-0-425" name="__codelineno-0-425"></a>        <span class="n">vulnerable</span><span class="o">=</span><span class="n">vulnerable</span><span class="p">,</span>
+<a id="__codelineno-0-426" name="__codelineno-0-426"></a>        <span class="n">evidence</span><span class="o">=</span><span class="n">evidence</span><span class="p">,</span>
+<a id="__codelineno-0-427" name="__codelineno-0-427"></a>        <span class="n">output_tokens</span><span class="o">=</span><span class="n">output_tokens</span><span class="p">,</span>
+<a id="__codelineno-0-428" name="__codelineno-0-428"></a>        <span class="n">elapsed_seconds</span><span class="o">=</span><span class="n">elapsed</span><span class="p">,</span>
+<a id="__codelineno-0-429" name="__codelineno-0-429"></a>    <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>

@@ -1445,6 +1445,14 @@ secret. That stops one spelling of it. The <code>sensitive_disclosure</code> ora
 first, so a secret emitted base64-, hex-, base32-, base85- or ROT13-encoded, or split across separators,
 is still reported as a disclosure. And the finding names the scheme it arrived in. A filter you can
 defeat by asking politely for base64 is worth knowing about.</p>
+<p>Encoding is one of two ways a secret gets past a naive check. The other is the <strong>field it arrives
+in</strong>. The reply text is one field of the response body. On 2026-09-04 an application answered an
+LLM02 probe with a polite refusal in <code>choices[0].message.content</code> and the planted secret verbatim in
+<code>choices[0].message.reasoning</code>. Every oracle here read the reply field, so the scan scored the refusal.
+The four LLM02 probes are now scored against the whole response body as well. A finding says when the
+token was found outside the reply field. This is safe for exactly the reason the table above
+already relies on: <strong>no LLM02 prompt contains the secret it scores</strong>, so an application echoing the
+request back cannot produce one.</p>
 <div class="admonition example">
 <p class="admonition-title">The evasion we did not think of and did not have to</p>
 <p>Our own test application filters its credential out of its replies by literal match. Asked to
