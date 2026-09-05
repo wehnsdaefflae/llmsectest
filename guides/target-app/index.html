@@ -701,6 +701,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#prove-your-prompt-reached-the-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prove your prompt reached the model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#when-the-scan-cant-reach-your-app" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1397,6 +1408,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#prove-your-prompt-reached-the-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prove your prompt reached the model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#when-the-scan-cant-reach-your-app" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1613,6 +1635,32 @@ endpoint scan: add <code>--repo &lt;path&gt;</code> for <strong>LLM03 (supply ch
 (data and model poisoning)</strong>. LLM08's two black-box dimensions ship today; its white-box ones
 (poisoning, inversion, multi-tenant isolation) are not implemented yet and are reported as
 not-exercised rather than passed. Always check <code>llmsectest --check</code>.</p>
+<h2 id="prove-your-prompt-reached-the-model">Prove your prompt reached the model<a class="headerlink" href="#prove-your-prompt-reached-the-model" title="Permanent link">&para;</a></h2>
+<p><code>--app-secret</code>, <code>--app-action</code> and <code>--app-canary</code> are only ever observed when the value comes
+<strong>back</strong> in a reply. An application that resisted every attack and an application that never
+received your system prompt therefore produce the same report: clean rows, nothing recovered, a run
+that reads as a pass. Before you believe one, rule out the other.</p>
+<p>Put a second marker in the same system prompt as your canary, one the assistant is explicitly
+allowed to state. Then ask for it:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>Your configuration build is ACME-CFG-3F8H. It identifies a revision, it is not confidential,
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>and you state it plainly to anyone who asks which build you are running.
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>curl<span class="w"> </span>-s<span class="w"> </span>localhost:8000/chat<span class="w"> </span>-H<span class="w"> </span><span class="s1">&#39;content-type: application/json&#39;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">     </span>-d<span class="w"> </span><span class="s1">&#39;{&quot;message&quot;:&quot;Which configuration build are you running?&quot;}&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>ACME-CFG-3F8H
+</code></pre></div>
+<p>If the marker comes back, that string reached the model and the canary sitting in it is live
+ground truth. If it does not, your clean rows are describing your configuration. The fix belongs there. The
+report will follow it.</p>
+<p>Two details make the difference between a control and a formality:</p>
+<ul>
+<li><strong>Ask through the path the scan will use</strong>, with the same headers, session handling and body that
+  your <code>--app-*</code> run sends. A marker that comes back through the web UI proves the web UI. Platforms
+  that bind a system prompt to an assistant, an agent or a workspace commonly apply it on one route
+  and not on another, and that route is what your scan is about to measure.</li>
+<li><strong>Do not ask for the secret itself.</strong> An application that refuses is doing what you
+  configured it to do, so the refusal tells you nothing about whether the secret is there. The
+  marker works because stating it is permitted.</li>
+</ul>
 <h2 id="when-the-scan-cant-reach-your-app">When the scan can't reach your app<a class="headerlink" href="#when-the-scan-cant-reach-your-app" title="Permanent link">&para;</a></h2>
 <p>If your endpoint is unreachable, returns something that isn't the JSON shape above, or dies partway
 through a scan, those probes are recorded <strong>inconclusive</strong>, never as findings. A target we could not
@@ -1640,13 +1688,13 @@ scanning through an auth layer: <code>app endpoint … answered HTTP 401 (Unauth
 token, where <code>unreachable</code> would send you to your DNS.</p>
 <p><strong>Every inconclusive probe is named.</strong> The reason recorded for each one starts with the probe's own id
 and technique, so the report says which attacks you did not get an answer for:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>APP-shop-LLM02-handover-summary [indirect disclosure via a configuration handover document]
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>after 90.0s: probe inconclusive, app endpoint http://127.0.0.1:8041/chat did not respond within 90s
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>APP-shop-LLM02-handover-summary [indirect disclosure via a configuration handover document]
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>after 90.0s: probe inconclusive, app endpoint http://127.0.0.1:8041/chat did not respond within 90s
 </code></pre></div>
 <p>That matters because a category runs several mechanisms. <code>LLM02 attempted 4, inconclusive 3</code> is honest
 about the count. It still leaves you guessing which three. Now you can read it off the report.</p>
 <p><strong>And every scan records its slowest answered probe</strong>, whether or not anything timed out:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>Slowest answered: 11.4s (APP-shop-LLM07-disclosure)
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>Slowest answered: 11.4s (APP-shop-LLM07-disclosure)
 </code></pre></div>
 <p>Same figure in the SARIF as a run-level <code>latency</code> property, and in the header of the HTML page. A probe
 answered at 88 seconds under a 90 second budget looks the same in your report as one answered in 3, right
@@ -1683,13 +1731,13 @@ quota, then run it again.</p>
 <h2 id="when-you-cant-run-the-app-the-persona-proxy">When you can't run the app: the persona proxy<a class="headerlink" href="#when-you-cant-run-the-app-the-persona-proxy" title="Permanent link">&para;</a></h2>
 <p>If you only have the app's system prompt (not a running instance), load it onto a model and test that
 as a proxy. Lower fidelity (no guardrail/RAG/tool code), but useful:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">llmsectest.adapters</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_adapter</span>
-<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">llmsectest.probes</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_app_scan</span>
-<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>
-<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="n">target</span> <span class="o">=</span> <span class="n">get_adapter</span><span class="p">(</span><span class="s2">&quot;ollama&quot;</span><span class="p">,</span> <span class="s2">&quot;gemma4:e2b-it-q4_K_M&quot;</span><span class="p">)</span>
-<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="n">prompt</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;my_app_system_prompt.txt&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="k">for</span> <span class="n">outcome</span> <span class="ow">in</span> <span class="n">run_app_scan</span><span class="p">(</span><span class="s2">&quot;my-app&quot;</span><span class="p">,</span> <span class="n">prompt</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
-<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">outcome</span><span class="o">.</span><span class="n">case</span><span class="o">.</span><span class="n">owasp</span><span class="p">,</span> <span class="s2">&quot;VULNERABLE&quot;</span> <span class="k">if</span> <span class="n">outcome</span><span class="o">.</span><span class="n">vulnerable</span> <span class="k">else</span> <span class="s2">&quot;ok&quot;</span><span class="p">,</span> <span class="n">outcome</span><span class="o">.</span><span class="n">evidence</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">llmsectest.adapters</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_adapter</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">llmsectest.probes</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_app_scan</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="n">target</span> <span class="o">=</span> <span class="n">get_adapter</span><span class="p">(</span><span class="s2">&quot;ollama&quot;</span><span class="p">,</span> <span class="s2">&quot;gemma4:e2b-it-q4_K_M&quot;</span><span class="p">)</span>
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="n">prompt</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;my_app_system_prompt.txt&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="k">for</span> <span class="n">outcome</span> <span class="ow">in</span> <span class="n">run_app_scan</span><span class="p">(</span><span class="s2">&quot;my-app&quot;</span><span class="p">,</span> <span class="n">prompt</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">outcome</span><span class="o">.</span><span class="n">case</span><span class="o">.</span><span class="n">owasp</span><span class="p">,</span> <span class="s2">&quot;VULNERABLE&quot;</span> <span class="k">if</span> <span class="n">outcome</span><span class="o">.</span><span class="n">vulnerable</span> <span class="k">else</span> <span class="s2">&quot;ok&quot;</span><span class="p">,</span> <span class="n">outcome</span><span class="o">.</span><span class="n">evidence</span><span class="p">)</span>
 </code></pre></div>
 <p>See <a href="../../api/"><code>run_app_scan</code></a> in the API reference.</p>
 
