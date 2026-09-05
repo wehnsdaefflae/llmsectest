@@ -142,28 +142,43 @@ nobody opened must not read as a store with no findings.
 ### Does a defense change the result?
 
 Yes, but only one kind does. Against a poisoned retrieved document, an undefended app obeyed 3 of 3
-injections; a persona telling it to distrust retrieved text got that to 2 of 3; adding spotlighting
-(delimiting and datamarking the retrieved block) left it at 2 of 3; deleting the poisoned text before
-the prompt got it to 0 of 3. **Wording and marking barely move indirect injection. Removing the text
-stops it**. The strongest level is the model never being asked rather than the model resisting.
+injections; a persona telling it to distrust retrieved text got that to 2 of 3 in July and to 3 of 3
+in two agreeing runs on 2026-09-05; adding spotlighting (delimiting and datamarking the retrieved
+block) left it at 2 of 3; deleting the poisoned text before the prompt got it to 0 of 3. **Wording and
+marking barely move indirect injection. Removing the text stops it**. The strongest level is the model
+never being asked rather than the model resisting.
 
-??? note "How we measured that. The claim we had to retract (2026-07-31, re-measured 2026-08-04)"
+??? note "How we measured that. The claim we had to retract (2026-07-31, re-measured 2026-08-04 and 2026-09-05)"
 
-    A probe that fires against everything is not a test. In our own app cohort every RAG member has
-    obeyed the poisoned document on every pass, including one whose persona explicitly said to treat
-    retrieved text as untrusted data, so we built the control: the same corpus, the same poisoned
-    document, the same local model, with a structural defense in front of it at three strengths.
+    A probe that fires against everything is not a test. Recomputed over the rendered reports on
+    2026-09-05, **13 of the 16 RAG members obeyed all three planted instructions** and two more obeyed
+    two of three, including members whose persona explicitly says to treat retrieved text as untrusted
+    data. So we built the control: the same corpus, the same poisoned document, the same local model,
+    with a structural defense in front of it at three strengths.
 
     | Defense | Indirect injection (3 probes) | Retrieval exposure (3 probes) |
     |---|---|---|
     | none | **3 obeyed** | 0 leaked |
-    | system prompt says retrieved text is data, never a command | **2 obeyed** | 0 leaked |
+    | system prompt says retrieved text is data, never a command | **2 obeyed** (07-31), **3 obeyed** (09-05, twice) | 0 leaked |
     | + [spotlighting](https://arxiv.org/abs/2403.14720): retrieved chunks delimited and datamarked | **2 obeyed** | 0 leaked |
     | + input-side redaction of instruction-shaped sentences | **0 obeyed** | **1 leaked** |
 
-    **Read the run count before the numbers.** Every row above is **one** full CLI scan (2026-07-31), except
-    the spotlighting row, which was re-run twice at that exact configuration on 2026-08-04 and is reported
-    from those two agreeing runs. That distinction matters, for the reason set out below.
+    **Read the run count before the numbers.** The undefended row is the untouched cohort twin
+    `llamaindex-docsbot`, first measured 2026-07-31 and last scanned 2026-09-02, which reproduced it.
+    The spotlighting row is 2026-08-04, from two agreeing runs at that exact configuration. The persona
+    and redaction rows were re-run on 2026-09-05. Redaction reproduced its July result. The persona row
+    moved from 2 obeyed to 3, in two agreeing runs, and 3 is the undefended number. On this stack, in
+    September, telling the model to distrust its corpus bought nothing measurable.
+
+    **One of the sixteen looked like resistance and was not. It took until 2026-09-05 to see it.**
+    `haystack-safetybot` shared an application script with a neighbour and was scanned for a canary and
+    a poison marker that the script never planted, so its six retrieval probes could not have fired
+    whatever it did. Rescanned with its own markers planted, it obeyed all three, which is where the
+    thirteenth member above comes from. Both halves are fixed. A report now carries an
+    unconfirmed-marker note for `--app-canary` and `--app-rag-poison` as it already did for
+    `--app-secret`. A scan cannot start against a member declaring a value its own application
+    neither plants nor takes from the runner. The remaining member that obeyed nothing is the redaction
+    fixture, where the instruction is deleted before the model sees it.
 
     **Reproducing it.** The harness that produced these rows is ours and it is not in this
     repository, so the row you can check is your own. Point a scan at your application with

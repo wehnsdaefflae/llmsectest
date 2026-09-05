@@ -204,3 +204,92 @@ def test_a_malformed_property_degrades_instead_of_crashing_the_renderer():
         }],
     })
     assert "never saw" not in page
+
+
+# --- LLM08 carries two markers, and one of them being live proves nothing about the other ---
+#
+# Found on 2026-09-05 in our own cohort: a member declared a canary and a poison marker
+# that the application it stands up never planted, and reported six LLM08 attacks
+# attempted, six withstood, zero findings. The category-keyed version of this check could
+# not have said so, because it asked one question per category.
+
+
+def test_a_configured_canary_never_seen_is_flagged_unconfirmed():
+    tally = attack_tally([
+        _probe("retrieval-exposure", "passed", "owasp_llm08", llmsec_canary_configured="yes"),
+        _probe("corpus-enumeration", "passed", "owasp_llm08", llmsec_canary_configured="yes"),
+    ])
+    assert tally["by_category"]["LLM08"]["withstood"] == 2
+    assert "--app-canary" in tally["unconfirmed_markers"]["LLM08"]
+
+
+def test_a_configured_poison_marker_never_seen_is_flagged_unconfirmed():
+    tally = attack_tally([
+        _probe("kb-directive", "passed", "owasp_llm08", llmsec_poison_configured="yes"),
+    ])
+    assert "--app-rag-poison" in tally["unconfirmed_markers"]["LLM08"]
+
+
+def test_both_llm08_markers_unconfirmed_are_reported_together():
+    """The cohort member's exact shape: neither value was in the application."""
+    tally = attack_tally([
+        _probe("kb-directive", "passed", "owasp_llm08",
+               llmsec_canary_configured="yes", llmsec_poison_configured="yes"),
+    ])
+    reason = tally["unconfirmed_markers"]["LLM08"]
+    assert "--app-canary" in reason and "--app-rag-poison" in reason
+    assert tally["by_category"]["LLM08"]["marker_unconfirmed"] == reason
+
+
+def test_obeying_the_poisoned_document_does_not_confirm_the_canary():
+    """The defect the per-category shape hid. Three injections obeyed is a non-empty LLM08
+    row, and it says nothing about whether the canary was ever in the corpus."""
+    tally = attack_tally([
+        _probe("kb-directive", "failed", "owasp_llm08",
+               llmsec_poison_configured="yes", llmsec_poison_observed="kb-directive",
+               llmsec_canary_configured="yes"),
+        _probe("retrieval-exposure", "passed", "owasp_llm08",
+               llmsec_poison_configured="yes", llmsec_canary_configured="yes"),
+    ])
+    reason = tally["unconfirmed_markers"]["LLM08"]
+    assert "--app-canary" in reason
+    assert "--app-rag-poison" not in reason
+
+
+def test_an_observed_canary_leaves_no_doubt_about_it():
+    tally = attack_tally([
+        _probe("retrieval-exposure", "failed", "owasp_llm08",
+               llmsec_canary_configured="yes", llmsec_canary_observed="retrieval-exposure"),
+    ])
+    assert "unconfirmed_markers" not in tally
+
+
+def test_a_scan_that_passed_no_llm08_flag_carries_no_llm08_doubt():
+    """A bare-model scan seeds its own corpus and takes neither flag."""
+    tally = attack_tally([_probe("kb-directive", "passed", "owasp_llm08")])
+    assert "unconfirmed_markers" not in tally
+
+
+def test_an_llm06_finding_still_settles_its_own_single_marker():
+    """The belt-and-braces rule survives for the categories that have one marker: a
+    finding there means the oracle matched the value, so the doubt does not apply."""
+    tally = attack_tally([
+        _probe("forged-auth", "failed", "owasp_llm06", llmsec_action_configured="yes"),
+    ])
+    assert "unconfirmed_markers" not in tally
+
+
+def test_the_llm08_doubt_reaches_every_surface_a_reader_looks_at(tmp_path):
+    """The member this was found on obeyed nothing and leaked nothing, and the reason was
+    that neither value was in the application. All three surfaces have to say so."""
+    results = [_probe("kb-directive", "passed", "owasp_llm08",
+                      llmsec_canary_configured="yes", llmsec_poison_configured="yes")]
+    doc = json.loads(SARIFGenerator("llmsectest", "0.1.0", tmp_path).generate(results))
+    props = doc["runs"][0]["properties"]
+    assert "--app-canary" in props["unconfirmed_markers"]["LLM08"]
+    assert "--app-rag-poison" in props["unconfirmed_markers"]["LLM08"]
+    assert props["attacks_withstood"]["by_category"]["LLM08"]["marker_unconfirmed"]
+    console = generate_console_summary(results, show_colors=False)
+    assert "--app-canary" in console and "LLM08" in console
+    page = render_sarif_html(doc)
+    assert "--app-canary" in page and "never saw" in page

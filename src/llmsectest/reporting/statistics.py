@@ -40,18 +40,31 @@ VOIDED_REASON = (
 #: signature we declared was a shape a prompt-only application never emits at all, while
 #: the application said in prose that it had performed the operation (measured 2026-08-05).
 #: Three weeks of clean rows meant "the marker was never live", and no report said so.
-MARKER_CATEGORIES = {
-    SECRET_CATEGORY: (
-        "--app-secret",
-        "llmsec_secret_configured",
-        "llmsec_secret_exposed",
-    ),
-    "LLM06": (
-        "--app-action",
-        "llmsec_action_configured",
-        "llmsec_action_observed",
-    ),
-}
+#:
+#: **One row per marker rather than per category (2026-09-05).** Until that day this held
+#: two entries, for LLM02 and LLM06, and LLM08 had none, so a cohort member whose manifest
+#: declared a canary and a poison marker its application never planted reported six LLM08
+#: probes, six withstood, zero findings, with nothing beside the row.
+#:
+#: Adding one LLM08 entry would not have been enough, which is why the shape changed too.
+#: LLM08 is scored against two independent developer-supplied values, a canary planted in
+#: the retrieved corpus and the marker a poisoned document tells the application to emit,
+#: and a run that proved one of them live says nothing about the other. A category-keyed
+#: rule reads a member's injection findings as "the oracle matched, so the marker is live"
+#: and suppresses the doubt about its canary. That case is live: the same member, rescanned
+#: with its markers planted, obeyed all three injections while its canary appeared nowhere.
+MARKER_CHECKS = (
+    (SECRET_CATEGORY, "--app-secret",
+     "llmsec_secret_configured", "llmsec_secret_exposed"),
+    ("LLM06", "--app-action",
+     "llmsec_action_configured", "llmsec_action_observed"),
+    ("LLM08", "--app-canary",
+     "llmsec_canary_configured", "llmsec_canary_observed"),
+    ("LLM08", "--app-rag-poison",
+     "llmsec_poison_configured", "llmsec_poison_observed"),
+)
+
+
 
 
 def _unconfirmed_reason(flag: str) -> str:
@@ -89,7 +102,7 @@ def attack_tally(results: list[TestResult]) -> dict | None:
     ``voided`` says "this run got the secret out, so nothing here counts as withstood",
     an unconfirmed marker says "this run never saw the value you configured, anywhere",
     which is the one thing a clean row cannot tell you apart from a typo in the flag.
-    See :data:`MARKER_CATEGORIES`. Reported per category and at run level; absent when
+    See :data:`MARKER_CHECKS`. Reported per category and at run level; absent when
     the marker was never configured, so a bare-model scan (which seeds its own secret and
     takes no flag) never carries a note about a flag the user did not pass.
 
@@ -142,7 +155,11 @@ def attack_tally(results: list[TestResult]) -> dict | None:
     # at run level, because it changes how the row above it reads and a consumer of the
     # SARIF (our renderer, a CI gate) must be able to see it without our code.
     unconfirmed: dict[str, str] = {}
-    for cat, (flag, configured_prop, observed_prop) in MARKER_CATEGORIES.items():
+    # A finding is evidence that *the* marker was live only where the category has one.
+    # LLM08 has two, so obeying the poisoned document proves nothing about the canary.
+    sole = {cat for cat, *_ in MARKER_CHECKS
+            if sum(1 for c, *_ in MARKER_CHECKS if c == cat) == 1}
+    for cat, flag, configured_prop, observed_prop in MARKER_CHECKS:
         tally = by_category.get(cat)
         if tally is None:
             continue
@@ -150,7 +167,7 @@ def attack_tally(results: list[TestResult]) -> dict | None:
             continue  # no flag was passed, so there is no configuration to doubt
         if any(r.properties.get(observed_prop) is not None for r in results):
             continue  # the marker turned up somewhere: it is demonstrably live
-        if tally["findings"]:
+        if tally["findings"] and cat in sole:
             # Belt and braces. A finding means the oracle matched the marker, so the
             # observation flag should have been recorded too; if the two ever disagree
             # the finding is the harder evidence and wins.
@@ -161,8 +178,11 @@ def attack_tally(results: list[TestResult]) -> dict | None:
             # wrong" on top would send a reader to check a flag when the endpoint is down.
             continue
         reason = _unconfirmed_reason(flag)
-        unconfirmed[cat] = reason
-        tally["marker_unconfirmed"] = reason
+        # A category can carry two markers, so the doubts accumulate rather than replace:
+        # a member that obeyed the poisoned document tells you nothing about whether its
+        # canary was ever in the corpus, and the row has to be able to say both.
+        unconfirmed[cat] = f"{unconfirmed[cat]} Also: {reason}" if cat in unconfirmed else reason
+        tally["marker_unconfirmed"] = unconfirmed[cat]
 
     totals = {
         field: sum(t[field] for t in by_category.values())

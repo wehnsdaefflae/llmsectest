@@ -2,6 +2,7 @@
 system-prompt persona proxy. Both let LLMSecTest test an *application*, not a
 bare model."""
 
+import collections
 import json
 
 import pytest
@@ -886,3 +887,70 @@ def test_an_application_that_answers_normally_is_untouched_by_the_status_branch(
         server.shutdown()
         server.server_close()
     assert response.text == "still fine"
+
+
+# --- the two application entry points, and the two categories they differ on ---
+#
+# `--target app:<url>` runs the packaged pytest suite; `run_app_scan` runs `app_cases`.
+# The suite keeps the authored LLM01 and LLM09 corpora whole for an app target and adds the
+# built-in red-team refusal set, so at full inputs it delivers 38 attacks where the API
+# delivers 23. Both paths return the same ten `CategoryCoverage` rows, so a coverage row is
+# the one thing that cannot tell them apart. Found on 2026-09-05 by re-deriving the coverage
+# map from the code. Pinned here so the gap has to be closed on purpose rather than drifting.
+
+_APP_INPUTS = {
+    "known_secret": "ZULU-9",
+    "forbidden_actions": ("ACTION: refund(",),
+    "known_canary": "INTERNAL-DOC-CANARY-7f2a",
+    "known_poison": "RAG-POISON-MARKER-3b9d",
+}
+
+#: Categories both paths build from `app_cases`, so they agree on these by construction.
+#: LLM05 is in the list on different evidence: the CLI reads it off the authored corpus and
+#: the API off `app_cases`, and the two counts happen to match today.
+_AGREED = ("owasp_llm02", "owasp_llm05", "owasp_llm06",
+           "owasp_llm07", "owasp_llm08", "owasp_llm10")
+
+
+def _suite_app_counts():
+    """Per-category attacks `--target app:<url>` delivers, read off the CLI's own sources."""
+    from llmsectest.__main__ import _APP_SUITE_MODULES
+    from llmsectest.probes.corpus import cases_for
+    from llmsectest.probes.redteam import redteam_cases
+
+    counts = collections.Counter()
+    # Modules the CLI keeps whole for an app target, each parametrized off `cases_for`.
+    for module, category in (("test_llm01_prompt_injection.py", "owasp_llm01"),
+                             ("test_llm05_improper_output_handling.py", "owasp_llm05"),
+                             ("test_llm09_misinformation.py", "owasp_llm09")):
+        assert module in _APP_SUITE_MODULES, f"{module} no longer runs against an app target"
+        counts[category] += len(cases_for(category))
+    # The red-team refusal set is LLM01 too, and ships built in with no `--redteam-set`.
+    assert "test_redteam_jailbreaks.py" in _APP_SUITE_MODULES
+    counts["owasp_llm01"] += len(redteam_cases(None))
+    # LLM02/06/07 return through test_application_mode, LLM08 and LLM10 through their own
+    # modules. All four read `app_cases`, which is why those categories agree.
+    for case in app_cases("shopbot", _REAL_APP_PROMPT, **_APP_INPUTS):
+        if case.owasp in _AGREED and case.owasp != "owasp_llm05":
+            counts[case.owasp] += 1
+    return counts
+
+
+def test_the_two_app_entry_points_differ_only_on_llm01_and_llm09():
+    api = collections.Counter(
+        c.owasp for c in app_cases("shopbot", _REAL_APP_PROMPT, **_APP_INPUTS))
+    cli = _suite_app_counts()
+    assert {c: api[c] for c in _AGREED} == {c: cli[c] for c in _AGREED}
+    assert (api["owasp_llm01"], cli["owasp_llm01"]) == (1, 13)
+    assert (api["owasp_llm09"], cli["owasp_llm09"]) == (1, 4)
+    assert (sum(api.values()), sum(cli.values())) == (23, 38)
+
+
+def test_the_coverage_map_reports_a_one_case_category_as_exercised():
+    """The honesty gap itself: `exercised` is true for LLM01 and LLM09 at one case each,
+    so only `AppScanResult.outcomes` says how deeply the API path asked."""
+    coverage = {c.owasp: c for c in app_coverage(_REAL_APP_PROMPT, **_APP_INPUTS)}
+    for category in ("owasp_llm01", "owasp_llm09"):
+        assert coverage[category].exercised
+        assert coverage[category].cases == 1
+        assert coverage[category].reason == ""

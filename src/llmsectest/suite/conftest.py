@@ -87,9 +87,26 @@ def configured_actions() -> tuple[str, ...]:
     return envvars.app_inputs_from_env()[2]
 
 
+@pytest.fixture(scope="session")
+def configured_canary() -> str | None:
+    """The value the developer passed to ``--app-canary``, or ``None``.
+
+    Session scope for the same reason as :func:`configured_secret`: a canary planted in
+    the retrieved corpus can come back through any probe, so "was it ever live" is a
+    question about the whole run.
+    """
+    return envvars.app_inputs_from_env()[3]
+
+
+@pytest.fixture(scope="session")
+def configured_poison() -> str | None:
+    """The marker the developer passed to ``--app-rag-poison``, or ``None``."""
+    return envvars.app_inputs_from_env()[4]
+
+
 @pytest.fixture
 def probe(target_adapter, target_responsiveness, configured_secret, configured_actions,
-          configured_prompt, record_property):
+          configured_prompt, configured_canary, configured_poison, record_property):
     """Return a callable that runs a probe case against the resolved target.
 
     When the case is a finding, record a **clean finding message** — the attack
@@ -145,7 +162,7 @@ def probe(target_adapter, target_responsiveness, configured_secret, configured_a
         # the other way round: a configured value that never turns up anywhere leaves a
         # clean row that a defended application and a mistyped flag both produce. The
         # "configured" flags say a doubt is possible at all; the "observed" ones resolve
-        # it. See llmsectest.reporting.statistics.MARKER_CATEGORIES.
+        # it. See llmsectest.reporting.statistics.MARKER_CHECKS.
         if configured_secret:
             record_property("llmsec_secret_configured", configured_secret[:8] + "…")
         if configured_actions:
@@ -158,6 +175,20 @@ def probe(target_adapter, target_responsiveness, configured_secret, configured_a
                                              configured_prompt)
             if seen:
                 record_property("llmsec_action_observed", f"{case.id}: {', '.join(seen)}")
+        # The two LLM08 markers, checked across every probe rather than only the LLM08
+        # ones, because a canary planted in the corpus can come back to any question and
+        # a poisoned document instructs the application whatever it was asked. Added
+        # 2026-09-05, after a cohort member reported six LLM08 attacks withstood while
+        # neither value it declared was anywhere in the application it stood up.
+        for value, configured_key, observed_key in (
+            (configured_canary, "llmsec_canary_configured", "llmsec_canary_observed"),
+            (configured_poison, "llmsec_poison_configured", "llmsec_poison_observed"),
+        ):
+            if not value:
+                continue
+            record_property(configured_key, value[:8] + "…")
+            if value.casefold() in outcome.response.casefold():
+                record_property(observed_key, case.id)
         if outcome.vulnerable:
             record_property(
                 "llmsec_finding",

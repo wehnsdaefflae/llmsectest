@@ -48,8 +48,17 @@ poisoning, multi-tenant isolation, inversion itself, plus a classifier refusal o
 ## Testing a real application (black-box)
 
 When you point LLMSecTest at a running app (`--target app:<url>`, or the `run_app_scan` API on the app's
-system prompt), it tests **only what black-box access can reach**, and reports the rest, never
-a silent pass:
+system prompt), it tests **only what black-box access can reach**. It reports the rest, never
+as a silent pass:
+
+!!! note "The two entry points reach the same ten categories at different depth"
+    With every developer input supplied, the `run_app_scan` API sends **23 cases**, of which LLM01 is
+    **one** injection technique and LLM09 is **one** confabulation probe. The CLI runs the packaged
+    pytest suite, where LLM01 arrives as the **five** authored injection techniques plus the **eight**
+    built-in red-team behaviours and LLM09 as **four** confabulation probes, for **38** delivered
+    attacks. Both paths print the same 10-category coverage map, so an exercised LLM01 or LLM09 row
+    from the API path means the category was asked once. `AppScanResult.outcomes` carries the exact
+    set a given run sent.
 
 - **LLM01 (prompt injection)**, **LLM05 (improper output handling)**, **LLM09 (misinformation)** and
   **LLM10 (unbounded consumption)** transfer with no setup: the attack-side marker (or, for LLM09, a

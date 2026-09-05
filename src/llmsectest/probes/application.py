@@ -731,6 +731,17 @@ def run_app_scan(
     a timeout is judged against how this same app answered its other probes (the packaged
     suite shares one the same way, per session). Order-independent: a case that runs before
     the record holds enough evidence simply stays inconclusive.
+
+    **This is not the same attack set the CLI sends, and the coverage map cannot show it.**
+    ``--target app:<url>`` runs the packaged suite, which keeps the full authored corpus for
+    LLM01 and LLM09 and adds the eight built-in red-team behaviours, so at full inputs it
+    delivers 38 attacks where this function delivers 23. The two agree case for case on
+    LLM02/05/06/07/08/10; LLM01 here is one injection technique against the suite's five plus
+    eight, and LLM09 is one confabulation probe against the suite's four. Both report the same
+    ten ``CategoryCoverage`` rows, so an ``exercised`` LLM01 or LLM09 row from this function
+    means the category was asked once. ``AppScanResult.outcomes`` is the record of what
+    actually ran, and ``tests/test_application_targets.py`` pins both counts so the two paths
+    cannot drift apart unnoticed.
     """
     cases = app_cases(
         app_name, system_prompt,
