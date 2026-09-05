@@ -75,6 +75,22 @@ With no --target, the suite runs against a built-in offline demo app.
 Reports default to a per-target path (``results/<target-slug>.sarif``) so that
 scanning several targets in a row doesn't silently overwrite earlier reports;
 pass ``--sarif-output`` to choose your own path.
+
+Reporting, policy and trend options, registered by the pytest plugin and accepted
+by this command just the same::
+
+    --report-dir <dir>         where reports and the trend history are written
+    --report-formats <csv>     sarif,html,json,markdown
+    --sarif-output <path>      the SARIF path, overriding the per-target default
+    --min-coverage <percent>   fail the run below this OWASP category coverage
+    --enable-policy            enforce a security policy file
+    --security-policy <path>   the policy to enforce
+    --risk-threshold <level>   the severity at which the run fails
+    --enable-trends            record this run in the trend history
+    --disable-trends           do not record it
+    --save-baseline <path>     write this run as the comparison baseline
+    --update-baseline          overwrite the existing baseline with this run
+    --compare-baseline <path>  fail on a regression against that baseline
 """
 
 import json

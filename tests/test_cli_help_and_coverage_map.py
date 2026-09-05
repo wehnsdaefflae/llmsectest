@@ -31,9 +31,14 @@ import pytest
 
 import llmsectest.__main__ as cli
 
-# The CLI parses argv by hand: every option reaches one of these three helpers as a
-# string literal, so the source is the register of what the CLI accepts.
-_PARSERS = {"_extract_opt", "_extract_flag", "_extract_opt_flag"}
+# The CLI parses argv by hand: every option reaches one of these helpers as a string
+# literal, so the source is the register of what the CLI accepts.
+#
+# `_extract_multi_opt` was missing until 2026-09-05, which is this file's own lesson turned
+# on itself: it asserts a floor on how many options it found precisely because a narrow
+# sweep reads like a clean one, and it then swept 30 of at least 33. The flag it could not
+# see was `--app-action`, one of the five the day's work was about.
+_PARSERS = {"_extract_opt", "_extract_multi_opt", "_extract_flag", "_extract_opt_flag"}
 
 # Relative to this test file, so an installed copy of the package cannot move it.
 _DOCS = pathlib.Path(__file__).resolve().parents[1] / "docs" / "owasp"
@@ -56,8 +61,25 @@ def _accepted_long_options() -> set[str]:
                 found.add(arg.value)
     # Options handled by an ``in args`` test rather than by a helper.
     found |= set(re.findall(r'"(--[a-z][a-z0-9-]+)" in args', source))
+    # …and by an equals-or-space test, which is how ``--sarif-output`` is recognised.
+    found |= set(re.findall(r'a == "(--[a-z][a-z0-9-]+)" or a\.startswith', source))
+    # The pytest plugin's own options reach a user through the same `llmsectest` command,
+    # so a listing that omits one is as wrong as if `__main__` had parsed it itself.
+    found |= _plugin_options()
     # ``--help`` prints the listing, so it is not a line the listing owes.
     return found - {"--help"}
+
+
+def _plugin_options() -> set[str]:
+    """Every ``--long-option`` the pytest plugin registers with ``addoption``."""
+    source = (pathlib.Path(cli.__file__).parent / "plugin.py").read_text(encoding="utf-8")
+    tree = ast.parse(source)
+    return {arg.value
+            for node in ast.walk(tree) if isinstance(node, ast.Call)
+            and getattr(node.func, "attr", None) == "addoption"
+            for arg in node.args
+            if isinstance(arg, ast.Constant) and isinstance(arg.value, str)
+            and arg.value.startswith("--")}
 
 
 def test_every_option_the_cli_accepts_is_named_in_its_help():
@@ -69,11 +91,26 @@ def test_every_option_the_cli_accepts_is_named_in_its_help():
     )
 
 
+def test_every_option_the_help_names_is_one_the_cli_accepts():
+    """The other direction, which is what a reader actually hits. A listing promising a flag
+    that errors is the wall this project measured in the wild on 2026-09-05: `llmsectest`
+    0.2.0 answered `unrecognized arguments` to six flags its own documentation used."""
+    documented = set(re.findall(r"--[a-z][a-z0-9-]+", cli.__doc__ or "")) - {"--help"}
+    unknown = sorted(documented - _accepted_long_options())
+    assert not unknown, (
+        "--help names options the CLI does not accept: " + ", ".join(unknown)
+    )
+
+
 def test_the_sweep_that_finds_the_options_found_some():
     """A check that looked at nothing reads exactly like a check that found nothing."""
     accepted = _accepted_long_options()
-    assert len(accepted) >= 15, f"only {len(accepted)} option(s) swept: {sorted(accepted)}"
+    assert len(accepted) >= 40, f"only {len(accepted)} option(s) swept: {sorted(accepted)}"
     assert "--redteam-generate" in accepted, "the option that motivated this test"
+    # One per parsing route, so a route dropping out of `_accepted_long_options` fails here
+    # rather than quietly shrinking the denominator of the two tests above.
+    for opt in ("--app-action", "--sarif-output", "--check"):
+        assert opt in accepted, f"{opt} is live and the sweep no longer sees it"
 
 
 @pytest.mark.parametrize("marker", sorted(cli._TESTABILITY))
