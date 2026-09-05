@@ -1,22 +1,23 @@
 name: release
 
-# Validates a release when a v* tag is pushed. It does NOT publish on a tag today: the
-# `publish` job below is `workflow_dispatch` only, because releases currently go out from a
-# workstation with an API token. Flip that condition and drop the token the day a trusted
-# publisher is configured, and this header becomes true again.
+# Validates a release when a v* tag is pushed, and publishes on a manual dispatch. Trusted
+# Publishing has been configured since 2026-09-05 and 0.3.0 went out through it (run
+# 33982896358), so no API token exists anywhere in this path. The dispatch stays manual on
+# purpose: a tag is a statement about the tree, publishing is a statement to the world, and
+# keeping them apart is what lets a tag be pushed, checked and built before anyone releases it.
 #
-# When it does run, it uses PyPI Trusted Publishing (OIDC) and no API token: PyPI is told, once,
+# The publish job uses PyPI Trusted Publishing (OIDC) and no API token: PyPI is told, once,
 # that this repository's `release` workflow running in the `pypi` environment is allowed
 # to upload `llmsectest`, and GitHub mints a short-lived credential per run. There is no
 # long-lived secret to store, leak, or rotate, which for a security tool is the point.
 #
-# Setup on PyPI, once, by the account owner:
-#   PyPI → Your projects → llmsectest → Publishing  (or, before the first release,
-#   Account settings → Publishing → Add a pending publisher)
+# Setup on PyPI, done once by the account owner on 2026-09-05 and not needed again:
+#   PyPI → Your projects → llmsectest → Publishing
 #     Owner: wehnsdaefflae   Repository: llmsectest
 #     Workflow: release.yml  Environment: pypi
 #
-# Then: git tag v0.2.0 && git push origin v0.2.0  (runs check + build; publish is manual)
+# To release:  git tag vX.Y.Z && git push origin vX.Y.Z   (runs check + build)
+#              gh workflow run release.yml --ref vX.Y.Z   (runs check + build + publish)
 
 on:
   push:
@@ -71,16 +72,15 @@ jobs:
       - uses: actions/upload-artifact@v4
         with: { name: dist, path: dist/ }
 
-  # Manual dispatch only, deliberately. Mark chose to publish with an API token from a
-  # workstation (2026-08-21), so this job would fail on a tag push: Trusted Publishing is
-  # not configured on PyPI, and by the time a tag exists the version is usually already
-  # uploaded, which PyPI rejects because a filename can never be reused. A red X on the
-  # repository's front page is a bad first impression bought for nothing.
+  # Manual dispatch only, deliberately, and it stays that way now Trusted Publishing works.
+  # 0.2.0 was uploaded by hand on 2026-08-21, before a tag for it existed, so a tag trigger
+  # would have tried to upload a filename PyPI had already taken. PyPI never lets a filename
+  # be reused, which makes that failure permanent: a red X on the repository's front page for
+  # a release that in fact worked.
   #
   # `check` and `build` still run on every tag, and they are the parts with teeth: they
   # prove the tag matches the version in pyproject and that the wheel installs and scans
-  # in a clean interpreter. Flip this to the tag trigger the day a trusted publisher is
-  # configured, and drop the token.
+  # in a clean interpreter. Deciding to publish is then one command, made by a person.
   publish:
     if: github.event_name == 'workflow_dispatch'
     needs: build
