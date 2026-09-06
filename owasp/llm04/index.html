@@ -962,6 +962,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#what-to-point-it-at" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What to point it at
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1314,6 +1325,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#what-to-point-it-at" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What to point it at
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1410,6 +1432,20 @@ no network. So it is safe and reproducible in CI.</p>
 heuristic. A legitimate weights file only references tensor-rebuild helpers, <code>torch._utils._rebuild_tensor_v2</code>,
 <code>collections.OrderedDict</code>, <code>numpy.core.multiarray._reconstruct</code>, none of which is on the list, so a clean
 model produces no finding. A model that imports <code>os.system</code> on load does not occur by accident.</p>
+<h3 id="what-to-point-it-at">What to point it at<a class="headerlink" href="#what-to-point-it-at" title="Permanent link">&para;</a></h3>
+<p>A file extension is not proof of a model. The scan discovers artifacts by extension, so a path handed to
+<code>--model-scan</code> that holds files carrying a model extension and no model gives you a clean report about
+nothing.</p>
+<p>The case to watch for is a <strong>bundled browser</strong>. Chromium ships <code>v8_context_snapshot.bin</code> and
+<code>snapshot_blob.bin</code>. <code>.bin</code> is a model extension. Any application that renders or crawls pages carries one,
+often as the only model-extension file it owns outside its dependency trees. Point <code>--model-scan</code> at
+a whole container filesystem and that snapshot joins the scan. It holds no pickle, the walk finds nothing,
+and the category comes back clean on a file nothing ever loads as a model. Other files behave the same
+way. A <code>.dat</code> or <code>.model</code> shipped as a lookup table belongs to the library that ships it.</p>
+<p>So point it at <strong>the directory your application loads weights from</strong>. Read the count of files scanned
+alongside the verdict. Distrust a clean LLM04 over a path whose loader you cannot name: a scan that looked
+at nothing reads the same as a scan that found nothing. Vendored trees (<code>site-packages</code>,
+<code>dist-packages</code>, <code>node_modules</code>) are skipped for that reason, and they are not the whole of it.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>llmsectest<span class="w"> </span>--model-scan<span class="w"> </span>models/<span class="w">                       </span><span class="c1"># scan a directory of model files</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>llmsectest<span class="w"> </span>--model-scan<span class="w"> </span>model.pt<span class="w">                      </span><span class="c1"># scan a single artifact</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat<span class="w"> </span>--model-scan<span class="w"> </span>models/<span class="w">   </span><span class="c1"># app probes + model scan</span>
