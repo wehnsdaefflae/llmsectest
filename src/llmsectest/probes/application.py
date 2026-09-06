@@ -460,6 +460,7 @@ def _llm08_cases(
                     system_prompt=system_prompt,
                     detector="retrieval_exposure",
                     forbidden=(known_canary,),
+                    inconclusive_tokens=(known_poison,) if known_poison else (),
                 )
             )
     if known_poison:

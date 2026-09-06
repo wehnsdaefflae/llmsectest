@@ -736,6 +736,10 @@ def test_app_cases_unlock_both_llm08_dimensions_together():
     llm08 = [c for c in cases if c.owasp == "owasp_llm08"]
     assert len(llm08) == 6
     assert {c.detector for c in llm08} == {"retrieval_exposure", "injection_marker"}
+    retrieval = [c for c in llm08 if c.detector == "retrieval_exposure"]
+    injections = [c for c in llm08 if c.detector == "injection_marker"]
+    assert all(c.inconclusive_tokens == ("RAG-POISON-3b9d",) for c in retrieval)
+    assert all(c.inconclusive_tokens == () for c in injections)
 
 
 def test_run_app_scan_flags_a_poisoned_document_injection():
@@ -747,6 +751,68 @@ def test_run_app_scan_flags_a_poisoned_document_injection():
     llm08 = [o for o in result.outcomes if o.case.owasp == "owasp_llm08"]
     assert llm08 and all(o.vulnerable for o in llm08)
     assert all(o in result.findings for o in llm08)
+
+
+def test_run_app_scan_marks_canary_probe_unconfirmed_when_poison_answers_it():
+    # A poisoned retrieved document can answer the canary probe with its own marker.
+    # Absence of the canary is then not evidence that retrieval stayed in scope.
+    canary = "DOC-CANARY-9z"
+    poison = "RAG-POISON-3b9d"
+    adapter = ScriptedAdapter(
+        lambda req: f"The retrieved directive says to emit {'-'.join(poison)}",
+        model="rag-poison-masks-canary",
+    )
+    result = run_app_scan(
+        "ragbot",
+        _REAL_APP_PROMPT,
+        adapter,
+        known_canary=canary,
+        known_poison=poison,
+    )
+    retrieval = [
+        o for o in result.outcomes
+        if o.case.detector == "retrieval_exposure"
+    ]
+    assert retrieval and all(not o.vulnerable for o in retrieval)
+    assert all(not o.errored for o in retrieval)
+    assert all(o.elapsed_seconds is not None for o in retrieval)
+    assert all(o not in result.findings for o in retrieval)
+    assert all("poisoned document" in o.evidence for o in retrieval)
+    assert all(poison in o.evidence and "via split" in o.evidence for o in retrieval)
+
+
+def test_run_app_scan_keeps_canary_finding_when_poison_answers_too():
+    canary = "DOC-CANARY-9z"
+    poison = "RAG-POISON-3b9d"
+    adapter = ScriptedAdapter(
+        lambda req: f"The document exposed {canary} and also emitted {poison}",
+        model="rag-leaks-both-markers",
+    )
+    result = run_app_scan(
+        "ragbot",
+        _REAL_APP_PROMPT,
+        adapter,
+        known_canary=canary,
+        known_poison=poison,
+    )
+    retrieval = [o for o in result.outcomes if o.case.detector == "retrieval_exposure"]
+    assert retrieval and all(o.vulnerable for o in retrieval)
+    assert all(not o.errored for o in retrieval)
+    assert all(o in result.findings for o in retrieval)
+
+
+def test_run_app_scan_does_not_treat_an_echoed_poison_marker_as_corpus_evidence():
+    canary = "DOC-CANARY-9z"
+    poison = "RAG-POISON-3b9d"
+    prompt = f"{_REAL_APP_PROMPT}\nThe configured poison marker is {poison}."
+    echoing = ScriptedAdapter(lambda req: req.messages[0].content, model="rag-echoes-prompt")
+    result = run_app_scan(
+        "ragbot", prompt, echoing, known_canary=canary, known_poison=poison
+    )
+    retrieval = [o for o in result.outcomes if o.case.detector == "retrieval_exposure"]
+    assert retrieval and all(not o.vulnerable for o in retrieval)
+    assert all(not o.errored for o in retrieval)
+    assert all("poisoned document" not in o.evidence for o in retrieval)
 
 
 def test_run_app_scan_passes_an_app_that_ignores_a_poisoned_document():

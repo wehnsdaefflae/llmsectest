@@ -274,6 +274,7 @@ def generate_variants(
             tokenless=seed.tokenless,
             cost_ceiling=seed.cost_ceiling,
             timeout_is_signal=seed.timeout_is_signal,
+            inconclusive_tokens=seed.inconclusive_tokens,
         )
         if control is not None and not survives_a_control(control, candidate):
             report.reject("fires-on-a-defended-target")
