@@ -60,14 +60,12 @@ from .models import SEVERITIES
 
 SEVERITY_RANK = {name: i for i, name in enumerate(SEVERITIES)}
 
-# Directories we never descend into when discovering model files — virtualenvs,
-# vendored/installed packages and VCS metadata are not the *project's* own model
-# artifacts. Mirrors the supply-chain scanner's prune set.
-_PRUNE_DIRS = frozenset({
-    ".git", ".hg", ".svn", ".venv", "venv", "env", "node_modules",
-    "site-packages", "__pycache__", ".tox", ".nox", "build", "dist",
-    ".mypy_cache", ".pytest_cache", ".ruff_cache", "tmp", ".eggs",
-})
+# Which directories a model scan must not descend into — virtualenvs, vendored/installed
+# packages and VCS metadata are not the *project's* own model artifacts. This WAS a second
+# copy of the supply-chain scanner's prune set, kept in step by a comment saying so, which
+# is how one of them can be fixed and the other left holding the defect. It is now the same
+# function, so "which directories are not the project's" is answered once.
+from .supplychain import is_pruned  # noqa: E402
 
 # File extensions that carry (or can carry) a Python pickle, directly or inside a
 # ZIP container. A scan still sniffs the bytes, so an unrecognised extension that
@@ -366,7 +364,7 @@ def discover_model_files(root: str | Path) -> list[Path]:
     for path in root.rglob("*"):
         if not path.is_file():
             continue
-        if any(part in _PRUNE_DIRS for part in path.relative_to(root).parts[:-1]):
+        if is_pruned(root, path):
             continue
         if path.suffix.lower() in MODEL_EXTS:
             found.add(path)
@@ -390,7 +388,7 @@ def discover_safe_model_files(root: str | Path) -> list[Path]:
     return sorted(
         path for path in root.rglob("*")
         if path.is_file() and path.suffix.lower() in SAFE_EXTS
-        and not any(part in _PRUNE_DIRS for part in path.relative_to(root).parts[:-1])
+        and not is_pruned(root, path)
     )
 
 

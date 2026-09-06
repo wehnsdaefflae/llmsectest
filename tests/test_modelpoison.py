@@ -176,10 +176,26 @@ def test_discover_recurses_and_prunes_vendored(tmp_path):
     (tmp_path / ".venv" / "lib").mkdir(parents=True)
     (tmp_path / ".venv" / "lib" / "vendored.pkl").write_bytes(
         _craft_global_pickle("os", "system"))
+    # What makes `.venv` a virtualenv rather than a directory with that name (PEP 405).
+    (tmp_path / ".venv" / "pyvenv.cfg").write_text("home = /usr\n")
     found = discover_model_files(tmp_path)
     names = {p.name for p in found}
     assert "good.pkl" in names
     assert "vendored.pkl" not in names  # .venv pruned
+
+
+def test_a_directory_named_env_is_scanned_unless_it_is_a_virtualenv(tmp_path):
+    # The same discriminator as the supply-chain scanner, and now literally the same
+    # function: a project package called `env` holds the project's own model files.
+    (tmp_path / "packages" / "env").mkdir(parents=True)
+    (tmp_path / "packages" / "env" / "mine.pkl").write_bytes(
+        _craft_global_pickle("os", "system"))
+    (tmp_path / "env" / "lib").mkdir(parents=True)
+    (tmp_path / "env" / "lib" / "theirs.pkl").write_bytes(
+        _craft_global_pickle("os", "system"))
+    (tmp_path / "env" / "pyvenv.cfg").write_text("home = /usr\n")
+    names = {p.name for p in discover_model_files(tmp_path)}
+    assert names == {"mine.pkl"}
 
 
 def test_scan_directory_uses_relative_paths_and_sorts(tmp_path):

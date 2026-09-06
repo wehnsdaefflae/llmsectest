@@ -147,12 +147,30 @@ floaty = "*"
 def test_discovery_prunes_vendored_dirs(tmp_path):
     _write(tmp_path, "requirements.txt", "requests==2.32.0")
     _write(tmp_path, ".venv/lib/requirements.txt", "evil-unpinned")
+    # PEP 405 puts this at the root of every virtualenv, and it is what the scanner reads:
+    # the directory is pruned for being one rather than for being called one.
+    _write(tmp_path, ".venv/pyvenv.cfg", "home = /usr\n")
     _write(tmp_path, "node_modules/x/requirements.txt", "another-unpinned")
     manifests = {p.name for p in discover_manifests(tmp_path)}
     found = discover_manifests(tmp_path)
     assert manifests == {"requirements.txt"}
     assert all(".venv" not in str(p) and "node_modules" not in str(p) for p in found)
     assert scan_dependencies(tmp_path) == []  # vendored manifests are ignored
+
+
+def test_a_package_named_env_is_not_a_virtualenv(tmp_path):
+    # Measured on lobehub/lobehub, which ships `packages/env/package.json`: a real workspace
+    # package declaring registry dependencies. Pruning `env` by name dropped it, and a
+    # supply chain reported as absent is the failure this scanner exists to prevent. What
+    # separates the two is `pyvenv.cfg`, so the one with it is pruned and the one without
+    # it is scanned.
+    _write(tmp_path, "packages/env/package.json",
+           '{"name": "@x/env", "dependencies": {"floaty": "*"}}')
+    _write(tmp_path, "env/lib/requirements.txt", "vendored-unpinned")
+    _write(tmp_path, "env/pyvenv.cfg", "home = /usr\n")
+    manifests = {str(p.relative_to(tmp_path)) for p in discover_manifests(tmp_path)}
+    assert manifests == {"packages/env/package.json"}
+    assert {f.package for f in scan_dependencies(tmp_path)} == {"floaty"}
 
 
 def test_discovery_finds_nested_manifests_in_monorepo(tmp_path):

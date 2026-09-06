@@ -98,3 +98,46 @@ jobs:
       - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33
         with:
           skip-existing: true
+
+  # THE RELEASES PAGE IS A SURFACE TOO (2026-09-06). Publishing to PyPI was the whole of
+  # "release" until today, so `pip install llmsectest` gave 0.3.0 while the repository's own
+  # Releases page still called 0.2.0 the latest. A visitor who lands on GitHub rather than on
+  # PyPI reads the older number, which is the same drift the version badge had one layer down.
+  #
+  # Separate job, so a failure here cannot make a successful upload look failed: the package
+  # is on PyPI by this point and cannot be taken back, and a red cross on a release that
+  # actually shipped teaches everyone to ignore the cross.
+  #
+  # The notes come from CHANGELOG.md rather than from generated commit titles, because the
+  # changelog is the one written for a reader.
+  announce:
+    if: github.event_name == 'workflow_dispatch' && startsWith(github.ref, 'refs/tags/v')
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # creating a release is a write to the repository; nothing else
+    steps:
+      - uses: actions/checkout@v6
+      - name: the section of the changelog this tag names
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          python - "$version" <<'PY' > notes.md
+          import re, sys, pathlib
+          want = sys.argv[1]
+          text = pathlib.Path("CHANGELOG.md").read_text(encoding="utf-8")
+          # The section for THIS version, up to the next heading. A release whose notes are
+          # the whole changelog is a release nobody reads.
+          m = re.search(rf"^## \[{re.escape(want)}\][^\n]*\n(.*?)(?=^## )", text, re.M | re.S)
+          print((m.group(1).strip() if m else
+                 f"See CHANGELOG.md for {want}."))
+          PY
+          cat notes.md
+      - name: create the release if this tag has none
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            echo "release $GITHUB_REF_NAME already exists, leaving it alone"
+          else
+            gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file notes.md
+          fi

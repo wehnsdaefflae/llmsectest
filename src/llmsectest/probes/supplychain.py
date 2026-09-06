@@ -50,14 +50,43 @@ from .models import SEVERITIES
 
 SEVERITY_RANK = {name: i for i, name in enumerate(SEVERITIES)}
 
-# Directories we never descend into when discovering manifests: virtualenvs,
-# vendored/installed packages and VCS metadata are not the *project's* declared
-# supply chain, and scanning them produces noise.
+# Directories we never descend into when discovering manifests: vendored/installed
+# packages and VCS metadata are not the *project's* declared supply chain, and scanning
+# them produces noise. Every name here means one thing wherever it appears.
 _PRUNE_DIRS = frozenset({
-    ".git", ".hg", ".svn", ".venv", "venv", "env", "node_modules",
+    ".git", ".hg", ".svn", "node_modules",
     "site-packages", "__pycache__", ".tox", ".nox", "build", "dist",
     ".mypy_cache", ".pytest_cache", ".ruff_cache", "tmp", ".eggs",
 })
+
+#: Names that USUALLY mean a Python virtualenv and sometimes mean a real package. They are
+#: pruned by what the directory *is* rather than by what it is called, because a name that
+#: means two things cannot be excluded by name without hiding one of them. Measured on
+#: 2026-09-06: `lobehub/lobehub` ships `packages/env/package.json`, a real workspace package
+#: declaring two registry dependencies, and `env` in the prune set dropped it from a scan
+#: that then reported the tree with 114 manifests instead of 115. Over-excluding reports a
+#: real supply chain as an absence, which is the failure this scanner exists to prevent.
+_VENV_NAMES = frozenset({".venv", "venv", "env"})
+
+
+def is_pruned(root: Path, path: Path) -> bool:
+    """Whether ``path`` sits under a directory a project scan must not descend into.
+
+    Shared with :mod:`llmsectest.probes.modelpoison`, whose prune set was a second copy of
+    this one and would otherwise have kept the defect above after this one lost it.
+
+    PEP 405 puts ``pyvenv.cfg`` at the root of every virtualenv, so that file is what
+    separates a vendored environment from a directory that merely shares its name. A
+    virtualenv old enough to lack one still has its installed packages pruned by
+    ``site-packages``, which is unambiguous.
+    """
+    parts = path.relative_to(root).parts[:-1]
+    for i, part in enumerate(parts):
+        if part in _PRUNE_DIRS:
+            return True
+        if part in _VENV_NAMES and (root.joinpath(*parts[:i + 1]) / "pyvenv.cfg").is_file():
+            return True
+    return False
 
 # Curated list of PyPI package names documented to have carried malware or to
 # squat a popular package / stdlib module name. Stored as *canonical* names
@@ -479,7 +508,7 @@ def discover_manifests(repo: Path) -> list[Path]:
     found: set[Path] = set()
     for pattern in _MANIFEST_GLOBS:
         for path in repo.rglob(pattern):
-            if any(part in _PRUNE_DIRS for part in path.relative_to(repo).parts[:-1]):
+            if is_pruned(repo, path):
                 continue
             if path.is_file():
                 found.add(path)
