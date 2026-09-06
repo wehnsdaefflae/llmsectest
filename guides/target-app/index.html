@@ -1512,9 +1512,9 @@ OpenAI-style <code>choices[0].message.content</code>.</p>
 <li><code>--app-request-field</code> says where your input goes: a field name, or a dotted path
   into the body from <code>--app-body</code>, list indices included. An OpenAI-compatible
   endpoint takes <code>messages.0.content</code> against a body carrying that one user
-  message, and needs no wrapper script. Send <strong>no system message</strong>: an application
-  that lets a client one override its own prompt would then be answering yours,
-  and the scan would measure the model rather than the application.</li>
+  message. No wrapper script is needed. Send <strong>no system message</strong>. An application
+  that lets a client one override its own prompt would then be answering yours, so
+  the scan becomes a scan of the model wearing your application's name.</li>
 <li><code>--app-response-path</code> is a dotted path to the reply. A number in it is a list index, so
   <code>outputs.0.results.message.text</code> walks a list and then two objects.</li>
 <li><code>--app-headers</code> is a JSON object merged over the defaults, for bearer tokens and API keys. The
@@ -1537,9 +1537,9 @@ whole application as unreachable, which is a true sentence about the wrong thing
 <a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="p">)</span>
 </code></pre></div>
 <h3 id="an-openai-compatible-application">An OpenAI-compatible application<a class="headerlink" href="#an-openai-compatible-application" title="Permanent link">&para;</a></h3>
-<p>A great many products serve <code>POST /v1/chat/completions</code>. That shape needs no wrapper either, and it
-is worth its own example because the prompt does not sit at the top level of the body: it sits
-inside a list.</p>
+<p>A great many products serve <code>POST /v1/chat/completions</code>. That shape needs no wrapper either. It
+is worth its own example. The prompt does not sit at the top level of the body: it sits inside a
+list.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:14000/api/v1/chat/completions<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span>--app-request-field<span class="w"> </span>messages.0.content<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span>--app-response-path<span class="w"> </span><span class="s1">&#39;choices.0.message.content&#39;</span><span class="w"> </span><span class="se">\</span>
@@ -1547,22 +1547,22 @@ inside a list.</p>
 <a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span>--app-body<span class="w"> </span><span class="s1">&#39;{&quot;model&quot;: &quot;your-app&quot;, &quot;stream&quot;: false,</span>
 <a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="s1">               &quot;messages&quot;: [{&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;&quot;}]}&#39;</span>
 </code></pre></div>
-<p><code>--app-body</code> supplies the envelope with one empty user turn in it, and <code>--app-request-field</code> writes
-each probe into that turn. The path only ever writes into a list your body already carries: it never
+<p><code>--app-body</code> supplies the envelope with one empty user turn in it. <code>--app-request-field</code> writes each
+probe into that turn. The path only ever writes into a list your body already carries: it never
 creates or extends one, because how long a list should be is not something a path can say.</p>
 <p><strong>Send no <code>system</code> message, whatever your body looks like.</strong> Many implementations of this endpoint
 let a client system message <em>replace</em> the application's own configured prompt. Put your persona
 there and the application stops being the thing under test: it becomes a proxy to the model, every
 guardrail written into its own prompt is gone, and the report that comes out looks exactly like a
 report about your application. If you want to know which side of that line your endpoint is on, ask
-it who it is twice — once with no system message, once with a system message naming somebody else —
-and see which answer wins. That is the same control described under <em>Prove your prompt reached the
+it who it is twice: once with no system message, once with a system message naming somebody else.
+Whichever answer wins tells you. That is the same control described under <em>Prove your prompt reached the
 model</em> below, run as a differential.</p>
 <p>Two more things worth knowing about this shape:</p>
 <ul>
 <li><strong>Prefer the nested response path to a flattened convenience field.</strong> <code>choices.0.message.content</code>
-  fails loudly when the reply is not the shape you expected, and the probe is then recorded
-  undelivered with the reason. A short field that quietly yields an empty string turns an
+  fails loudly when the reply is not the shape you expected, so the probe is recorded undelivered
+  with the reason. A short field that quietly yields an empty string turns an
   application that said nothing into one that withstood the attack.</li>
 <li><strong>Watch for an error envelope returned with HTTP 200.</strong> Several implementations answer
   <code>{"status": "error", "msg": ...}</code> with a success code. The nested path above is what catches it.</li>
