@@ -34,9 +34,9 @@ llmsectest --target app:http://localhost:7860/api/v1/run/<flow-id> \
 - `--app-request-field` says where your input goes: a field name, or a dotted path
   into the body from `--app-body`, list indices included. An OpenAI-compatible
   endpoint takes `messages.0.content` against a body carrying that one user
-  message, and needs no wrapper script. Send **no system message**: an application
-  that lets a client one override its own prompt would then be answering yours,
-  and the scan would measure the model rather than the application.
+  message. No wrapper script is needed. Send **no system message**. An application
+  that lets a client one override its own prompt would then be answering yours, so
+  the scan becomes a scan of the model wearing your application's name.
 - `--app-response-path` is a dotted path to the reply. A number in it is a list index, so
   `outputs.0.results.message.text` walks a list and then two objects.
 - `--app-headers` is a JSON object merged over the defaults, for bearer tokens and API keys. The
@@ -64,9 +64,9 @@ target = AppEndpointAdapter(
 
 ### An OpenAI-compatible application
 
-A great many products serve `POST /v1/chat/completions`. That shape needs no wrapper either, and it
-is worth its own example because the prompt does not sit at the top level of the body: it sits
-inside a list.
+A great many products serve `POST /v1/chat/completions`. That shape needs no wrapper either. It
+is worth its own example. The prompt does not sit at the top level of the body: it sits inside a
+list.
 
 ```bash
 llmsectest --target app:http://localhost:14000/api/v1/chat/completions \
@@ -77,8 +77,8 @@ llmsectest --target app:http://localhost:14000/api/v1/chat/completions \
                "messages": [{"role": "user", "content": ""}]}'
 ```
 
-`--app-body` supplies the envelope with one empty user turn in it, and `--app-request-field` writes
-each probe into that turn. The path only ever writes into a list your body already carries: it never
+`--app-body` supplies the envelope with one empty user turn in it. `--app-request-field` writes each
+probe into that turn. The path only ever writes into a list your body already carries: it never
 creates or extends one, because how long a list should be is not something a path can say.
 
 **Send no `system` message, whatever your body looks like.** Many implementations of this endpoint
@@ -86,15 +86,15 @@ let a client system message *replace* the application's own configured prompt. P
 there and the application stops being the thing under test: it becomes a proxy to the model, every
 guardrail written into its own prompt is gone, and the report that comes out looks exactly like a
 report about your application. If you want to know which side of that line your endpoint is on, ask
-it who it is twice — once with no system message, once with a system message naming somebody else —
-and see which answer wins. That is the same control described under *Prove your prompt reached the
+it who it is twice: once with no system message, once with a system message naming somebody else.
+Whichever answer wins tells you. That is the same control described under *Prove your prompt reached the
 model* below, run as a differential.
 
 Two more things worth knowing about this shape:
 
 - **Prefer the nested response path to a flattened convenience field.** `choices.0.message.content`
-  fails loudly when the reply is not the shape you expected, and the probe is then recorded
-  undelivered with the reason. A short field that quietly yields an empty string turns an
+  fails loudly when the reply is not the shape you expected, so the probe is recorded undelivered
+  with the reason. A short field that quietly yields an empty string turns an
   application that said nothing into one that withstood the attack.
 - **Watch for an error envelope returned with HTTP 200.** Several implementations answer
   `{"status": "error", "msg": ...}` with a success code. The nested path above is what catches it.
