@@ -49,7 +49,8 @@ class ProbeCase:
     #: Tokens planted in a different corpus artifact whose presence means this case
     #: cannot establish a clean result. For example, a poisoned retrieved document may
     #: answer a retrieval-canary probe before the canary can be observed. Such a reply
-    #: is recorded as inconclusive rather than as a withstood probe.
+    #: remains a delivered, scored result and is annotated through the marker-unconfirmed
+    #: reporting channel rather than being mistaken for a transport error.
     inconclusive_tokens: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:

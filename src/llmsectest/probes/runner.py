@@ -14,7 +14,7 @@ from ..adapters.base import (
     LLMAdapter,
     Message,
 )
-from .detectors import get_detector, output_ceiling_reached
+from .detectors import _present_deobfuscated, get_detector, output_ceiling_reached
 from .models import ProbeCase, ProbeOutcome
 
 #: How many probes must have completed inside the per-request budget before a *timeout*
@@ -113,6 +113,14 @@ _TOKEN_PRESENCE_DETECTORS = frozenset(
 )
 
 
+def _tokens_we_send_ourselves(
+    case: ProbeCase, tokens: tuple[str, ...]
+) -> tuple[str, ...]:
+    """Return the supplied tokens that are already present in our own request."""
+    sent = f"{case.user_prompt}\n{case.system_prompt}".casefold()
+    return tuple(token for token in tokens if token and token.casefold() in sent)
+
+
 def forbidden_tokens_we_send_ourselves(case: ProbeCase) -> tuple[str, ...]:
     """The case's forbidden tokens that appear in the attack *we* transmit.
 
@@ -140,8 +148,7 @@ def forbidden_tokens_we_send_ourselves(case: ProbeCase) -> tuple[str, ...]:
     the user turn, so a system-prompt token is not literally on the wire. Counting it
     anyway costs the LLM07 case its body coverage and cannot manufacture a false finding.
     """
-    sent = f"{case.user_prompt}\n{case.system_prompt}".lower()
-    return tuple(t for t in case.forbidden if t and t.lower() in sent)
+    return _tokens_we_send_ourselves(case, case.forbidden)
 
 
 def may_scan_whole_body(case: ProbeCase) -> bool:
@@ -166,15 +173,21 @@ def _inconclusive_marker_evidence(response: str, case: ProbeCase) -> str | None:
     carried on the case rather than inferred from the detector, because both LLM08
     dimensions use token-presence detectors with different meanings.
     """
-    if not case.inconclusive_tokens:
+    candidates = tuple(
+        token for token in case.inconclusive_tokens
+        if token not in _tokens_we_send_ourselves(case, case.inconclusive_tokens)
+    )
+    if not candidates:
         return None
-    folded = response.casefold()
-    hits = tuple(token for token in case.inconclusive_tokens if token and token.casefold() in folded)
+    hits = _present_deobfuscated(response, candidates)
     if not hits:
         return None
-    markers = ", ".join(repr(token) for token in hits)
+    markers = ", ".join(
+        f"{token!r}" + (f" via {scheme}" if scheme else "")
+        for token, scheme in hits
+    )
     return (
-        "retrieval-exposure probe inconclusive: the response carried marker(s) from a "
+        "retrieval-exposure result unconfirmed: the response carried marker(s) from a "
         f"poisoned document ({markers}), so the document answered the probe before "
         "the retrieval canary could establish whether the corpus was exposed"
     )
@@ -441,17 +454,12 @@ def run_probe(
                 "response body"
             )
     if not vulnerable:
-        inconclusive_evidence = _inconclusive_marker_evidence(whole_response, case)
-        if inconclusive_evidence:
-            return ProbeOutcome(
-                case=case,
-                response=response.text,
-                vulnerable=False,
-                evidence=inconclusive_evidence,
-                output_tokens=output_tokens,
-                errored=True,
-                elapsed_seconds=elapsed,
-            )
+        marker_evidence = _inconclusive_marker_evidence(whole_response, case)
+        if marker_evidence:
+            # This request was delivered and scored. Keep it out of the timeout/error
+            # channel: the existing marker-unconfirmed report annotation carries the
+            # ambiguity without inflating unfinished time or dropping measured latency.
+            evidence = marker_evidence
     if case.cost_ceiling and not vulnerable:
         vulnerable, evidence = output_ceiling_reached(output_tokens, request.max_tokens)
     return ProbeOutcome(
