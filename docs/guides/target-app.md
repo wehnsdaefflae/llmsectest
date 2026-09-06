@@ -90,6 +90,15 @@ it who it is twice: once with no system message, once with a system message nami
 Whichever answer wins tells you. That is the same control described under *Prove your prompt reached the
 model* below, run as a differential.
 
+**A system message that is merely *added* is the quieter half of the same problem.** Where one
+implementation replaces the application's prompt, another keeps its own and appends yours. Nothing
+looks wrong: the persona reaches the model, your canary comes back, the report fills in. What you
+have measured is the prompt your client sent, on an application that is holding a different one,
+and there is nothing on the server to read your persona back from. The remedy is the same either
+way. **Put the persona where the application stores it**, through whatever the product calls a
+system prompt, an agent or a workspace instruction, send no `system` message at all, then read it
+back off the application and check it byte for byte before you believe a single clean row.
+
 Two more things worth knowing about this shape:
 
 - **Prefer the nested response path to a flattened convenience field.** `choices.0.message.content`

@@ -53,13 +53,21 @@ def _now_iso() -> str:
     return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def _purl(name: str, pinned: str | None) -> str:
-    """The Package-URL for a PyPI dependency (canonical name; version if pinned).
+#: PURL type per dependency ecosystem. A PURL names a registry, so emitting
+#: ``pkg:pypi/react`` for a package.json dependency would be a wrong fact in a document
+#: whose whole purpose is machine consumption by a downstream vulnerability service.
+_PURL_TYPE = {"PyPI": "pypi", "npm": "npm"}
 
-    Names are already PEP 503-canonical (``[a-z0-9-]``), so no PURL percent-
-    encoding is required. An unpinned dependency yields a versionless PURL.
+
+def _purl(name: str, pinned: str | None, ecosystem: str = "PyPI") -> str:
+    """The Package-URL for a dependency (canonical name; version if pinned).
+
+    PyPI names are already PEP 503-canonical (``[a-z0-9-]``) and npm names are
+    lowercase, so no PURL percent-encoding is required except for the ``/`` inside an
+    npm scope, which the PURL spec keeps literal. An unpinned dependency yields a
+    versionless PURL.
     """
-    base = f"pkg:pypi/{name}"
+    base = f"pkg:{_PURL_TYPE.get(ecosystem, ecosystem.lower())}/{name}"
     return f"{base}@{pinned}" if pinned else base
 
 
@@ -67,7 +75,7 @@ def _component(name: str, specifier: str, url: str, deps: list[Dependency],
                taken_refs: set[str]) -> dict:
     """One CycloneDX ``component`` for a group of identical declarations."""
     pinned = pinned_version(deps[0])  # every dep in the group shares the specifier
-    purl = _purl(name, pinned)
+    purl = _purl(name, pinned, deps[0].ecosystem)
 
     # bom-ref must be unique across the BOM; two distinct unpinned constraints on
     # the same name share a versionless PURL, so disambiguate on collision.
@@ -112,14 +120,17 @@ def build_cyclonedx(dependencies: list[Dependency], *, subject: str | None = Non
     if tool_version is None:
         tool_version = _tool_version()
 
-    groups: dict[tuple[str, str, str], list[Dependency]] = {}
+    # Grouped by ecosystem as well, so a name published in both registries becomes two
+    # components with two PURLs rather than one wearing the wrong registry's type.
+    groups: dict[tuple[str, str, str, str], list[Dependency]] = {}
     for dep in dependencies:
-        groups.setdefault((dep.name, dep.specifier, dep.url), []).append(dep)
+        groups.setdefault((dep.ecosystem, dep.name, dep.specifier, dep.url), []).append(dep)
 
     taken_refs: set[str] = set()
     components = [
-        _component(name, specifier, url, groups[(name, specifier, url)], taken_refs)
-        for (name, specifier, url) in sorted(groups)
+        _component(name, specifier, url, groups[key], taken_refs)
+        for key in sorted(groups)
+        for (_ecosystem, name, specifier, url) in [key]
     ]
 
     tool = {"type": "application", "name": "llmsectest"}

@@ -15,7 +15,11 @@ from pathlib import Path
 import pytest
 
 from llmsectest import envvars
-from llmsectest.probes.modelpoison import discover_model_files, scan_model_files
+from llmsectest.probes.modelpoison import (
+    discover_model_files,
+    discover_safe_model_files,
+    scan_model_files,
+)
 from llmsectest.suite.scanners import fail_with_finding, scanner_params
 
 
@@ -29,6 +33,16 @@ def _load():
     if not p.exists():
         return None, f"model path {path!r} does not exist"
     if not discover_model_files(p):
+        # "nothing there" and "everything there is in a format that cannot carry the
+        # attack" are opposite statements about a project, and the second one is the
+        # remediation this category recommends. Reporting it as an absence read as a
+        # gap in the scan on a deployment whose only model file is an ONNX embedder.
+        safe = discover_safe_model_files(p)
+        if safe:
+            return None, (f"{len(safe)} model file(s) under {path}, all in code-free "
+                          f"formats (.safetensors / .gguf / .onnx) that carry no pickle "
+                          f"to execute on load — nothing for this scan to walk, which is "
+                          f"the recommended state")
         return None, (f"no model files (.pkl / .pt / .pth / .ckpt / .bin / .npy / "
                       f".joblib / …) found under {path}")
     return scan_model_files(p), ""

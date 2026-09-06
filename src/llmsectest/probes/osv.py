@@ -100,14 +100,18 @@ def scan_known_vulnerabilities(repo: str | Path) -> OsvScanResult:
     deps whose version is statically determined, and aggregates the advisories
     into one finding per vulnerable package. Network use is the caller's opt-in.
     """
-    pinned: dict[tuple[str, str], Dependency] = {}
+    # Keyed by ECOSYSTEM as well as name and version: OSV answers about a name *in a
+    # registry*, so a monorepo declaring `requests` on PyPI and `requests` on npm must
+    # ask two questions. Keying on the name alone would have asked one and reported the
+    # answer about both.
+    pinned: dict[tuple[str, str, str], Dependency] = {}
     unqueried = 0
     for dep in collect_dependencies(repo):
         version = pinned_version(dep)
         if version is None:
             unqueried += 1
             continue
-        pinned.setdefault((dep.name, version), dep)  # dedupe across manifests
+        pinned.setdefault((dep.ecosystem, dep.name, version), dep)  # dedupe across manifests
 
     ordered = sorted(pinned.items())
     results: list[dict] = []
@@ -116,8 +120,8 @@ def scan_known_vulnerabilities(repo: str | Path) -> OsvScanResult:
             chunk = ordered[start:start + _BATCH_SIZE]
             payload = {
                 "queries": [
-                    {"package": {"name": name, "ecosystem": "PyPI"}, "version": version}
-                    for (name, version), _ in chunk
+                    {"package": {"name": name, "ecosystem": ecosystem}, "version": version}
+                    for (ecosystem, name, version), _ in chunk
                 ]
             }
             response = _post_json(OSV_QUERYBATCH_URL, payload)
@@ -138,7 +142,7 @@ def scan_known_vulnerabilities(repo: str | Path) -> OsvScanResult:
         )
 
     findings = []
-    for ((_name, version), dep), result in zip(ordered, results, strict=True):
+    for ((_ecosystem, _name, version), dep), result in zip(ordered, results, strict=True):
         vuln_ids = [v["id"] for v in (result.get("vulns") or []) if v.get("id")]
         if vuln_ids:
             findings.append(_advisory_finding(dep, version, vuln_ids))
