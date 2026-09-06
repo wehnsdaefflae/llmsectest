@@ -20,6 +20,8 @@ import json
 import pytest
 
 import llmsectest.envvars as envvars
+from llmsectest.adapters.app_endpoint import AppEndpointAdapter
+from llmsectest.adapters.base import AdapterError
 from llmsectest.probes.demo import resolve_target
 
 
@@ -80,3 +82,61 @@ def test_the_shape_is_ignored_for_a_non_app_target(monkeypatch):
 # `--pdf-output` were undocumented: a check whose denominator excluded them.
 # `tests/test_cli_help_and_coverage_map.py` asks the question over every option the
 # CLI accepts, which is where it belongs.
+
+
+# --- the prompt's own place in the body ---------------------------------------
+#
+# Added 2026-09-06, standing up OpenAgent (the-open-agent/openagent v2.90.1), whose only
+# chat door is OpenAI-compatible: the prompt belongs at `messages.0.content`, inside a list
+# the caller supplies in `--app-body`. A flat key could not reach it, so every such
+# application needed a wrapper script — and a wrapper that sends a system message is exactly
+# what makes a scan measure the model instead of the application.
+
+def test_the_prompt_reaches_a_list_element_the_body_carries():
+    """The OpenAI-compatible shape, described with no shim."""
+    a = AppEndpointAdapter(
+        endpoint="http://x/v1/chat/completions",
+        request_field="messages.0.content",
+        extra_body={"model": "m", "stream": False,
+                    "messages": [{"role": "user", "content": ""}]},
+    )
+    assert a._body("attack") == {
+        "model": "m", "stream": False,
+        "messages": [{"role": "user", "content": "attack"}],
+    }
+
+
+def test_the_body_template_is_not_consumed_by_the_first_probe():
+    """`extra_body` is one object shared by every probe, and the placement writes into it,
+    so a shallow copy would leave probe 2 sending probe 1's text."""
+    a = AppEndpointAdapter(
+        endpoint="http://x/v1/chat/completions",
+        request_field="messages.0.content",
+        extra_body={"messages": [{"role": "user", "content": ""}]},
+    )
+    a._body("first")
+    assert a._body("second")["messages"][0]["content"] == "second"
+    assert a.extra_body["messages"][0]["content"] == ""
+
+
+def test_the_prompt_wins_over_a_static_value_for_the_same_field():
+    """The body used to be `{request_field: sent, **extra_body}`, so a body naming the same
+    key silently replaced the attacker turn with a fixed sentence and the probe text never
+    left this process. Every reply would then be the application answering something else,
+    scored as if it had answered the attack."""
+    a = AppEndpointAdapter(endpoint="http://x/chat", request_field="message",
+                           extra_body={"message": "placeholder", "stream": False})
+    assert a._body("attack") == {"message": "attack", "stream": False}
+
+
+@pytest.mark.parametrize("path,body", [
+    ("messages.0.content", {}),                       # no list at all
+    ("messages.2.content", {"messages": [{}]}),       # past the end of the one there
+    ("0", {"messages": [{}]}),                        # the body itself is not a list
+])
+def test_an_index_with_no_list_under_it_is_still_refused(path, body):
+    """The original refusal was right about the case it was written for: a path cannot say
+    how long a list the application never asked for should be."""
+    a = AppEndpointAdapter(endpoint="http://x/chat", request_field=path, extra_body=body)
+    with pytest.raises(AdapterError, match="named fields only"):
+        a._body("attack")

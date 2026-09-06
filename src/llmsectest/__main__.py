@@ -34,6 +34,13 @@ Examples:
         --app-headers '{"Authorization": "Bearer <token>"}' \\
         --app-body '{"output_type": "chat", "input_type": "chat"}'
                           # non-OpenAI endpoint: customise the request and reply shapes
+    python -m llmsectest --target app:http://localhost:14000/api/v1/chat/completions \\
+        --app-request-field messages.0.content \\
+        --app-response-path 'choices.0.message.content' \\
+        --app-body '{"model": "app", "stream": false,
+                     "messages": [{"role": "user", "content": ""}]}'
+                          # an OpenAI-compatible app: the prompt goes into the body's list,
+                          # and NO system message, so the app's own prompt stays in place
     python -m llmsectest --target app:http://localhost:42110/api/chat \\
         --app-session-field conversation_id \\
         --app-session-init '{"url": "/api/sessions", "response_path": "conversation_id"}'
@@ -61,7 +68,9 @@ their input are reported as skipped-with-reason.
 
 Endpoints that neither read ``{"message": ...}`` nor answer in an OpenAI-compatible
 shape are described with four more flags instead of a wrapper script:
-``--app-request-field`` (the body field your endpoint reads the prompt from),
+``--app-request-field`` (where in the body your endpoint reads the prompt from: a
+field name, or a dotted path into the body you supply below, list indices included,
+e.g. ``messages.0.content`` for an OpenAI-compatible door),
 ``--app-response-path`` (a dotted path to the reply in the response body, list indices
 included, e.g. ``choices.0.message.content``), ``--app-headers`` and ``--app-body``
 (JSON objects merged into the headers and the request body of every probe).

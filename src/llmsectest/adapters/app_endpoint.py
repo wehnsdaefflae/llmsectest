@@ -24,6 +24,7 @@ scan without it measures the wrong thing.
 from __future__ import annotations
 
 import contextlib
+import copy
 import json
 import time
 import urllib.error
@@ -105,34 +106,69 @@ def _extract(data: object, path: str | None) -> str:
     )
 
 
+def _refuse_index(path: str, part: str) -> AdapterError:
+    """The one message both ends of :func:`_place` give for an index with no list under it.
+
+    A numeric segment is only ever an index into a list the body **already carries**: this
+    writes into such an element, and never creates or extends a list, because how long one
+    should be is not something a path can say.
+    """
+    return AdapterError(
+        f"{path!r} indexes {part!r} where the request body has no list, so a value is "
+        "placed into named fields only, or into an element of a list the body already has"
+    )
+
+
 def _place(body: dict, path: str, value: str) -> None:
     """Write ``value`` into ``body`` at a dotted ``path``, creating the objects on the way.
 
     The same dotted convention :func:`_extract` reads a reply out of, used in the other
     direction, so an application that answers at ``choices.0.message.content`` and wants its
-    session at ``metadata.conversation_id`` is described in one vocabulary. List indices are
-    not accepted here: reading past one is unambiguous, while writing into one would have to
-    invent how long the list is.
+    session at ``metadata.conversation_id`` is described in one vocabulary.
+
+    **A numeric segment indexes a list the body already carries (2026-09-06).** It used to
+    be refused outright, on the ground that writing into a list would have to invent how
+    long the list is. That is true of a list which is not there, and it is the whole reason
+    an OpenAI-compatible application could not be described without a wrapper script: the
+    prompt goes at ``messages.0.content``, inside a list the caller supplies in
+    ``--app-body``. So the refusal now applies where it was actually earned — an index with
+    no list under it — and an existing element is written to. Nothing is created or
+    extended, so a path can still never invent a message the application did not ask for.
     """
     parts = path.split(".")
-    cur = body
+    cur: object = body
     for part in parts[:-1]:
-        if part.isdigit():
-            raise AdapterError(
-                f"session field {path!r} indexes a list at {part!r}; a session value is "
-                "placed into named fields only"
-            )
-        nxt = cur.get(part)
-        if not isinstance(nxt, dict):
+        nxt = _child(cur, part, path)
+        if not isinstance(nxt, (dict, list)):
             nxt = {}
-            cur[part] = nxt
+            _assign(cur, part, nxt, path)
         cur = nxt
-    if parts[-1].isdigit():
-        raise AdapterError(
-            f"session field {path!r} indexes a list at {parts[-1]!r}; a session value is "
-            "placed into named fields only"
-        )
-    cur[parts[-1]] = value
+    _assign(cur, parts[-1], value, path)
+
+
+def _child(container: object, part: str, path: str) -> object:
+    """The element of ``container`` at ``part``, or ``None`` when there is nothing there."""
+    if isinstance(container, list):
+        if not part.isdigit() or int(part) >= len(container):
+            raise _refuse_index(path, part)
+        return container[int(part)]
+    if isinstance(container, dict):
+        if part.isdigit():
+            raise _refuse_index(path, part)
+        return container.get(part)
+    raise _refuse_index(path, part)
+
+
+def _assign(container: object, part: str, value: object, path: str) -> None:
+    """Write ``value`` at ``part`` of ``container``, list element or named field."""
+    if isinstance(container, list):
+        if not part.isdigit() or int(part) >= len(container):
+            raise _refuse_index(path, part)
+        container[int(part)] = value
+        return
+    if not isinstance(container, dict) or part.isdigit():
+        raise _refuse_index(path, part)
+    container[part] = value
 
 
 class AppEndpointAdapter(LLMAdapter):
@@ -170,9 +206,28 @@ class AppEndpointAdapter(LLMAdapter):
         self.session_field = session_field
         self.session_init = None if session_init is None else dict(session_init)
 
+    def _body(self, sent: str) -> dict:
+        """The request body for one probe: ``extra_body``, with the attacker turn placed in it.
+
+        **Two things this fixes, both measured on 2026-09-06 standing OpenAgent up.** The
+        body used to be ``{request_field: sent, **extra_body}``, so a `request_field` naming
+        a key `--app-body` also carries was silently overwritten by the static value and the
+        probe text never left this process: every reply would then be the application
+        answering some fixed sentence, scored as if it had answered the attack. And a flat
+        key cannot reach the prompt of an OpenAI-compatible endpoint, where it sits at
+        ``messages.0.content`` inside a list `--app-body` supplies, which is why every such
+        member needed a wrapper script until now.
+
+        Deep-copied because the placement writes *into* that structure, and ``extra_body``
+        is one object shared by every probe in the scan.
+        """
+        body = copy.deepcopy(self.extra_body)
+        _place(body, self.request_field, sent)
+        return body
+
     def complete(self, request: CompletionRequest) -> CompletionResponse:
         sent = _last_user(request)
-        body = {self.request_field: sent, **self.extra_body}
+        body = self._body(sent)
         if self.session_field:
             _place(body, self.session_field, self._session_value())
         req = urllib.request.Request(
