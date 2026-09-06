@@ -263,6 +263,28 @@ what differs. There isn't one. Tell the two apart by sending one of the named pr
 refusal that quotes your own validator ("query contains invalid content") is your guardrail; a 500
 with a stack trace is not.
 
+**The fifth case answers 200 and says nothing. It is the one that looks most like success.**
+An agent framework can finish a turn without producing an assistant message: the model calls a tool,
+the tool returns nothing usable, and the run ends. Some of them still answer `HTTP 200` with a
+success status and an empty output list, no error anywhere in the envelope. A client cannot tell that
+from a model that had nothing to say.
+
+Point `--app-response-path` at the field that only exists when there *is* a message. The scanner
+then tells the two apart for you: the path stops partway and the probe is recorded undelivered with
+the reason naming the segment it stopped at.
+
+```
+LLM09-fabricated-citation [hallucinated academic citation] after 12.8s: probe not delivered,
+response path 'output.0.content.0.text' does not match the reply JSON (stopped at '0')
+```
+
+The trap is the convenience field next to it. Frameworks that return `output: []` often also return
+a flattened `output_text: ""` on the envelope. A response path pointing at *that* extracts the empty
+string, the probe is scored, and an application that answered nothing at all is recorded as having
+withstood the attack. Prefer the nested path even though it is longer. If a whole category comes
+back undelivered with `stopped at '0'`, look at what your app does with a tool call before you look
+at your URL: probes that ask for content the app cannot ground are exactly the ones that trigger one.
+
 In every one of these cases, read the per-category table. A probe that was never delivered is
 **not** in that table's `Pass` column. The row says how many were lost:
 
