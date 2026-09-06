@@ -1686,15 +1686,29 @@ sends one, because the fix is a quota rather than a URL. Any other refusal (<cod
 reason names the status and says the endpoint <em>was</em> reached. That distinction matters when you are
 scanning through an auth layer: <code>app endpoint … answered HTTP 401 (Unauthorized)</code> sends you to your
 token, where <code>unreachable</code> would send you to your DNS.</p>
+<p><strong>The fourth case is the one with nothing to fix: your app refused the input on purpose.</strong> Some
+applications validate the prompt before it reaches the model. If yours rejects, say, anything
+matching an XSS pattern list, the probes carrying <code>&lt;script&gt;</code> or <code>javascript:</code> payloads never reach
+the model at all. They are recorded undelivered like any other error. That is the right
+record: nothing about your output handling was measured, so nothing may be claimed about it. The remedy is
+what differs. There isn't one. Tell the two apart by sending one of the named probes by hand. A
+refusal that quotes your own validator ("query contains invalid content") is your guardrail; a 500
+with a stack trace is not.</p>
+<p>In every one of these cases, read the per-category table. A probe that was never delivered is
+<strong>not</strong> in that table's <code>Pass</code> column. The row says how many were lost:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>LLM05    Improper Output Handling                4     2     0  2 never delivered
+</code></pre></div>
+<p>Four probes, two answered and held, none failed, two never delivered. A row reading <code>4  4  0</code>
+would be claiming your app handled output safely four times when it did so twice.</p>
 <p><strong>Every inconclusive probe is named.</strong> The reason recorded for each one starts with the probe's own id
 and technique, so the report says which attacks you did not get an answer for:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>APP-shop-LLM02-handover-summary [indirect disclosure via a configuration handover document]
-<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>after 90.0s: probe inconclusive, app endpoint http://127.0.0.1:8041/chat did not respond within 90s
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>APP-shop-LLM02-handover-summary [indirect disclosure via a configuration handover document]
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>after 90.0s: probe inconclusive, app endpoint http://127.0.0.1:8041/chat did not respond within 90s
 </code></pre></div>
 <p>That matters because a category runs several mechanisms. <code>LLM02 attempted 4, inconclusive 3</code> is honest
 about the count. It still leaves you guessing which three. Now you can read it off the report.</p>
 <p><strong>And every scan records its slowest answered probe</strong>, whether or not anything timed out:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>Slowest answered: 11.4s (APP-shop-LLM07-disclosure)
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>Slowest answered: 11.4s (APP-shop-LLM07-disclosure)
 </code></pre></div>
 <p>Same figure in the SARIF as a run-level <code>latency</code> property, and in the header of the HTML page. A probe
 answered at 88 seconds under a 90 second budget looks the same in your report as one answered in 3, right
@@ -1731,13 +1745,13 @@ quota, then run it again.</p>
 <h2 id="when-you-cant-run-the-app-the-persona-proxy">When you can't run the app: the persona proxy<a class="headerlink" href="#when-you-cant-run-the-app-the-persona-proxy" title="Permanent link">&para;</a></h2>
 <p>If you only have the app's system prompt (not a running instance), load it onto a model and test that
 as a proxy. Lower fidelity (no guardrail/RAG/tool code), but useful:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">llmsectest.adapters</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_adapter</span>
-<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">llmsectest.probes</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_app_scan</span>
-<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>
-<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="n">target</span> <span class="o">=</span> <span class="n">get_adapter</span><span class="p">(</span><span class="s2">&quot;ollama&quot;</span><span class="p">,</span> <span class="s2">&quot;gemma4:e2b-it-q4_K_M&quot;</span><span class="p">)</span>
-<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="n">prompt</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;my_app_system_prompt.txt&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="k">for</span> <span class="n">outcome</span> <span class="ow">in</span> <span class="n">run_app_scan</span><span class="p">(</span><span class="s2">&quot;my-app&quot;</span><span class="p">,</span> <span class="n">prompt</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
-<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">outcome</span><span class="o">.</span><span class="n">case</span><span class="o">.</span><span class="n">owasp</span><span class="p">,</span> <span class="s2">&quot;VULNERABLE&quot;</span> <span class="k">if</span> <span class="n">outcome</span><span class="o">.</span><span class="n">vulnerable</span> <span class="k">else</span> <span class="s2">&quot;ok&quot;</span><span class="p">,</span> <span class="n">outcome</span><span class="o">.</span><span class="n">evidence</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">llmsectest.adapters</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_adapter</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">llmsectest.probes</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_app_scan</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="n">target</span> <span class="o">=</span> <span class="n">get_adapter</span><span class="p">(</span><span class="s2">&quot;ollama&quot;</span><span class="p">,</span> <span class="s2">&quot;gemma4:e2b-it-q4_K_M&quot;</span><span class="p">)</span>
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="n">prompt</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;my_app_system_prompt.txt&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="k">for</span> <span class="n">outcome</span> <span class="ow">in</span> <span class="n">run_app_scan</span><span class="p">(</span><span class="s2">&quot;my-app&quot;</span><span class="p">,</span> <span class="n">prompt</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
+<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">outcome</span><span class="o">.</span><span class="n">case</span><span class="o">.</span><span class="n">owasp</span><span class="p">,</span> <span class="s2">&quot;VULNERABLE&quot;</span> <span class="k">if</span> <span class="n">outcome</span><span class="o">.</span><span class="n">vulnerable</span> <span class="k">else</span> <span class="s2">&quot;ok&quot;</span><span class="p">,</span> <span class="n">outcome</span><span class="o">.</span><span class="n">evidence</span><span class="p">)</span>
 </code></pre></div>
 <p>See <a href="../../api/"><code>run_app_scan</code></a> in the API reference.</p>
 
