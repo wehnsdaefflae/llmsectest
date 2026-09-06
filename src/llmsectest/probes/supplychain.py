@@ -28,11 +28,12 @@ What it flags, per declared dependency:
 Exact pins (``==`` / ``===``), compatible-release (``~=``) and fully bounded ranges
 (``>=x,<y``) are treated as safe and produce no finding.
 
-Manifests understood, across two ecosystems: on **PyPI**, ``requirements*.txt``
+Manifests understood, across three ecosystems: on **PyPI**, ``requirements*.txt``
 (incl. ``-e`` / index directives), PEP 621 ``pyproject.toml`` (``[project]`` +
 optional-dependencies), Poetry (``[tool.poetry.dependencies]``) and ``Pipfile``;
 on **npm**, ``package.json`` (``dependencies`` / ``devDependencies`` /
-``optionalDependencies``). A dependency carries the ecosystem it belongs to, so the
+``optionalDependencies``); on **Go**, ``go.mod`` (``require``, direct and indirect, and
+``replace``). A dependency carries the ecosystem it belongs to, so the
 known-bad corpus, the OSV query and the SBOM PURL all name the right registry. This
 core is the offline, zero-dependency baseline; the opt-in networked known-CVE lookup
 on top of it lives in :mod:`llmsectest.probes.osv` (CLI ``--osv``).
@@ -487,7 +488,105 @@ def _parse_package_json(path: Path, rel: str) -> list[Dependency]:
     return deps
 
 
-MANIFEST_GLOBS = ("requirements*.txt", "pyproject.toml", "Pipfile", "package.json")
+#: One ``require`` entry: a module path and its version, in either the single-line
+#: (``require example.com/m v1.2.3``) or the parenthesised block form. The module path is
+#: kept EXACTLY as written and is not lowercased the way an npm name is: a Go module path is
+#: case-sensitive, and OSV and the PURL spec both name it as the author published it.
+_GO_REQUIRE_RE = re.compile(r"^(?P<module>[^\s()]+)\s+(?P<version>v\S+)$")
+
+#: One ``replace`` directive: ``old [version] => new [version]``.
+_GO_REPLACE_RE = re.compile(r"^(?P<old>[^\s()]+)(?:\s+v\S+)?\s*=>\s*"
+                            r"(?P<new>\S+)(?:\s+(?P<newv>v\S+))?$")
+
+#: A replacement target that is a directory rather than a module path. Go resolves these
+#: off the filesystem, so neither the module proxy's immutability nor the checksum
+#: database's integrity guarantee applies to what the build actually compiles.
+_GO_LOCAL_RE = re.compile(r"^(?:\.{1,2}[/\\]|[/\\]|[A-Za-z]:[/\\])")
+
+
+def _go_require(entry: str, rel: str) -> Dependency | None:
+    """One ``require`` entry, or ``None`` for a line that is not one."""
+    found = _GO_REQUIRE_RE.match(entry)
+    if not found:
+        return None
+    module, version = found["module"], found["version"]
+    return Dependency(module, f"{module} {version}", "==" + version, rel, ecosystem="Go")
+
+
+def _go_replacement(entry: str, rel: str) -> Dependency | None:
+    """One ``replace`` directive, as the dependency the build actually fetches.
+
+    A replacement to a **directory** is recorded against the module it replaces, with the
+    path in ``url``, so it classifies as the index bypass it is. A replacement to another
+    **module** is recorded under the replacement's own path and version, because that, and
+    not the module named in ``require``, is what the build compiles.
+    """
+    found = _GO_REPLACE_RE.match(entry)
+    if not found:
+        return None
+    new, version = found["new"], found["newv"]
+    if _GO_LOCAL_RE.match(new):
+        return Dependency(found["old"], entry, "", rel, url=new, ecosystem="Go")
+    # A module-to-module replacement without a version is not valid go.mod; skipped rather
+    # than recorded as unpinned, which would be a finding invented out of a parse failure.
+    return Dependency(new, entry, "==" + version, rel, ecosystem="Go") if version else None
+
+
+def _parse_go_mod(path: Path, rel: str) -> list[Dependency]:
+    """Parse the module graph a ``go.mod`` declares.
+
+    **Why LLM03 needs it (2026-09-06).** Written for a real shape this scanner could not
+    read: a Go server whose repository declares its dependencies in ``go.mod``, beside a
+    React ``package.json``, a worker's ``package.json`` and an OCR service's
+    ``requirements.txt``. Every manifest the scanner understood belonged to something other
+    than the program the probes were talking to, so an LLM03 verdict off that set would have
+    been a statement about a frontend wearing the whole application's name.
+
+    ``// indirect`` requirements are parsed like any other. They are the rest of the module
+    graph the build resolves, they are exactly what a known-vulnerability lookup wants, and
+    dropping them would report a supply chain a fraction of its real size.
+
+    Every ``require`` carries an exact version by construction, so a well-formed ``go.mod``
+    yields no *unpinned* or *no-upper-bound* finding at all. That is the correct answer and
+    the reason the count matters more than the verdict here: this parser's contribution is a
+    denominator, plus the two shapes that can still go wrong — a name on the known-bad
+    corpus, and a ``replace`` that points the build at a directory.
+    """
+    deps: list[Dependency] = []
+    try:
+        text = path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return deps
+    block = ""  # the directive whose parenthesised block we are inside, if any
+    for raw in text.splitlines():
+        line = raw.split("//", 1)[0].strip()
+        if not line:
+            continue
+        if block:
+            if line == ")":
+                block = ""
+                continue
+            directive, entry = block, line
+        else:
+            head = line.split(None, 1)
+            if head[0] not in ("require", "replace"):
+                continue
+            rest = head[1].strip() if len(head) > 1 else ""
+            if rest == "(":
+                block = head[0]
+                continue
+            if not rest:
+                continue
+            directive, entry = head[0], rest
+        dep = (_go_replacement(entry, rel) if directive == "replace"
+               else _go_require(entry, rel))
+        if dep is not None:
+            deps.append(dep)
+    return deps
+
+
+MANIFEST_GLOBS = ("requirements*.txt", "pyproject.toml", "Pipfile",
+                  "package.json", "go.mod")
 
 #: Kept as the old private name so nothing that imported it breaks; the public one is
 #: what `qa/apps/_standup.py` reads to decide which files a pinned checkout has to
@@ -574,6 +673,8 @@ def _parse_manifest(manifest: Path, rel: str) -> tuple[list[Dependency], list[Su
         return _parse_pipfile(manifest, rel), []
     if manifest.name == "package.json":
         return _parse_package_json(manifest, rel), []
+    if manifest.name == "go.mod":
+        return _parse_go_mod(manifest, rel), []
     return _parse_requirements(manifest, rel)
 
 

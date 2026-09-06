@@ -143,6 +143,17 @@ def test_npm_dependency_gets_an_npm_purl():
     assert purls["requests"] == "pkg:pypi/requests@2.32.0"
 
 
+def test_go_dependency_gets_a_golang_purl():
+    # `golang`, not `go`: the ecosystem-lowercased fallback would emit a PURL type no
+    # downstream vulnerability service resolves, in the one document whose whole purpose
+    # is being read by one.
+    bom = build_cyclonedx([
+        Dependency(name="github.com/beego/beego", raw="github.com/beego/beego v1.12.12",
+                   specifier="==v1.12.12", manifest="go.mod", ecosystem="Go"),
+    ], tool_version="0.0.0")
+    assert bom["components"][0]["purl"] == "pkg:golang/github.com/beego/beego@v1.12.12"
+
+
 def test_same_name_in_two_ecosystems_stays_two_components():
     bom = build_cyclonedx([
         Dependency(name="urllib", raw="urllib", specifier="", manifest="package.json",

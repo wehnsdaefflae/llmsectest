@@ -12,10 +12,18 @@ insecure install paths.
 
 ## How LLMSecTest tests it
 
-Point LLMSecTest at the project with `--repo <path>`. It reads the dependency manifests
-(`requirements*.txt`, `pyproject.toml` including Poetry, and `Pipfile`), recursing through the repo so
-monorepos and nested projects are covered, while skipping vendored/virtualenv trees. And flags, per
-declared dependency:
+Point LLMSecTest at the project with `--repo <path>`. It reads the dependency manifests of three
+ecosystems, recursing through the repo so monorepos and nested projects are covered, while skipping
+vendored/virtualenv trees:
+
+| ecosystem | manifests | what is read |
+|---|---|---|
+| PyPI | `requirements*.txt`, `pyproject.toml` (PEP 621 and Poetry), `Pipfile` | declared dependencies, plus `--index-url` / `--extra-index-url` directives |
+| npm | `package.json` | `dependencies`, `devDependencies`, `optionalDependencies`, with `npm:` aliases resolved to the package actually fetched |
+| Go | `go.mod` | `require`, direct and indirect, and `replace`: a replacement is recorded under the module the build actually fetches, or, when it points at a directory, against the module it replaces |
+
+Every dependency carries the ecosystem it belongs to, so the known-bad corpus, the OSV query and the
+CycloneDX PURL each name the right registry. It then flags, per declared dependency:
 
 - **Known-malicious / typosquatted package** (`critical`), the name matches a curated list of packages
   documented to have carried malware on PyPI or to squat a popular package / stdlib module. A hit is high-signal. These are real malicious uploads. We don't guess at typos.

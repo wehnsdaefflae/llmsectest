@@ -22,6 +22,26 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ### Added
 
+- **LLM03 reads `go.mod`, so a Go application's own supply chain is in the denominator.**
+  The scanner understood `requirements*.txt`, `pyproject.toml`, `Pipfile` and `package.json`,
+  which on a Go repository means a React `package.json`, a worker's `package.json` and an OCR
+  service's `requirements.txt`: 94 dependencies, none of them belonging to the server the
+  probes actually talk to. `require` (direct and indirect) and `replace` are now parsed into
+  the same `Dependency` shape as every other ecosystem, so the known-bad corpus, the OSV
+  query and the CycloneDX PURL all name the right registry: 312 dependencies on the first
+  repository it met instead of 94. A `replace` pointing at a **directory** is classified as
+  the index bypass it is: Go resolves it off the filesystem, so neither the module proxy's
+  immutability nor the checksum database's integrity guarantee covers what is compiled. A
+  `replace` pointing at another **module** is recorded under the replacement's own path and
+  version, because that is what the build fetches. Every `require` carries an exact version
+  by construction, so a well-formed `go.mod` yields no *unpinned* or *no-upper-bound*
+  finding at all: the contribution here is a denominator, plus the two shapes that can still
+  go wrong (2026-09-07).
+- **The CycloneDX SBOM emits `pkg:golang/` for a Go module.** The PURL type is `golang`; the
+  ecosystem-lowercased fallback would have written `pkg:go/`, a type no downstream
+  vulnerability service resolves, in the one document whose whole purpose is being read by
+  one (2026-09-07).
+
 - **`white_box_scanners` in the SARIF run properties, naming each white-box input and its
   path.** `attacks_withstood` counts probes *delivered to a target*, so LLM03 and LLM04, which
   read the project's own manifests and model files, can never appear in it. A consumer of the

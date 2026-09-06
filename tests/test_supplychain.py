@@ -296,3 +296,95 @@ def test_malicious_corpus_is_canonical():
     # every key must already be in canonical form, so lookups match canonicalised names
     for name in KNOWN_MALICIOUS_PACKAGES:
         assert name == canonicalize_name(name), name
+
+
+# --- go.mod (Go) ---------------------------------------------------------------
+
+GO_MOD = """module example.com/app
+
+go 1.25.0
+
+toolchain go1.25.8
+
+require (
+	github.com/ThinkInAIXYZ/go-mcp v0.2.24 // a comment the parser drops
+	github.com/beego/beego v1.12.12
+)
+
+require golang.org/x/net v0.38.0
+
+require (
+	github.com/davecgh/go-spew v1.1.1 // indirect
+)
+
+replace github.com/sashabaranov/go-openai => github.com/casibase/go-openai v1.39.0
+
+replace google.golang.org/api v0.153.0 => google.golang.org/api v0.150.0
+
+replace example.com/vendored => ./third_party/vendored
+"""
+
+
+def _go_deps(tmp_path):
+    _write(tmp_path, "go.mod", GO_MOD)
+    return {d.name: d for d in collect_dependencies(tmp_path)}
+
+
+def test_go_mod_is_a_manifest_llm03_reads(tmp_path):
+    # The whole point: a Go server's dependencies were invisible while its React
+    # frontend's were not, so LLM03 answered about the wrong program.
+    _write(tmp_path, "go.mod", GO_MOD)
+    assert [p.name for p in discover_manifests(tmp_path)] == ["go.mod"]
+
+
+def test_go_require_is_parsed_in_block_and_single_line_form(tmp_path):
+    deps = _go_deps(tmp_path)
+    assert deps["github.com/beego/beego"].specifier == "==v1.12.12"
+    assert deps["golang.org/x/net"].specifier == "==v0.38.0"
+    assert deps["github.com/beego/beego"].ecosystem == "Go"
+
+
+def test_an_indirect_requirement_is_still_a_dependency(tmp_path):
+    # It is in the module graph the build resolves, so dropping it would report a supply
+    # chain a fraction of its real size — and it is exactly what an OSV lookup wants.
+    assert "github.com/davecgh/go-spew" in _go_deps(tmp_path)
+
+
+def test_a_go_module_path_keeps_its_case(tmp_path):
+    # Unlike an npm name. A Go module path is case-sensitive, and OSV and the PURL spec
+    # both name it as the author published it.
+    assert "github.com/ThinkInAIXYZ/go-mcp" in _go_deps(tmp_path)
+
+
+def test_a_replace_to_another_module_is_recorded_as_what_is_built(tmp_path):
+    deps = _go_deps(tmp_path)
+    assert deps["github.com/casibase/go-openai"].specifier == "==v1.39.0"
+    # The module named in `require` is superseded, and the downgrade replacement lands at
+    # the version the build actually compiles rather than the one it asks for.
+    assert deps["google.golang.org/api"].specifier == "==v0.150.0"
+
+
+def test_a_replace_to_a_directory_is_an_index_bypass(tmp_path):
+    _write(tmp_path, "go.mod", GO_MOD)
+    found = _by_pkg(scan_dependencies(tmp_path))
+    bypass = found["example.com/vendored"]
+    assert bypass.id == "LLM03-direct-url-go-example.com/vendored"
+    assert bypass.severity == "high"
+    assert "./third_party/vendored" in bypass.evidence
+
+
+def test_a_pinned_go_module_graph_produces_no_other_finding(tmp_path):
+    # Every `require` carries an exact version by construction, so the correct answer here
+    # is a large denominator and no unpinned/no-upper-bound finding at all. A test that
+    # only asserted "no findings" would pass on a parser that read nothing.
+    deps = _go_deps(tmp_path)
+    # Four `require` entries plus one per `replace`: two recorded under the module the
+    # build actually fetches, and the directory one under the module it replaces.
+    assert len(deps) == 7
+    assert [f.package for f in scan_dependencies(tmp_path)] == ["example.com/vendored"]
+
+
+def test_a_go_mod_with_no_requirements_is_not_fatal(tmp_path):
+    _write(tmp_path, "go.mod", "module example.com/app\n\ngo 1.25.0\n")
+    assert collect_dependencies(tmp_path) == []
+    assert scan_dependencies(tmp_path) == []

@@ -61,7 +61,7 @@ See [Funding](#funding).
 |---|---|---|
 | LLM01 prompt injection | marker-injection corpus + a **red-team jailbreak set** ([JailbreakBench](https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors) / AdvBench, `--redteam-set`) scored by a refusal oracle | black-box |
 | LLM02 sensitive information disclosure | four disclosure mechanisms against a named secret the app holds | black-box |
-| LLM03 supply chain | reads your dependency manifests (`requirements*.txt`, `pyproject.toml` incl. Poetry, `Pipfile`) via `--repo`, flags unpinned deps and insecure package indexes, optionally checks exact pins against OSV.dev for known CVEs, emits a CycloneDX SBOM | white-box |
+| LLM03 supply chain | reads your dependency manifests via `--repo` across three ecosystems (PyPI: `requirements*.txt`, `pyproject.toml` incl. Poetry, `Pipfile`; npm: `package.json`; Go: `go.mod`), flags unpinned deps, index bypasses and insecure package indexes, optionally checks exact pins against OSV.dev for known CVEs, emits a CycloneDX SBOM | white-box |
 | LLM04 data and model poisoning | serialized-model scanner over the pickle opcode stream (`--model-scan`), never unpickling | white-box |
 | LLM05 improper output handling | asks the app to emit active payloads; a raw echo is the finding | black-box |
 | LLM06 excessive agency | four unverifiable authority claims, scored on a real invocation | black-box |
@@ -236,7 +236,7 @@ What a category needs and what it gets you:
 | `--app-action <signature>` | LLM06 | a privileged tool call, repeatable |
 | `--app-canary <value>` | LLM08 retrieval exposure | confidential content planted in the retrieved corpus |
 | `--app-rag-poison <marker>` | LLM08 indirect injection | the marker a planted poisoned document tells the model to emit |
-| `--repo <path>` | LLM03 | dependency manifests to scan (add `--osv` for known CVEs, `--sbom` for CycloneDX) |
+| `--repo <path>` | LLM03 | dependency manifests to scan, Python, npm and Go (add `--osv` for known CVEs, `--sbom` for CycloneDX) |
 | `--model-scan <path>` | LLM04 | serialized model files, read as pickle opcodes and never unpickled |
 | `--vector-store <path>` | LLM08 embedding-inversion exposure | a persisted vector store (Chroma sqlite, JSON store, FAISS sidecar), read offline and never unpickled |
 | `--app-stress <N>` | every app case, under load | one simultaneous wave of N requests per case, reporting only a guardrail that held at one request and failed at N. No default: the target is somebody else's running app, so absence of the flag means absence of traffic |

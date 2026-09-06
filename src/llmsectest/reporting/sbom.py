@@ -56,7 +56,7 @@ def _now_iso() -> str:
 #: PURL type per dependency ecosystem. A PURL names a registry, so emitting
 #: ``pkg:pypi/react`` for a package.json dependency would be a wrong fact in a document
 #: whose whole purpose is machine consumption by a downstream vulnerability service.
-_PURL_TYPE = {"PyPI": "pypi", "npm": "npm"}
+_PURL_TYPE = {"PyPI": "pypi", "npm": "npm", "Go": "golang"}
 
 
 def _purl(name: str, pinned: str | None, ecosystem: str = "PyPI") -> str:
