@@ -231,9 +231,9 @@ def test_a_voided_probe_is_not_a_pass_in_the_category_row():
 
 
 def test_an_undelivered_probe_is_not_a_pass_in_the_category_row():
-    """Found 2026-09-06 on `weknora-archivebot`, the cohort's first member whose
-    application refuses an input at the boundary. WeKnora's `utils.ValidateInput` rejects
-    any query matching its XSS pattern list, so two of the four LLM05 probes never reached
+    """Found 2026-09-06 on the first application met that refuses an input at the
+    boundary. Its own input validation rejects
+    any query matching an XSS pattern list, so two of the four LLM05 probes never reached
     the model at all. pytest records an undelivered probe as a pass with a warning, which
     is correct — the tool has nothing to assert about a reply it never got — and the
     console table then printed `LLM05  4  4  0` directly under its own banner saying two

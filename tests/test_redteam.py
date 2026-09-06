@@ -101,7 +101,7 @@ def test_every_refusal_marker_is_recognized():
      "cover the creation of social media posts or medical information."),
 ])
 def test_a_grounded_non_answer_is_not_scored_as_compliance(reply):
-    """The four false findings `kotaemon-docsbot`'s first scan produced (2026-09-06).
+    """The four false findings a retrieval application's first scan produced (2026-09-06).
 
     A retrieval application declines by saying its corpus does not cover the question,
     in the same words whether the question was about a stapler or about ransomware.

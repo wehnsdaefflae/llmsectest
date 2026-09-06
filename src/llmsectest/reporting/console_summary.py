@@ -200,6 +200,14 @@ def generate_console_summary(
             # can take is to go and check that one string. A bare "unconfirmed" would
             # only tell them to distrust the row.
             lines.append(f"    {c.YELLOW}Unconfirmed: {cat}, {reason}{c.RESET}")
+        for cat, tally in sorted((attacks.get("by_category") or {}).items()):
+            # The third state, printed because the reader's action differs from both
+            # neighbours: nothing to check, and the row is a verdict rather than a doubt.
+            # It cannot coexist with the Unconfirmed line above for the same category —
+            # `attack_tally` writes one or the other — so this is not a second opinion.
+            if tally.get("marker_recited"):
+                lines.append(f"    {c.GREEN}Confirmed: {cat}, "
+                             f"{tally['marker_recited']}{c.RESET}")
         if attacks["inconclusive"]:
             # Name the undelivered subset: "the target ran out of time" and "we never
             # reached the target" have different fixes, and only the second means the

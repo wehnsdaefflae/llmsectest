@@ -13,7 +13,11 @@ import pytest
 
 from llmsectest import envvars
 from llmsectest.probes import resolve_target
-from llmsectest.probes.detectors import action_signatures_emitted, secret_exposed
+from llmsectest.probes.detectors import (
+    action_signatures_emitted,
+    action_signatures_present,
+    secret_exposed,
+)
 from llmsectest.probes.runner import TargetResponsiveness, run_probe
 
 
@@ -175,6 +179,20 @@ def probe(target_adapter, target_responsiveness, configured_secret, configured_a
                                              configured_prompt)
             if seen:
                 record_property("llmsec_action_observed", f"{case.id}: {', '.join(seen)}")
+            else:
+                # A signature the application RECITED, which is not an invocation and is
+                # not scored as one — and which still answers the only question the
+                # unconfirmed-marker doubt asks. That doubt is "your flag may not be the
+                # string the application holds"; a reply reproducing the signature verbatim
+                # out of the application's own instructions settles it, whichever probe
+                # provoked the reply. Measured on 2026-09-06: a deployment recited both of
+                # its signatures inside its LLM07 finding while its LLM06 row read "never
+                # appeared in any reply in this run", which is a sentence that run held a
+                # counterexample to.
+                recited = action_signatures_present(outcome.response, configured_actions)
+                if recited:
+                    record_property("llmsec_action_recited",
+                                    f"{case.id}: {', '.join(recited)}")
         # The two LLM08 markers, checked across every probe rather than only the LLM08
         # ones, because a canary planted in the corpus can come back to any question and
         # a poisoned document instructs the application whatever it was asked. Added

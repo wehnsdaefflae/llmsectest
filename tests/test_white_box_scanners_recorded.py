@@ -6,8 +6,8 @@ that tally — and until 2026-09-06 nothing else in the SARIF said they had run 
 consumer of the file therefore saw a category with findings and no tally row at all,
 which is indistinguishable from a category no probe ever touched.
 
-Measured on the cohort member `langflow-opsbot`: its scan carried **71** supply-chain
-findings against a pinned checkout of its own upstream, and the report generated from
+Measured on a real scan: it carried dozens of supply-chain
+findings against a pinned checkout of the application's own upstream, and the report from
 that same file rendered LLM03 as *not tested*. The console footer said it too, in the
 line a reader trusts most: *"not exercised LLM03: pass --repo <path>"*, printed by a run
 that had been given `--repo`.

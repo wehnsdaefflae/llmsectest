@@ -319,9 +319,9 @@ class SARIFGenerator:
         # read the project's own artefacts instead, so they can never appear in it. That
         # left a consumer of this file seeing a category with 71 findings and no tally row
         # at all, which is indistinguishable from a category no probe ever ran — the exact
-        # defect the tally exists to prevent, one category along. Measured on
-        # `langflow-opsbot`, whose own cohort report read LLM03 as *not tested* while the
-        # same file carried 71 supply-chain findings.
+        # defect the tally exists to prevent, one category along. Measured on a scan whose
+        # own report read LLM03 as *not tested* while the same file carried dozens of
+        # supply-chain findings.
         scanners = {
             category: {"input": flag, "path": os.environ[variable]}
             for category, flag, variable in (
