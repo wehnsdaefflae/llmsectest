@@ -1,10 +1,12 @@
 """SARIF v2.1.0 report generator for pytest results."""
 
 import json
+import os
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from .. import envvars
 from .compliance_mapper import (
     get_compliance_mappings,
     get_compliance_summary,
@@ -311,6 +313,26 @@ class SARIFGenerator:
                 "count": len(secret_exposed),
                 "reasons": secret_exposed[:20],
             }
+
+        # **Which white-box scanners this run was pointed at, and at what (2026-09-06).**
+        # `attacks_withstood` below counts probes DELIVERED to a target; LLM03 and LLM04
+        # read the project's own artefacts instead, so they can never appear in it. That
+        # left a consumer of this file seeing a category with 71 findings and no tally row
+        # at all, which is indistinguishable from a category no probe ever ran — the exact
+        # defect the tally exists to prevent, one category along. Measured on
+        # `langflow-opsbot`, whose own cohort report read LLM03 as *not tested* while the
+        # same file carried 71 supply-chain findings.
+        scanners = {
+            category: {"input": flag, "path": os.environ[variable]}
+            for category, flag, variable in (
+                ("LLM03", "--repo", envvars.REPO),
+                ("LLM04", "--model-scan", envvars.MODEL_SCAN),
+                ("LLM08", "--vector-store", envvars.VECTOR_STORE),
+            )
+            if os.environ.get(variable)
+        }
+        if scanners:
+            properties["white_box_scanners"] = scanners
 
         # Run-level "what did the target withstand" tally — the positive half of the
         # run, so an empty findings list is evidence rather than silence. Rationale and

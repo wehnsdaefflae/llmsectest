@@ -10,7 +10,24 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ## [Unreleased]
 
+### Fixed
+
+- **A scan that had been given `--repo` reported LLM03 as never run.** The application-scan
+  coverage footer is built from the black-box probe map, which knows nothing about the two
+  white-box categories, so it printed *"not exercised LLM03: white-box supply-chain scan runs
+  from the repo, pass --repo <path>"* under a scan that had just produced 71 supply-chain
+  findings from a real checkout. The footer now counts a white-box category whose input was
+  supplied, reading the whole scanner-input table rather than two of its three entries, so
+  `--vector-store` is treated the same way (2026-09-06).
+
 ### Added
+
+- **`white_box_scanners` in the SARIF run properties, naming each white-box input and its
+  path.** `attacks_withstood` counts probes *delivered to a target*, so LLM03 and LLM04, which
+  read the project's own manifests and model files, can never appear in it. A consumer of the
+  file therefore saw a category with findings and no tally row, which is indistinguishable from
+  a category no probe ever touched. Absent when no white-box input was given, so "pointed at
+  nothing" cannot look like "pointed at a repo and found it clean" (2026-09-06).
 
 - **`--app-request-field` takes a path, so an OpenAI-compatible application needs no wrapper
   script.** The prompt on a `/v1/chat/completions` endpoint sits at `messages.0.content`, inside
@@ -743,8 +760,8 @@ a day and publishing every report.
   `pyproject.toml` including Poetry, `Pipfile`) instead of describing the category abstractly, and the
   README and website state that the category numbering is the **2025** edition. Prompted by a
   supply-chain security engineer who read an older edition's numbering, concluded LLM03 was about model
-  provenance rather than dependency pins, and ruled himself out as a user of the feature he
-  specialises in. (2026-07-29)
+  provenance rather than dependency pins, and ruled themselves out as a user of the feature they
+  specialise in. (2026-07-29)
 
 ### Changed
 - **`pytest-cov` replaced by `coverage` in the `dev` extra, with the dev toolchain pinned.** `pytest --cov`

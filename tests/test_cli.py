@@ -371,6 +371,14 @@ def test_footer_reflects_supplied_app_inputs(monkeypatch, capsys):
     monkeypatch.setenv(cli.envvars.APP_PROMPT, "You are the ExampleCorp support assistant.")
     monkeypatch.setenv(cli.envvars.APP_SECRET, "sk-canary")
     monkeypatch.delenv(cli.envvars.APP_ACTIONS, raising=False)
+    # The white-box inputs too, and the reason is a leak rather than tidiness:
+    # `run_suite` writes them straight into `os.environ` and never restores them, so
+    # `test_run_suite_sets_osv_env_only_when_requested` leaves `LLMSECTEST_REPO="."` set
+    # for the rest of the process. Since 2026-09-06 the footer counts a white-box category
+    # whose input was supplied as exercised, so that leak made this test's list read
+    # LLM01, LLM02, LLM03, ... depending only on which tests had run before it.
+    for name in (cli.envvars.REPO, cli.envvars.MODEL_SCAN, cli.envvars.VECTOR_STORE):
+        monkeypatch.delenv(name, raising=False)
     cli._print_coverage_footer("app:http://localhost:1")
     out = capsys.readouterr().out
     # LLM02 + LLM07 join the always-on LLM01/LLM05/LLM09/LLM10 as exercised; LLM06 still

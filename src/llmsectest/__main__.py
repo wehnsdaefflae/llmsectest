@@ -441,8 +441,26 @@ def _print_coverage_footer(target: str | None) -> None:
                            known_poison=poison)
         exercised = [c.owasp for c in cov if c.exercised]
         skipped = [(c.owasp, c.reason) for c in cov if not c.exercised]
+        # **A white-box category the run WAS pointed at is exercised (2026-09-06).**
+        # `app_coverage` knows only the black-box probes, so LLM03 and LLM04 landed in
+        # `skipped` whatever the run did, and the footer of a scan that had just produced
+        # 71 supply-chain findings against a real checkout still read *"not exercised
+        # LLM03: pass --repo <path>"*. A coverage map that contradicts the scan printed
+        # above it is worse than no map: it is the one line a reader trusts to tell them
+        # what went untested. Same table the model-target branch below reads, so the two
+        # cannot drift, and it is read WHOLE: LLM08 is in it too, so a scan given
+        # `--vector-store` and no `--app-canary` stops printing "not exercised LLM08" while
+        # its own SARIF records LLM08 as a white-box scanner that ran. `not in exercised`
+        # keeps a category the black-box probes already reached from being listed twice.
+        ran_whitebox = [m for m, (variable, _) in _SCANNER_INPUT.items()
+                        if os.environ.get(variable) and m not in exercised]
+        skipped = [(m, r) for m, r in skipped if m not in ran_whitebox]
+        exercised = sorted(exercised + ran_whitebox)
+        label = ("exercised" if not ran_whitebox else
+                 f"exercised, {len(ran_whitebox)} of them white-box from the project's "
+                 f"own artefacts")
         print(f"Application-scan coverage, {len(exercised)}/10 OWASP categories "
-              "exercised black-box. No silent gaps:")
+              f"{label}. No silent gaps:")
     else:
         from .probes import APP_ONLY_CATEGORIES, SCANNER_CATEGORIES, covered_categories
 
