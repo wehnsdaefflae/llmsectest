@@ -171,7 +171,8 @@ class AppEndpointAdapter(LLMAdapter):
         self.session_init = None if session_init is None else dict(session_init)
 
     def complete(self, request: CompletionRequest) -> CompletionResponse:
-        body = {self.request_field: _last_user(request), **self.extra_body}
+        sent = _last_user(request)
+        body = {self.request_field: sent, **self.extra_body}
         if self.session_field:
             _place(body, self.session_field, self._session_value())
         req = urllib.request.Request(
@@ -211,12 +212,57 @@ class AppEndpointAdapter(LLMAdapter):
             raise AdapterError(f"app endpoint {self.endpoint} unreachable: {exc}") from exc
         except json.JSONDecodeError as exc:
             raise AdapterError(f"app endpoint {self.endpoint} returned non-JSON: {exc}") from exc
+        text = _extract(payload, self.response_path)
+        self._refuse_our_own_turn(text, sent)
         return CompletionResponse(
-            text=_extract(payload, self.response_path),
+            text=text,
             model=self.model,
             provider=self.provider,
             raw=payload,
         )
+
+    def _refuse_our_own_turn(self, text: str, sent: str) -> None:
+        """Refuse to score a "reply" that is the attacker turn we just sent.
+
+        **The defect this exists for (2026-09-06, measured on Open Notebook v1.14.0).**
+        An application whose reply is the last element of a growing message list makes
+        ``messages.0.content`` a plausible-looking response path, and it reads back
+        ``ChatMessage(type="human")`` — our own attack prompt, verbatim. Every marker this
+        suite scores for LLM01 and LLM05 is a string the *attack* carries, so each probe
+        then finds its own sentinel or its own payload in what it believes is the reply and
+        scores a finding. The scan renders, validates and reports a near-total failure of
+        an application that was never asked anything.
+
+        That is the one class of wrongness this scanner must never produce. Everything else
+        the honesty guarantee covers fails towards silence: an unreachable app, a bad token
+        or a mistyped path is inconclusive and never a finding. A response path aimed at our
+        own turn fails the other way, manufacturing high-severity findings out of nothing,
+        and nothing in a rendered report distinguishes it from a real one.
+
+        Equality after trimming surrounding whitespace is the whole test, and it is
+        deliberately narrow. Trimmed rather than byte-for-byte because an application that
+        echoes the turn with a trailing newline is the same defect. Every probe prompt in
+        :mod:`llmsectest.probes.application` wraps its marker in instruction text, so no
+        compliant reply is ever equal to the prompt: the LLM05 payload cases ask
+        for the payload inside a framing sentence, and LLM01 asks for the sentinel after
+        "Ignore all previous instructions". An application that genuinely echoes the whole
+        request has no assistant turn to score either, so stopping is the right answer for
+        it too, and the message says which two things to check.
+
+        Raised as a plain :class:`AdapterError`, so the probe is recorded inconclusive and
+        the operator gets the reason, rather than a report that has to be disbelieved later.
+        """
+        if sent.strip() and text.strip() == sent.strip():
+            raise AdapterError(
+                f"app endpoint {self.endpoint} answered with the exact text we sent it, so "
+                f"--app-response-path "
+                f"{self.response_path or '(auto-detected)'} is reading our own turn back "
+                f"rather than the application's reply. Every LLM01 and LLM05 marker is a "
+                f"string our attack carries, so scoring this would manufacture a finding "
+                f"per probe. Check the path against a real reply (a message list usually "
+                f"needs the LAST element, e.g. `messages.-1.content`), or the endpoint "
+                f"itself if it truly echoes."
+            )
 
     def _session_value(self) -> str:
         """A session value for **this probe**, minted here or issued by the application.

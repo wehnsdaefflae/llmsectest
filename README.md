@@ -91,8 +91,10 @@ See [Funding](#funding).
   instead: one application returned a planted secret verbatim in `choices[0].message.reasoning` while
   `content` held a refusal. A probe that plants its marker in the application and never utters it
   itself is scored against the whole body. The finding says so when the token was found outside the
-  reply field. A probe whose marker travels in our own request is not, so an application that
-  quotes the attack back is never a finding.
+  reply field. A probe whose marker travels in our own request is not, so a quotation of
+  the attack landing anywhere but the reply field is never a whole-body finding. In the reply
+  field it is scored by that probe's own detector, which for improper output handling is exactly
+  where the finding lives.
 - **Over-refusal is measured too.** `--redteam-benign` runs the matched benign twins and reports the
   target's **false-refusal rate**, a usability signal that's kept out of the security findings and the exit code.
 - **One adapter for every target.** OpenAI, Anthropic, HuggingFace, and local Ollama / LM Studio, plus a
@@ -184,6 +186,18 @@ lost others exits 0 while saying in as many words that it does not claim the los
 A run that got **no** answer at all exits non-zero, because a scan of nothing is not a pass. So a slow
 app is still worth a higher `--app-timeout`. You reached it. The probes you lost are the ones you
 would rather have had.
+
+**An app that hands your own prompt back is never scored as a finding.** Every guarantee above
+fails towards silence: an unreachable endpoint, an expired token, a mistyped path all end as
+inconclusive, never as a result. One misconfiguration used to fail the other way. Many chat APIs
+answer with the whole conversation, so `--app-response-path messages.0.content` reads back the
+*question* rather than the reply. A prompt-injection or output-handling probe carries
+its own marker, so every probe would then find its own payload in what it believes is the answer
+and score a finding. The run would render, validate and report a near-total failure of an application
+that was never asked anything. So a reply that comes back identical to the text just sent, once
+both are trimmed of surrounding whitespace, stops the probe with an error naming the flag, what it
+is reading and what a message list usually needs (`messages.-1.content`). A reply that merely *quotes* the attack is untouched, because that
+is what a real improper-output-handling finding looks like.
 
 **A target that answers is never called unreachable.** An endpoint that replies `HTTP 429` was
 reached, so its probes are inconclusive and named as **throttled**, carrying the target's own
