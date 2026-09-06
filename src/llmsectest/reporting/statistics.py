@@ -244,7 +244,7 @@ def calculate_statistics(results: list[TestResult]) -> dict:
         # not earn is worse (2026-09-04).
         "owasp_categories": defaultdict(
             lambda: {"total": 0, "failed": 0, "passed": 0, "skipped": 0, "exercised": False,
-                     "voided": 0}
+                     "voided": 0, "undelivered": 0}
         ),
         "severity_distribution": defaultdict(int),
         "by_severity": defaultdict(lambda: {"total": 0, "failed": 0, "passed": 0}),
@@ -256,9 +256,20 @@ def calculate_statistics(results: list[TestResult]) -> dict:
     # counted as `voided` in the attacks block with its reason attached. The per-category
     # table counted the same probe as a pytest pass, so one page said `LLM02  4  4  0` and
     # the block above it said four voided. Two accounts of four probes, in one report.
+    # **And an undelivered probe must not read as a pass either (2026-09-06).** Same
+    # argument, one state along, found on `weknora-archivebot`: WeKnora's own
+    # `utils.ValidateInput` refuses a query matching its XSS pattern list, so two of the
+    # four LLM05 probes were rejected at the input boundary and never reached the model.
+    # pytest records an undelivered probe as a pass with a warning — which is right, the
+    # tool has nothing to assert — and the report printed `LLM05  4  4  0` above its own
+    # banner saying two probes were never delivered. The attacks block already had this
+    # right, counting them `inconclusive`; the per-category table was the surface that
+    # still credited the target with output handling it never performed.
     tally = attack_tally(results) or {}
     voided_by_cat = {cat: row.get("voided", 0)
                      for cat, row in (tally.get("by_category") or {}).items()}
+    undelivered_by_cat = {cat: row.get("undelivered", 0)
+                          for cat, row in (tally.get("by_category") or {}).items()}
     for result in results:
         # Track OWASP category statistics
         is_coverage_map = COVERAGE_MAP_MARKER in result.markers
@@ -270,6 +281,7 @@ def calculate_statistics(results: list[TestResult]) -> dict:
             row = stats["owasp_categories"][category.id]
             row["exercised"] = marker in exercised
             row["voided"] = voided_by_cat.get(category.id, 0)
+            row["undelivered"] = undelivered_by_cat.get(category.id, 0)
             if is_coverage_map:
                 # The row exists so the category stays on every report. Its numbers do
                 # not, because they would be the tool's own coverage assertion counted as

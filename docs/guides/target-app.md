@@ -254,6 +254,26 @@ reason names the status and says the endpoint *was* reached. That distinction ma
 scanning through an auth layer: `app endpoint … answered HTTP 401 (Unauthorized)` sends you to your
 token, where `unreachable` would send you to your DNS.
 
+**The fourth case is the one with nothing to fix: your app refused the input on purpose.** Some
+applications validate the prompt before it reaches the model. If yours rejects, say, anything
+matching an XSS pattern list, the probes carrying `<script>` or `javascript:` payloads never reach
+the model at all. They are recorded undelivered like any other error. That is the right
+record: nothing about your output handling was measured, so nothing may be claimed about it. The remedy is
+what differs. There isn't one. Tell the two apart by sending one of the named probes by hand. A
+refusal that quotes your own validator ("query contains invalid content") is your guardrail; a 500
+with a stack trace is not.
+
+In every one of these cases, read the per-category table. A probe that was never delivered is
+**not** in that table's `Pass` column. The row says how many were lost:
+
+```
+LLM05    Improper Output Handling                4     2     0  2 never delivered
+```
+
+Four probes, two answered and held, none failed, two never delivered. A row reading `4  4  0`
+would be claiming your app handled output safely four times when it did so twice.
+
+
 **Every inconclusive probe is named.** The reason recorded for each one starts with the probe's own id
 and technique, so the report says which attacks you did not get an answer for:
 

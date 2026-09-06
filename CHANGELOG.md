@@ -12,6 +12,12 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ### Documentation
 
+- **The guide named three reasons a probe comes back undelivered. There is a fourth.** An
+  application that validates the prompt before the model sees it refuses some probes outright, so
+  they never reach the model and nothing about its output handling is measured. The target-app
+  guide now names that case beside the unreachable endpoint, the malformed reply and the error
+  status, gives the two-minute way to tell a guardrail from a fault, and shows the per-category
+  row a reader meets (2026-09-06).
 - **A clean report and an unconfigured target look the same. Nothing said so.**
   `--app-secret`, `--app-action` and `--app-canary` are observed only when the value comes back
   in a reply, so an application that resisted everything and an application that never received
@@ -22,6 +28,12 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ### Fixed
 
+- **A probe that was never delivered sat in the per-category table's `Pass` column.** The attacks
+  block and the HTML report already counted it as inconclusive, so one page could print
+  `LLM05  Improper Output Handling  4  4  0` directly under its own banner saying two probes were
+  never delivered. The console and Markdown tables now subtract it, name it in the row
+  (`2 never delivered`) and carry a legend line, the same treatment `voided` got. Found scanning an
+  application whose own input validator refuses a payload before the model sees it (2026-09-06).
 - **The tool reported itself as `0.1.0` on every surface that names a version.** `__version__`
   had not moved since the first tagged release on 2026-06-10. It is what the SARIF carries as
   `tool.driver.version` and what the HTML report puts in its header, so every stored report

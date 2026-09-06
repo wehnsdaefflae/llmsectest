@@ -25,6 +25,8 @@ labelling it trades a false pass for a silent gap.
 
 from __future__ import annotations
 
+import re
+
 from llmsectest.reporting.console_summary import generate_console_summary
 from llmsectest.reporting.html_generator import HTMLReportGenerator
 from llmsectest.reporting.markdown_generator import MarkdownReportGenerator
@@ -226,3 +228,42 @@ def test_a_voided_probe_is_not_a_pass_in_the_category_row():
     row = next(line for line in out.splitlines() if "LLM02" in line and "Sensitive" in line)
     assert "4 voided" in row, row
     assert "voided: survived a run that lost the secret" in out
+
+
+def test_an_undelivered_probe_is_not_a_pass_in_the_category_row():
+    """Found 2026-09-06 on `weknora-archivebot`, the cohort's first member whose
+    application refuses an input at the boundary. WeKnora's `utils.ValidateInput` rejects
+    any query matching its XSS pattern list, so two of the four LLM05 probes never reached
+    the model at all. pytest records an undelivered probe as a pass with a warning, which
+    is correct — the tool has nothing to assert about a reply it never got — and the
+    console table then printed `LLM05  4  4  0` directly under its own banner saying two
+    probes were never delivered. The same defect as the voided one above, one state along:
+    a probe that was never answered is not a probe the target withstood.
+    """
+    results = [_coverage_map_result(m) for m in ALL_MARKERS]
+    results.append(_probe_result("owasp_llm05"))
+    results.append(_probe_result("owasp_llm05"))
+    for _ in range(2):
+        never = _probe_result("owasp_llm05")
+        never.properties["llmsec_inconclusive"] = "app endpoint answered HTTP 502"
+        never.properties["llmsec_undelivered"] = "app endpoint answered HTTP 502"
+        results.append(never)
+
+    stats = calculate_statistics(results)
+    llm05 = stats["owasp_categories"]["LLM05"]
+    assert llm05["total"] == 4, llm05
+    assert llm05["undelivered"] == 2, llm05
+
+    out = generate_console_summary(results)
+    row = next(line for line in out.splitlines() if "LLM05" in line and "Improper" in line)
+    assert "2 never delivered" in row, row
+    # The Pass column carries the two that were actually answered, not all four.
+    plain = re.sub(r"\x1b\[[0-9;]*m", "", row)
+    assert re.search(r"\s4\s+2\s+0\b", plain), plain
+    assert "never delivered: the probe got no answer to score" in out
+
+    md = MarkdownReportGenerator(TOOL, VERSION).generate(results)
+    llm05_row = next(line for line in md.splitlines()
+                     if line.startswith("| LLM05 ") and "Improper" in line)
+    assert "2 never delivered" in llm05_row, llm05_row
+    assert "✅ Pass" not in llm05_row, llm05_row

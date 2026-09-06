@@ -111,14 +111,18 @@ class MarkdownReportGenerator:
                 continue
 
             voided = cat_stats.get("voided", 0)
-            if cat_stats["failed"] == 0 and voided:
-                status = f"⚠ {voided} voided"
+            never = cat_stats.get("undelivered", 0)
+            if cat_stats["failed"] == 0 and (voided or never):
+                # Not a pass, and the cell says which of the two it is: a probe the target
+                # survived in a run that lost the secret anyway, or one it never answered.
+                status = "⚠ " + ", ".join(([f"{voided} voided"] if voided else [])
+                                          + ([f"{never} never delivered"] if never else []))
             else:
                 status = "✅ Pass" if cat_stats["failed"] == 0 else "❌ Fail"
 
             owasp_section += (
                 f"| {category.id} | {category.name} | "
-                f"{cat_stats['total']} | {cat_stats['passed']} | "
+                f"{cat_stats['total']} | {max(cat_stats['passed'] - voided - never, 0)} | "
                 f"{cat_stats['failed']} | {status} |\n"
             )
 
