@@ -920,6 +920,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="How LLMSecTest tests it">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#read-the-count-of-dependencies-not-only-the-verdict" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Read the count of dependencies, not only the verdict
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1305,6 +1322,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="How LLMSecTest tests it">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#read-the-count-of-dependencies-not-only-the-verdict" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Read the count of dependencies, not only the verdict
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1407,7 +1441,7 @@ vendored/virtualenv trees:</p>
 <tbody>
 <tr>
 <td>PyPI</td>
-<td><code>requirements*.txt</code>, <code>pyproject.toml</code> (PEP 621 and Poetry), <code>Pipfile</code></td>
+<td><code>requirements*.txt</code>, <code>pyproject.toml</code> (PEP 621, PEP 735 groups and Poetry), <code>Pipfile</code></td>
 <td>declared dependencies, plus <code>--index-url</code> / <code>--extra-index-url</code> directives</td>
 </tr>
 <tr>
@@ -1438,6 +1472,31 @@ CycloneDX PURL each name the right registry. It then flags, per declared depende
 <p>Exact pins (<code>==</code> / <code>===</code>), compatible-release (<code>~=</code>) and fully bounded ranges (<code>&gt;=x,&lt;y</code>) are treated as
 structurally safe and produce no structural finding. The scan is <strong>deterministic and offline</strong>, no
 network, no package-index queries. So it is safe and reproducible in CI.</p>
+<h3 id="read-the-count-of-dependencies-not-only-the-verdict">Read the count of dependencies, not only the verdict<a class="headerlink" href="#read-the-count-of-dependencies-not-only-the-verdict" title="Permanent link">&para;</a></h3>
+<p>A supply-chain scan has two numbers and only one of them is usually printed. "No findings" over 600
+dependencies is a result. "No findings" over 17 of them, on a repository that installs 600, is a
+scan that read the wrong table, and from the outside the two are the same green line.</p>
+<p><code>pyproject.toml</code> is where this bites, because a Python project has <strong>three</strong> places to declare
+dependencies and they mean different things:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">[project]</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">dependencies</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;shared==1.0&quot;</span><span class="p">]</span><span class="w">          </span><span class="c1"># published with the distribution</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="k">[project.optional-dependencies]</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">pdf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;pypdf&gt;=5.0&quot;</span><span class="p">]</span><span class="w">                    </span><span class="c1"># extras: `pip install yourpkg[pdf]`</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="k">[dependency-groups]</span><span class="w">                     </span><span class="c1"># PEP 735 - NOT under [project]</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="n">runtime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;fastapi&gt;=0.116&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">]</span><span class="w">     </span><span class="c1"># installed, never published</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="n">dev</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;pytest&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="n">include-group</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;runtime&quot;</span><span class="p">}]</span>
+</code></pre></div>
+<p>All three are read. The one to know about is the third. <code>[dependency-groups]</code> is a top-level table,
+standardised by PEP 735 and written by default by <code>uv</code>, and it holds the sets a project installs but
+does not publish. On a repository whose components ship as <strong>container images</strong>, that
+is where the deployed image's real dependency list lives, and <code>[project]</code> may hold only the handful of
+pins two components share. An <code>{include-group = "other"}</code> entry names another group in the same table, so it is
+skipped; the group it points at is read on its own account.</p>
+<p>So: run <code>--sbom</code> beside the scan, or read the component count in it, and check it is the order of
+magnitude your project installs. A denominator you have not looked at is the one way an
+offline, deterministic scan can still be quietly wrong about you.</p>
 <h2 id="known-cve-lookup-osv-opt-in">Known-CVE lookup (<code>--osv</code>, opt-in)<a class="headerlink" href="#known-cve-lookup-osv-opt-in" title="Permanent link">&para;</a></h2>
 <p>A safely-pinned version can still be a <em>known-vulnerable</em> version. Adding <code>--osv</code> checks every
 <strong>exactly-pinned</strong> dependency (<code>==X.Y.Z</code>) against <a href="https://osv.dev">OSV.dev</a>, the open,
@@ -1448,9 +1507,9 @@ linking the OSV advisory ids.</p>
 receives, so a static manifest scan cannot honestly attribute a CVE to it (resolving the live
 environment is <code>pip-audit</code>'s job). The lookup is <strong>off by default</strong> so the standard scan stays
 offline; every non-run state, not requested, nothing pinned, or a failed lookup, appears as an explicit <strong>skip reason</strong>, never as "no known CVEs".</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>llmsectest<span class="w"> </span>--repo<span class="w"> </span>.<span class="w">                                   </span><span class="c1"># scan this project&#39;s dependencies</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>llmsectest<span class="w"> </span>--repo<span class="w"> </span>.<span class="w"> </span>--osv<span class="w">                             </span><span class="c1"># + known-CVE lookup via OSV.dev</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat<span class="w"> </span>--repo<span class="w"> </span>.<span class="w">   </span><span class="c1"># app probes + supply-chain scan</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>llmsectest<span class="w"> </span>--repo<span class="w"> </span>.<span class="w">                                   </span><span class="c1"># scan this project&#39;s dependencies</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>llmsectest<span class="w"> </span>--repo<span class="w"> </span>.<span class="w"> </span>--osv<span class="w">                             </span><span class="c1"># + known-CVE lookup via OSV.dev</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat<span class="w"> </span>--repo<span class="w"> </span>.<span class="w">   </span><span class="c1"># app probes + supply-chain scan</span>
 </code></pre></div>
 <p>Without <code>--repo</code>, LLM03 is reported as a <strong>skipped</strong> test (with the reason that it needs a repo), never
 a silent pass.</p>
@@ -1471,23 +1530,23 @@ The same unpinned dependency the LLM03 scan flags as a risk shows up version-les
 richer <a href="https://github.com/CycloneDX/cyclonedx-python-lib"><code>cyclonedx-python-lib</code></a> engine, XML/SPDX output,
 schema validation, is an optional follow-up, not a hard dependency, mirroring the LLM03 structural-scan / OSV
 split. The output defaults to <code>results/&lt;repo&gt;.cdx.json</code> (or pass an explicit path).</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>llmsectest<span class="w"> </span>--sbom<span class="w"> </span>--repo<span class="w"> </span>.<span class="w">                            </span><span class="c1"># write results/&lt;repo&gt;.cdx.json</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>llmsectest<span class="w"> </span>--sbom<span class="w"> </span>sbom.cdx.json<span class="w"> </span>--repo<span class="w"> </span>path/to/app<span class="w">    </span><span class="c1"># explicit output path</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>llmsectest<span class="w"> </span>--sbom<span class="w"> </span>--repo<span class="w"> </span>.<span class="w">                            </span><span class="c1"># write results/&lt;repo&gt;.cdx.json</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>llmsectest<span class="w"> </span>--sbom<span class="w"> </span>sbom.cdx.json<span class="w"> </span>--repo<span class="w"> </span>path/to/app<span class="w">    </span><span class="c1"># explicit output path</span>
 </code></pre></div>
 <h2 id="what-a-real-run-looks-like">What a real run looks like<a class="headerlink" href="#what-a-real-run-looks-like" title="Permanent link">&para;</a></h2>
 <p>Here is the supply-chain half of a scan against LLMSecTest's own repository, since a worked example
 on somebody else's code would be a claim about them.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="gp">$ </span>llmsectest<span class="w"> </span>--repo<span class="w"> </span>code<span class="w"> </span>--osv
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="go">    Category Name                                Total  Pass  Fail</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="go">    LLM03    Supply Chain                            8     1     7</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="go">E  [version range has no upper bound] anthropic (pyproject.toml): &#39;anthropic&#39; specifies &#39;&gt;=0.39&#39;</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="go">   with no upper bound, admitting an unvetted future major release.</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="go">   -&gt; Add an upper bound (e.g. &#39;anthropic&gt;=X,&lt;Y&#39;) or pin exactly.</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="go">... the same for cvss, httpx, huggingface-hub, mkdocstrings, openai and pytest</span>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="go">SKIPPED  LLM03 known-CVE lookup: no exactly-pinned (==X.Y.Z) dependencies to query, OSV can only</span>
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="go">         attribute advisories to a concrete version</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="gp">$ </span>llmsectest<span class="w"> </span>--repo<span class="w"> </span>code<span class="w"> </span>--osv
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="go">    Category Name                                Total  Pass  Fail</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="go">    LLM03    Supply Chain                            8     1     7</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="go">E  [version range has no upper bound] anthropic (pyproject.toml): &#39;anthropic&#39; specifies &#39;&gt;=0.39&#39;</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="go">   with no upper bound, admitting an unvetted future major release.</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="go">   -&gt; Add an upper bound (e.g. &#39;anthropic&gt;=X,&lt;Y&#39;) or pin exactly.</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="go">... the same for cvss, httpx, huggingface-hub, mkdocstrings, openai and pytest</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="go">SKIPPED  LLM03 known-CVE lookup: no exactly-pinned (==X.Y.Z) dependencies to query, OSV can only</span>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="go">         attribute advisories to a concrete version</span>
 </code></pre></div>
 <p><strong>That command runs the whole suite</strong>, so its overall status covers the black-box probes against the
 built-in demo target as well. The rows above are the LLM03 part of it. Pass the suite file as the test

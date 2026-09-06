@@ -5978,22 +5978,7 @@ list means no risky dependency or index directive was found in any manifest.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/llmsectest/probes/supplychain.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-696">696</a></span>
-<span class="normal"><a href="#__codelineno-0-697">697</a></span>
-<span class="normal"><a href="#__codelineno-0-698">698</a></span>
-<span class="normal"><a href="#__codelineno-0-699">699</a></span>
-<span class="normal"><a href="#__codelineno-0-700">700</a></span>
-<span class="normal"><a href="#__codelineno-0-701">701</a></span>
-<span class="normal"><a href="#__codelineno-0-702">702</a></span>
-<span class="normal"><a href="#__codelineno-0-703">703</a></span>
-<span class="normal"><a href="#__codelineno-0-704">704</a></span>
-<span class="normal"><a href="#__codelineno-0-705">705</a></span>
-<span class="normal"><a href="#__codelineno-0-706">706</a></span>
-<span class="normal"><a href="#__codelineno-0-707">707</a></span>
-<span class="normal"><a href="#__codelineno-0-708">708</a></span>
-<span class="normal"><a href="#__codelineno-0-709">709</a></span>
-<span class="normal"><a href="#__codelineno-0-710">710</a></span>
-<span class="normal"><a href="#__codelineno-0-711">711</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-711">711</a></span>
 <span class="normal"><a href="#__codelineno-0-712">712</a></span>
 <span class="normal"><a href="#__codelineno-0-713">713</a></span>
 <span class="normal"><a href="#__codelineno-0-714">714</a></span>
@@ -6003,32 +5988,47 @@ list means no risky dependency or index directive was found in any manifest.</p>
 <span class="normal"><a href="#__codelineno-0-718">718</a></span>
 <span class="normal"><a href="#__codelineno-0-719">719</a></span>
 <span class="normal"><a href="#__codelineno-0-720">720</a></span>
-<span class="normal"><a href="#__codelineno-0-721">721</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-696" name="__codelineno-0-696"></a><span class="k">def</span><span class="w"> </span><span class="nf">scan_dependencies</span><span class="p">(</span><span class="n">repo</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">SupplyChainFinding</span><span class="p">]:</span>
-<a id="__codelineno-0-697" name="__codelineno-0-697"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Scan every dependency manifest under ``repo`` for supply-chain risks.</span>
-<a id="__codelineno-0-698" name="__codelineno-0-698"></a>
-<a id="__codelineno-0-699" name="__codelineno-0-699"></a><span class="sd">    Returns the findings sorted worst-first (by severity, then package). An empty</span>
-<a id="__codelineno-0-700" name="__codelineno-0-700"></a><span class="sd">    list means no risky dependency or index directive was found in any manifest.</span>
-<a id="__codelineno-0-701" name="__codelineno-0-701"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-702" name="__codelineno-0-702"></a>    <span class="n">repo</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span>
-<a id="__codelineno-0-703" name="__codelineno-0-703"></a>    <span class="n">findings</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">SupplyChainFinding</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-<a id="__codelineno-0-704" name="__codelineno-0-704"></a>    <span class="c1"># (ecosystem, canonical name, technique-class), deduped across manifests. The</span>
-<a id="__codelineno-0-705" name="__codelineno-0-705"></a>    <span class="c1"># ecosystem is in the key because a monorepo can declare the same name in both, and</span>
-<a id="__codelineno-0-706" name="__codelineno-0-706"></a>    <span class="c1"># without it the second registry&#39;s risk would be silently swallowed by the first.</span>
-<a id="__codelineno-0-707" name="__codelineno-0-707"></a>    <span class="n">seen</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-<a id="__codelineno-0-708" name="__codelineno-0-708"></a>    <span class="k">for</span> <span class="n">manifest</span> <span class="ow">in</span> <span class="n">discover_manifests</span><span class="p">(</span><span class="n">repo</span><span class="p">):</span>
-<a id="__codelineno-0-709" name="__codelineno-0-709"></a>        <span class="n">deps</span><span class="p">,</span> <span class="n">dir_findings</span> <span class="o">=</span> <span class="n">_parse_manifest</span><span class="p">(</span><span class="n">manifest</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">manifest</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">repo</span><span class="p">)))</span>
-<a id="__codelineno-0-710" name="__codelineno-0-710"></a>        <span class="n">findings</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">dir_findings</span><span class="p">)</span>
-<a id="__codelineno-0-711" name="__codelineno-0-711"></a>        <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">deps</span><span class="p">:</span>
-<a id="__codelineno-0-712" name="__codelineno-0-712"></a>            <span class="n">finding</span> <span class="o">=</span> <span class="n">_classify</span><span class="p">(</span><span class="n">dep</span><span class="p">)</span>
-<a id="__codelineno-0-713" name="__codelineno-0-713"></a>            <span class="k">if</span> <span class="n">finding</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-714" name="__codelineno-0-714"></a>                <span class="k">continue</span>
-<a id="__codelineno-0-715" name="__codelineno-0-715"></a>            <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">dep</span><span class="o">.</span><span class="n">ecosystem</span><span class="p">,</span> <span class="n">dep</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">finding</span><span class="o">.</span><span class="n">technique</span><span class="p">)</span>
-<a id="__codelineno-0-716" name="__codelineno-0-716"></a>            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
-<a id="__codelineno-0-717" name="__codelineno-0-717"></a>                <span class="k">continue</span>
-<a id="__codelineno-0-718" name="__codelineno-0-718"></a>            <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
-<a id="__codelineno-0-719" name="__codelineno-0-719"></a>            <span class="n">findings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">finding</span><span class="p">)</span>
-<a id="__codelineno-0-720" name="__codelineno-0-720"></a>    <span class="n">findings</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="p">(</span><span class="n">SEVERITY_RANK</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">severity</span><span class="p">,</span> <span class="mi">99</span><span class="p">),</span> <span class="n">f</span><span class="o">.</span><span class="n">package</span><span class="p">))</span>
-<a id="__codelineno-0-721" name="__codelineno-0-721"></a>    <span class="k">return</span> <span class="n">findings</span>
+<span class="normal"><a href="#__codelineno-0-721">721</a></span>
+<span class="normal"><a href="#__codelineno-0-722">722</a></span>
+<span class="normal"><a href="#__codelineno-0-723">723</a></span>
+<span class="normal"><a href="#__codelineno-0-724">724</a></span>
+<span class="normal"><a href="#__codelineno-0-725">725</a></span>
+<span class="normal"><a href="#__codelineno-0-726">726</a></span>
+<span class="normal"><a href="#__codelineno-0-727">727</a></span>
+<span class="normal"><a href="#__codelineno-0-728">728</a></span>
+<span class="normal"><a href="#__codelineno-0-729">729</a></span>
+<span class="normal"><a href="#__codelineno-0-730">730</a></span>
+<span class="normal"><a href="#__codelineno-0-731">731</a></span>
+<span class="normal"><a href="#__codelineno-0-732">732</a></span>
+<span class="normal"><a href="#__codelineno-0-733">733</a></span>
+<span class="normal"><a href="#__codelineno-0-734">734</a></span>
+<span class="normal"><a href="#__codelineno-0-735">735</a></span>
+<span class="normal"><a href="#__codelineno-0-736">736</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-711" name="__codelineno-0-711"></a><span class="k">def</span><span class="w"> </span><span class="nf">scan_dependencies</span><span class="p">(</span><span class="n">repo</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">SupplyChainFinding</span><span class="p">]:</span>
+<a id="__codelineno-0-712" name="__codelineno-0-712"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Scan every dependency manifest under ``repo`` for supply-chain risks.</span>
+<a id="__codelineno-0-713" name="__codelineno-0-713"></a>
+<a id="__codelineno-0-714" name="__codelineno-0-714"></a><span class="sd">    Returns the findings sorted worst-first (by severity, then package). An empty</span>
+<a id="__codelineno-0-715" name="__codelineno-0-715"></a><span class="sd">    list means no risky dependency or index directive was found in any manifest.</span>
+<a id="__codelineno-0-716" name="__codelineno-0-716"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-717" name="__codelineno-0-717"></a>    <span class="n">repo</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span>
+<a id="__codelineno-0-718" name="__codelineno-0-718"></a>    <span class="n">findings</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">SupplyChainFinding</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+<a id="__codelineno-0-719" name="__codelineno-0-719"></a>    <span class="c1"># (ecosystem, canonical name, technique-class), deduped across manifests. The</span>
+<a id="__codelineno-0-720" name="__codelineno-0-720"></a>    <span class="c1"># ecosystem is in the key because a monorepo can declare the same name in both, and</span>
+<a id="__codelineno-0-721" name="__codelineno-0-721"></a>    <span class="c1"># without it the second registry&#39;s risk would be silently swallowed by the first.</span>
+<a id="__codelineno-0-722" name="__codelineno-0-722"></a>    <span class="n">seen</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+<a id="__codelineno-0-723" name="__codelineno-0-723"></a>    <span class="k">for</span> <span class="n">manifest</span> <span class="ow">in</span> <span class="n">discover_manifests</span><span class="p">(</span><span class="n">repo</span><span class="p">):</span>
+<a id="__codelineno-0-724" name="__codelineno-0-724"></a>        <span class="n">deps</span><span class="p">,</span> <span class="n">dir_findings</span> <span class="o">=</span> <span class="n">_parse_manifest</span><span class="p">(</span><span class="n">manifest</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">manifest</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">repo</span><span class="p">)))</span>
+<a id="__codelineno-0-725" name="__codelineno-0-725"></a>        <span class="n">findings</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">dir_findings</span><span class="p">)</span>
+<a id="__codelineno-0-726" name="__codelineno-0-726"></a>        <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">deps</span><span class="p">:</span>
+<a id="__codelineno-0-727" name="__codelineno-0-727"></a>            <span class="n">finding</span> <span class="o">=</span> <span class="n">_classify</span><span class="p">(</span><span class="n">dep</span><span class="p">)</span>
+<a id="__codelineno-0-728" name="__codelineno-0-728"></a>            <span class="k">if</span> <span class="n">finding</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-729" name="__codelineno-0-729"></a>                <span class="k">continue</span>
+<a id="__codelineno-0-730" name="__codelineno-0-730"></a>            <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">dep</span><span class="o">.</span><span class="n">ecosystem</span><span class="p">,</span> <span class="n">dep</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">finding</span><span class="o">.</span><span class="n">technique</span><span class="p">)</span>
+<a id="__codelineno-0-731" name="__codelineno-0-731"></a>            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+<a id="__codelineno-0-732" name="__codelineno-0-732"></a>                <span class="k">continue</span>
+<a id="__codelineno-0-733" name="__codelineno-0-733"></a>            <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+<a id="__codelineno-0-734" name="__codelineno-0-734"></a>            <span class="n">findings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">finding</span><span class="p">)</span>
+<a id="__codelineno-0-735" name="__codelineno-0-735"></a>    <span class="n">findings</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="p">(</span><span class="n">SEVERITY_RANK</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">severity</span><span class="p">,</span> <span class="mi">99</span><span class="p">),</span> <span class="n">f</span><span class="o">.</span><span class="n">package</span><span class="p">))</span>
+<a id="__codelineno-0-736" name="__codelineno-0-736"></a>    <span class="k">return</span> <span class="n">findings</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -6058,41 +6058,41 @@ declared dependencies are scanned.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/llmsectest/probes/supplychain.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-597">597</a></span>
-<span class="normal"><a href="#__codelineno-0-598">598</a></span>
-<span class="normal"><a href="#__codelineno-0-599">599</a></span>
-<span class="normal"><a href="#__codelineno-0-600">600</a></span>
-<span class="normal"><a href="#__codelineno-0-601">601</a></span>
-<span class="normal"><a href="#__codelineno-0-602">602</a></span>
-<span class="normal"><a href="#__codelineno-0-603">603</a></span>
-<span class="normal"><a href="#__codelineno-0-604">604</a></span>
-<span class="normal"><a href="#__codelineno-0-605">605</a></span>
-<span class="normal"><a href="#__codelineno-0-606">606</a></span>
-<span class="normal"><a href="#__codelineno-0-607">607</a></span>
-<span class="normal"><a href="#__codelineno-0-608">608</a></span>
-<span class="normal"><a href="#__codelineno-0-609">609</a></span>
-<span class="normal"><a href="#__codelineno-0-610">610</a></span>
-<span class="normal"><a href="#__codelineno-0-611">611</a></span>
-<span class="normal"><a href="#__codelineno-0-612">612</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-612">612</a></span>
 <span class="normal"><a href="#__codelineno-0-613">613</a></span>
-<span class="normal"><a href="#__codelineno-0-614">614</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-597" name="__codelineno-0-597"></a><span class="k">def</span><span class="w"> </span><span class="nf">discover_manifests</span><span class="p">(</span><span class="n">repo</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">]:</span>
-<a id="__codelineno-0-598" name="__codelineno-0-598"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Find dependency manifests anywhere under ``repo``, skipping vendored/venv dirs.</span>
-<a id="__codelineno-0-599" name="__codelineno-0-599"></a>
-<a id="__codelineno-0-600" name="__codelineno-0-600"></a><span class="sd">    Recurses so monorepos and nested projects are covered — a top-level-only scan</span>
-<a id="__codelineno-0-601" name="__codelineno-0-601"></a><span class="sd">    would report a repo whose manifests live in subdirectories as &quot;clean&quot;, which</span>
-<a id="__codelineno-0-602" name="__codelineno-0-602"></a><span class="sd">    is a silent gap for a security tool. Vendored/installed trees (``.venv``,</span>
-<a id="__codelineno-0-603" name="__codelineno-0-603"></a><span class="sd">    ``node_modules``, ``site-packages``, …) are pruned so only the project&#39;s own</span>
-<a id="__codelineno-0-604" name="__codelineno-0-604"></a><span class="sd">    declared dependencies are scanned.</span>
-<a id="__codelineno-0-605" name="__codelineno-0-605"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-606" name="__codelineno-0-606"></a>    <span class="n">repo</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span>
-<a id="__codelineno-0-607" name="__codelineno-0-607"></a>    <span class="n">found</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-<a id="__codelineno-0-608" name="__codelineno-0-608"></a>    <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">_MANIFEST_GLOBS</span><span class="p">:</span>
-<a id="__codelineno-0-609" name="__codelineno-0-609"></a>        <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">repo</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="n">pattern</span><span class="p">):</span>
-<a id="__codelineno-0-610" name="__codelineno-0-610"></a>            <span class="k">if</span> <span class="n">is_pruned</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
-<a id="__codelineno-0-611" name="__codelineno-0-611"></a>                <span class="k">continue</span>
-<a id="__codelineno-0-612" name="__codelineno-0-612"></a>            <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
-<a id="__codelineno-0-613" name="__codelineno-0-613"></a>                <span class="n">found</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-<a id="__codelineno-0-614" name="__codelineno-0-614"></a>    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">found</span><span class="p">)</span>
+<span class="normal"><a href="#__codelineno-0-614">614</a></span>
+<span class="normal"><a href="#__codelineno-0-615">615</a></span>
+<span class="normal"><a href="#__codelineno-0-616">616</a></span>
+<span class="normal"><a href="#__codelineno-0-617">617</a></span>
+<span class="normal"><a href="#__codelineno-0-618">618</a></span>
+<span class="normal"><a href="#__codelineno-0-619">619</a></span>
+<span class="normal"><a href="#__codelineno-0-620">620</a></span>
+<span class="normal"><a href="#__codelineno-0-621">621</a></span>
+<span class="normal"><a href="#__codelineno-0-622">622</a></span>
+<span class="normal"><a href="#__codelineno-0-623">623</a></span>
+<span class="normal"><a href="#__codelineno-0-624">624</a></span>
+<span class="normal"><a href="#__codelineno-0-625">625</a></span>
+<span class="normal"><a href="#__codelineno-0-626">626</a></span>
+<span class="normal"><a href="#__codelineno-0-627">627</a></span>
+<span class="normal"><a href="#__codelineno-0-628">628</a></span>
+<span class="normal"><a href="#__codelineno-0-629">629</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-612" name="__codelineno-0-612"></a><span class="k">def</span><span class="w"> </span><span class="nf">discover_manifests</span><span class="p">(</span><span class="n">repo</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">]:</span>
+<a id="__codelineno-0-613" name="__codelineno-0-613"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Find dependency manifests anywhere under ``repo``, skipping vendored/venv dirs.</span>
+<a id="__codelineno-0-614" name="__codelineno-0-614"></a>
+<a id="__codelineno-0-615" name="__codelineno-0-615"></a><span class="sd">    Recurses so monorepos and nested projects are covered — a top-level-only scan</span>
+<a id="__codelineno-0-616" name="__codelineno-0-616"></a><span class="sd">    would report a repo whose manifests live in subdirectories as &quot;clean&quot;, which</span>
+<a id="__codelineno-0-617" name="__codelineno-0-617"></a><span class="sd">    is a silent gap for a security tool. Vendored/installed trees (``.venv``,</span>
+<a id="__codelineno-0-618" name="__codelineno-0-618"></a><span class="sd">    ``node_modules``, ``site-packages``, …) are pruned so only the project&#39;s own</span>
+<a id="__codelineno-0-619" name="__codelineno-0-619"></a><span class="sd">    declared dependencies are scanned.</span>
+<a id="__codelineno-0-620" name="__codelineno-0-620"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-621" name="__codelineno-0-621"></a>    <span class="n">repo</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span>
+<a id="__codelineno-0-622" name="__codelineno-0-622"></a>    <span class="n">found</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+<a id="__codelineno-0-623" name="__codelineno-0-623"></a>    <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">_MANIFEST_GLOBS</span><span class="p">:</span>
+<a id="__codelineno-0-624" name="__codelineno-0-624"></a>        <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">repo</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="n">pattern</span><span class="p">):</span>
+<a id="__codelineno-0-625" name="__codelineno-0-625"></a>            <span class="k">if</span> <span class="n">is_pruned</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+<a id="__codelineno-0-626" name="__codelineno-0-626"></a>                <span class="k">continue</span>
+<a id="__codelineno-0-627" name="__codelineno-0-627"></a>            <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+<a id="__codelineno-0-628" name="__codelineno-0-628"></a>                <span class="n">found</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+<a id="__codelineno-0-629" name="__codelineno-0-629"></a>    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">found</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -6121,31 +6121,31 @@ the manifest format.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/llmsectest/probes/supplychain.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-681">681</a></span>
-<span class="normal"><a href="#__codelineno-0-682">682</a></span>
-<span class="normal"><a href="#__codelineno-0-683">683</a></span>
-<span class="normal"><a href="#__codelineno-0-684">684</a></span>
-<span class="normal"><a href="#__codelineno-0-685">685</a></span>
-<span class="normal"><a href="#__codelineno-0-686">686</a></span>
-<span class="normal"><a href="#__codelineno-0-687">687</a></span>
-<span class="normal"><a href="#__codelineno-0-688">688</a></span>
-<span class="normal"><a href="#__codelineno-0-689">689</a></span>
-<span class="normal"><a href="#__codelineno-0-690">690</a></span>
-<span class="normal"><a href="#__codelineno-0-691">691</a></span>
-<span class="normal"><a href="#__codelineno-0-692">692</a></span>
-<span class="normal"><a href="#__codelineno-0-693">693</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-681" name="__codelineno-0-681"></a><span class="k">def</span><span class="w"> </span><span class="nf">collect_dependencies</span><span class="p">(</span><span class="n">repo</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Dependency</span><span class="p">]:</span>
-<a id="__codelineno-0-682" name="__codelineno-0-682"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse every declared dependency out of all manifests under ``repo``.</span>
-<a id="__codelineno-0-683" name="__codelineno-0-683"></a>
-<a id="__codelineno-0-684" name="__codelineno-0-684"></a><span class="sd">    The shared parse pass behind both the structural classifier</span>
-<a id="__codelineno-0-685" name="__codelineno-0-685"></a><span class="sd">    (:func:`scan_dependencies`) and the OSV known-vulnerability lookup</span>
-<a id="__codelineno-0-686" name="__codelineno-0-686"></a><span class="sd">    (:mod:`llmsectest.probes.osv`) — one normalised dependency list, whatever</span>
-<a id="__codelineno-0-687" name="__codelineno-0-687"></a><span class="sd">    the manifest format.</span>
-<a id="__codelineno-0-688" name="__codelineno-0-688"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-689" name="__codelineno-0-689"></a>    <span class="n">repo</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span>
-<a id="__codelineno-0-690" name="__codelineno-0-690"></a>    <span class="n">deps</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Dependency</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-<a id="__codelineno-0-691" name="__codelineno-0-691"></a>    <span class="k">for</span> <span class="n">manifest</span> <span class="ow">in</span> <span class="n">discover_manifests</span><span class="p">(</span><span class="n">repo</span><span class="p">):</span>
-<a id="__codelineno-0-692" name="__codelineno-0-692"></a>        <span class="n">deps</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_parse_manifest</span><span class="p">(</span><span class="n">manifest</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">manifest</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">repo</span><span class="p">)))[</span><span class="mi">0</span><span class="p">])</span>
-<a id="__codelineno-0-693" name="__codelineno-0-693"></a>    <span class="k">return</span> <span class="n">deps</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-696">696</a></span>
+<span class="normal"><a href="#__codelineno-0-697">697</a></span>
+<span class="normal"><a href="#__codelineno-0-698">698</a></span>
+<span class="normal"><a href="#__codelineno-0-699">699</a></span>
+<span class="normal"><a href="#__codelineno-0-700">700</a></span>
+<span class="normal"><a href="#__codelineno-0-701">701</a></span>
+<span class="normal"><a href="#__codelineno-0-702">702</a></span>
+<span class="normal"><a href="#__codelineno-0-703">703</a></span>
+<span class="normal"><a href="#__codelineno-0-704">704</a></span>
+<span class="normal"><a href="#__codelineno-0-705">705</a></span>
+<span class="normal"><a href="#__codelineno-0-706">706</a></span>
+<span class="normal"><a href="#__codelineno-0-707">707</a></span>
+<span class="normal"><a href="#__codelineno-0-708">708</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-696" name="__codelineno-0-696"></a><span class="k">def</span><span class="w"> </span><span class="nf">collect_dependencies</span><span class="p">(</span><span class="n">repo</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Dependency</span><span class="p">]:</span>
+<a id="__codelineno-0-697" name="__codelineno-0-697"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse every declared dependency out of all manifests under ``repo``.</span>
+<a id="__codelineno-0-698" name="__codelineno-0-698"></a>
+<a id="__codelineno-0-699" name="__codelineno-0-699"></a><span class="sd">    The shared parse pass behind both the structural classifier</span>
+<a id="__codelineno-0-700" name="__codelineno-0-700"></a><span class="sd">    (:func:`scan_dependencies`) and the OSV known-vulnerability lookup</span>
+<a id="__codelineno-0-701" name="__codelineno-0-701"></a><span class="sd">    (:mod:`llmsectest.probes.osv`) — one normalised dependency list, whatever</span>
+<a id="__codelineno-0-702" name="__codelineno-0-702"></a><span class="sd">    the manifest format.</span>
+<a id="__codelineno-0-703" name="__codelineno-0-703"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-704" name="__codelineno-0-704"></a>    <span class="n">repo</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span>
+<a id="__codelineno-0-705" name="__codelineno-0-705"></a>    <span class="n">deps</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Dependency</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+<a id="__codelineno-0-706" name="__codelineno-0-706"></a>    <span class="k">for</span> <span class="n">manifest</span> <span class="ow">in</span> <span class="n">discover_manifests</span><span class="p">(</span><span class="n">repo</span><span class="p">):</span>
+<a id="__codelineno-0-707" name="__codelineno-0-707"></a>        <span class="n">deps</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_parse_manifest</span><span class="p">(</span><span class="n">manifest</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">manifest</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">repo</span><span class="p">)))[</span><span class="mi">0</span><span class="p">])</span>
+<a id="__codelineno-0-708" name="__codelineno-0-708"></a>    <span class="k">return</span> <span class="n">deps</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -6314,8 +6314,7 @@ CycloneDX SBOM export (an exact pin becomes a component <code>version</code> + P
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/llmsectest/probes/supplychain.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-198">198</a></span>
-<span class="normal"><a href="#__codelineno-0-199">199</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-199">199</a></span>
 <span class="normal"><a href="#__codelineno-0-200">200</a></span>
 <span class="normal"><a href="#__codelineno-0-201">201</a></span>
 <span class="normal"><a href="#__codelineno-0-202">202</a></span>
@@ -6327,20 +6326,21 @@ CycloneDX SBOM export (an exact pin becomes a component <code>version</code> + P
 <span class="normal"><a href="#__codelineno-0-208">208</a></span>
 <span class="normal"><a href="#__codelineno-0-209">209</a></span>
 <span class="normal"><a href="#__codelineno-0-210">210</a></span>
-<span class="normal"><a href="#__codelineno-0-211">211</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-198" name="__codelineno-0-198"></a><span class="k">def</span><span class="w"> </span><span class="nf">pinned_version</span><span class="p">(</span><span class="n">dep</span><span class="p">:</span> <span class="n">Dependency</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-199" name="__codelineno-0-199"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;The concrete version a dependency is pinned to, or ``None``.</span>
-<a id="__codelineno-0-200" name="__codelineno-0-200"></a>
-<a id="__codelineno-0-201" name="__codelineno-0-201"></a><span class="sd">    Returns the version only for a single exact pin (``==X.Y.Z`` / ``===X.Y.Z``</span>
-<a id="__codelineno-0-202" name="__codelineno-0-202"></a><span class="sd">    without a wildcard); any range, wildcard or multi-clause specifier yields</span>
-<a id="__codelineno-0-203" name="__codelineno-0-203"></a><span class="sd">    ``None`` because the installed version is not statically determined. This is</span>
-<a id="__codelineno-0-204" name="__codelineno-0-204"></a><span class="sd">    the single source of truth for &quot;is this dependency pinned, and to what?&quot; —</span>
-<a id="__codelineno-0-205" name="__codelineno-0-205"></a><span class="sd">    shared by the OSV known-CVE lookup (only exact pins are queryable) and the</span>
-<a id="__codelineno-0-206" name="__codelineno-0-206"></a><span class="sd">    CycloneDX SBOM export (an exact pin becomes a component ``version`` + PURL).</span>
-<a id="__codelineno-0-207" name="__codelineno-0-207"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-208" name="__codelineno-0-208"></a>    <span class="n">m</span> <span class="o">=</span> <span class="n">_EXACT_PIN_RE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">dep</span><span class="o">.</span><span class="n">specifier</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
-<a id="__codelineno-0-209" name="__codelineno-0-209"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">m</span> <span class="ow">or</span> <span class="s2">&quot;*&quot;</span> <span class="ow">in</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span>
-<a id="__codelineno-0-210" name="__codelineno-0-210"></a>        <span class="k">return</span> <span class="kc">None</span>
-<a id="__codelineno-0-211" name="__codelineno-0-211"></a>    <span class="k">return</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="normal"><a href="#__codelineno-0-211">211</a></span>
+<span class="normal"><a href="#__codelineno-0-212">212</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-199" name="__codelineno-0-199"></a><span class="k">def</span><span class="w"> </span><span class="nf">pinned_version</span><span class="p">(</span><span class="n">dep</span><span class="p">:</span> <span class="n">Dependency</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-200" name="__codelineno-0-200"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;The concrete version a dependency is pinned to, or ``None``.</span>
+<a id="__codelineno-0-201" name="__codelineno-0-201"></a>
+<a id="__codelineno-0-202" name="__codelineno-0-202"></a><span class="sd">    Returns the version only for a single exact pin (``==X.Y.Z`` / ``===X.Y.Z``</span>
+<a id="__codelineno-0-203" name="__codelineno-0-203"></a><span class="sd">    without a wildcard); any range, wildcard or multi-clause specifier yields</span>
+<a id="__codelineno-0-204" name="__codelineno-0-204"></a><span class="sd">    ``None`` because the installed version is not statically determined. This is</span>
+<a id="__codelineno-0-205" name="__codelineno-0-205"></a><span class="sd">    the single source of truth for &quot;is this dependency pinned, and to what?&quot; —</span>
+<a id="__codelineno-0-206" name="__codelineno-0-206"></a><span class="sd">    shared by the OSV known-CVE lookup (only exact pins are queryable) and the</span>
+<a id="__codelineno-0-207" name="__codelineno-0-207"></a><span class="sd">    CycloneDX SBOM export (an exact pin becomes a component ``version`` + PURL).</span>
+<a id="__codelineno-0-208" name="__codelineno-0-208"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-209" name="__codelineno-0-209"></a>    <span class="n">m</span> <span class="o">=</span> <span class="n">_EXACT_PIN_RE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">dep</span><span class="o">.</span><span class="n">specifier</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+<a id="__codelineno-0-210" name="__codelineno-0-210"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">m</span> <span class="ow">or</span> <span class="s2">&quot;*&quot;</span> <span class="ow">in</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span>
+<a id="__codelineno-0-211" name="__codelineno-0-211"></a>        <span class="k">return</span> <span class="kc">None</span>
+<a id="__codelineno-0-212" name="__codelineno-0-212"></a>    <span class="k">return</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
