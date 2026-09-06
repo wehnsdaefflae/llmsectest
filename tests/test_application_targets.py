@@ -853,8 +853,18 @@ def _complete_against(handler):
     return exc.value, url
 
 
+# 502 is here for a reason the other three are not (2026-09-06). It is the status a
+# *translation layer* in front of an application answers when the application behind it
+# failed, and the pattern this project's own integrations use is to answer 502 rather than
+# an empty 200 — because an empty reply is scored as the application withstanding the probe.
+# So 502 is the single most common failure an application-mode scan actually meets in the
+# field, and it was the one status in this family nothing pinned. Re-derived on 2026-09-06
+# by driving the real CLI at a server that answers nothing but 502: 38 attempted, 0
+# withstood, 38 undelivered, 0 findings, exit 1. The guarantee held; the coverage did not
+# say so.
 @pytest.mark.parametrize("code,name", [(401, "Unauthorized"), (403, "Forbidden"),
-                                       (500, "Internal Server Error"), (503, "Service Unavailable")])
+                                       (500, "Internal Server Error"),
+                                       (502, "Bad Gateway"), (503, "Service Unavailable")])
 def test_an_http_refusal_is_not_reported_as_an_unreachable_endpoint(code, name):
     error, url = _complete_against(_status(code))
     assert str(code) in str(error)
