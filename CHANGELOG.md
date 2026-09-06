@@ -10,6 +10,17 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ## [Unreleased]
 
+### Added
+
+- **`--app-request-field` takes a path, so an OpenAI-compatible application needs no wrapper
+  script.** The prompt on a `/v1/chat/completions` endpoint sits at `messages.0.content`, inside
+  a list supplied through `--app-body`. A flag that could only name a top-level key therefore sent
+  every reader with the commonest endpoint shape in the world off to write a translation layer. The
+  attacker turn is now placed at a dotted path into the declared body, writing into a list element
+  the body already carries. Nothing is created or extended: an index with no list under it is still
+  refused. The target-app guide gains a worked example, plus the warning that decides whether such
+  a scan means anything: send no `system` message (2026-09-06).
+
 ### Documentation
 
 - **The guide named three reasons a probe comes back undelivered. There is a fourth.** An
@@ -28,6 +39,12 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ### Fixed
 
+- **A `--app-request-field` naming a key `--app-body` also carried was silently overwritten by the
+  static value.** The request body was built as `{request_field: sent, **extra_body}`, so the
+  attacker turn never left the process and the application answered a fixed sentence that was then
+  scored as its answer to the attack. The probe text now wins. The body template was also shared
+  between probes by reference, so a placement into it leaked into the next probe; it is now
+  deep-copied per request (2026-09-06).
 - **A probe that was never delivered sat in the per-category table's `Pass` column.** The attacks
   block and the HTML report already counted it as inconclusive, so one page could print
   `LLM05  Improper Output Handling  4  4  0` directly under its own banner saying two probes were
