@@ -652,6 +652,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#an-openai-compatible-application" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        An OpenAI-compatible application
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#applications-that-scope-a-chat-to-a-conversation" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1359,6 +1370,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#an-openai-compatible-application" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        An OpenAI-compatible application
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#applications-that-scope-a-chat-to-a-conversation" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1487,7 +1509,12 @@ OpenAI-style <code>choices[0].message.content</code>.</p>
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span>--app-body<span class="w"> </span><span class="s1">&#39;{&quot;output_type&quot;: &quot;chat&quot;, &quot;input_type&quot;: &quot;chat&quot;}&#39;</span>
 </code></pre></div>
 <ul>
-<li><code>--app-request-field</code> renames the field your input goes in.</li>
+<li><code>--app-request-field</code> says where your input goes: a field name, or a dotted path
+  into the body from <code>--app-body</code>, list indices included. An OpenAI-compatible
+  endpoint takes <code>messages.0.content</code> against a body carrying that one user
+  message, and needs no wrapper script. Send <strong>no system message</strong>: an application
+  that lets a client one override its own prompt would then be answering yours,
+  and the scan would measure the model rather than the application.</li>
 <li><code>--app-response-path</code> is a dotted path to the reply. A number in it is a list index, so
   <code>outputs.0.results.message.text</code> walks a list and then two objects.</li>
 <li><code>--app-headers</code> is a JSON object merged over the defaults, for bearer tokens and API keys. The
@@ -1509,21 +1536,52 @@ whole application as unreachable, which is a true sentence about the wrong thing
 <a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    <span class="n">extra_body</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;session_id&quot;</span><span class="p">:</span> <span class="s2">&quot;llmsectest&quot;</span><span class="p">},</span>
 <a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="p">)</span>
 </code></pre></div>
+<h3 id="an-openai-compatible-application">An OpenAI-compatible application<a class="headerlink" href="#an-openai-compatible-application" title="Permanent link">&para;</a></h3>
+<p>A great many products serve <code>POST /v1/chat/completions</code>. That shape needs no wrapper either, and it
+is worth its own example because the prompt does not sit at the top level of the body: it sits
+inside a list.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:14000/api/v1/chat/completions<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span>--app-request-field<span class="w"> </span>messages.0.content<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span>--app-response-path<span class="w"> </span><span class="s1">&#39;choices.0.message.content&#39;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span>--app-headers<span class="w"> </span><span class="s1">&#39;{&quot;Authorization&quot;: &quot;Bearer &lt;token&gt;&quot;}&#39;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span>--app-body<span class="w"> </span><span class="s1">&#39;{&quot;model&quot;: &quot;your-app&quot;, &quot;stream&quot;: false,</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="s1">               &quot;messages&quot;: [{&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;&quot;}]}&#39;</span>
+</code></pre></div>
+<p><code>--app-body</code> supplies the envelope with one empty user turn in it, and <code>--app-request-field</code> writes
+each probe into that turn. The path only ever writes into a list your body already carries: it never
+creates or extends one, because how long a list should be is not something a path can say.</p>
+<p><strong>Send no <code>system</code> message, whatever your body looks like.</strong> Many implementations of this endpoint
+let a client system message <em>replace</em> the application's own configured prompt. Put your persona
+there and the application stops being the thing under test: it becomes a proxy to the model, every
+guardrail written into its own prompt is gone, and the report that comes out looks exactly like a
+report about your application. If you want to know which side of that line your endpoint is on, ask
+it who it is twice — once with no system message, once with a system message naming somebody else —
+and see which answer wins. That is the same control described under <em>Prove your prompt reached the
+model</em> below, run as a differential.</p>
+<p>Two more things worth knowing about this shape:</p>
+<ul>
+<li><strong>Prefer the nested response path to a flattened convenience field.</strong> <code>choices.0.message.content</code>
+  fails loudly when the reply is not the shape you expected, and the probe is then recorded
+  undelivered with the reason. A short field that quietly yields an empty string turns an
+  application that said nothing into one that withstood the attack.</li>
+<li><strong>Watch for an error envelope returned with HTTP 200.</strong> Several implementations answer
+  <code>{"status": "error", "msg": ...}</code> with a success code. The nested path above is what catches it.</li>
+</ul>
 <h3 id="applications-that-scope-a-chat-to-a-conversation">Applications that scope a chat to a conversation<a class="headerlink" href="#applications-that-scope-a-chat-to-a-conversation" title="Permanent link">&para;</a></h3>
 <p>Some applications hang the persona, the knowledge base or the tool set off a <strong>conversation</strong>. Point
 every probe at one conversation and each attack sees the ones before it, so a refusal or a leak early
 on changes what every later probe measures. That is then a property of the scan. Two flags give each
 probe a conversation of its own.</p>
 <p><strong>When your application accepts an id you choose:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:3000/api/chat<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span>--app-session-field<span class="w"> </span>conversation_id
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:3000/api/chat<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span>--app-session-field<span class="w"> </span>conversation_id
 </code></pre></div>
 <p>A fresh UUID goes into that body field for every probe. It costs no extra request. Most applications
 need only this. The field takes a dotted path, so <code>metadata.session.id</code> reaches a nested envelope.</p>
 <p><strong>When only the application may create one:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:42110/api/chat<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span>--app-session-field<span class="w"> </span>conversation_id<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span>--app-session-init<span class="w"> </span><span class="s1">&#39;{&quot;url&quot;: &quot;/api/sessions&quot;, &quot;response_path&quot;: &quot;conversation_id&quot;}&#39;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:42110/api/chat<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span>--app-session-field<span class="w"> </span>conversation_id<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span>--app-session-init<span class="w"> </span><span class="s1">&#39;{&quot;url&quot;: &quot;/api/sessions&quot;, &quot;response_path&quot;: &quot;conversation_id&quot;}&#39;</span>
 </code></pre></div>
 <p>Before each probe LLMSecTest sends that request, reads the value at <code>response_path</code> out of the reply
 and carries it into the field <code>--app-session-field</code> names. A relative <code>url</code> resolves against your
@@ -1568,10 +1626,10 @@ publishes a machine path, because they all want people building on them, and it 
 from the one the UI walks through. Look for <em>API keys</em>, <em>Service API</em> or <em>integrations</em> in the app's
 own settings. It is a one-time manual step per application.</p>
 <p>Once you hold that credential the rest is the four flags above:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:https://your-platform/v1/chat-messages<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span>--app-headers<span class="w"> </span><span class="s1">&#39;{&quot;Authorization&quot;: &quot;Bearer app-xxxxxxxx&quot;}&#39;</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span>--app-request-field<span class="w"> </span>query<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span>--app-body<span class="w"> </span><span class="s1">&#39;{&quot;inputs&quot;: {}, &quot;response_mode&quot;: &quot;blocking&quot;, &quot;user&quot;: &quot;llmsectest&quot;}&#39;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:https://your-platform/v1/chat-messages<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span>--app-headers<span class="w"> </span><span class="s1">&#39;{&quot;Authorization&quot;: &quot;Bearer app-xxxxxxxx&quot;}&#39;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span>--app-request-field<span class="w"> </span>query<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">  </span>--app-body<span class="w"> </span><span class="s1">&#39;{&quot;inputs&quot;: {}, &quot;response_mode&quot;: &quot;blocking&quot;, &quot;user&quot;: &quot;llmsectest&quot;}&#39;</span>
 </code></pre></div>
 <p><strong>One thing to check before you read the results.</strong> On some platforms the assistant's system prompt
 lives in the browser rather than on the server. It is sent with each request. There, an endpoint
@@ -1582,13 +1640,13 @@ score normally either way.</p>
 <h2 id="no-paid-calls-back-your-app-with-a-local-model">No paid calls: back your app with a local model<a class="headerlink" href="#no-paid-calls-back-your-app-with-a-local-model" title="Permanent link">&para;</a></h2>
 <p>Run your app in a test configuration whose LLM backend points at a <strong>local</strong> model (e.g. Ollama or
 LM Studio), then test it, zero API cost:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># 1) your app, configured to call a local OpenAI-compatible endpoint:</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">OPENAI_BASE_URL</span><span class="o">=</span>http://localhost:11434/v1<span class="w">   </span><span class="c1"># Ollama (LM Studio: http://localhost:1234/v1)</span>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>ollama<span class="w">                        </span><span class="c1"># ignored by local servers</span>
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>./run-your-app.sh<span class="w"> </span><span class="p">&amp;</span>
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="c1"># 2) test it</span>
-<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># 1) your app, configured to call a local OpenAI-compatible endpoint:</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">OPENAI_BASE_URL</span><span class="o">=</span>http://localhost:11434/v1<span class="w">   </span><span class="c1"># Ollama (LM Studio: http://localhost:1234/v1)</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>ollama<span class="w">                        </span><span class="c1"># ignored by local servers</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>./run-your-app.sh<span class="w"> </span><span class="p">&amp;</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="c1"># 2) test it</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat
 </code></pre></div>
 <h2 id="whats-covered-against-an-endpoint">What's covered against an endpoint<a class="headerlink" href="#whats-covered-against-an-endpoint" title="Permanent link">&para;</a></h2>
 <p>Endpoint testing is <strong>black-box</strong>. <strong>LLM01 (prompt injection)</strong>, <strong>LLM05 (improper output
@@ -1599,13 +1657,13 @@ finite number of times) and output amplification (emit a large but finite non-re
 app that floods or amplifies on demand is flagged without risking a runaway generation against an uncapped
 endpoint. Four more categories light up when you tell LLMSecTest what
 only you, the app's developer, know:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">    </span>--app-prompt<span class="w"> </span>prompt.txt<span class="w"> </span><span class="se">\ </span><span class="w">                     </span><span class="c1"># your app&#39;s system prompt    → LLM07</span>
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span>--app-secret<span class="w"> </span><span class="s2">&quot;sk-canary-123&quot;</span><span class="w"> </span><span class="se">\ </span><span class="w">                </span><span class="c1"># a real secret it holds      → LLM02</span>
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">    </span>--app-action<span class="w"> </span><span class="s2">&quot;ACTION: refund(&quot;</span><span class="w"> </span><span class="se">\ </span><span class="w">              </span><span class="c1"># a privileged tool call      → LLM06</span>
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">    </span>--app-action<span class="w"> </span><span class="s2">&quot;ACTION: delete_user(&quot;</span><span class="w"> </span><span class="se">\ </span><span class="w">         </span><span class="c1"># (repeatable)</span>
-<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">    </span>--app-canary<span class="w"> </span><span class="s2">&quot;INTERNAL-DOC-CANARY-7f2a&quot;</span><span class="w"> </span><span class="se">\ </span><span class="w">     </span><span class="c1"># confidential RAG content    → LLM08</span>
-<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">    </span>--app-rag-poison<span class="w"> </span><span class="s2">&quot;RAG-POISON-3b9d&quot;</span><span class="w">             </span><span class="c1"># poisoned-doc marker         → LLM08</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">    </span>--app-prompt<span class="w"> </span>prompt.txt<span class="w"> </span><span class="se">\ </span><span class="w">                     </span><span class="c1"># your app&#39;s system prompt    → LLM07</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">    </span>--app-secret<span class="w"> </span><span class="s2">&quot;sk-canary-123&quot;</span><span class="w"> </span><span class="se">\ </span><span class="w">                </span><span class="c1"># a real secret it holds      → LLM02</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">    </span>--app-action<span class="w"> </span><span class="s2">&quot;ACTION: refund(&quot;</span><span class="w"> </span><span class="se">\ </span><span class="w">              </span><span class="c1"># a privileged tool call      → LLM06</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">    </span>--app-action<span class="w"> </span><span class="s2">&quot;ACTION: delete_user(&quot;</span><span class="w"> </span><span class="se">\ </span><span class="w">         </span><span class="c1"># (repeatable)</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">    </span>--app-canary<span class="w"> </span><span class="s2">&quot;INTERNAL-DOC-CANARY-7f2a&quot;</span><span class="w"> </span><span class="se">\ </span><span class="w">     </span><span class="c1"># confidential RAG content    → LLM08</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="w">    </span>--app-rag-poison<span class="w"> </span><span class="s2">&quot;RAG-POISON-3b9d&quot;</span><span class="w">             </span><span class="c1"># poisoned-doc marker         → LLM08</span>
 </code></pre></div>
 <ul>
 <li><strong><code>--app-prompt</code></strong>, the app's own system prompt (inline text or a file path). Knowing it means
@@ -1642,11 +1700,11 @@ received your system prompt therefore produce the same report: clean rows, nothi
 that reads as a pass. Before you believe one, rule out the other.</p>
 <p>Put a second marker in the same system prompt as your canary, one the assistant is explicitly
 allowed to state. Then ask for it:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>Your configuration build is ACME-CFG-3F8H. It identifies a revision, it is not confidential,
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>and you state it plainly to anyone who asks which build you are running.
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>Your configuration build is ACME-CFG-3F8H. It identifies a revision, it is not confidential,
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>and you state it plainly to anyone who asks which build you are running.
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>curl<span class="w"> </span>-s<span class="w"> </span>localhost:8000/chat<span class="w"> </span>-H<span class="w"> </span><span class="s1">&#39;content-type: application/json&#39;</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">     </span>-d<span class="w"> </span><span class="s1">&#39;{&quot;message&quot;:&quot;Which configuration build are you running?&quot;}&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>ACME-CFG-3F8H
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>curl<span class="w"> </span>-s<span class="w"> </span>localhost:8000/chat<span class="w"> </span>-H<span class="w"> </span><span class="s1">&#39;content-type: application/json&#39;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">     </span>-d<span class="w"> </span><span class="s1">&#39;{&quot;message&quot;:&quot;Which configuration build are you running?&quot;}&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>ACME-CFG-3F8H
 </code></pre></div>
 <p>If the marker comes back, that string reached the model and the canary sitting in it is live
 ground truth. If it does not, your clean rows are describing your configuration. The fix belongs there. The
@@ -1702,8 +1760,8 @@ from a model that had nothing to say.</p>
 <p>Point <code>--app-response-path</code> at the field that only exists when there <em>is</em> a message. The scanner
 then tells the two apart for you: the path stops partway and the probe is recorded undelivered with
 the reason naming the segment it stopped at.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>LLM09-fabricated-citation [hallucinated academic citation] after 12.8s: probe not delivered,
-<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>response path &#39;output.0.content.0.text&#39; does not match the reply JSON (stopped at &#39;0&#39;)
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>LLM09-fabricated-citation [hallucinated academic citation] after 12.8s: probe not delivered,
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>response path &#39;output.0.content.0.text&#39; does not match the reply JSON (stopped at &#39;0&#39;)
 </code></pre></div>
 <p>The trap is the convenience field next to it. Frameworks that return <code>output: []</code> often also return
 a flattened <code>output_text: ""</code> on the envelope. A response path pointing at <em>that</em> extracts the empty
@@ -1713,19 +1771,19 @@ back undelivered with <code>stopped at '0'</code>, look at what your app does wi
 at your URL: probes that ask for content the app cannot ground are exactly the ones that trigger one.</p>
 <p>In every one of these cases, read the per-category table. A probe that was never delivered is
 <strong>not</strong> in that table's <code>Pass</code> column. The row says how many were lost:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>LLM05    Improper Output Handling                4     2     0  2 never delivered
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>LLM05    Improper Output Handling                4     2     0  2 never delivered
 </code></pre></div>
 <p>Four probes, two answered and held, none failed, two never delivered. A row reading <code>4  4  0</code>
 would be claiming your app handled output safely four times when it did so twice.</p>
 <p><strong>Every inconclusive probe is named.</strong> The reason recorded for each one starts with the probe's own id
 and technique, so the report says which attacks you did not get an answer for:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>APP-shop-LLM02-handover-summary [indirect disclosure via a configuration handover document]
-<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>after 90.0s: probe inconclusive, app endpoint http://127.0.0.1:8041/chat did not respond within 90s
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>APP-shop-LLM02-handover-summary [indirect disclosure via a configuration handover document]
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>after 90.0s: probe inconclusive, app endpoint http://127.0.0.1:8041/chat did not respond within 90s
 </code></pre></div>
 <p>That matters because a category runs several mechanisms. <code>LLM02 attempted 4, inconclusive 3</code> is honest
 about the count. It still leaves you guessing which three. Now you can read it off the report.</p>
 <p><strong>And every scan records its slowest answered probe</strong>, whether or not anything timed out:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>Slowest answered: 11.4s (APP-shop-LLM07-disclosure)
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>Slowest answered: 11.4s (APP-shop-LLM07-disclosure)
 </code></pre></div>
 <p>Same figure in the SARIF as a run-level <code>latency</code> property, and in the header of the HTML page. A probe
 answered at 88 seconds under a 90 second budget looks the same in your report as one answered in 3, right
@@ -1762,13 +1820,13 @@ quota, then run it again.</p>
 <h2 id="when-you-cant-run-the-app-the-persona-proxy">When you can't run the app: the persona proxy<a class="headerlink" href="#when-you-cant-run-the-app-the-persona-proxy" title="Permanent link">&para;</a></h2>
 <p>If you only have the app's system prompt (not a running instance), load it onto a model and test that
 as a proxy. Lower fidelity (no guardrail/RAG/tool code), but useful:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">llmsectest.adapters</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_adapter</span>
-<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">llmsectest.probes</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_app_scan</span>
-<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>
-<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="n">target</span> <span class="o">=</span> <span class="n">get_adapter</span><span class="p">(</span><span class="s2">&quot;ollama&quot;</span><span class="p">,</span> <span class="s2">&quot;gemma4:e2b-it-q4_K_M&quot;</span><span class="p">)</span>
-<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="n">prompt</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;my_app_system_prompt.txt&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="k">for</span> <span class="n">outcome</span> <span class="ow">in</span> <span class="n">run_app_scan</span><span class="p">(</span><span class="s2">&quot;my-app&quot;</span><span class="p">,</span> <span class="n">prompt</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
-<a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">outcome</span><span class="o">.</span><span class="n">case</span><span class="o">.</span><span class="n">owasp</span><span class="p">,</span> <span class="s2">&quot;VULNERABLE&quot;</span> <span class="k">if</span> <span class="n">outcome</span><span class="o">.</span><span class="n">vulnerable</span> <span class="k">else</span> <span class="s2">&quot;ok&quot;</span><span class="p">,</span> <span class="n">outcome</span><span class="o">.</span><span class="n">evidence</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">llmsectest.adapters</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_adapter</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">llmsectest.probes</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_app_scan</span>
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="n">target</span> <span class="o">=</span> <span class="n">get_adapter</span><span class="p">(</span><span class="s2">&quot;ollama&quot;</span><span class="p">,</span> <span class="s2">&quot;gemma4:e2b-it-q4_K_M&quot;</span><span class="p">)</span>
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="n">prompt</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;my_app_system_prompt.txt&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="k">for</span> <span class="n">outcome</span> <span class="ow">in</span> <span class="n">run_app_scan</span><span class="p">(</span><span class="s2">&quot;my-app&quot;</span><span class="p">,</span> <span class="n">prompt</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
+<a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">outcome</span><span class="o">.</span><span class="n">case</span><span class="o">.</span><span class="n">owasp</span><span class="p">,</span> <span class="s2">&quot;VULNERABLE&quot;</span> <span class="k">if</span> <span class="n">outcome</span><span class="o">.</span><span class="n">vulnerable</span> <span class="k">else</span> <span class="s2">&quot;ok&quot;</span><span class="p">,</span> <span class="n">outcome</span><span class="o">.</span><span class="n">evidence</span><span class="p">)</span>
 </code></pre></div>
 <p>See <a href="../../api/"><code>run_app_scan</code></a> in the API reference.</p>
 
