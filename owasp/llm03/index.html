@@ -1393,10 +1393,37 @@ whatever the registry serves next, including a release published by an attacker 
 package. The 2025 OWASP list calls this out as LLM03, spanning vulnerable packages, tampered models and
 insecure install paths.</p>
 <h2 id="how-llmsectest-tests-it">How LLMSecTest tests it<a class="headerlink" href="#how-llmsectest-tests-it" title="Permanent link">&para;</a></h2>
-<p>Point LLMSecTest at the project with <code>--repo &lt;path&gt;</code>. It reads the dependency manifests
-(<code>requirements*.txt</code>, <code>pyproject.toml</code> including Poetry, and <code>Pipfile</code>), recursing through the repo so
-monorepos and nested projects are covered, while skipping vendored/virtualenv trees. And flags, per
-declared dependency:</p>
+<p>Point LLMSecTest at the project with <code>--repo &lt;path&gt;</code>. It reads the dependency manifests of three
+ecosystems, recursing through the repo so monorepos and nested projects are covered, while skipping
+vendored/virtualenv trees:</p>
+<table>
+<thead>
+<tr>
+<th>ecosystem</th>
+<th>manifests</th>
+<th>what is read</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PyPI</td>
+<td><code>requirements*.txt</code>, <code>pyproject.toml</code> (PEP 621 and Poetry), <code>Pipfile</code></td>
+<td>declared dependencies, plus <code>--index-url</code> / <code>--extra-index-url</code> directives</td>
+</tr>
+<tr>
+<td>npm</td>
+<td><code>package.json</code></td>
+<td><code>dependencies</code>, <code>devDependencies</code>, <code>optionalDependencies</code>, with <code>npm:</code> aliases resolved to the package actually fetched</td>
+</tr>
+<tr>
+<td>Go</td>
+<td><code>go.mod</code></td>
+<td><code>require</code>, direct and indirect, and <code>replace</code>: a replacement is recorded under the module the build actually fetches, or, when it points at a directory, against the module it replaces</td>
+</tr>
+</tbody>
+</table>
+<p>Every dependency carries the ecosystem it belongs to, so the known-bad corpus, the OSV query and the
+CycloneDX PURL each name the right registry. It then flags, per declared dependency:</p>
 <ul>
 <li><strong>Known-malicious / typosquatted package</strong> (<code>critical</code>), the name matches a curated list of packages
   documented to have carried malware on PyPI or to squat a popular package / stdlib module. A hit is high-signal. These are real malicious uploads. We don't guess at typos.</li>

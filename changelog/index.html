@@ -1971,6 +1971,27 @@ forward-looking plan is the <a href="https://llmsec.dev/#roadmap">roadmap</a>.</
 </ul>
 <h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
 <ul>
+<li><strong>LLM03 reads <code>go.mod</code>, so a Go application's own supply chain is in the denominator.</strong>
+  The scanner understood <code>requirements*.txt</code>, <code>pyproject.toml</code>, <code>Pipfile</code> and <code>package.json</code>,
+  which on a Go repository means a React <code>package.json</code>, a worker's <code>package.json</code> and an OCR
+  service's <code>requirements.txt</code>: 94 dependencies, none of them belonging to the server the
+  probes actually talk to. <code>require</code> (direct and indirect) and <code>replace</code> are now parsed into
+  the same <code>Dependency</code> shape as every other ecosystem, so the known-bad corpus, the OSV
+  query and the CycloneDX PURL all name the right registry: 312 dependencies on the first
+  repository it met instead of 94. A <code>replace</code> pointing at a <strong>directory</strong> is classified as
+  the index bypass it is: Go resolves it off the filesystem, so neither the module proxy's
+  immutability nor the checksum database's integrity guarantee covers what is compiled. A
+  <code>replace</code> pointing at another <strong>module</strong> is recorded under the replacement's own path and
+  version, because that is what the build fetches. Every <code>require</code> carries an exact version
+  by construction, so a well-formed <code>go.mod</code> yields no <em>unpinned</em> or <em>no-upper-bound</em>
+  finding at all: the contribution here is a denominator, plus the two shapes that can still
+  go wrong (2026-09-07).</li>
+<li>
+<p><strong>The CycloneDX SBOM emits <code>pkg:golang/</code> for a Go module.</strong> The PURL type is <code>golang</code>; the
+  ecosystem-lowercased fallback would have written <code>pkg:go/</code>, a type no downstream
+  vulnerability service resolves, in the one document whose whole purpose is being read by
+  one (2026-09-07).</p>
+</li>
 <li>
 <p><strong><code>white_box_scanners</code> in the SARIF run properties, naming each white-box input and its
   path.</strong> <code>attacks_withstood</code> counts probes <em>delivered to a target</em>, so LLM03 and LLM04, which
