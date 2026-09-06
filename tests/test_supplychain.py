@@ -115,6 +115,49 @@ extra = ["python3-dateutil>=2.0"]
     assert "requests" not in findings                        # exact pin is safe
 
 
+def test_pyproject_pep735_dependency_groups(tmp_path):
+    """A service repository keeps its RUNTIME set in a group, not in `[project]`.
+
+    PEP 735 puts `[dependency-groups]` at the top level of the file rather than under
+    `[project]`, because a group is a set the project installs and does not publish. On a
+    repository whose components ship as containers instead of as wheels, that is where the
+    deployed image's dependency list lives, and `[project]` holds only the handful of pins
+    two components share.
+
+    The failure this guards is not a crash. The scan reads the file, reports a denominator
+    and returns a verdict over `[project]` alone, which looks exactly like a project with a
+    small dependency list. Measured on a real one: 17 dependencies parsed out of a
+    `pyproject.toml` declaring 156.
+    """
+    _write(tmp_path, "pyproject.toml", """
+[project]
+name = "demo"
+dependencies = ["shared==1.0"]
+
+[dependency-groups]
+runtime = ["only-in-a-group>=1.0", "pinned-in-a-group==2.0"]
+dev = ["unbounded-dev-tool", {include-group = "runtime"}]
+""")
+    findings = _by_pkg(scan_dependencies(tmp_path))
+    assert findings["only-in-a-group"].severity == "medium"     # no upper bound
+    assert findings["unbounded-dev-tool"].severity == "high"    # unpinned
+    assert "pinned-in-a-group" not in findings                  # exact pin is safe
+    assert "shared" not in findings
+
+
+def test_an_include_group_reference_is_not_read_as_a_package(tmp_path):
+    """`{include-group = "other"}` names a group, and that group is parsed in its own
+    right. Following it would count the same dependencies twice; parsing the table as a
+    requirement string would invent a package."""
+    _write(tmp_path, "pyproject.toml", """
+[dependency-groups]
+base = ["loose-one"]
+all = [{include-group = "base"}]
+""")
+    packages = [d.name for d in collect_dependencies(tmp_path)]
+    assert packages == ["loose-one"]
+
+
 def test_pyproject_poetry_dependencies(tmp_path):
     _write(tmp_path, "pyproject.toml", """
 [tool.poetry.dependencies]

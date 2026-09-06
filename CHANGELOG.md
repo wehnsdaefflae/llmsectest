@@ -22,6 +22,18 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ### Added
 
+- **LLM03 reads PEP 735 `[dependency-groups]`, so a container-shipping project's runtime
+  dependencies are in the denominator.** `pyproject.toml` parsing covered `[project]`,
+  `[project.optional-dependencies]` and Poetry. PEP 735 puts dependency groups in a
+  *top-level* table instead, which is where a component that ships as a container image
+  rather than as a wheel now declares what it installs, and `uv` writes them by default.
+  Measured on a real multi-language repository: `[project]` held only the handful of pins
+  two components share, the rest sat in a group nothing read, and the Python side of the
+  scan therefore covered about an eighth of what the corrected parse finds. Nothing about
+  the result read as a gap: the file was found, the manifest count was right, and a verdict
+  came back over a fraction of the surface with no sign that it had. An
+  `{include-group = "other"}` entry names another group in the same table and is skipped,
+  because that group is parsed on its own account (2026-09-07).
 - **LLM03 reads `go.mod`, so a Go application's own supply chain is in the denominator.**
   The scanner understood `requirements*.txt`, `pyproject.toml`, `Pipfile` and `package.json`,
   which on a Go repository means a React `package.json`, a worker's `package.json` and an OCR

@@ -18,7 +18,7 @@ vendored/virtualenv trees:
 
 | ecosystem | manifests | what is read |
 |---|---|---|
-| PyPI | `requirements*.txt`, `pyproject.toml` (PEP 621 and Poetry), `Pipfile` | declared dependencies, plus `--index-url` / `--extra-index-url` directives |
+| PyPI | `requirements*.txt`, `pyproject.toml` (PEP 621, PEP 735 groups and Poetry), `Pipfile` | declared dependencies, plus `--index-url` / `--extra-index-url` directives |
 | npm | `package.json` | `dependencies`, `devDependencies`, `optionalDependencies`, with `npm:` aliases resolved to the package actually fetched |
 | Go | `go.mod` | `require`, direct and indirect, and `replace`: a replacement is recorded under the module the build actually fetches, or, when it points at a directory, against the module it replaces |
 
@@ -38,6 +38,38 @@ CycloneDX PURL each name the right registry. It then flags, per declared depende
 Exact pins (`==` / `===`), compatible-release (`~=`) and fully bounded ranges (`>=x,<y`) are treated as
 structurally safe and produce no structural finding. The scan is **deterministic and offline**, no
 network, no package-index queries. So it is safe and reproducible in CI.
+
+### Read the count of dependencies, not only the verdict
+
+A supply-chain scan has two numbers and only one of them is usually printed. "No findings" over 600
+dependencies is a result. "No findings" over 17 of them, on a repository that installs 600, is a
+scan that read the wrong table, and from the outside the two are the same green line.
+
+`pyproject.toml` is where this bites, because a Python project has **three** places to declare
+dependencies and they mean different things:
+
+```toml
+[project]
+dependencies = ["shared==1.0"]          # published with the distribution
+
+[project.optional-dependencies]
+pdf = ["pypdf>=5.0"]                    # extras: `pip install yourpkg[pdf]`
+
+[dependency-groups]                     # PEP 735 - NOT under [project]
+runtime = ["fastapi>=0.116", "..."]     # installed, never published
+dev = ["pytest", {include-group = "runtime"}]
+```
+
+All three are read. The one to know about is the third. `[dependency-groups]` is a top-level table,
+standardised by PEP 735 and written by default by `uv`, and it holds the sets a project installs but
+does not publish. On a repository whose components ship as **container images**, that
+is where the deployed image's real dependency list lives, and `[project]` may hold only the handful of
+pins two components share. An `{include-group = "other"}` entry names another group in the same table, so it is
+skipped; the group it points at is read on its own account.
+
+So: run `--sbom` beside the scan, or read the component count in it, and check it is the order of
+magnitude your project installs. A denominator you have not looked at is the one way an
+offline, deterministic scan can still be quietly wrong about you.
 
 ## Known-CVE lookup (`--osv`, opt-in)
 

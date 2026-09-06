@@ -30,7 +30,8 @@ Exact pins (``==`` / ``===``), compatible-release (``~=``) and fully bounded ran
 
 Manifests understood, across three ecosystems: on **PyPI**, ``requirements*.txt``
 (incl. ``-e`` / index directives), PEP 621 ``pyproject.toml`` (``[project]`` +
-optional-dependencies), Poetry (``[tool.poetry.dependencies]``) and ``Pipfile``;
+optional-dependencies + PEP 735 ``[dependency-groups]``), Poetry
+(``[tool.poetry.dependencies]``) and ``Pipfile``;
 on **npm**, ``package.json`` (``dependencies`` / ``devDependencies`` /
 ``optionalDependencies``); on **Go**, ``go.mod`` (``require``, direct and indirect, and
 ``replace``). A dependency carries the ecosystem it belongs to, so the
@@ -342,6 +343,20 @@ def _parse_pyproject(path: Path, rel: str) -> list[Dependency]:
     specs: list[str] = list(project.get("dependencies", []) or [])
     for group in (project.get("optional-dependencies", {}) or {}).values():
         specs.extend(group or [])
+    # PEP 735 dependency groups, and note the table is TOP-LEVEL rather than under
+    # `[project]`: they are the sets a project installs but does not publish — the
+    # test, lint and, on a service repository, the *runtime* set of a component that
+    # ships as a container instead of as a wheel. Missing them does not read as a
+    # gap, which is what makes it dangerous: the scan reports a denominator and a
+    # verdict over the handful of shared pins in `[project]` while the deployed
+    # image's real dependency list sits in a group nothing looked at.
+    #
+    # An entry may be a table, `{include-group = "other"}`, which names another group
+    # rather than a package. It is skipped rather than parsed: the group it names is
+    # itself in this table and is read on its own account, so following the reference
+    # would only count the same dependencies twice.
+    for group in (data.get("dependency-groups", {}) or {}).values():
+        specs.extend(entry for entry in (group or []) if isinstance(entry, str))
     for spec in specs:
         name, specifier, ref_url = _split_name_spec(spec)
         if name:
