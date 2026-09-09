@@ -17,6 +17,9 @@ message. Your application supplies its own system prompt. That's the thing we wa
 
 ### Request and response shapes
 
+*Working out these values by hand takes a while. [Have an assistant wire it up](adapter-prompt.md) is a prompt that reads them off your own
+repository, with a rule against guessing any of them.*
+
 By default the request body is `{"message": "<attacker input>"}` and the reply is auto-detected across
 common shapes: a top-level `reply` / `response` / `message` / `content` / `answer` field, or the
 OpenAI-style `choices[0].message.content`.

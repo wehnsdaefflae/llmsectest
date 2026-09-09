@@ -10,6 +10,18 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ## [Unreleased]
 
+### Added
+
+- **A prompt that wires an application up for you: [Have an assistant wire it
+  up](https://docs.llmsec.dev/guides/adapter-prompt/).** Standing a new application up is the
+  expensive part of a scan: about ten values have to be read out of that application's own code
+  before the first probe can be sent. The new guide is a copy-paste prompt for a coding assistant
+  with the repository open. It is built around a rule against guessing. Every value has to be
+  traced to a file and line, anything not found is left out and named, and the output ends with the
+  OWASP categories that will therefore be recorded as skipped. That last part is the point: a
+  guessed `--app-secret` can never be leaked back, so the category reports as attacked and
+  withstood, which is a clean row that means nothing was ever planted (2026-09-09).
+
 ### Fixed
 
 - **A scan that had been given `--repo` reported LLM03 as never run.** The application-scan

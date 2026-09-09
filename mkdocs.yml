@@ -68,6 +68,7 @@ nav:
   - Getting started: getting-started.md
   - Guides:
       - Test your running app: guides/target-app.md
+      - Have an assistant wire it up: guides/adapter-prompt.md
       - Red-team your defense: guides/red-team-your-defense.md
       - Author your own tests: guides/authoring.md
       - CI/CD integration: guides/ci.md
