@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://docs.llmsec.dev/guides/development/">
+        <link rel="canonical" href="https://docs.llmsec.dev/guides/adapter-prompt/">
       
       
-        <link rel="prev" href="../ci/">
+        <link rel="prev" href="../target-app/">
       
       
-        <link rel="next" href="../../owasp/">
+        <link rel="next" href="../red-team-your-defense/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Development - LLMSecTest</title>
+        <title>Have an assistant wire it up - LLMSecTest</title>
       
     
     
@@ -82,7 +82,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#development" class="md-skip">
+        <a href="#have-an-assistant-wire-it-up" class="md-skip">
           Skip to content
         </a>
       
@@ -116,7 +116,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Development
+              Have an assistant wire it up
             
           </span>
         </div>
@@ -594,10 +594,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../adapter-prompt/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Have an assistant wire it up
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -613,6 +640,81 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-prompt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The prompt
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-you-get-back" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What you get back
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-the-prompt-is-written-to-refuse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why the prompt is written to refuse
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#when-the-assistant-gets-stuck" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When the assistant gets stuck
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -706,37 +808,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Development
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../development/" class="md-nav__link">
         
   
   
@@ -752,98 +827,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#install" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Install
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#run-the-unit-suite" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Run the unit suite
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#measure-coverage" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Measure coverage
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Measure coverage">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#what-is-excluded" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        What is excluded
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#lint" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Lint
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#profiling" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Profiling
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1331,10 +1314,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#install" class="md-nav__link">
+  <a href="#the-prompt" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Install
+        The prompt
       
     </span>
   </a>
@@ -1342,10 +1325,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#run-the-unit-suite" class="md-nav__link">
+  <a href="#what-you-get-back" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Run the unit suite
+        What you get back
       
     </span>
   </a>
@@ -1353,38 +1336,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#measure-coverage" class="md-nav__link">
+  <a href="#why-the-prompt-is-written-to-refuse" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Measure coverage
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Measure coverage">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#what-is-excluded" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        What is excluded
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#lint" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Lint
+        Why the prompt is written to refuse
       
     </span>
   </a>
@@ -1392,10 +1347,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#profiling" class="md-nav__link">
+  <a href="#when-the-assistant-gets-stuck" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Profiling
+        When the assistant gets stuck
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related
       
     </span>
   </a>
@@ -1422,74 +1388,154 @@
   
 
 
-<h1 id="development">Development<a class="headerlink" href="#development" title="Permanent link">&para;</a></h1>
-<p>How to run the tests and measure coverage on this project.</p>
-<h2 id="install">Install<a class="headerlink" href="#install" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[dev,cvss]&quot;</span>
+<h1 id="have-an-assistant-wire-it-up">Have an assistant wire it up<a class="headerlink" href="#have-an-assistant-wire-it-up" title="Permanent link">&para;</a></h1>
+<div class="admonition info">
+<p class="admonition-title">These pages describe v0.3.0</p>
+<p>The site is built from <code>main</code>, so it can describe a version newer than the one
+<code>pip install llmsectest</code> gives you. Run <code>llmsectest --version</code> to see what you have.
+<a href="https://docs.llmsec.dev/changelog/">The changelog</a> says what arrived when.</p>
+</div>
+<p>Pointing LLMSecTest at a real application means answering about ten questions about that
+application: which URL answers, what the request body looks like, where your text goes inside it,
+where the reply comes back, what the auth header is, whether a conversation has to be created
+first, and what ground truth the app holds. All of those answers are in your own code.</p>
+<p><strong>This page is a prompt you can hand to a coding assistant, with your repository open, to produce
+the command line for you.</strong> It is written to make the assistant read your code rather than guess at
+it, because a guessed adapter is worse than no adapter. The last section explains why.</p>
+<h2 id="the-prompt">The prompt<a class="headerlink" href="#the-prompt" title="Permanent link">&para;</a></h2>
+<p>Copy everything in the block. Run it in a coding assistant that can read your repository.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>You are wiring my application up to LLMSecTest, a security scanner that attacks a running
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>LLM application over HTTP and reports against the OWASP LLM Top 10.
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>Your job is to produce one shell command. You may only write a value into that command
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>if you can point at the file and line in THIS repository where you read it. If you cannot
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>find something, leave the flag out and list it under &quot;Not determined&quot; with the reason.
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>Do not infer a value from convention, from a similar project, or from the framework&#39;s
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>documentation. A wrong value here produces a security report that is confidently wrong,
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>which is worse for me than a short one.
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>Work in this order.
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>STEP 1 - Find the endpoint that a user&#39;s chat message reaches.
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>Search the repo for the HTTP route handlers. Identify the ONE route that takes a user&#39;s
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>message and returns the model&#39;s reply. Note the method, the full path, and the port the
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>service listens on in local development. If several routes qualify (streaming and
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>non-streaming, v1 and v2), pick the non-streaming one and say which others you saw.
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>STEP 2 - Read the request body shape off the handler.
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>Find the request model, schema, or the first lines of the handler that read the body.
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>Write down the exact JSON an existing client sends. Then answer: which key holds the
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>user&#39;s message text? Give it as a dotted path from the root of the body, using numbers
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>for list indices. Examples: &quot;message&quot;, &quot;input_value&quot;, &quot;messages.0.content&quot;, &quot;query.text&quot;.
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>This is --app-request-field. Every OTHER key in that body, with a valid fixed value that
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>makes the request well formed, is --app-body as a JSON object. If the body carries a
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>message list, --app-body must contain that list with exactly one user message whose
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>content is an empty string, and --app-request-field addresses that entry.
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>STEP 3 - Read the response body shape off the handler.
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>Find what the handler returns. Write down the exact JSON. Then give the dotted path to
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>the assistant&#39;s reply TEXT, again with numbers for list indices. Examples:
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>&quot;reply&quot;, &quot;choices.0.message.content&quot;, &quot;outputs.0.outputs.0.results.message.text&quot;.
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>This is --app-response-path. If the reply text is not present as a plain string anywhere
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>in a non-streaming response, stop and say so: the scanner cannot read it and this is the
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>single most useful thing you can tell me.
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>STEP 4 - Read the authentication off the middleware.
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>Find the auth check that runs before the handler. Name the header and the exact format of
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>the value. This is --app-headers as a JSON object, for example
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>{&quot;Authorization&quot;: &quot;Bearer &lt;token&gt;&quot;}. Leave the token as a placeholder for me to fill in.
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>If there is no auth in local development, say that explicitly rather than omitting it.
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>STEP 5 - Decide whether a conversation must exist first.
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>Look for a conversation, session, thread or chat id in the request body or path. If the
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>handler rejects a request without one, find the endpoint that creates one and give me:
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>the dotted path in the request body where the id goes (--app-session-field), and a JSON
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>object naming the creating endpoint&#39;s url, method, headers, body and the dotted path to
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>the new id in its response (--app-session-init). If no such id exists, say so.
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>STEP 6 - Collect the ground truth the app already holds.
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>These four unlock four of the ten categories. Report each one as found or absent, and
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>give the file and line for each one you found.
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>  a) The system prompt the application sends. Give me the file path.
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>     This becomes --app-prompt &lt;path&gt; and enables LLM07.
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>  b) A real secret the application holds in its context or prompt: an API key, an
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>     internal URL, a customer identifier. Give me the file and line, NOT the value.
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>     I will pass the value myself as --app-secret. This enables LLM02.
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>  c) Every privileged action the model can trigger, as the exact literal prefix the
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>     model must emit to trigger it. Read this off the tool definitions or the output
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>     parser, not off the documentation. Example: if the parser matches a line starting
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>     &quot;ACTION: refund(&quot;, the signature is &quot;ACTION: refund(&quot;. Each one is a repeated
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>     --app-action and they enable LLM06.
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>  d) Whether the app retrieves documents at query time. If it does, name the store and
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>     how a document gets into it. I will plant two markers myself
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>     (--app-canary and --app-rag-poison) and those enable LLM08.
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>STEP 7 - Prove the shape before you hand me the command.
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>Write ONE curl command using everything above, with a harmless question as the input.
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>Run it if you can run commands. Show me the raw response. Confirm that
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>--app-response-path resolves to the reply text in the response you actually got. If you
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>cannot run it, say the command is unverified.
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>STEP 8 - Output, in this order and nothing else.
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="w">  </span><span class="k">1.</span> The curl command from step 7 and its response, or a note that it is unverified.
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a><span class="w">  </span><span class="k">2.</span> The llmsectest command, one flag per line with backslash continuations.
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="w">  </span><span class="k">3.</span> A table: flag, value, file:line where you read it.
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="w">  </span><span class="k">4.</span> &quot;Not determined&quot;: every flag you left out, with the reason.
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="w">  </span><span class="k">5.</span> &quot;Categories this will not exercise&quot;: for each of --app-prompt, --app-secret,
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>     --app-action, --app-canary and --app-rag-poison that you could not supply, name the
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>     OWASP category it would have unlocked, so I know the report will record those as
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>     skipped rather than as passed.
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>The flags exist exactly as named above. Do not invent flags. Do not write a wrapper
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>script, a proxy, or any Python: the scanner talks to the endpoint directly and every
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>shape difference is expressible in the flags above.
 </code></pre></div>
-<h2 id="run-the-unit-suite">Run the unit suite<a class="headerlink" href="#run-the-unit-suite" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>pytest<span class="w"> </span>-q
+<h2 id="what-you-get-back">What you get back<a class="headerlink" href="#what-you-get-back" title="Permanent link">&para;</a></h2>
+<p>A command in this shape, with the values from your own repository:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/api/chat<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span>--app-request-field<span class="w"> </span><span class="s1">&#39;messages.0.content&#39;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span>--app-response-path<span class="w"> </span><span class="s1">&#39;choices.0.message.content&#39;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span>--app-headers<span class="w"> </span><span class="s1">&#39;{&quot;Authorization&quot;: &quot;Bearer $APP_TOKEN&quot;}&#39;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span>--app-body<span class="w"> </span><span class="s1">&#39;{&quot;model&quot;: &quot;app&quot;, &quot;stream&quot;: false,</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="s1">               &quot;messages&quot;: [{&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;&quot;}]}&#39;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">  </span>--app-prompt<span class="w"> </span>prompts/system.txt<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">  </span>--app-secret<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$REAL_SECRET</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">  </span>--app-action<span class="w"> </span><span class="s2">&quot;ACTION: refund(&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">  </span>--report-formats<span class="w"> </span>sarif,html
 </code></pre></div>
-<p>The unit suite is offline and fast (about 1.5 seconds). It never contacts a model,
-so it can run anywhere, including in CI on every push.</p>
-<h2 id="measure-coverage">Measure coverage<a class="headerlink" href="#measure-coverage" title="Permanent link">&para;</a></h2>
-<p>Use <code>coverage run -m pytest</code>, <strong>not</strong> <code>pytest --cov</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>coverage<span class="w"> </span>run<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>-q
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>coverage<span class="w"> </span>report
-</code></pre></div>
-<p>Both commands look equivalent and are not. <code>llmsectest</code> registers a
-<a href="https://docs.pytest.org/en/stable/how-to/writing_plugins.html"><code>pytest11</code> entry point</a>,
-so pytest imports the package while loading plugins, which happens <em>before</em>
-<code>pytest-cov</code> starts measuring. Every module reached on that path has its
-module-level statements recorded as never executed. On the same green suite:</p>
-<table>
-<thead>
-<tr>
-<th>Invocation</th>
-<th>Reported coverage</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>pytest --cov=llmsectest</code></td>
-<td>48%</td>
-</tr>
-<tr>
-<td><code>coverage run -m pytest</code></td>
-<td>72%</td>
-</tr>
-</tbody>
-</table>
-<p>The 48% comes from import order. The code is tested. <code>coverage run</code> starts
-measuring before pytest loads anything, so it sees the real picture. This is a
-general trap for any package that is itself a pytest plugin.</p>
-<p>Configuration lives in <code>pyproject.toml</code> under <code>[tool.coverage.run]</code> and
-<code>[tool.coverage.report]</code>. Branch coverage is on. <code>coverage report</code> fails below
-the floor set in <code>fail_under</code>. The floor ratchets upward: raise it when a change
-legitimately lifts coverage and never lower it to turn a red build green.</p>
-<h3 id="what-is-excluded">What is excluded<a class="headerlink" href="#what-is-excluded" title="Permanent link">&para;</a></h3>
-<p><code>src/llmsectest/suite/</code> (the packaged probe suite) is omitted from the
-measurement. Those modules only execute against a live target (a model, or an
-application endpoint), so a unit run can never enter them; counting them would
-measure how much of the product needs a GPU rather than how much of it is
-untested. They are exercised end to end against real applications instead.</p>
-<h2 id="lint">Lint<a class="headerlink" href="#lint" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>ruff<span class="w"> </span>check<span class="w"> </span>src<span class="w"> </span>tests
-</code></pre></div>
-<p>The rule set is declared explicitly in <code>pyproject.toml</code> rather than inherited from
-ruff's defaults. The tool is pinned to a major range. Ruff's default selection
-changes between releases, so an unpinned linter can turn a green branch red without
-a single line of code changing.</p>
-<h2 id="profiling">Profiling<a class="headerlink" href="#profiling" title="Permanent link">&para;</a></h2>
-<p>There is no profiling dependency and adding one has been measured to be
-unnecessary. A real scan is dominated by waiting for the model: in a 183-second
-bare-model run, 180.8 seconds (98.8%) were spent in <code>socket.recv</code>, and everything
-this project's own Python does totalled under 1.2 seconds, most of it interpreter
-startup. If you do need a profile, stdlib <code>cProfile</code> is enough:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nv">LLMSECTEST_TARGET</span><span class="o">=</span><span class="s2">&quot;ollama:your-model&quot;</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span>python<span class="w"> </span>-m<span class="w"> </span>cProfile<span class="w"> </span>-o<span class="w"> </span>scan.prof<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>src/llmsectest/suite<span class="w"> </span>-q
-</code></pre></div>
-<p>Revisit this only if a scan ever becomes CPU-bound rather than model-bound.</p>
+<p>Run it. A non-zero exit means the scan found something.</p>
+<h2 id="why-the-prompt-is-written-to-refuse">Why the prompt is written to refuse<a class="headerlink" href="#why-the-prompt-is-written-to-refuse" title="Permanent link">&para;</a></h2>
+<p>An assistant that fills in every flag looks more helpful than one that leaves four blank. For this
+particular task it is the opposite. The reason is worth understanding before you use
+the output.</p>
+<p><strong>A wrong <code>--app-response-path</code> reports your whole application as unreachable.</strong> The scanner cannot
+find the reply, so every probe comes back unanswered. The report is then a true sentence about the
+wrong thing, which is why the run refuses a malformed JSON flag rather than falling back to a
+default.</p>
+<p><strong>A wrong <code>--app-secret</code> is worse, because it comes out green.</strong> The LLM02 probes ask the
+application for a secret and check whether that exact value comes back. If the value you passed is
+not a secret the application actually holds, nothing can ever match, and the category reports as
+attacked and withstood. <strong>You get a clean row that means nothing had been planted.</strong> The same trap
+sits under <code>--app-action</code> for LLM06 and under the two markers for LLM08.</p>
+<p>This is the failure mode this project spends most of its effort on. LLMSecTest reports a category
+with no ground truth as <strong>skipped, naming the reason and the flag that would enable it</strong>, rather
+than as a pass. The prompt's "Not determined" and "Categories this will not exercise" sections exist so
+that the assistant's output and the scanner's report agree about what was never tested.</p>
+<p><strong>So read the file:line table before you run the command.</strong> It takes a minute. It is the difference between a report about your application and a report about your configuration.</p>
+<h2 id="when-the-assistant-gets-stuck">When the assistant gets stuck<a class="headerlink" href="#when-the-assistant-gets-stuck" title="Permanent link">&para;</a></h2>
+<p>Three answers are common and all three are useful.</p>
+<p><strong>"The reply is only available as a stream."</strong> Some applications have no non-streaming route at all.
+Say so in an issue. The adapter reads a complete response body, so a streaming-only door is a real gap and not a configuration problem.</p>
+<p><strong>"The persona is attached to a conversation created by the UI."</strong> This is normal in chat products.
+Step 5 is the path: <code>--app-session-init</code> asks the application for a conversation before each probe.
+<code>--app-session-field</code> puts the id where the handler reads it.</p>
+<p><strong>"The retrieval context is assembled by a second endpoint."</strong> The scanner talks to one door. An
+application that assembles its context elsewhere needs that door to be the one you point at. If no single door carries both the retrieval and the generation, LLM08 cannot be exercised black-box.</p>
+<h2 id="related">Related<a class="headerlink" href="#related" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../target-app/">Test your running app</a> for what each flag means in full.</li>
+<li><a href="../../cli/">CLI reference</a> for every flag the scanner takes.</li>
+</ul>
 
 
 

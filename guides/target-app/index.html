@@ -16,7 +16,7 @@
         <link rel="prev" href="../../getting-started/">
       
       
-        <link rel="next" href="../red-team-your-defense/">
+        <link rel="next" href="../adapter-prompt/">
       
       
         
@@ -748,6 +748,34 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../adapter-prompt/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Have an assistant wire it up
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1498,6 +1526,8 @@ finding reflects how your app behaves under attack.</p>
 <p>LLMSecTest POSTs the <strong>attacker turn</strong> to your endpoint and reads the reply. It sends <em>only</em> the user
 message. Your application supplies its own system prompt. That's the thing we want to test.</p>
 <h3 id="request-and-response-shapes">Request and response shapes<a class="headerlink" href="#request-and-response-shapes" title="Permanent link">&para;</a></h3>
+<p><em>Working out these values by hand takes a while. <a href="../adapter-prompt/">Have an assistant wire it up</a> is a prompt that reads them off your own
+repository, with a rule against guessing any of them.</em></p>
 <p>By default the request body is <code>{"message": "&lt;attacker input&gt;"}</code> and the reply is auto-detected across
 common shapes: a top-level <code>reply</code> / <code>response</code> / <code>message</code> / <code>content</code> / <code>answer</code> field, or the
 OpenAI-style <code>choices[0].message.content</code>.</p>
