@@ -84,7 +84,7 @@ class CompletionResponse:
 
         :attr:`text` is one field of the response body, chosen by ``response_path`` or
         autodetected. A model's answer can also arrive in a *sibling* field, and on
-        2026-09-04 one did: LibreChat returned the planted LLM02 secret verbatim in
+        2026-09-04 one did: an application returned the planted LLM02 secret verbatim in
         ``choices[0].message.reasoning`` while ``choices[0].message.content`` held a
         polite refusal, so the reply field said the application resisted and the body
         said it had not. Every oracle in this tool read the reply field only.

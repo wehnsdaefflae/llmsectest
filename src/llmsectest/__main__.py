@@ -28,6 +28,19 @@ Examples:
         --app-canary "INTERNAL-DOC-CANARY-7f2a" \\
         --app-rag-poison "RAG-POISON-MARKER-3b9d"
                           # deeper app scan: the dev-supplied inputs unlock LLM07/02/06/08
+    python -m llmsectest --target app:http://localhost:7860/api/v1/run/<flow-id> \\
+        --app-request-field input_value \\
+        --app-response-path 'outputs.0.outputs.0.results.message.text' \\
+        --app-headers '{"Authorization": "Bearer <token>"}' \\
+        --app-body '{"output_type": "chat", "input_type": "chat"}'
+                          # non-OpenAI endpoint: customise the request and reply shapes
+    python -m llmsectest --target app:http://localhost:14000/api/v1/chat/completions \\
+        --app-request-field messages.0.content \\
+        --app-response-path 'choices.0.message.content' \\
+        --app-body '{"model": "app", "stream": false,
+                     "messages": [{"role": "user", "content": ""}]}'
+                          # an OpenAI-compatible app: the prompt goes into the body's list,
+                          # and NO system message, so the app's own prompt stays in place
     python -m llmsectest --target app:http://localhost:42110/api/chat \\
         --app-session-field conversation_id \\
         --app-session-init '{"url": "/api/sessions", "response_path": "conversation_id"}'
@@ -55,7 +68,9 @@ their input are reported as skipped-with-reason.
 
 Endpoints that neither read ``{"message": ...}`` nor answer in an OpenAI-compatible
 shape are described with four more flags instead of a wrapper script:
-``--app-request-field`` (the body field your endpoint reads the prompt from),
+``--app-request-field`` (where in the body your endpoint reads the prompt from: a
+field name, or a dotted path into the body you supply below, list indices included,
+e.g. ``messages.0.content`` for an OpenAI-compatible door),
 ``--app-response-path`` (a dotted path to the reply in the response body, list indices
 included, e.g. ``choices.0.message.content``), ``--app-headers`` and ``--app-body``
 (JSON objects merged into the headers and the request body of every probe).
@@ -394,6 +409,18 @@ def _is_app_target(target: str | None) -> bool:
     return bool(target) and target.startswith("app:")
 
 
+#: pytest exit codes that mean the suite produced no result, keyed to what to tell the
+#: reader. Exit 0 (clean) and exit 1 (findings, which is the normal outcome of a scan that
+#: worked) both leave the coverage footer alone; these four are the ones where printing a
+#: coverage line would be a claim about a run that did not happen.
+_SUITE_DID_NOT_RUN = {
+    2: "the run was interrupted before it finished",
+    3: "pytest hit an internal error",
+    4: "pytest rejected the command line above, so no probe was sent",
+    5: "no tests were collected",
+}
+
+
 def _print_coverage_footer(target: str | None) -> None:
     """Surface which OWASP categories this run did and did not exercise, so a
     category is never silently left untested."""
@@ -414,8 +441,26 @@ def _print_coverage_footer(target: str | None) -> None:
                            known_poison=poison)
         exercised = [c.owasp for c in cov if c.exercised]
         skipped = [(c.owasp, c.reason) for c in cov if not c.exercised]
+        # **A white-box category the run WAS pointed at is exercised (2026-09-06).**
+        # `app_coverage` knows only the black-box probes, so LLM03 and LLM04 landed in
+        # `skipped` whatever the run did, and the footer of a scan that had just produced
+        # 71 supply-chain findings against a real checkout still read *"not exercised
+        # LLM03: pass --repo <path>"*. A coverage map that contradicts the scan printed
+        # above it is worse than no map: it is the one line a reader trusts to tell them
+        # what went untested. Same table the model-target branch below reads, so the two
+        # cannot drift, and it is read WHOLE: LLM08 is in it too, so a scan given
+        # `--vector-store` and no `--app-canary` stops printing "not exercised LLM08" while
+        # its own SARIF records LLM08 as a white-box scanner that ran. `not in exercised`
+        # keeps a category the black-box probes already reached from being listed twice.
+        ran_whitebox = [m for m, (variable, _) in _SCANNER_INPUT.items()
+                        if os.environ.get(variable) and m not in exercised]
+        skipped = [(m, r) for m, r in skipped if m not in ran_whitebox]
+        exercised = sorted(exercised + ran_whitebox)
+        label = ("exercised" if not ran_whitebox else
+                 f"exercised, {len(ran_whitebox)} of them white-box from the project's "
+                 f"own artefacts")
         print(f"Application-scan coverage, {len(exercised)}/10 OWASP categories "
-              "exercised black-box. No silent gaps:")
+              f"{label}. No silent gaps:")
     else:
         from .probes import APP_ONLY_CATEGORIES, SCANNER_CATEGORIES, covered_categories
 
@@ -614,6 +659,20 @@ def run_suite(args: list, target: str | None, repo: str | None = None,
     print(f"\nTarget: {target or f'{DEFAULT_TARGET} (offline demo)'}")
     print(f"Running: {' '.join(cmd)}\n")
     rc = subprocess.call(cmd)
+    if rc in _SUITE_DID_NOT_RUN:
+        # The footer is computed from the inputs this run was CONFIGURED with, never from
+        # what the suite did, so it says the same thing whether every probe ran or none
+        # did. Found 2026-09-05 by reading the tool's own output cold: a mistyped option
+        # made pytest exit 4 without collecting anything, and stdout still ended
+        # "Coverage this run, 7/10 OWASP categories exercised. No silent gaps". That is
+        # this project's own recurring defect pointed at its console: a run nothing was
+        # put to rendering as one that passed. A finding is a failing test and exits 1,
+        # so 1 keeps the footer; these four codes mean the suite never produced a result.
+        print("\n" + "-" * 68)
+        print(f"No coverage to report: {_SUITE_DID_NOT_RUN[rc]} (pytest exit {rc}). "
+              "Nothing above this line was measured against the target.")
+        print("-" * 68)
+        return rc
     _print_coverage_footer(target)
     if redteam_benign:
         _print_over_refusal(target, redteam_benign_set)
@@ -766,12 +825,28 @@ def main():
         print(__doc__)
         return 0
     if "--version" in args:
+        # `__version__` rather than the installed metadata, because the two are computed
+        # independently and disagreed on 2026-09-05: in an editable checkout the metadata
+        # is frozen at `pip install -e` time, so it reported 0.1.0 while the code being
+        # imported was 0.3.0. The version a scan should be attributed to is the code that
+        # ran, which is what `__version__` is and what the SARIF driver version and the
+        # HTML report header already carry. The metadata is still printed when it differs,
+        # because that difference means a stale editable install and nothing else says so.
         from importlib.metadata import PackageNotFoundError, version
 
+        from . import __version__
+
         try:
-            print(f"llmsectest {version('llmsectest')}")
+            installed = version("llmsectest")
         except PackageNotFoundError:
-            print("llmsectest (not installed, running from source)")
+            installed = None
+        if installed is None:
+            print(f"llmsectest {__version__} (not installed, running from source)")
+        elif installed != __version__:
+            print(f"llmsectest {__version__} "
+                  f"(installed metadata says {installed}: re-run `pip install -e .`)")
+        else:
+            print(f"llmsectest {__version__}")
         return 0
     if "--check" in args:
         check_coverage()

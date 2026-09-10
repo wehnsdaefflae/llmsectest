@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/wehnsdaefflae/llmsectest/actions/workflows/ci.yml/badge.svg)](https://github.com/wehnsdaefflae/llmsectest/actions/workflows/ci.yml)
 [![docs](https://github.com/wehnsdaefflae/llmsectest/actions/workflows/docs.yml/badge.svg)](https://docs.llmsec.dev)
-[![license: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![license: MIT](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/wehnsdaefflae/llmsectest/blob/main/LICENSE)
 
 Your LLM application can be talked into ignoring its instructions, into repeating a secret it
 was told to keep, or into acting on an instruction hidden in a document it retrieved. Your
@@ -34,12 +34,12 @@ with CVSS v4.0- and risk-scored findings.
 running app, the OWASP coverage map, CLI and API reference. Build locally with
 `pip install -e ".[docs]" && mkdocs serve`.
 
-🤝 **Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md). The most useful thing you can send is a bad
+🤝 **Contributing:** [CONTRIBUTING.md](https://github.com/wehnsdaefflae/llmsectest/blob/main/CONTRIBUTING.md). The most useful thing you can send is a bad
 first run: if you tried it and gave up, say where you stopped. Two people already have. Both
 reports changed the tool. Security issues in the tool itself go through
-[SECURITY.md](SECURITY.md), privately.
+[SECURITY.md](https://github.com/wehnsdaefflae/llmsectest/blob/main/SECURITY.md), privately.
 
-📝 **What's new:** see the [changelog](CHANGELOG.md) (also on the [docs site](https://docs.llmsec.dev/changelog/)); the forward plan is the [roadmap](https://llmsec.dev/#roadmap).
+📝 **What's new:** see the [changelog](https://github.com/wehnsdaefflae/llmsectest/blob/main/CHANGELOG.md) (also on the [docs site](https://docs.llmsec.dev/changelog/)); the forward plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 Funded by the German Federal Ministry of Research, Technology and Space (BMFTR)
 via the [Prototype Fund](https://prototypefund.de) (FKZ 16IS26S10). MIT-licensed.
@@ -49,7 +49,7 @@ See [Funding](#funding).
 > categories ship a real probe or scanner. None is a placeholder. A scan that cannot
 > reach one says so instead of passing it silently.
 >
-> **Known limitations** live in the [changelog](CHANGELOG.md#known-issue) and are named on the
+> **Known limitations** live in the [changelog](https://github.com/wehnsdaefflae/llmsectest/blob/main/CHANGELOG.md#known-issue) and are named on the
 > category's own page as they are found. One is open today:
 > [LLM06](https://docs.llmsec.dev/owasp/llm06/) reports only what your application emits, so on an
 > application that describes an action in prose rather than emitting the signature you passed, a
@@ -61,7 +61,7 @@ See [Funding](#funding).
 |---|---|---|
 | LLM01 prompt injection | marker-injection corpus + a **red-team jailbreak set** ([JailbreakBench](https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors) / AdvBench, `--redteam-set`) scored by a refusal oracle | black-box |
 | LLM02 sensitive information disclosure | four disclosure mechanisms against a named secret the app holds | black-box |
-| LLM03 supply chain | reads your dependency manifests (`requirements*.txt`, `pyproject.toml` incl. Poetry, `Pipfile`) via `--repo`, flags unpinned deps and insecure package indexes, optionally checks exact pins against OSV.dev for known CVEs, emits a CycloneDX SBOM | white-box |
+| LLM03 supply chain | reads your dependency manifests via `--repo` across three ecosystems (PyPI: `requirements*.txt`, `pyproject.toml` incl. Poetry, `Pipfile`; npm: `package.json`; Go: `go.mod`), flags unpinned deps, index bypasses and insecure package indexes, optionally checks exact pins against OSV.dev for known CVEs, emits a CycloneDX SBOM | white-box |
 | LLM04 data and model poisoning | serialized-model scanner over the pickle opcode stream (`--model-scan`), never unpickling | white-box |
 | LLM05 improper output handling | asks the app to emit active payloads; a raw echo is the finding | black-box |
 | LLM06 excessive agency | four unverifiable authority claims, scored on a real invocation | black-box |
@@ -91,14 +91,16 @@ See [Funding](#funding).
   instead: one application returned a planted secret verbatim in `choices[0].message.reasoning` while
   `content` held a refusal. A probe that plants its marker in the application and never utters it
   itself is scored against the whole body. The finding says so when the token was found outside the
-  reply field. A probe whose marker travels in our own request is not, so an application that
-  quotes the attack back is never a finding.
+  reply field. A probe whose marker travels in our own request is not, so a quotation of
+  the attack landing anywhere but the reply field is never a whole-body finding. In the reply
+  field it is scored by that probe's own detector, which for improper output handling is exactly
+  where the finding lives.
 - **Over-refusal is measured too.** `--redteam-benign` runs the matched benign twins and reports the
   target's **false-refusal rate**, a usability signal that's kept out of the security findings and the exit code.
 - **One adapter for every target.** OpenAI, Anthropic, HuggingFace, and local Ollama / LM Studio, plus a
   running application at its own HTTP endpoint (`--target app:<url>`).
 - **Next up.** More depth. Embedding-store poisoning, multi-tenant retrieval isolation, a classifier refusal oracle. The modules
-  under [`examples/`](examples/) show the reporting pipeline across all ten categories with deterministic
+  under [`examples/`](https://github.com/wehnsdaefflae/llmsectest/tree/main/examples) show the reporting pipeline across all ten categories with deterministic
   mock fixtures.
 
 ## The unified adapter
@@ -185,6 +187,18 @@ A run that got **no** answer at all exits non-zero, because a scan of nothing is
 app is still worth a higher `--app-timeout`. You reached it. The probes you lost are the ones you
 would rather have had.
 
+**An app that hands your own prompt back is never scored as a finding.** Every guarantee above
+fails towards silence: an unreachable endpoint, an expired token, a mistyped path all end as
+inconclusive, never as a result. One misconfiguration used to fail the other way. Many chat APIs
+answer with the whole conversation, so `--app-response-path messages.0.content` reads back the
+*question* rather than the reply. A prompt-injection or output-handling probe carries
+its own marker, so every probe would then find its own payload in what it believes is the answer
+and score a finding. The run would render, validate and report a near-total failure of an application
+that was never asked anything. So a reply that comes back identical to the text just sent, once
+both are trimmed of surrounding whitespace, stops the probe with an error naming the flag, what it
+is reading and what a message list usually needs (`messages.-1.content`). A reply that merely *quotes* the attack is untouched, because that
+is what a real improper-output-handling finding looks like.
+
 **A target that answers is never called unreachable.** An endpoint that replies `HTTP 429` was
 reached, so its probes are inconclusive and named as **throttled**, carrying the target's own
 `Retry-After` where it sent one, because that is a quota to raise rather than a URL to check. Any
@@ -222,7 +236,7 @@ What a category needs and what it gets you:
 | `--app-action <signature>` | LLM06 | a privileged tool call, repeatable |
 | `--app-canary <value>` | LLM08 retrieval exposure | confidential content planted in the retrieved corpus |
 | `--app-rag-poison <marker>` | LLM08 indirect injection | the marker a planted poisoned document tells the model to emit |
-| `--repo <path>` | LLM03 | dependency manifests to scan (add `--osv` for known CVEs, `--sbom` for CycloneDX) |
+| `--repo <path>` | LLM03 | dependency manifests to scan, Python, npm and Go (add `--osv` for known CVEs, `--sbom` for CycloneDX) |
 | `--model-scan <path>` | LLM04 | serialized model files, read as pickle opcodes and never unpickled |
 | `--vector-store <path>` | LLM08 embedding-inversion exposure | a persisted vector store (Chroma sqlite, JSON store, FAISS sidecar), read offline and never unpickled |
 | `--app-stress <N>` | every app case, under load | one simultaneous wave of N requests per case, reporting only a guardrail that held at one request and failed at N. No default: the target is somebody else's running app, so absence of the flag means absence of traffic |
@@ -296,7 +310,7 @@ learn how big your budget is, which we found out by doing it: our own cohort rea
 targets and forty fast ones until we took the timed-out probes back out, and then it read as
 one population. One exception is still ours to finish: the two **bounded LLM10** probes score
 a timeout as a *finding* rather than as inconclusive, so on a target that fails them the peak
-still reports the budget. See [`examples/`](examples/) for one test module per OWASP category.
+still reports the budget. See [`examples/`](https://github.com/wehnsdaefflae/llmsectest/tree/main/examples) for one test module per OWASP category.
 
 ## Install
 

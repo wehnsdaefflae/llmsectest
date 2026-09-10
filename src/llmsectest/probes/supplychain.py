@@ -28,15 +28,21 @@ What it flags, per declared dependency:
 Exact pins (``==`` / ``===``), compatible-release (``~=``) and fully bounded ranges
 (``>=x,<y``) are treated as safe and produce no finding.
 
-Manifests understood: ``requirements*.txt`` (incl. ``-e`` / index directives),
-PEP 621 ``pyproject.toml`` (``[project]`` + optional-dependencies), Poetry
-(``[tool.poetry.dependencies]``) and ``Pipfile``. This core is the offline,
-zero-dependency baseline; the opt-in networked known-CVE lookup on top of it
-lives in :mod:`llmsectest.probes.osv` (CLI ``--osv``).
+Manifests understood, across three ecosystems: on **PyPI**, ``requirements*.txt``
+(incl. ``-e`` / index directives), PEP 621 ``pyproject.toml`` (``[project]`` +
+optional-dependencies + PEP 735 ``[dependency-groups]``), Poetry
+(``[tool.poetry.dependencies]``) and ``Pipfile``;
+on **npm**, ``package.json`` (``dependencies`` / ``devDependencies`` /
+``optionalDependencies``); on **Go**, ``go.mod`` (``require``, direct and indirect, and
+``replace``). A dependency carries the ecosystem it belongs to, so the
+known-bad corpus, the OSV query and the SBOM PURL all name the right registry. This
+core is the offline, zero-dependency baseline; the opt-in networked known-CVE lookup
+on top of it lives in :mod:`llmsectest.probes.osv` (CLI ``--osv``).
 """
 
 from __future__ import annotations
 
+import json
 import re
 import tomllib
 from dataclasses import dataclass
@@ -46,14 +52,43 @@ from .models import SEVERITIES
 
 SEVERITY_RANK = {name: i for i, name in enumerate(SEVERITIES)}
 
-# Directories we never descend into when discovering manifests: virtualenvs,
-# vendored/installed packages and VCS metadata are not the *project's* declared
-# supply chain, and scanning them produces noise.
+# Directories we never descend into when discovering manifests: vendored/installed
+# packages and VCS metadata are not the *project's* declared supply chain, and scanning
+# them produces noise. Every name here means one thing wherever it appears.
 _PRUNE_DIRS = frozenset({
-    ".git", ".hg", ".svn", ".venv", "venv", "env", "node_modules",
+    ".git", ".hg", ".svn", "node_modules",
     "site-packages", "__pycache__", ".tox", ".nox", "build", "dist",
     ".mypy_cache", ".pytest_cache", ".ruff_cache", "tmp", ".eggs",
 })
+
+#: Names that USUALLY mean a Python virtualenv and sometimes mean a real package. They are
+#: pruned by what the directory *is* rather than by what it is called, because a name that
+#: means two things cannot be excluded by name without hiding one of them. Measured on
+#: 2026-09-06: `lobehub/lobehub` ships `packages/env/package.json`, a real workspace package
+#: declaring two registry dependencies, and `env` in the prune set dropped it from a scan
+#: that then reported the tree with 114 manifests instead of 115. Over-excluding reports a
+#: real supply chain as an absence, which is the failure this scanner exists to prevent.
+_VENV_NAMES = frozenset({".venv", "venv", "env"})
+
+
+def is_pruned(root: Path, path: Path) -> bool:
+    """Whether ``path`` sits under a directory a project scan must not descend into.
+
+    Shared with :mod:`llmsectest.probes.modelpoison`, whose prune set was a second copy of
+    this one and would otherwise have kept the defect above after this one lost it.
+
+    PEP 405 puts ``pyvenv.cfg`` at the root of every virtualenv, so that file is what
+    separates a vendored environment from a directory that merely shares its name. A
+    virtualenv old enough to lack one still has its installed packages pruned by
+    ``site-packages``, which is unambiguous.
+    """
+    parts = path.relative_to(root).parts[:-1]
+    for i, part in enumerate(parts):
+        if part in _PRUNE_DIRS:
+            return True
+        if part in _VENV_NAMES and (root.joinpath(*parts[:i + 1]) / "pyvenv.cfg").is_file():
+            return True
+    return False
 
 # Curated list of PyPI package names documented to have carried malware or to
 # squat a popular package / stdlib module name. Stored as *canonical* names
@@ -81,6 +116,53 @@ KNOWN_MALICIOUS_PACKAGES: dict[str, str] = {
     "noblesse": "info-stealer malicious upload (JFrog disclosure, 2021)",
 }
 
+# The npm counterpart, held apart from the PyPI list rather than merged into it: a
+# name is only known-bad *in an ecosystem*, and `requests` on npm is not the PyPI
+# package of that name. Same curation rule as above, applied harder — every entry is
+# a name that was ITSELF a malicious upload. Packages that are legitimate and had one
+# compromised release (``event-stream``, ``eslint-scope``, ``ua-parser-js``, ``coa``,
+# ``rc``) are deliberately absent, because flagging the name would condemn every
+# project that depends on the healthy version; the malicious dependency ``event-stream``
+# pulled in is listed instead. Names since re-registered by a legitimate project
+# (``mariadb``, ``smb``, ``tkinter``) are absent for the same reason. Provenance: npm's
+# own "Reported malicious module: crossenv" disclosure (2017-08-02) and the
+# ``event-stream``/``flatmap-stream`` incident write-ups (2018-11).
+KNOWN_MALICIOUS_NPM_PACKAGES: dict[str, str] = {
+    "flatmap-stream": "malicious dependency injected into 'event-stream' to steal "
+                      "Copay wallet keys (2018)",
+    "crossenv": "typosquat of 'cross-env', exfiltrated environment variables (npm, 2017)",
+    "cross-env.js": "typosquat of 'cross-env' (npm, 2017)",
+    "babelcli": "typosquat of 'babel-cli' (npm, 2017)",
+    "gruntcli": "typosquat of 'grunt-cli' (npm, 2017)",
+    "ffmepg": "typosquat of 'ffmpeg' (npm, 2017)",
+    "mongose": "typosquat of 'mongoose' (npm, 2017)",
+    "nodesass": "typosquat of 'node-sass' (npm, 2017)",
+    "nodecaffe": "typosquat of 'caffe' bindings (npm, 2017)",
+    "nodefabric": "typosquat of 'fabric' (npm, 2017)",
+    "node-fabric": "typosquat of 'fabric' (npm, 2017)",
+    "noderequest": "typosquat of 'request' (npm, 2017)",
+    "nodesqlite": "typosquat of 'sqlite3' (npm, 2017)",
+    "sqliteproto": "typosquat of 'sqlite3' (npm, 2017)",
+    "nodemssql": "typosquat of 'mssql' (npm, 2017)",
+    "shadowsock": "typosquat of 'shadowsocks' (npm, 2017)",
+    "d3.js": "'.js'-suffix squat of 'd3' (npm, 2017)",
+    "fabric-js": "'.js'-suffix squat of 'fabric' (npm, 2017)",
+    "http-proxy.js": "'.js'-suffix squat of 'http-proxy' (npm, 2017)",
+    "jquery.js": "'.js'-suffix squat of 'jquery' (npm, 2017)",
+    "mssql.js": "'.js'-suffix squat of 'mssql' (npm, 2017)",
+    "nodemailer.js": "'.js'-suffix squat of 'nodemailer' (npm, 2017)",
+    "opencv.js": "'.js'-suffix squat of 'opencv' bindings (npm, 2017)",
+    "openssl.js": "'.js'-suffix squat of 'openssl' bindings (npm, 2017)",
+    "proxy.js": "'.js'-suffix squat of 'proxy' (npm, 2017)",
+    "sqlite.js": "'.js'-suffix squat of 'sqlite3' (npm, 2017)",
+}
+
+#: Which curated list a dependency is judged against, keyed by its ecosystem.
+_KNOWN_MALICIOUS: dict[str, dict[str, str]] = {
+    "PyPI": KNOWN_MALICIOUS_PACKAGES,
+    "npm": KNOWN_MALICIOUS_NPM_PACKAGES,
+}
+
 # Version-specifier operators that establish an upper bound (so a future,
 # unvetted release cannot be pulled silently).
 _HAS_UPPER = ("==", "===", "~=", "<", "<=")
@@ -101,6 +183,12 @@ class Dependency:
     specifier: str  # version constraint, e.g. "==1.2.3", ">=1.0", "" (unpinned)
     manifest: str  # repo-relative path of the manifest it came from
     url: str = ""  # set when the dep is a direct VCS/URL install
+    #: The OSV/PURL ecosystem the name belongs to — ``"PyPI"`` or ``"npm"``. It is a
+    #: field rather than an inference from the manifest name because two of this
+    #: package's consumers ask the registry a question with it: the OSV lookup queries
+    #: an ecosystem by name, and the SBOM emits a ``pkg:<ecosystem>/`` PURL. Defaulted
+    #: to PyPI so every existing caller keeps the behaviour it had.
+    ecosystem: str = "PyPI"
 
 
 # An exact pin whose version is concrete: ==1.2.3 / ===1!2.0.post1, but not a
@@ -255,6 +343,20 @@ def _parse_pyproject(path: Path, rel: str) -> list[Dependency]:
     specs: list[str] = list(project.get("dependencies", []) or [])
     for group in (project.get("optional-dependencies", {}) or {}).values():
         specs.extend(group or [])
+    # PEP 735 dependency groups, and note the table is TOP-LEVEL rather than under
+    # `[project]`: they are the sets a project installs but does not publish — the
+    # test, lint and, on a service repository, the *runtime* set of a component that
+    # ships as a container instead of as a wheel. Missing them does not read as a
+    # gap, which is what makes it dangerous: the scan reports a denominator and a
+    # verdict over the handful of shared pins in `[project]` while the deployed
+    # image's real dependency list sits in a group nothing looked at.
+    #
+    # An entry may be a table, `{include-group = "other"}`, which names another group
+    # rather than a package. It is skipped rather than parsed: the group it names is
+    # itself in this table and is read on its own account, so following the reference
+    # would only count the same dependencies twice.
+    for group in (data.get("dependency-groups", {}) or {}).values():
+        specs.extend(entry for entry in (group or []) if isinstance(entry, str))
     for spec in specs:
         name, specifier, ref_url = _split_name_spec(spec)
         if name:
@@ -301,7 +403,210 @@ def _parse_pipfile(path: Path, rel: str) -> list[Dependency]:
     return deps
 
 
-_MANIFEST_GLOBS = ("requirements*.txt", "pyproject.toml", "Pipfile")
+# --- npm (package.json) --------------------------------------------------------
+#
+# **Why this ecosystem is here (2026-09-06).** LLM03 read Python manifests only, so a
+# member whose upstream is a JavaScript project had nothing for `--repo` to point at and
+# the category could only ever be recorded as *not applicable to this member*. That would
+# have been a statement about our scanner wearing the member's name: `Mintplex-Labs/
+# anything-llm` declares its whole supply chain in eight `package.json` files and has no
+# `requirements.txt` anywhere in 6,566 tracked paths. The risks LLM03 names are not
+# language-specific — a floating range pulls whatever the registry serves next on npm
+# exactly as it does on PyPI — so the classifier is reused unchanged and only the parsing
+# and the known-bad corpus are per-ecosystem.
+
+#: npm range values that constrain nothing at all, so the install floats to whatever the
+#: registry serves next. ``""`` is included because ``"dep": ""`` is legal and means ``*``.
+_NPM_ANY = frozenset({"", "*", "x", "X", "latest", "any"})
+
+#: A single concrete version, with npm's optional ``=``/``v`` prefixes: ``1.2.3``,
+#: ``=1.2.3``, ``v1.2.3``, ``1.2.3-rc.1``.
+_NPM_EXACT_RE = re.compile(r"^=?\s*v?(\d+\.\d+\.\d+[0-9A-Za-z.+-]*)$")
+
+#: An x-range or a bare major/minor (``1``, ``1.x``, ``1.2.*``): bounded above by the
+#: next component, so it is not a float to *any* future release.
+_NPM_XRANGE_RE = re.compile(r"^\d+(\.(\d+|[xX*]))*(\.[xX*])?$")
+
+#: A hyphen range (``1.2.3 - 2.0.0``), which is inclusive on both ends.
+_NPM_HYPHEN_RE = re.compile(r"^\S+\s+-\s+\S+$")
+
+#: Protocols that fetch from somewhere other than the registry. ``workspace:``,
+#: ``file:``, ``link:`` and ``portal:`` are deliberately absent: they resolve to a
+#: directory inside the project itself, so they are first-party code that is already
+#: being scanned rather than a third party the build trusts.
+_NPM_URL_RE = re.compile(
+    r"^(git\+|git:|github:|gitlab:|bitbucket:|https?://|ssh://)|^[\w.-]+/[\w.-]+(#|$)")
+
+#: The sections whose entries are actually installed. ``peerDependencies`` is excluded
+#: on purpose: it declares what a *host* project must provide, is conventionally written
+#: as a wide open range, and flagging those would report a compatibility statement as an
+#: unpinned install on nearly every library in existence.
+_NPM_DEP_SECTIONS = ("dependencies", "devDependencies", "optionalDependencies")
+
+
+def _npm_dep(name: str, spec, rel: str) -> Dependency:
+    """Normalise one ``package.json`` entry into the shared :class:`Dependency` shape.
+
+    The npm range vocabulary is translated into the Python one the classifier already
+    understands, rather than teaching the classifier a second grammar: an exact version
+    becomes ``==x``, a caret/tilde/x-range/hyphen range becomes ``~=x`` (bounded above,
+    the same verdict Poetry's ``^``/``~`` already get), a lower bound alone is passed
+    through so it reads as having no upper bound, and ``*`` becomes the empty specifier
+    that means unpinned.
+    """
+    text = str(spec).strip()
+    raw = f"{name}: {text!r}"
+    # `npm:` is an alias install — `"react17": "npm:react@^17"` installs `react`. The
+    # risk belongs to the package actually fetched, so the alias is resolved here.
+    if text.startswith("npm:"):
+        target = text[4:]
+        at = target.rfind("@")
+        if at > 0:
+            name, text = target[:at], target[at + 1:]
+        else:
+            name, text = target, "*"
+    lowered = name.strip().lower()
+    if _NPM_URL_RE.match(text):
+        return Dependency(lowered, raw, "", rel, url=text, ecosystem="npm")
+    if text in _NPM_ANY:
+        return Dependency(lowered, raw, "", rel, ecosystem="npm")
+    if text[0] in "^~":
+        return Dependency(lowered, raw, "~=" + text[1:], rel, ecosystem="npm")
+    exact = _NPM_EXACT_RE.match(text)
+    if exact:
+        return Dependency(lowered, raw, "==" + exact.group(1), rel, ecosystem="npm")
+    if _NPM_XRANGE_RE.match(text) or _NPM_HYPHEN_RE.match(text):
+        return Dependency(lowered, raw, "~=" + text, rel, ecosystem="npm")
+    # Anything left is a comparator set (">=1.2 <2", ">=1.2"); handed over as written so
+    # `_HAS_UPPER` decides, exactly as it does for a requirements.txt line.
+    return Dependency(lowered, raw, text, rel, ecosystem="npm")
+
+
+def _parse_package_json(path: Path, rel: str) -> list[Dependency]:
+    """Parse the installed dependency sections out of a ``package.json``."""
+    deps: list[Dependency] = []
+    try:
+        data = json.loads(path.read_text(encoding="utf-8", errors="replace"))
+    except (json.JSONDecodeError, ValueError):
+        return deps
+    if not isinstance(data, dict):
+        return deps
+    for section in _NPM_DEP_SECTIONS:
+        block = data.get(section)
+        if not isinstance(block, dict):
+            continue
+        for name, spec in block.items():
+            if not isinstance(spec, str) or str(spec).startswith(
+                    ("workspace:", "file:", "link:", "portal:")):
+                continue
+            deps.append(_npm_dep(name, spec, rel))
+    return deps
+
+
+#: One ``require`` entry: a module path and its version, in either the single-line
+#: (``require example.com/m v1.2.3``) or the parenthesised block form. The module path is
+#: kept EXACTLY as written and is not lowercased the way an npm name is: a Go module path is
+#: case-sensitive, and OSV and the PURL spec both name it as the author published it.
+_GO_REQUIRE_RE = re.compile(r"^(?P<module>[^\s()]+)\s+(?P<version>v\S+)$")
+
+#: One ``replace`` directive: ``old [version] => new [version]``.
+_GO_REPLACE_RE = re.compile(r"^(?P<old>[^\s()]+)(?:\s+v\S+)?\s*=>\s*"
+                            r"(?P<new>\S+)(?:\s+(?P<newv>v\S+))?$")
+
+#: A replacement target that is a directory rather than a module path. Go resolves these
+#: off the filesystem, so neither the module proxy's immutability nor the checksum
+#: database's integrity guarantee applies to what the build actually compiles.
+_GO_LOCAL_RE = re.compile(r"^(?:\.{1,2}[/\\]|[/\\]|[A-Za-z]:[/\\])")
+
+
+def _go_require(entry: str, rel: str) -> Dependency | None:
+    """One ``require`` entry, or ``None`` for a line that is not one."""
+    found = _GO_REQUIRE_RE.match(entry)
+    if not found:
+        return None
+    module, version = found["module"], found["version"]
+    return Dependency(module, f"{module} {version}", "==" + version, rel, ecosystem="Go")
+
+
+def _go_replacement(entry: str, rel: str) -> Dependency | None:
+    """One ``replace`` directive, as the dependency the build actually fetches.
+
+    A replacement to a **directory** is recorded against the module it replaces, with the
+    path in ``url``, so it classifies as the index bypass it is. A replacement to another
+    **module** is recorded under the replacement's own path and version, because that, and
+    not the module named in ``require``, is what the build compiles.
+    """
+    found = _GO_REPLACE_RE.match(entry)
+    if not found:
+        return None
+    new, version = found["new"], found["newv"]
+    if _GO_LOCAL_RE.match(new):
+        return Dependency(found["old"], entry, "", rel, url=new, ecosystem="Go")
+    # A module-to-module replacement without a version is not valid go.mod; skipped rather
+    # than recorded as unpinned, which would be a finding invented out of a parse failure.
+    return Dependency(new, entry, "==" + version, rel, ecosystem="Go") if version else None
+
+
+def _parse_go_mod(path: Path, rel: str) -> list[Dependency]:
+    """Parse the module graph a ``go.mod`` declares.
+
+    **Why LLM03 needs it (2026-09-06).** Written for a real shape this scanner could not
+    read: a Go server whose repository declares its dependencies in ``go.mod``, beside a
+    React ``package.json``, a worker's ``package.json`` and an OCR service's
+    ``requirements.txt``. Every manifest the scanner understood belonged to something other
+    than the program the probes were talking to, so an LLM03 verdict off that set would have
+    been a statement about a frontend wearing the whole application's name.
+
+    ``// indirect`` requirements are parsed like any other. They are the rest of the module
+    graph the build resolves, they are exactly what a known-vulnerability lookup wants, and
+    dropping them would report a supply chain a fraction of its real size.
+
+    Every ``require`` carries an exact version by construction, so a well-formed ``go.mod``
+    yields no *unpinned* or *no-upper-bound* finding at all. That is the correct answer and
+    the reason the count matters more than the verdict here: this parser's contribution is a
+    denominator, plus the two shapes that can still go wrong — a name on the known-bad
+    corpus, and a ``replace`` that points the build at a directory.
+    """
+    deps: list[Dependency] = []
+    try:
+        text = path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return deps
+    block = ""  # the directive whose parenthesised block we are inside, if any
+    for raw in text.splitlines():
+        line = raw.split("//", 1)[0].strip()
+        if not line:
+            continue
+        if block:
+            if line == ")":
+                block = ""
+                continue
+            directive, entry = block, line
+        else:
+            head = line.split(None, 1)
+            if head[0] not in ("require", "replace"):
+                continue
+            rest = head[1].strip() if len(head) > 1 else ""
+            if rest == "(":
+                block = head[0]
+                continue
+            if not rest:
+                continue
+            directive, entry = head[0], rest
+        dep = (_go_replacement(entry, rel) if directive == "replace"
+               else _go_require(entry, rel))
+        if dep is not None:
+            deps.append(dep)
+    return deps
+
+
+MANIFEST_GLOBS = ("requirements*.txt", "pyproject.toml", "Pipfile",
+                  "package.json", "go.mod")
+
+#: Kept as the old private name so nothing that imported it breaks; the public one is
+#: what `qa/apps/_standup.py` reads to decide which files a pinned checkout has to
+#: fetch, so "which manifests does LLM03 read" is stated once.
+_MANIFEST_GLOBS = MANIFEST_GLOBS
 
 
 def discover_manifests(repo: Path) -> list[Path]:
@@ -317,28 +622,35 @@ def discover_manifests(repo: Path) -> list[Path]:
     found: set[Path] = set()
     for pattern in _MANIFEST_GLOBS:
         for path in repo.rglob(pattern):
-            if any(part in _PRUNE_DIRS for part in path.relative_to(repo).parts[:-1]):
+            if is_pruned(repo, path):
                 continue
             if path.is_file():
                 found.add(path)
     return sorted(found)
 
 
+def _tag(dep: Dependency) -> str:
+    """The ecosystem-qualified name used in a finding id, so two registries that both
+    publish a `requests` produce two findings rather than one that silently wins."""
+    return dep.name if dep.ecosystem == "PyPI" else f"{dep.ecosystem.lower()}-{dep.name}"
+
+
 def _classify(dep: Dependency) -> SupplyChainFinding | None:
     """Return the highest-severity supply-chain risk for one dependency, or None."""
-    if dep.name in KNOWN_MALICIOUS_PACKAGES:
+    known_bad = _KNOWN_MALICIOUS.get(dep.ecosystem, {})
+    if dep.name in known_bad:
         return SupplyChainFinding(
-            id=f"LLM03-malicious-{dep.name}", severity="critical",
+            id=f"LLM03-malicious-{_tag(dep)}", severity="critical",
             package=dep.name, manifest=dep.manifest,
             technique="known-malicious / typosquatted package",
-            evidence=f"'{dep.name}' is a known-bad package: "
-                     f"{KNOWN_MALICIOUS_PACKAGES[dep.name]}.",
+            evidence=f"'{dep.name}' is a known-bad {dep.ecosystem} package: "
+                     f"{known_bad[dep.name]}.",
             recommendation=f"Remove '{dep.name}' immediately and audit for compromise; "
                            "install the legitimate package by its correct name.",
         )
     if dep.url:
         return SupplyChainFinding(
-            id=f"LLM03-direct-url-{dep.name}", severity="high",
+            id=f"LLM03-direct-url-{_tag(dep)}", severity="high",
             package=dep.name, manifest=dep.manifest,
             technique="direct VCS/URL install bypasses the package index",
             evidence=f"'{dep.name}' is installed from {dep.url!r}, bypassing the package "
@@ -348,7 +660,7 @@ def _classify(dep: Dependency) -> SupplyChainFinding | None:
         )
     if not dep.specifier:
         return SupplyChainFinding(
-            id=f"LLM03-unpinned-{dep.name}", severity="high",
+            id=f"LLM03-unpinned-{_tag(dep)}", severity="high",
             package=dep.name, manifest=dep.manifest,
             technique="unpinned dependency floats to any future version",
             evidence=f"'{dep.name}' has no version constraint, so the build pulls whatever "
@@ -358,7 +670,7 @@ def _classify(dep: Dependency) -> SupplyChainFinding | None:
         )
     if not any(op in dep.specifier for op in _HAS_UPPER):
         return SupplyChainFinding(
-            id=f"LLM03-no-upper-bound-{dep.name}", severity="medium",
+            id=f"LLM03-no-upper-bound-{_tag(dep)}", severity="medium",
             package=dep.name, manifest=dep.manifest,
             technique="version range has no upper bound",
             evidence=f"'{dep.name}' specifies '{dep.specifier}' with no upper bound, admitting "
@@ -374,6 +686,10 @@ def _parse_manifest(manifest: Path, rel: str) -> tuple[list[Dependency], list[Su
         return _parse_pyproject(manifest, rel), []
     if manifest.name == "Pipfile":
         return _parse_pipfile(manifest, rel), []
+    if manifest.name == "package.json":
+        return _parse_package_json(manifest, rel), []
+    if manifest.name == "go.mod":
+        return _parse_go_mod(manifest, rel), []
     return _parse_requirements(manifest, rel)
 
 
@@ -400,7 +716,10 @@ def scan_dependencies(repo: str | Path) -> list[SupplyChainFinding]:
     """
     repo = Path(repo)
     findings: list[SupplyChainFinding] = []
-    seen: set[tuple[str, str]] = set()  # (canonical name, technique-class), dedupe across manifests
+    # (ecosystem, canonical name, technique-class), deduped across manifests. The
+    # ecosystem is in the key because a monorepo can declare the same name in both, and
+    # without it the second registry's risk would be silently swallowed by the first.
+    seen: set[tuple[str, str, str]] = set()
     for manifest in discover_manifests(repo):
         deps, dir_findings = _parse_manifest(manifest, str(manifest.relative_to(repo)))
         findings.extend(dir_findings)
@@ -408,7 +727,7 @@ def scan_dependencies(repo: str | Path) -> list[SupplyChainFinding]:
             finding = _classify(dep)
             if finding is None:
                 continue
-            key = (dep.name, finding.technique)
+            key = (dep.ecosystem, dep.name, finding.technique)
             if key in seen:
                 continue
             seen.add(key)

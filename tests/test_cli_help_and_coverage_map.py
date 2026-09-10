@@ -112,6 +112,21 @@ def test_the_sweep_that_finds_the_options_found_some():
     for opt in ("--app-action", "--sarif-output", "--check"):
         assert opt in accepted, f"{opt} is live and the sweep no longer sees it"
 
+def test_help_has_a_worked_example_for_custom_app_request_shapes():
+    """The four flags are most useful together for a non-OpenAI-compatible endpoint."""
+    examples = (cli.__doc__ or "").split("Application scans", maxsplit=1)[0]
+    assert (
+        "python -m llmsectest --target app:http://localhost:7860/api/v1/run/<flow-id>"
+        in examples
+    )
+    for option in (
+        "--app-request-field",
+        "--app-response-path",
+        "--app-headers",
+        "--app-body",
+    ):
+        assert option in examples
+
 
 @pytest.mark.parametrize("marker", sorted(cli._TESTABILITY))
 def test_the_docs_coverage_map_agrees_with_check_about_white_box(marker):
@@ -138,3 +153,59 @@ def test_a_white_box_scanner_names_its_input_flag_on_the_map(marker):
     _, hint = cli._SCANNER_INPUT[marker]
     option = re.search(r"--[a-z][a-z0-9-]+", hint).group(0)
     assert option in row, f"{marker}: coverage row never names {option}"
+
+
+# The third surface that describes the CLI, added 2026-09-09 with
+# `docs/guides/adapter-prompt.md`. That page hands a user a prompt whose whole
+# premise is that the flags it names are real, so a renamed flag turns the page
+# into instructions for producing a command that does not run. The two tests above
+# read `--help` and the coverage map; nothing read the guides.
+_GUIDES = pathlib.Path(__file__).resolve().parents[1] / "docs" / "guides"
+
+#: Options a guide may name without the CLI accepting them, each with its reason.
+#: An exception is written down here rather than argued for at the assertion.
+_NOT_THE_CLI: dict[str, str] = {
+    "--cov": "pytest's, in the Development guide's own test command",
+}
+
+
+def _options_named_in(page: pathlib.Path) -> set[str]:
+    """Every ``--long-option`` a guide names, code blocks included.
+
+    Code blocks are the point: the flags live in the command a reader copies.
+    """
+    text = page.read_text(encoding="utf-8")
+    # Two shapes in these pages look like options and are not. Prose writes the family
+    # as `--app-*`, so a match may not be followed by a hyphen, a star or another word
+    # character: trimming the trailing hyphen instead would produce a `--app` this test
+    # then reports as an invented flag. And three of the guides open with the mkdocs
+    # snippet line `--8<-- "_release.md"`, so an option has to start with a letter.
+    return {m for m in re.findall(r"--[a-z][a-z0-9-]*[a-z0-9](?![\w*-])", text)
+            if m not in _NOT_THE_CLI}
+
+
+@pytest.mark.parametrize("page", sorted(_GUIDES.glob("*.md")), ids=lambda p: p.name)
+def test_every_option_a_guide_names_is_one_the_cli_accepts(page):
+    """A guide naming a flag the CLI dropped is a copy-paste command that fails."""
+    accepted = _accepted_long_options()
+    named = _options_named_in(page)
+    unknown = sorted(o for o in named if o not in accepted)
+    assert not unknown, (
+        f"{page.name} names option(s) the CLI does not accept: {', '.join(unknown)}. "
+        f"Either the flag was renamed and the guide is stale, or the guide invented it."
+    )
+
+
+def test_the_guide_sweep_reads_the_page_that_motivated_it():
+    """A check that looked at nothing reads exactly like a check that found nothing.
+
+    `adapter-prompt.md` is the reason this exists, and most of its flags sit inside a
+    fenced block, so the denominator is asserted on that page specifically.
+    """
+    page = _GUIDES / "adapter-prompt.md"
+    assert page.exists(), "the guide this test was written for is gone"
+    named = _options_named_in(page)
+    assert len(named) >= 10, f"only {len(named)} option(s) read off the page: {sorted(named)}"
+    for option in ("--app-request-field", "--app-response-path", "--app-session-init",
+                   "--app-rag-poison"):
+        assert option in named, f"{option} is on the page and the sweep no longer sees it"

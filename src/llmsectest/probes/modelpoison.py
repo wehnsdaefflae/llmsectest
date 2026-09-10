@@ -60,19 +60,17 @@ from .models import SEVERITIES
 
 SEVERITY_RANK = {name: i for i, name in enumerate(SEVERITIES)}
 
-# Directories we never descend into when discovering model files — virtualenvs,
-# vendored/installed packages and VCS metadata are not the *project's* own model
-# artifacts. Mirrors the supply-chain scanner's prune set.
-_PRUNE_DIRS = frozenset({
-    ".git", ".hg", ".svn", ".venv", "venv", "env", "node_modules",
-    "site-packages", "__pycache__", ".tox", ".nox", "build", "dist",
-    ".mypy_cache", ".pytest_cache", ".ruff_cache", "tmp", ".eggs",
-})
+# Which directories a model scan must not descend into — virtualenvs, vendored/installed
+# packages and VCS metadata are not the *project's* own model artifacts. This WAS a second
+# copy of the supply-chain scanner's prune set, kept in step by a comment saying so, which
+# is how one of them can be fixed and the other left holding the defect. It is now the same
+# function, so "which directories are not the project's" is answered once.
+from .supplychain import is_pruned  # noqa: E402
 
 # File extensions that carry (or can carry) a Python pickle, directly or inside a
 # ZIP container. A scan still sniffs the bytes, so an unrecognised extension that
 # *is* a pickle is caught and a misnamed non-pickle is harmlessly ignored.
-_MODEL_EXTS = frozenset({
+MODEL_EXTS = frozenset({
     ".pkl", ".pickle", ".pck", ".pcl", ".dump", ".bin", ".ckpt", ".pt", ".pth",
     ".joblib", ".model", ".sav", ".dat", ".npy", ".npz", ".zip",
 })
@@ -80,7 +78,20 @@ _MODEL_EXTS = frozenset({
 # Extensions for code-free serialization formats — recorded so a scan can report
 # it *looked* at the model dir and (correctly) found nothing to flag, rather than
 # silently ignoring everything. We do not parse them (no embedded pickle).
-_SAFE_EXTS = frozenset({".safetensors", ".gguf"})
+#
+# ``.onnx`` joined the pair on 2026-09-06 for the same reason the other two are here:
+# it is a protobuf graph with no pickle anywhere in it, so it cannot carry the
+# load-time execution this module looks for. It arrived through a real deployment
+# rather than from a list — the only model file an AnythingLLM deployment holds is
+# the ONNX build of its native embedder, and without this the category could only
+# report "no model files found", which reads as *nothing was there* about a
+# deployment that loads a model on every embed.
+SAFE_EXTS = frozenset({".safetensors", ".gguf", ".onnx"})
+
+#: Kept so nothing that imported the private names breaks; the public ones are what
+#: `qa/apps/_standup.py` reads to decide whether a member's artefacts are scannable at
+#: all, so "which formats can carry a pickle" is stated once.
+_MODEL_EXTS, _SAFE_EXTS = MODEL_EXTS, SAFE_EXTS
 
 # Whole modules whose import during unpickling is an unambiguous code-execution
 # primitive: importing any name from them at load time means the file runs OS,
@@ -353,11 +364,32 @@ def discover_model_files(root: str | Path) -> list[Path]:
     for path in root.rglob("*"):
         if not path.is_file():
             continue
-        if any(part in _PRUNE_DIRS for part in path.relative_to(root).parts[:-1]):
+        if is_pruned(root, path):
             continue
-        if path.suffix.lower() in _MODEL_EXTS:
+        if path.suffix.lower() in MODEL_EXTS:
             found.add(path)
     return sorted(found)
+
+
+def discover_safe_model_files(root: str | Path) -> list[Path]:
+    """Find the code-free model artifacts under ``root`` (safetensors / GGUF / ONNX).
+
+    These are not scanned — there is no pickle in them to walk — but a caller has to be
+    able to tell *"this project ships no model"* from *"this project ships models in a
+    format that cannot carry the attack"*. The second is the recommended remediation and
+    reporting it as an absence understates the project. Same pruning as
+    :func:`discover_model_files`, so a vendored library's weights do not count.
+    """
+    root = Path(root)
+    if root.is_file():
+        return [root] if root.suffix.lower() in SAFE_EXTS else []
+    if not root.is_dir():
+        return []
+    return sorted(
+        path for path in root.rglob("*")
+        if path.is_file() and path.suffix.lower() in SAFE_EXTS
+        and not is_pruned(root, path)
+    )
 
 
 def scan_model_files(root: str | Path) -> list[ModelPoisonFinding]:

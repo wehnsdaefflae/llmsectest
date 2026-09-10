@@ -42,6 +42,24 @@ heuristic. A legitimate weights file only references tensor-rebuild helpers, `to
 `collections.OrderedDict`, `numpy.core.multiarray._reconstruct`, none of which is on the list, so a clean
 model produces no finding. A model that imports `os.system` on load does not occur by accident.
 
+### What to point it at
+
+A file extension is not proof of a model. The scan discovers artifacts by extension, so a path handed to
+`--model-scan` that holds files carrying a model extension and no model gives you a clean report about
+nothing.
+
+The case to watch for is a **bundled browser**. Chromium ships `v8_context_snapshot.bin` and
+`snapshot_blob.bin`. `.bin` is a model extension. Any application that renders or crawls pages carries one,
+often as the only model-extension file it owns outside its dependency trees. Point `--model-scan` at
+a whole container filesystem and that snapshot joins the scan. It holds no pickle, the walk finds nothing,
+and the category comes back clean on a file nothing ever loads as a model. Other files behave the same
+way. A `.dat` or `.model` shipped as a lookup table belongs to the library that ships it.
+
+So point it at **the directory your application loads weights from**. Read the count of files scanned
+alongside the verdict. Distrust a clean LLM04 over a path whose loader you cannot name: a scan that looked
+at nothing reads the same as a scan that found nothing. Vendored trees (`site-packages`,
+`dist-packages`, `node_modules`) are skipped for that reason, and they are not the whole of it.
+
 ```bash
 llmsectest --model-scan models/                       # scan a directory of model files
 llmsectest --model-scan model.pt                      # scan a single artifact

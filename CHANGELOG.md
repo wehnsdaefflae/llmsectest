@@ -10,7 +10,127 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ## [Unreleased]
 
-*Nothing since 0.3.0.*
+### Added
+
+- **A prompt that wires an application up for you: [Have an assistant wire it
+  up](https://docs.llmsec.dev/guides/adapter-prompt/).** Standing a new application up is the
+  expensive part of a scan: about ten values have to be read out of that application's own code
+  before the first probe can be sent. The new guide is a copy-paste prompt for a coding assistant
+  with the repository open. It is built around a rule against guessing. Every value has to be
+  traced to a file and line, anything not found is left out and named, and the output ends with the
+  OWASP categories that will therefore be recorded as skipped. That last part is the point: a
+  guessed `--app-secret` can never be leaked back, so the category reports as attacked and
+  withstood, which is a clean row that means nothing was ever planted (2026-09-09).
+
+### Fixed
+
+- **A scan that had been given `--repo` reported LLM03 as never run.** The application-scan
+  coverage footer is built from the black-box probe map, which knows nothing about the two
+  white-box categories, so it printed *"not exercised LLM03: white-box supply-chain scan runs
+  from the repo, pass --repo <path>"* under a scan that had just produced 71 supply-chain
+  findings from a real checkout. The footer now counts a white-box category whose input was
+  supplied, reading the whole scanner-input table rather than two of its three entries, so
+  `--vector-store` is treated the same way (2026-09-06).
+
+### Added
+
+- **LLM03 reads PEP 735 `[dependency-groups]`, so a container-shipping project's runtime
+  dependencies are in the denominator.** `pyproject.toml` parsing covered `[project]`,
+  `[project.optional-dependencies]` and Poetry. PEP 735 puts dependency groups in a
+  *top-level* table instead, which is where a component that ships as a container image
+  rather than as a wheel now declares what it installs, and `uv` writes them by default.
+  Measured on a real multi-language repository: `[project]` held only the handful of pins
+  two components share, the rest sat in a group nothing read, and the Python side of the
+  scan therefore covered about an eighth of what the corrected parse finds. Nothing about
+  the result read as a gap: the file was found, the manifest count was right, and a verdict
+  came back over a fraction of the surface with no sign that it had. An
+  `{include-group = "other"}` entry names another group in the same table and is skipped,
+  because that group is parsed on its own account (2026-09-07).
+- **LLM03 reads `go.mod`, so a Go application's own supply chain is in the denominator.**
+  The scanner understood `requirements*.txt`, `pyproject.toml`, `Pipfile` and `package.json`,
+  which on a Go repository means a React `package.json`, a worker's `package.json` and an OCR
+  service's `requirements.txt`: 94 dependencies, none of them belonging to the server the
+  probes actually talk to. `require` (direct and indirect) and `replace` are now parsed into
+  the same `Dependency` shape as every other ecosystem, so the known-bad corpus, the OSV
+  query and the CycloneDX PURL all name the right registry: 312 dependencies on the first
+  repository it met instead of 94. A `replace` pointing at a **directory** is classified as
+  the index bypass it is: Go resolves it off the filesystem, so neither the module proxy's
+  immutability nor the checksum database's integrity guarantee covers what is compiled. A
+  `replace` pointing at another **module** is recorded under the replacement's own path and
+  version, because that is what the build fetches. Every `require` carries an exact version
+  by construction, so a well-formed `go.mod` yields no *unpinned* or *no-upper-bound*
+  finding at all: the contribution here is a denominator, plus the two shapes that can still
+  go wrong (2026-09-07).
+- **The CycloneDX SBOM emits `pkg:golang/` for a Go module.** The PURL type is `golang`; the
+  ecosystem-lowercased fallback would have written `pkg:go/`, a type no downstream
+  vulnerability service resolves, in the one document whose whole purpose is being read by
+  one (2026-09-07).
+
+- **`white_box_scanners` in the SARIF run properties, naming each white-box input and its
+  path.** `attacks_withstood` counts probes *delivered to a target*, so LLM03 and LLM04, which
+  read the project's own manifests and model files, can never appear in it. A consumer of the
+  file therefore saw a category with findings and no tally row, which is indistinguishable from
+  a category no probe ever touched. Absent when no white-box input was given, so "pointed at
+  nothing" cannot look like "pointed at a repo and found it clean" (2026-09-06).
+
+- **`--app-request-field` takes a path, so an OpenAI-compatible application needs no wrapper
+  script.** The prompt on a `/v1/chat/completions` endpoint sits at `messages.0.content`, inside
+  a list supplied through `--app-body`. A flag that could only name a top-level key therefore sent
+  every reader with the commonest endpoint shape in the world off to write a translation layer. The
+  attacker turn is now placed at a dotted path into the declared body, writing into a list element
+  the body already carries. Nothing is created or extended: an index with no list under it is still
+  refused. The target-app guide gains a worked example, plus the warning that decides whether such
+  a scan means anything: send no `system` message (2026-09-06).
+
+### Documentation
+
+- **The guide named three reasons a probe comes back undelivered. There is a fourth.** An
+  application that validates the prompt before the model sees it refuses some probes outright, so
+  they never reach the model and nothing about its output handling is measured. The target-app
+  guide now names that case beside the unreachable endpoint, the malformed reply and the error
+  status, gives the two-minute way to tell a guardrail from a fault, and shows the per-category
+  row a reader meets (2026-09-06).
+- **A clean report and an unconfigured target look the same. Nothing said so.**
+  `--app-secret`, `--app-action` and `--app-canary` are observed only when the value comes back
+  in a reply, so an application that resisted everything and an application that never received
+  the system prompt produce the same rows. The target-app guide now carries *Prove your prompt
+  reached the model*: plant a second, non-confidential marker in the same system prompt as the
+  canary, ask for it through the path the scan will use, and read a clean run only once it comes
+  back (2026-09-06).
+
+### Fixed
+
+- **A `--app-request-field` naming a key `--app-body` also carried was silently overwritten by the
+  static value.** The request body was built as `{request_field: sent, **extra_body}`, so the
+  attacker turn never left the process and the application answered a fixed sentence that was then
+  scored as its answer to the attack. The probe text now wins. The body template was also shared
+  between probes by reference, so a placement into it leaked into the next probe; it is now
+  deep-copied per request (2026-09-06).
+- **A probe that was never delivered sat in the per-category table's `Pass` column.** The attacks
+  block and the HTML report already counted it as inconclusive, so one page could print
+  `LLM05  Improper Output Handling  4  4  0` directly under its own banner saying two probes were
+  never delivered. The console and Markdown tables now subtract it, name it in the row
+  (`2 never delivered`) and carry a legend line, the same treatment `voided` got. Found scanning an
+  application whose own input validator refuses a payload before the model sees it (2026-09-06).
+- **The tool reported itself as `0.1.0` on every surface that names a version.** `__version__`
+  had not moved since the first tagged release on 2026-06-10. It is what the SARIF carries as
+  `tool.driver.version` and what the HTML report puts in its header, so every stored report
+  named a version that never scanned anything. It now tracks `pyproject.toml`, pinned by
+  `tests/test_version_is_one_number.py` (2026-09-05).
+- **`--version` printed the installed metadata, which is frozen at `pip install -e` time.** In a
+  working checkout it could report a different number from the code being imported, which is
+  what happened here: `0.1.0` from the metadata against `0.3.0` in the tree. It prints the
+  version of the code that is running and names the installed metadata only when the two
+  disagree, because that disagreement means a stale editable install (2026-09-05).
+- **The coverage footer printed after runs that never happened.** It is computed from the inputs
+  a run was configured with, so a mistyped option that made pytest exit 4 without collecting
+  anything still ended the output with `Coverage this run, 7/10 OWASP categories exercised. No
+  silent gaps`. Exit codes 2, 3, 4 and 5 now print what went wrong instead. A finding is a
+  failing test and exits 1, so a scan that worked keeps its footer (2026-09-05).
+- **Seven links in `README.md`, naming six relative targets, resolved only inside the repository.**
+  The same file is the package description on PyPI, where the five files they name (`LICENSE`,
+  `CONTRIBUTING.md`, `SECURITY.md`, `CHANGELOG.md`, `examples/`) all answered 404. They are absolute now, pinned by `tests/test_readme_links.py`
+  (2026-09-05).
 
 ## [0.3.0] - 2026-09-05
 
@@ -684,8 +804,8 @@ a day and publishing every report.
   `pyproject.toml` including Poetry, `Pipfile`) instead of describing the category abstractly, and the
   README and website state that the category numbering is the **2025** edition. Prompted by a
   supply-chain security engineer who read an older edition's numbering, concluded LLM03 was about model
-  provenance rather than dependency pins, and ruled himself out as a user of the feature he
-  specialises in. (2026-07-29)
+  provenance rather than dependency pins, and ruled themselves out as a user of the feature they
+  specialise in. (2026-07-29)
 
 ### Changed
 - **`pytest-cov` replaced by `coverage` in the `dev` extra, with the dev toolchain pinned.** `pytest --cov`

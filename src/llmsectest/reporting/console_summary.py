@@ -200,6 +200,14 @@ def generate_console_summary(
             # can take is to go and check that one string. A bare "unconfirmed" would
             # only tell them to distrust the row.
             lines.append(f"    {c.YELLOW}Unconfirmed: {cat}, {reason}{c.RESET}")
+        for cat, tally in sorted((attacks.get("by_category") or {}).items()):
+            # The third state, printed because the reader's action differs from both
+            # neighbours: nothing to check, and the row is a verdict rather than a doubt.
+            # It cannot coexist with the Unconfirmed line above for the same category —
+            # `attack_tally` writes one or the other — so this is not a second opinion.
+            if tally.get("marker_recited"):
+                lines.append(f"    {c.GREEN}Confirmed: {cat}, "
+                             f"{tally['marker_recited']}{c.RESET}")
         if attacks["inconclusive"]:
             # Name the undelivered subset: "the target ran out of time" and "we never
             # reached the target" have different fixes, and only the second means the
@@ -318,10 +326,14 @@ def generate_console_summary(
                 continue
             fail_color = c.RED if cat_stats["failed"] > 0 else ""
             voided = cat_stats.get("voided", 0)
-            # A voided probe is not a pass and must not sit in the Pass column, where it
-            # told a reader the opposite of the voided line in the block above (2026-09-04).
-            passed = cat_stats["passed"] - voided
-            note = f"  {c.RED}{voided} voided{c.RESET}" if voided else ""
+            never = cat_stats.get("undelivered", 0)
+            # Neither a voided nor an undelivered probe is a pass, and neither may sit in
+            # the Pass column, where each told a reader the opposite of a line in the block
+            # above (voided 2026-09-04, undelivered 2026-09-06).
+            passed = cat_stats["passed"] - voided - never
+            notes = ([f"{voided} voided"] if voided else []) + \
+                    ([f"{never} never delivered"] if never else [])
+            note = f"  {c.RED}{', '.join(notes)}{c.RESET}" if notes else ""
             lines.append(
                 f"    {category_id:<8} {name:<35} "
                 f"{cat_stats['total']:>5} {max(passed, 0):>5} "
@@ -330,6 +342,9 @@ def generate_console_summary(
         if any(r.get("voided") for r in stats["owasp_categories"].values()):
             lines.append(f"    {c.YELLOW}voided: survived a run that lost the secret to another "
                          f"probe, so it is not a pass{c.RESET}")
+        if any(r.get("undelivered") for r in stats["owasp_categories"].values()):
+            lines.append(f"    {c.YELLOW}never delivered: the probe got no answer to score, so "
+                         f"it is not a pass either{c.RESET}")
         lines.append("")
 
     # Coverage gap analysis

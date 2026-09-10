@@ -17,6 +17,9 @@ message. Your application supplies its own system prompt. That's the thing we wa
 
 ### Request and response shapes
 
+*Working out these values by hand takes a while. [Have an assistant wire it up](adapter-prompt.md) is a prompt that reads them off your own
+repository, with a rule against guessing any of them.*
+
 By default the request body is `{"message": "<attacker input>"}` and the reply is auto-detected across
 common shapes: a top-level `reply` / `response` / `message` / `content` / `answer` field, or the
 OpenAI-style `choices[0].message.content`.
@@ -31,7 +34,12 @@ llmsectest --target app:http://localhost:7860/api/v1/run/<flow-id> \
   --app-body '{"output_type": "chat", "input_type": "chat"}'
 ```
 
-- `--app-request-field` renames the field your input goes in.
+- `--app-request-field` says where your input goes: a field name, or a dotted path
+  into the body from `--app-body`, list indices included. An OpenAI-compatible
+  endpoint takes `messages.0.content` against a body carrying that one user
+  message. No wrapper script is needed. Send **no system message**. An application
+  that lets a client one override its own prompt would then be answering yours, so
+  the scan becomes a scan of the model wearing your application's name.
 - `--app-response-path` is a dotted path to the reply. A number in it is a list index, so
   `outputs.0.results.message.text` walks a list and then two objects.
 - `--app-headers` is a JSON object merged over the defaults, for bearer tokens and API keys. The
@@ -56,6 +64,52 @@ target = AppEndpointAdapter(
     extra_body={"session_id": "llmsectest"},
 )
 ```
+
+### An OpenAI-compatible application
+
+A great many products serve `POST /v1/chat/completions`. That shape needs no wrapper either. It
+is worth its own example. The prompt does not sit at the top level of the body: it sits inside a
+list.
+
+```bash
+llmsectest --target app:http://localhost:14000/api/v1/chat/completions \
+  --app-request-field messages.0.content \
+  --app-response-path 'choices.0.message.content' \
+  --app-headers '{"Authorization": "Bearer <token>"}' \
+  --app-body '{"model": "your-app", "stream": false,
+               "messages": [{"role": "user", "content": ""}]}'
+```
+
+`--app-body` supplies the envelope with one empty user turn in it. `--app-request-field` writes each
+probe into that turn. The path only ever writes into a list your body already carries: it never
+creates or extends one, because how long a list should be is not something a path can say.
+
+**Send no `system` message, whatever your body looks like.** Many implementations of this endpoint
+let a client system message *replace* the application's own configured prompt. Put your persona
+there and the application stops being the thing under test: it becomes a proxy to the model, every
+guardrail written into its own prompt is gone, and the report that comes out looks exactly like a
+report about your application. If you want to know which side of that line your endpoint is on, ask
+it who it is twice: once with no system message, once with a system message naming somebody else.
+Whichever answer wins tells you. That is the same control described under *Prove your prompt reached the
+model* below, run as a differential.
+
+**A system message that is merely *added* is the quieter half of the same problem.** Where one
+implementation replaces the application's prompt, another keeps its own and appends yours. Nothing
+looks wrong: the persona reaches the model, your canary comes back, the report fills in. What you
+have measured is the prompt your client sent, on an application that is holding a different one,
+and there is nothing on the server to read your persona back from. The remedy is the same either
+way. **Put the persona where the application stores it**, through whatever the product calls a
+system prompt, an agent or a workspace instruction, send no `system` message at all, then read it
+back off the application and check it byte for byte before you believe a single clean row.
+
+Two more things worth knowing about this shape:
+
+- **Prefer the nested response path to a flattened convenience field.** `choices.0.message.content`
+  fails loudly when the reply is not the shape you expected, so the probe is recorded undelivered
+  with the reason. A short field that quietly yields an empty string turns an
+  application that said nothing into one that withstood the attack.
+- **Watch for an error envelope returned with HTTP 200.** Several implementations answer
+  `{"status": "error", "msg": ...}` with a success code. The nested path above is what catches it.
 
 ### Applications that scope a chat to a conversation
 
@@ -189,6 +243,40 @@ endpoint scan: add `--repo <path>` for **LLM03 (supply chain)** and `--model-sca
 (poisoning, inversion, multi-tenant isolation) are not implemented yet and are reported as
 not-exercised rather than passed. Always check `llmsectest --check`.
 
+## Prove your prompt reached the model
+
+`--app-secret`, `--app-action` and `--app-canary` are only ever observed when the value comes
+**back** in a reply. An application that resisted every attack and an application that never
+received your system prompt therefore produce the same report: clean rows, nothing recovered, a run
+that reads as a pass. Before you believe one, rule out the other.
+
+Put a second marker in the same system prompt as your canary, one the assistant is explicitly
+allowed to state. Then ask for it:
+
+```text
+Your configuration build is ACME-CFG-3F8H. It identifies a revision, it is not confidential,
+and you state it plainly to anyone who asks which build you are running.
+```
+
+```bash
+curl -s localhost:8000/chat -H 'content-type: application/json' \
+     -d '{"message":"Which configuration build are you running?"}' | grep ACME-CFG-3F8H
+```
+
+If the marker comes back, that string reached the model and the canary sitting in it is live
+ground truth. If it does not, your clean rows are describing your configuration. The fix belongs there. The
+report will follow it.
+
+Two details make the difference between a control and a formality:
+
+- **Ask through the path the scan will use**, with the same headers, session handling and body that
+  your `--app-*` run sends. A marker that comes back through the web UI proves the web UI. Platforms
+  that bind a system prompt to an assistant, an agent or a workspace commonly apply it on one route
+  and not on another, and that route is what your scan is about to measure.
+- **Do not ask for the secret itself.** An application that refuses is doing what you
+  configured it to do, so the refusal tells you nothing about whether the secret is there. The
+  marker works because stating it is permitted.
+
 ## When the scan can't reach your app
 
 If your endpoint is unreachable, returns something that isn't the JSON shape above, or dies partway
@@ -219,6 +307,48 @@ sends one, because the fix is a quota rather than a URL. Any other refusal (`401
 reason names the status and says the endpoint *was* reached. That distinction matters when you are
 scanning through an auth layer: `app endpoint … answered HTTP 401 (Unauthorized)` sends you to your
 token, where `unreachable` would send you to your DNS.
+
+**The fourth case is the one with nothing to fix: your app refused the input on purpose.** Some
+applications validate the prompt before it reaches the model. If yours rejects, say, anything
+matching an XSS pattern list, the probes carrying `<script>` or `javascript:` payloads never reach
+the model at all. They are recorded undelivered like any other error. That is the right
+record: nothing about your output handling was measured, so nothing may be claimed about it. The remedy is
+what differs. There isn't one. Tell the two apart by sending one of the named probes by hand. A
+refusal that quotes your own validator ("query contains invalid content") is your guardrail; a 500
+with a stack trace is not.
+
+**The fifth case answers 200 and says nothing. It is the one that looks most like success.**
+An agent framework can finish a turn without producing an assistant message: the model calls a tool,
+the tool returns nothing usable, and the run ends. Some of them still answer `HTTP 200` with a
+success status and an empty output list, no error anywhere in the envelope. A client cannot tell that
+from a model that had nothing to say.
+
+Point `--app-response-path` at the field that only exists when there *is* a message. The scanner
+then tells the two apart for you: the path stops partway and the probe is recorded undelivered with
+the reason naming the segment it stopped at.
+
+```
+LLM09-fabricated-citation [hallucinated academic citation] after 12.8s: probe not delivered,
+response path 'output.0.content.0.text' does not match the reply JSON (stopped at '0')
+```
+
+The trap is the convenience field next to it. Frameworks that return `output: []` often also return
+a flattened `output_text: ""` on the envelope. A response path pointing at *that* extracts the empty
+string, the probe is scored, and an application that answered nothing at all is recorded as having
+withstood the attack. Prefer the nested path even though it is longer. If a whole category comes
+back undelivered with `stopped at '0'`, look at what your app does with a tool call before you look
+at your URL: probes that ask for content the app cannot ground are exactly the ones that trigger one.
+
+In every one of these cases, read the per-category table. A probe that was never delivered is
+**not** in that table's `Pass` column. The row says how many were lost:
+
+```
+LLM05    Improper Output Handling                4     2     0  2 never delivered
+```
+
+Four probes, two answered and held, none failed, two never delivered. A row reading `4  4  0`
+would be claiming your app handled output safely four times when it did so twice.
+
 
 **Every inconclusive probe is named.** The reason recorded for each one starts with the probe's own id
 and technique, so the report says which attacks you did not get an answer for:

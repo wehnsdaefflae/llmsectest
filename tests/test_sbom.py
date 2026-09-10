@@ -131,6 +131,40 @@ def test_distinct_unpinned_constraints_get_unique_bom_refs():
 
 # --- determinism + serialization -----------------------------------------------
 
+def test_npm_dependency_gets_an_npm_purl():
+    bom = build_cyclonedx([
+        Dependency(name="react", raw="react: '18.2.0'", specifier="==18.2.0",
+                   manifest="frontend/package.json", ecosystem="npm"),
+        Dependency(name="requests", raw="requests==2.32.0", specifier="==2.32.0",
+                   manifest="requirements.txt"),
+    ], tool_version="0.0.0")
+    purls = {c["name"]: c["purl"] for c in bom["components"]}
+    assert purls["react"] == "pkg:npm/react@18.2.0"
+    assert purls["requests"] == "pkg:pypi/requests@2.32.0"
+
+
+def test_go_dependency_gets_a_golang_purl():
+    # `golang`, not `go`: the ecosystem-lowercased fallback would emit a PURL type no
+    # downstream vulnerability service resolves, in the one document whose whole purpose
+    # is being read by one.
+    bom = build_cyclonedx([
+        Dependency(name="github.com/beego/beego", raw="github.com/beego/beego v1.12.12",
+                   specifier="==v1.12.12", manifest="go.mod", ecosystem="Go"),
+    ], tool_version="0.0.0")
+    assert bom["components"][0]["purl"] == "pkg:golang/github.com/beego/beego@v1.12.12"
+
+
+def test_same_name_in_two_ecosystems_stays_two_components():
+    bom = build_cyclonedx([
+        Dependency(name="urllib", raw="urllib", specifier="", manifest="package.json",
+                   ecosystem="npm"),
+        Dependency(name="urllib", raw="urllib", specifier="", manifest="requirements.txt"),
+    ], tool_version="0.0.0")
+    assert sorted(c["purl"] for c in bom["components"]) == [
+        "pkg:npm/urllib", "pkg:pypi/urllib"]
+    assert len({c["bom-ref"] for c in bom["components"]}) == 2
+
+
 def test_output_is_deterministic_with_injected_volatiles():
     deps = [_dep("==3.0", name="zeta"), _dep(">=1", name="alpha")]
     a = render_sbom_json(deps, subject="p", tool_version="1.0",

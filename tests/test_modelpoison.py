@@ -18,6 +18,7 @@ from collections import OrderedDict
 from llmsectest.probes.modelpoison import (
     ModelPoisonFinding,
     discover_model_files,
+    discover_safe_model_files,
     scan_model_file,
     scan_model_files,
 )
@@ -175,10 +176,26 @@ def test_discover_recurses_and_prunes_vendored(tmp_path):
     (tmp_path / ".venv" / "lib").mkdir(parents=True)
     (tmp_path / ".venv" / "lib" / "vendored.pkl").write_bytes(
         _craft_global_pickle("os", "system"))
+    # What makes `.venv` a virtualenv rather than a directory with that name (PEP 405).
+    (tmp_path / ".venv" / "pyvenv.cfg").write_text("home = /usr\n")
     found = discover_model_files(tmp_path)
     names = {p.name for p in found}
     assert "good.pkl" in names
     assert "vendored.pkl" not in names  # .venv pruned
+
+
+def test_a_directory_named_env_is_scanned_unless_it_is_a_virtualenv(tmp_path):
+    # The same discriminator as the supply-chain scanner, and now literally the same
+    # function: a project package called `env` holds the project's own model files.
+    (tmp_path / "packages" / "env").mkdir(parents=True)
+    (tmp_path / "packages" / "env" / "mine.pkl").write_bytes(
+        _craft_global_pickle("os", "system"))
+    (tmp_path / "env" / "lib").mkdir(parents=True)
+    (tmp_path / "env" / "lib" / "theirs.pkl").write_bytes(
+        _craft_global_pickle("os", "system"))
+    (tmp_path / "env" / "pyvenv.cfg").write_text("home = /usr\n")
+    names = {p.name for p in discover_model_files(tmp_path)}
+    assert names == {"mine.pkl"}
 
 
 def test_scan_directory_uses_relative_paths_and_sorts(tmp_path):
@@ -194,6 +211,29 @@ def test_scan_directory_uses_relative_paths_and_sorts(tmp_path):
 def test_single_safetensors_not_discovered(tmp_path):
     (tmp_path / "model.safetensors").write_bytes(b"safetensors-binary-blob")
     assert discover_model_files(tmp_path) == []
+
+
+def test_code_free_formats_are_discoverable_but_never_scanned(tmp_path):
+    (tmp_path / "weights.safetensors").write_bytes(b"\x00" * 32)
+    (tmp_path / "embedder.onnx").write_bytes(b"\x08\x07onnx-protobuf")
+    (tmp_path / "llama.gguf").write_bytes(b"GGUF")
+    vendored = tmp_path / "node_modules" / "pkg"
+    vendored.mkdir(parents=True)
+    (vendored / "vendored.onnx").write_bytes(b"x")
+    # Nothing for the pickle walker, so the poisoning scan is silent...
+    assert discover_model_files(tmp_path) == []
+    assert scan_model_files(tmp_path) == []
+    # ...but a caller can still tell "no model" from "a model in a safe format", and a
+    # vendored library's artefact does not count as the project's.
+    assert sorted(p.name for p in discover_safe_model_files(tmp_path)) == [
+        "embedder.onnx", "llama.gguf", "weights.safetensors"]
+
+
+def test_discover_safe_model_files_on_a_single_file(tmp_path):
+    onnx = tmp_path / "model.onnx"
+    onnx.write_bytes(b"x")
+    assert discover_safe_model_files(onnx) == [onnx]
+    assert discover_safe_model_files(tmp_path / "nope.onnx") == []
 
 
 def test_finding_repr_is_compact():
