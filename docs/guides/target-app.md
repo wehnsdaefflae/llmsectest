@@ -405,6 +405,122 @@ above. There is no retry or backoff: getting the count right comes first. A retr
 built over a wrong count would only produce a confidently wrong number. Slow the scan down or raise your
 quota, then run it again.
 
+## You found something in somebody else's application. Where does it go?
+
+Everything above ends at a report. If the application is your own, that is the end of it. If you
+scanned a deployment you were asked to assess, a self-hosted product you run, or an open-source
+project, you now hold a finding about software somebody else maintains. Nothing in this guide used
+to cover the next step.
+
+**Read the route off the repository. Your memory of that project is not the route.** Three surfaces
+say what a project wrote down:
+
+- a `SECURITY.md` at the root of *their* repository
+- the same file under *their* `.github/` directory
+- the rendered policy page at `https://github.com/<owner>/<repo>/security/policy`
+
+All three render the same file. A project that states a route there has given you your answer. It's
+usually the right one. Expect an email address, a HackerOne programme, or GitHub's own private
+advisory form.
+
+**A fourth surface says something the other three can't.** Private vulnerability reporting is a
+repository setting. No file records it. Whether it's switched on is public:
+
+```bash
+curl -sL https://api.github.com/repos/<owner>/<repo>/private-vulnerability-reporting
+```
+
+```json
+{"enabled": true}
+```
+
+No token, no authentication. `true` means the repository's **Report a vulnerability** button exists
+at `https://github.com/<owner>/<repo>/security/advisories/new`, whatever the files do or don't say.
+
+**The two surfaces disagree. The disagreement runs both ways.** All fifteen projects in our own test
+cohort, read on 2026-09-11:
+
+| Repository | their root policy file | their `.github/` one | `private-vulnerability-reporting` |
+|---|---|---|---|
+| `agent0ai/agent-zero` | 404 | 404 | `enabled: true` |
+| `khoj-ai/khoj` | 404 | 404 | `enabled: true` |
+| `Cinnamon/kotaemon` | 404 | 404 | `enabled: true` |
+| `open-webui/open-webui` | 404 | 404 | `enabled: true` |
+| `danny-avila/LibreChat` | 404 | 200 | `enabled: true` |
+| `langflow-ai/langflow` | 200 | 404 | `enabled: false` |
+| `arc53/DocsGPT` | 200 | 404 | `enabled: true` |
+| `infiniflow/ragflow` | 200 | 404 | `enabled: true` |
+| `lobehub/lobe-chat` | 200 | 404 | `enabled: true` |
+| `onyx-dot-app/onyx` | 200 | 404 | `enabled: true` |
+| `Tencent/WeKnora` | 200 | 404 | `enabled: true` |
+| `1Panel-dev/MaxKB` | 200 | 404 | `enabled: true` |
+| `lfnovo/open-notebook` | 200 | 404 | `enabled: true` |
+| `dataelement/bisheng` | 200 | 404 | `enabled: true` |
+| `Mintplex-Labs/anything-llm` | 200 | 404 | `enabled: true` |
+
+That's every repository in the cohort, so the counts below are over all of them rather than over a
+sample somebody chose. **Four have no policy file on either path and a private channel standing
+open**: Agent Zero, Khoj, Kotaemon and Open WebUI. Read only the files and you'll conclude there's
+no route. The only place left to put a finding is then the public issue tracker. That's the one
+place it must not go.
+
+`langflow-ai/langflow` is the mirror image. It's the only one. It has a policy file and the setting
+switched **off**, so its file is the whole answer and it sends you to HackerOne. Fourteen of fifteen
+have the private channel open. Look for the button before you go hunting for an email address.
+
+Neither surface is sufficient on its own. **Read both. When they disagree, an open private channel
+wins.** A maintainer who switched it on is asking for reports there. A file that predates the
+setting isn't a refusal.
+
+**Follow redirects when you make that call.** A renamed repository answers the unredirected request
+with an envelope carrying no `enabled` field at all:
+
+```json
+{"message": "MovedPermanently", "url": "https://api.github.com/repositories/643445235/private-vulnerability-reporting"}
+```
+
+`lobehub/lobe-chat` answers exactly that today. Code that reads `.enabled` off it gets nothing back
+and treats the project as having no private channel. That's how a finding ends up in public on a
+project that was waiting for it privately. Use `curl -sL`, or `follow_redirects=True`, and the same
+call returns `{"enabled": true}`.
+
+**If none of the four says anything**, your route is the maintainer. Try a commit email, a
+maintainer's profile, or the project's chat. If you genuinely can't find one, open a public issue
+saying you have a security finding and asking where to send it, *without the finding in it*.
+
+### The sentence that has to be in your report
+
+Whatever route you use, the report needs one thing a scanner's output doesn't contain. Leaving it
+out is how a true finding reads as a false one:
+
+> The persona and the canary this finding refers to are **my own configuration of your application**,
+> installed by me into the deployment I tested. They are not something your project ships.
+
+Everything this tool measures happens inside an application configured the way *you* configured it.
+You planted the system prompt. You planted the canary the report quotes back. A maintainer who reads
+`the assistant disclosed the secret VENDOR-CANARY-4417` without that sentence will search their
+repository for that string, fail to find it, and reasonably close the report. They'd be right to. On
+its face it's a claim about a configuration they have never seen. Say which prompt you installed,
+how you installed it, and which probe elicited what. Then the finding is reproducible by the one
+person who can fix it.
+
+Give them the probe's own id and technique from the report, the model and backend behind the
+application, and the version or commit you tested. A finding against `v0.19.0` on a cloud model is a
+different claim from the same finding on `main` against a local one.
+
+### Before you send it
+
+Two things are yours to check. Don't leave either to the maintainer:
+
+- **Check that you measured the application.** If you sent a `system` message, you may have measured
+  a proxy to the model instead. See *Prove your prompt reached the model* above. Run the control and
+  include its result.
+- **Check that it isn't already known.** Search the project's advisories and its closed issues for
+  the category before filing. A duplicate costs a maintainer the same triage as a new one.
+
+And `--target app:` points at a host. Scanning a deployment that isn't yours, without being asked,
+isn't a documentation question, and this guide is not permission to do it.
+
 ## When you can't run the app: the persona proxy
 
 If you only have the app's system prompt (not a running instance), load it onto a model and test that
