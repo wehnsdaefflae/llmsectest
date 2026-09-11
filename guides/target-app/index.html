@@ -734,6 +734,45 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#you-found-something-in-somebody-elses-application-where-does-it-go" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        You found something in somebody else's application. Where does it go?
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="You found something in somebody else&#39;s application. Where does it go?">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-sentence-that-has-to-be-in-your-report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The sentence that has to be in your report
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#before-you-send-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Before you send it
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#when-you-cant-run-the-app-the-persona-proxy" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1480,6 +1519,45 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#you-found-something-in-somebody-elses-application-where-does-it-go" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        You found something in somebody else's application. Where does it go?
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="You found something in somebody else&#39;s application. Where does it go?">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-sentence-that-has-to-be-in-your-report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The sentence that has to be in your report
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#before-you-send-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Before you send it
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#when-you-cant-run-the-app-the-persona-proxy" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1855,16 +1933,193 @@ provider's own <code>Retry-After</code> value when it sent one, and the run exit
 above. There is no retry or backoff: getting the count right comes first. A retry loop
 built over a wrong count would only produce a confidently wrong number. Slow the scan down or raise your
 quota, then run it again.</p>
+<h2 id="you-found-something-in-somebody-elses-application-where-does-it-go">You found something in somebody else's application. Where does it go?<a class="headerlink" href="#you-found-something-in-somebody-elses-application-where-does-it-go" title="Permanent link">&para;</a></h2>
+<p>Everything above ends at a report. If the application is your own, that is the end of it. If you
+scanned a deployment you were asked to assess, a self-hosted product you run, or an open-source
+project, you now hold a finding about software somebody else maintains. Nothing in this guide used
+to cover the next step.</p>
+<p><strong>Read the route off the repository. Your memory of that project is not the route.</strong> Three surfaces
+say what a project wrote down:</p>
+<ul>
+<li>a <code>SECURITY.md</code> at the root of <em>their</em> repository</li>
+<li>the same file under <em>their</em> <code>.github/</code> directory</li>
+<li>the rendered policy page at <code>https://github.com/&lt;owner&gt;/&lt;repo&gt;/security/policy</code></li>
+</ul>
+<p>All three render the same file. A project that states a route there has given you your answer. It's
+usually the right one. Expect an email address, a HackerOne programme, or GitHub's own private
+advisory form.</p>
+<p><strong>A fourth surface says something the other three can't.</strong> Private vulnerability reporting is a
+repository setting. No file records it. Whether it's switched on is public:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>curl<span class="w"> </span>-sL<span class="w"> </span>https://api.github.com/repos/&lt;owner&gt;/&lt;repo&gt;/private-vulnerability-reporting
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="p">{</span><span class="nt">&quot;enabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">}</span>
+</code></pre></div>
+<p>No token, no authentication. <code>true</code> means the repository's <strong>Report a vulnerability</strong> button exists
+at <code>https://github.com/&lt;owner&gt;/&lt;repo&gt;/security/advisories/new</code>, whatever the files do or don't say.</p>
+<p><strong>The two surfaces disagree. The disagreement runs both ways.</strong> All fifteen projects in our own test
+cohort, read on 2026-09-11:</p>
+<table>
+<thead>
+<tr>
+<th>Repository</th>
+<th>their root policy file</th>
+<th>their <code>.github/</code> one</th>
+<th><code>private-vulnerability-reporting</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>agent0ai/agent-zero</code></td>
+<td>404</td>
+<td>404</td>
+<td><code>enabled: true</code></td>
+</tr>
+<tr>
+<td><code>khoj-ai/khoj</code></td>
+<td>404</td>
+<td>404</td>
+<td><code>enabled: true</code></td>
+</tr>
+<tr>
+<td><code>Cinnamon/kotaemon</code></td>
+<td>404</td>
+<td>404</td>
+<td><code>enabled: true</code></td>
+</tr>
+<tr>
+<td><code>open-webui/open-webui</code></td>
+<td>404</td>
+<td>404</td>
+<td><code>enabled: true</code></td>
+</tr>
+<tr>
+<td><code>danny-avila/LibreChat</code></td>
+<td>404</td>
+<td>200</td>
+<td><code>enabled: true</code></td>
+</tr>
+<tr>
+<td><code>langflow-ai/langflow</code></td>
+<td>200</td>
+<td>404</td>
+<td><code>enabled: false</code></td>
+</tr>
+<tr>
+<td><code>arc53/DocsGPT</code></td>
+<td>200</td>
+<td>404</td>
+<td><code>enabled: true</code></td>
+</tr>
+<tr>
+<td><code>infiniflow/ragflow</code></td>
+<td>200</td>
+<td>404</td>
+<td><code>enabled: true</code></td>
+</tr>
+<tr>
+<td><code>lobehub/lobe-chat</code></td>
+<td>200</td>
+<td>404</td>
+<td><code>enabled: true</code></td>
+</tr>
+<tr>
+<td><code>onyx-dot-app/onyx</code></td>
+<td>200</td>
+<td>404</td>
+<td><code>enabled: true</code></td>
+</tr>
+<tr>
+<td><code>Tencent/WeKnora</code></td>
+<td>200</td>
+<td>404</td>
+<td><code>enabled: true</code></td>
+</tr>
+<tr>
+<td><code>1Panel-dev/MaxKB</code></td>
+<td>200</td>
+<td>404</td>
+<td><code>enabled: true</code></td>
+</tr>
+<tr>
+<td><code>lfnovo/open-notebook</code></td>
+<td>200</td>
+<td>404</td>
+<td><code>enabled: true</code></td>
+</tr>
+<tr>
+<td><code>dataelement/bisheng</code></td>
+<td>200</td>
+<td>404</td>
+<td><code>enabled: true</code></td>
+</tr>
+<tr>
+<td><code>Mintplex-Labs/anything-llm</code></td>
+<td>200</td>
+<td>404</td>
+<td><code>enabled: true</code></td>
+</tr>
+</tbody>
+</table>
+<p>That's every repository in the cohort, so the counts below are over all of them rather than over a
+sample somebody chose. <strong>Four have no policy file on either path and a private channel standing
+open</strong>: Agent Zero, Khoj, Kotaemon and Open WebUI. Read only the files and you'll conclude there's
+no route. The only place left to put a finding is then the public issue tracker. That's the one
+place it must not go.</p>
+<p><code>langflow-ai/langflow</code> is the mirror image. It's the only one. It has a policy file and the setting
+switched <strong>off</strong>, so its file is the whole answer and it sends you to HackerOne. Fourteen of fifteen
+have the private channel open. Look for the button before you go hunting for an email address.</p>
+<p>Neither surface is sufficient on its own. <strong>Read both. When they disagree, an open private channel
+wins.</strong> A maintainer who switched it on is asking for reports there. A file that predates the
+setting isn't a refusal.</p>
+<p><strong>Follow redirects when you make that call.</strong> A renamed repository answers the unredirected request
+with an envelope carrying no <code>enabled</code> field at all:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="p">{</span><span class="nt">&quot;message&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;MovedPermanently&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;url&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;https://api.github.com/repositories/643445235/private-vulnerability-reporting&quot;</span><span class="p">}</span>
+</code></pre></div>
+<p><code>lobehub/lobe-chat</code> answers exactly that today. Code that reads <code>.enabled</code> off it gets nothing back
+and treats the project as having no private channel. That's how a finding ends up in public on a
+project that was waiting for it privately. Use <code>curl -sL</code>, or <code>follow_redirects=True</code>, and the same
+call returns <code>{"enabled": true}</code>.</p>
+<p><strong>If none of the four says anything</strong>, your route is the maintainer. Try a commit email, a
+maintainer's profile, or the project's chat. If you genuinely can't find one, open a public issue
+saying you have a security finding and asking where to send it, <em>without the finding in it</em>.</p>
+<h3 id="the-sentence-that-has-to-be-in-your-report">The sentence that has to be in your report<a class="headerlink" href="#the-sentence-that-has-to-be-in-your-report" title="Permanent link">&para;</a></h3>
+<p>Whatever route you use, the report needs one thing a scanner's output doesn't contain. Leaving it
+out is how a true finding reads as a false one:</p>
+<blockquote>
+<p>The persona and the canary this finding refers to are <strong>my own configuration of your application</strong>,
+installed by me into the deployment I tested. They are not something your project ships.</p>
+</blockquote>
+<p>Everything this tool measures happens inside an application configured the way <em>you</em> configured it.
+You planted the system prompt. You planted the canary the report quotes back. A maintainer who reads
+<code>the assistant disclosed the secret VENDOR-CANARY-4417</code> without that sentence will search their
+repository for that string, fail to find it, and reasonably close the report. They'd be right to. On
+its face it's a claim about a configuration they have never seen. Say which prompt you installed,
+how you installed it, and which probe elicited what. Then the finding is reproducible by the one
+person who can fix it.</p>
+<p>Give them the probe's own id and technique from the report, the model and backend behind the
+application, and the version or commit you tested. A finding against <code>v0.19.0</code> on a cloud model is a
+different claim from the same finding on <code>main</code> against a local one.</p>
+<h3 id="before-you-send-it">Before you send it<a class="headerlink" href="#before-you-send-it" title="Permanent link">&para;</a></h3>
+<p>Two things are yours to check. Don't leave either to the maintainer:</p>
+<ul>
+<li><strong>Check that you measured the application.</strong> If you sent a <code>system</code> message, you may have measured
+  a proxy to the model instead. See <em>Prove your prompt reached the model</em> above. Run the control and
+  include its result.</li>
+<li><strong>Check that it isn't already known.</strong> Search the project's advisories and its closed issues for
+  the category before filing. A duplicate costs a maintainer the same triage as a new one.</li>
+</ul>
+<p>And <code>--target app:</code> points at a host. Scanning a deployment that isn't yours, without being asked,
+isn't a documentation question, and this guide is not permission to do it.</p>
 <h2 id="when-you-cant-run-the-app-the-persona-proxy">When you can't run the app: the persona proxy<a class="headerlink" href="#when-you-cant-run-the-app-the-persona-proxy" title="Permanent link">&para;</a></h2>
 <p>If you only have the app's system prompt (not a running instance), load it onto a model and test that
 as a proxy. Lower fidelity (no guardrail/RAG/tool code), but useful:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">llmsectest.adapters</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_adapter</span>
-<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">llmsectest.probes</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_app_scan</span>
-<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>
-<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="n">target</span> <span class="o">=</span> <span class="n">get_adapter</span><span class="p">(</span><span class="s2">&quot;ollama&quot;</span><span class="p">,</span> <span class="s2">&quot;gemma4:e2b-it-q4_K_M&quot;</span><span class="p">)</span>
-<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="n">prompt</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;my_app_system_prompt.txt&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-<a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="k">for</span> <span class="n">outcome</span> <span class="ow">in</span> <span class="n">run_app_scan</span><span class="p">(</span><span class="s2">&quot;my-app&quot;</span><span class="p">,</span> <span class="n">prompt</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
-<a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">outcome</span><span class="o">.</span><span class="n">case</span><span class="o">.</span><span class="n">owasp</span><span class="p">,</span> <span class="s2">&quot;VULNERABLE&quot;</span> <span class="k">if</span> <span class="n">outcome</span><span class="o">.</span><span class="n">vulnerable</span> <span class="k">else</span> <span class="s2">&quot;ok&quot;</span><span class="p">,</span> <span class="n">outcome</span><span class="o">.</span><span class="n">evidence</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">llmsectest.adapters</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_adapter</span>
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">llmsectest.probes</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_app_scan</span>
+<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>
+<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="n">target</span> <span class="o">=</span> <span class="n">get_adapter</span><span class="p">(</span><span class="s2">&quot;ollama&quot;</span><span class="p">,</span> <span class="s2">&quot;gemma4:e2b-it-q4_K_M&quot;</span><span class="p">)</span>
+<a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="n">prompt</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;my_app_system_prompt.txt&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="k">for</span> <span class="n">outcome</span> <span class="ow">in</span> <span class="n">run_app_scan</span><span class="p">(</span><span class="s2">&quot;my-app&quot;</span><span class="p">,</span> <span class="n">prompt</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
+<a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">outcome</span><span class="o">.</span><span class="n">case</span><span class="o">.</span><span class="n">owasp</span><span class="p">,</span> <span class="s2">&quot;VULNERABLE&quot;</span> <span class="k">if</span> <span class="n">outcome</span><span class="o">.</span><span class="n">vulnerable</span> <span class="k">else</span> <span class="s2">&quot;ok&quot;</span><span class="p">,</span> <span class="n">outcome</span><span class="o">.</span><span class="n">evidence</span><span class="p">)</span>
 </code></pre></div>
 <p>See <a href="../../api/"><code>run_app_scan</code></a> in the API reference.</p>
 
