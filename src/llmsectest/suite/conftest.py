@@ -14,6 +14,7 @@ import pytest
 from llmsectest import envvars
 from llmsectest.probes import resolve_target
 from llmsectest.probes.detectors import (
+    _present_deobfuscated,
     action_signatures_emitted,
     action_signatures_present,
     secret_exposed,
@@ -205,7 +206,7 @@ def probe(target_adapter, target_responsiveness, configured_secret, configured_a
             if not value:
                 continue
             record_property(configured_key, value[:8] + "…")
-            if value.casefold() in outcome.response.casefold():
+            if _present_deobfuscated(outcome.response, (value,)):
                 record_property(observed_key, case.id)
         if outcome.vulnerable:
             record_property(
