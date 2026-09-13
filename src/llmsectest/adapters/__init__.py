@@ -31,6 +31,9 @@ _REGISTRY: dict[str, str | type[LLMAdapter]] = {
     "lmstudio": "llmsectest.adapters.openai_adapter:LMStudioAdapter",
     "anthropic": "llmsectest.adapters.anthropic_adapter:AnthropicAdapter",
     "huggingface": "llmsectest.adapters.huggingface_adapter:HuggingFaceAdapter",
+    # Not a model provider: it wraps one and scans the data layer the model is allowed to
+    # drive, so `inner=` is required. See mloda_adapter's own docstring.
+    "mloda": "llmsectest.adapters.mloda_adapter:MlodaAdapter",
     "mock": "llmsectest.adapters.mock:EchoAdapter",
 }
 

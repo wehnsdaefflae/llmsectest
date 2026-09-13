@@ -12,6 +12,20 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ### Added
 
+- **An `mloda` target, which scans the data layer rather than the model
+  (`llmsectest.adapters.mloda_adapter`).** mloda's own documentation advertises an LLM tool
+  function: the agent emits a feature request as JSON and mloda executes it. The string an attacker
+  influences therefore does not stop at a prompt. It reaches a resolver that decides which data is
+  fetched. The adapter runs both halves. It asks the model for a request under mloda's own
+  contract, hands the answer to `load_features_from_config` and `run_all`, then reports the model's
+  words next to what mloda did with them. That separation is the point. One planted canary means
+  *sensitive information disclosure* where the model says it. The same canary means *excessive
+  agency* where the data layer fetched it because the model asked. A transcript that collapsed the
+  two would hide which of them happened. A request mloda refuses is recorded as refused rather than
+  as a finding, since that is the system working. The adapter declines to run without an inner
+  adapter, or without `api_data`, because a scan against an empty data layer reports clean for the
+  one reason that means nothing at all (2026-09-13).
+
 - **A prompt that wires an application up for you: [Have an assistant wire it
   up](https://docs.llmsec.dev/guides/adapter-prompt/).** Standing a new application up is the
   expensive part of a scan: about ten values have to be read out of that application's own code
