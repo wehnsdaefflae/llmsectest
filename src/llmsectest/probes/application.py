@@ -467,11 +467,7 @@ def _llm08_cases(
                     system_prompt=system_prompt,
                     detector="retrieval_exposure",
                     forbidden=(known_canary,),
-                    # When both markers are configured the poisoned document is in the
-                    # same corpus this probe queries, and it is retrieved on almost any
-                    # query — so it can answer here, in the canary's place. Declaring it
-                    # makes such a reply inconclusive instead of a pass (issue #12).
-                    confounded_by=(known_poison,) if known_poison else (),
+                    inconclusive_tokens=(known_poison,) if known_poison else (),
                 )
             )
     if known_poison:

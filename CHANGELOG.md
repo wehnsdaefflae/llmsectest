@@ -12,20 +12,6 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ### Added
 
-- **An `mloda` target, which scans the data layer rather than the model
-  (`llmsectest.adapters.mloda_adapter`).** mloda's own documentation advertises an LLM tool
-  function: the agent emits a feature request as JSON and mloda executes it. The string an attacker
-  influences therefore does not stop at a prompt. It reaches a resolver that decides which data is
-  fetched. The adapter runs both halves. It asks the model for a request under mloda's own
-  contract, hands the answer to `load_features_from_config` and `run_all`, then reports the model's
-  words next to what mloda did with them. That separation is the point. One planted canary means
-  *sensitive information disclosure* where the model says it. The same canary means *excessive
-  agency* where the data layer fetched it because the model asked. A transcript that collapsed the
-  two would hide which of them happened. A request mloda refuses is recorded as refused rather than
-  as a finding, since that is the system working. The adapter declines to run without an inner
-  adapter, or without `api_data`, because a scan against an empty data layer reports clean for the
-  one reason that means nothing at all (2026-09-13).
-
 - **A prompt that wires an application up for you: [Have an assistant wire it
   up](https://docs.llmsec.dev/guides/adapter-prompt/).** Standing a new application up is the
   expensive part of a scan: about ten values have to be read out of that application's own code
@@ -37,29 +23,6 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
   withstood, which is a clean row that means nothing was ever planted (2026-09-09).
 
 ### Fixed
-
-- **A poisoned retrieved document could answer the LLM08 retrieval-canary probe while the row still
-  read *withstood*.** LLM08 has two black-box dimensions and a RAG application can carry the marker
-  for both: `--app-canary`, planted in the corpus, and `--app-rag-poison`, the marker a planted
-  poisoned document tells the app to emit. The poisoned document is retrieved on almost any query
-  and instructs the model to answer with one fixed marker and nothing besides, so on a *canary*
-  probe the application can emit the *poison* marker instead. No canary appeared. The row then
-  reported that retrieval stayed within authorized scope, which is a question the reply never
-  addressed.
-  Measured over the cohort on 2026-09-05: of 16 applications carrying both markers, 13 reported the
-  poisoned-document dimension alone, which is consistent with masking without proving it.
-
-  A retrieval case now declares the competing marker (`ProbeCase.confounded_by`). A reply
-  carrying it is recorded **inconclusive with a reason naming the poisoned document** rather than as
-  a pass. The check runs only over a reply every oracle already found clean, so a genuine canary
-  leak is never downgraded. It matches through the same de-obfuscating detector the canary oracles
-  use, so a split or encoded poison marker cannot slip past. A marker travelling in our own
-  prompt is ignored, so an application that merely echoes the request cannot void its own row. The
-  outcome is `errored` without `undelivered`, which keeps it distinct from a dead endpoint and
-  leaves the run's exit code alone. Reported by `mikemikimike` in
-  [#12](https://github.com/wehnsdaefflae/llmsectest/issues/12), whose [PR
-  #14](https://github.com/wehnsdaefflae/llmsectest/pull/14) proposed the same fix from a branch four
-  weeks behind `main` (2026-09-18).
 
 - **A scan that had been given `--repo` reported LLM03 as never run.** The application-scan
   coverage footer is built from the black-box probe map, which knows nothing about the two

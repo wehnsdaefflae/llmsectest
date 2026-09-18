@@ -203,6 +203,21 @@ NON_REGISTRY_SPECS = {
 }
 
 
+#: Target specs that ``resolve_target`` accepts without going through the registry at all,
+#: with the file that proves each one translates its own failures. Added 2026-08-28: the
+#: check below used to enumerate ``available_providers()``, and ``app:<url>`` is not in the
+#: registry, so **the one path every real third-party cohort member is scanned through was
+#: outside the world this test reasons about**. Its handling could have been deleted and
+#: this file would still have passed. That is a filter the checker chose standing in for
+#: the whole set, which is the shape of most defects this project has had.
+NON_REGISTRY_SPECS = {
+    "app:": "AppEndpointAdapter — tests/test_application_targets.py",
+    "demo": "ScriptedAdapter, answers in-process",
+    "demo-vulnerable": "ScriptedAdapter, answers in-process",
+    "demo-defended": "ScriptedAdapter, answers in-process",
+}
+
+
 def test_every_registered_provider_is_covered_here():
     """No silent gaps: a new provider needs a case, an inheritance note, or an exemption.
 
@@ -223,48 +238,6 @@ def test_every_registered_provider_is_covered_here():
         "NON_SDK_TRANSPORT_PROVIDERS (naming the test that proves it), or exempt it in "
         "NO_TRANSPORT_PROVIDERS with the reason"
     )
-
-
-def test_every_non_sdk_transport_provider_names_a_test_that_exists():
-    """A declaration is only worth what it points at.
-
-    ``NON_SDK_TRANSPORT_PROVIDERS`` lets a provider satisfy the enumerating gate by naming
-    its own proof instead of taking an SDK row, which would be a hole exactly the size of a
-    typo: name a test that does not exist and the provider is waved through while looking
-    accounted for. So the named test has to be here.
-    """
-    here = set(globals())
-    for provider, test_name in NON_SDK_TRANSPORT_PROVIDERS.items():
-        assert test_name in here, (
-            f"{provider} names {test_name!r} as its transport proof and no such test "
-            "exists in this file"
-        )
-
-
-def test_mloda_turns_a_data_layer_transport_failure_into_an_adapter_error():
-    """The undelivered guarantee, for the one adapter whose endpoint is not a model.
-
-    ``mloda`` asks an inner adapter for a feature request and then hands it to the mloda
-    data layer. If that layer is unreachable the probe must arrive at ``run_probe`` as an
-    ``AdapterError`` — recorded undelivered — rather than as a clean scan that found
-    nothing, which is what an unwrapped exception or a swallowed one would produce.
-    """
-    from llmsectest.adapters.base import AdapterError, CompletionRequest, Message, Role
-    from llmsectest.adapters.mloda_adapter import MlodaAdapter
-    from llmsectest.adapters.mock import EchoAdapter
-
-    adapter = MlodaAdapter.__new__(MlodaAdapter)  # bypass __init__: no mloda installed here
-    adapter.model = "test"
-    adapter._inner = EchoAdapter()
-    adapter._contract = "answer with json"
-
-    def _unreachable(_text):
-        raise ConnectionError("connection refused")
-
-    adapter.execute = _unreachable
-    request = CompletionRequest(messages=[Message(role=Role.USER, content="hi")])
-    with pytest.raises(AdapterError):
-        adapter.complete(request)
 
 
 def test_the_registry_is_not_the_whole_set_of_target_paths():

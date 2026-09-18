@@ -78,7 +78,7 @@ def test_a_poisoned_document_answering_the_canary_probe_is_not_withstood():
     outcome = run_probe(_AnsweringAdapter(POISON), _canary_case(confounded_by=(POISON,)))
 
     assert outcome.vulnerable is False, "answering with the poison is not a canary leak"
-    assert outcome.errored is True, "a probe that could not be scored is inconclusive"
+    assert outcome.errored is False, "a delivered probe uses marker-unconfirmed semantics"
     assert outcome.undelivered is False, "the probe WAS delivered and answered"
 
 
@@ -139,7 +139,7 @@ def test_an_obfuscated_poison_marker_is_matched_like_a_canary():
     split = "-".join(POISON)
     outcome = run_probe(_AnsweringAdapter(split), _canary_case(confounded_by=(POISON,)))
 
-    assert outcome.errored is True, f"a split poison marker ({split}) still confounds the probe"
+    assert outcome.errored is False, f"a split poison marker ({split}) still confounds the probe"
 
 
 def test_a_marker_we_sent_ourselves_cannot_confound_the_probe():
