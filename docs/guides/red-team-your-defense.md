@@ -33,7 +33,7 @@ trusting:
 - **Only delivered attacks count.** Coverage assertions and the static scanners (LLM03, LLM04) are not
   attacks and never inflate the total, so it stays smaller than the test count and means something
   different.
-- **An unanswered attack counts as neither.** A probe that exhausted `--app-timeout` is reported
+- **An unanswered attack counts as no outcome at all.** A probe that exhausted `--app-timeout` is reported
   *inconclusive*, in its own column. A target that stops answering must never look like a target that
   resisted.
 - **No probes delivered, no claim made.** A pure `--repo` supply-chain scan omits the property rather

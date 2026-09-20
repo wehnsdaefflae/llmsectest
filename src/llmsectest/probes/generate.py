@@ -274,6 +274,15 @@ def generate_variants(
             tokenless=seed.tokenless,
             cost_ceiling=seed.cost_ceiling,
             timeout_is_signal=seed.timeout_is_signal,
+            # ‼ A variant inherits what makes its seed's CLEAN result trustworthy, and this
+            # field is exactly that: `confounded_by` names the marker whose presence means a
+            # reply cannot establish retrieval isolation. Every other field was copied here
+            # and this one was not, so an authored case was protected while its generated
+            # rewordings could report a pass they had not earned — invisibly, because a
+            # variant that loses the declaration produces a clean row indistinguishable from
+            # an earned one. Found by `mikemikimike` in PR #14 (2026-09-05), which sat open
+            # for fifteen days while we shipped the other half of the same fix.
+            confounded_by=seed.confounded_by,
         )
         if control is not None and not survives_a_control(control, candidate):
             report.reject("fires-on-a-defended-target")

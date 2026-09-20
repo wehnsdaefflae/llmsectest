@@ -468,7 +468,7 @@ place it must not go.
 switched **off**, so its file is the whole answer and it sends you to HackerOne. Fourteen of fifteen
 have the private channel open. Look for the button before you go hunting for an email address.
 
-Neither surface is sufficient on its own. **Read both. When they disagree, an open private channel
+Each surface is incomplete on its own. **Read both. When they disagree, an open private channel
 wins.** A maintainer who switched it on is asking for reports there. A file that predates the
 setting isn't a refusal.
 

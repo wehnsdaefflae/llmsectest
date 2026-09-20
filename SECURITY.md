@@ -34,7 +34,7 @@ that boundary:
 
 ## Scope
 
-This repository. The scanned targets aren't in scope. Neither is the published report set on
+This repository. The scanned targets aren't in scope. Nor is the published report set on
 llmsec.dev, which holds scans of applications I wrote to be scanned.
 
 ## Supported versions

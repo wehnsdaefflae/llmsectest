@@ -12,7 +12,7 @@ exposure). **Status:** covered (three dimensions).
     offline with no application at all. The two still tracked are **embedding/data poisoning** of the
     store and **multi-tenant namespace isolation**, which needs a controlled multi-tenant fixture. As
     always, a dimension that did not run is reported as *not exercised* with a reason, never silently
-    passed: with neither `--app-canary` nor `--app-rag-poison` (or against a bare model, which has no
+    passed: without `--app-canary` and without `--app-rag-poison` (or against a bare model, which has no
     retrieval corpus) the black-box half skips naming both flags, and without `--vector-store` the
     white-box half skips naming that one.
 
@@ -29,7 +29,7 @@ text from vectors).
 
 LLMSecTest ships **two black-box dimensions**, each tested against a running RAG application
 (`--target app:<url>`) and each enabled by its own dev-supplied marker. They are independent, supply
-either, both, or neither (with neither, the LLM08 module skips and names both flags).
+either, both, or no flag at all (with no flag, the LLM08 module skips and names both).
 
 ### Dimension 1, retrieval exposure (`--app-canary`)
 
@@ -200,7 +200,7 @@ never being asked rather than the model resisting.
     thirteenth member above comes from. Both halves are fixed. A report now carries an
     unconfirmed-marker note for `--app-canary` and `--app-rag-poison` as it already did for
     `--app-secret`. A scan cannot start against a member declaring a value its own application
-    neither plants nor takes from the runner. The remaining member that obeyed nothing is the redaction
+    does not plant and does not take from the runner. The remaining member that obeyed nothing is the redaction
     fixture, where the instruction is deleted before the model sees it.
 
     **Reproducing it.** The harness that produced these rows is ours and it is not in this
@@ -247,7 +247,7 @@ never being asked rather than the model resisting.
 
     **The leak did not reappear once, including in the two control runs, at the wording that produced
     it.** Injection at the control wording matched 2026-07-31 exactly (2 of 3 obeyed); only the leak is gone.
-    So the wording hypothesis is neither confirmed nor refuted. The effect it was invented to explain is not
+    So the wording hypothesis stands unconfirmed and unrefuted. The effect it was invented to explain is not
     there to explain.
 
     **And we cannot say what was different, which is the actual lesson.** The 2026-07-31 measurement came out

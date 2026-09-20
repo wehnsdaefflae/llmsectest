@@ -81,7 +81,7 @@ The scan says so instead of scoring them.
 
 **Two are not about your endpoint at all.** LLM03 reads your dependency manifests and LLM04 reads
 your model files, so they need a path rather than a flag about your app: `--repo .` and
-`--model-scan <path>`. Neither sends anything anywhere.
+`--model-scan <path>`. Both read locally and send nothing anywhere.
 
 Telling it one of those turns a blank row into a real one:
 

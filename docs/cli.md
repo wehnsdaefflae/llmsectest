@@ -50,8 +50,8 @@ llmsectest --sbom [<out.json>] --repo <path>
 Every report also carries a run-level **`attacks_withstood`** tally: how many probes were
 delivered to the target and how many it held off, broken down by OWASP category,
 so a clean scan is evidence rather than an empty page. Only delivered probes count (a
-coverage assertion or a static scanner never inflates it) and an inconclusive probe is
-neither withstood nor a finding. See [Red-team your defense](guides/red-team-your-defense.md).
+coverage assertion or a static scanner never inflates it) and an inconclusive probe is left out
+of both counts. See [Red-team your defense](guides/red-team-your-defense.md).
 
 ## Gating, baselines and policy
 

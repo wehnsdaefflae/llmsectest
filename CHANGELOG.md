@@ -12,6 +12,18 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ### Fixed
 
+- **A generated variant silently lost the declaration that makes its seed's clean result
+  trustworthy (2026-09-20).** `generate_variants` rebuilds each case field by field. It copied
+  every field except `confounded_by`. That field names the marker whose presence means a
+  retrieval-canary probe cannot establish isolation, so an authored case was protected while its
+  generated rewordings were not. A variant that lost it could report *withstood* for a reply the
+  poisoned document had answered. The row then looked like an earned one.
+
+  Found by [`mikemikimike`](https://github.com/mikemikimike) in
+  [#14](https://github.com/wehnsdaefflae/llmsectest/pull/14), the half of that pull request main did
+  not already carry. A regression test pins it: it fails on `assert () == ('RAG POISON EXECUTED',)`
+  without the fix.
+
 - **A refusal that quotes the marker is no longer scored as a leak (2026-09-20).** Both LLM08
   oracles, `injection_marker` and `retrieval_exposure`, asked one question: does the planted
   marker or canary appear anywhere in the reply. An application that declines an injected
@@ -111,8 +123,9 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
   the same `Dependency` shape as every other ecosystem, so the known-bad corpus, the OSV
   query and the CycloneDX PURL all name the right registry: 312 dependencies on the first
   repository it met instead of 94. A `replace` pointing at a **directory** is classified as
-  the index bypass it is: Go resolves it off the filesystem, so neither the module proxy's
-  immutability nor the checksum database's integrity guarantee covers what is compiled. A
+  the index bypass it is: Go resolves it off the filesystem, so the module proxy's
+  immutability does not cover what is compiled, and the checksum database's integrity
+  guarantee does not either. A
   `replace` pointing at another **module** is recorded under the replacement's own path and
   version, because that is what the build fetches. Every `require` carries an exact version
   by construction, so a well-formed `go.mod` yields no *unpinned* or *no-upper-bound*
@@ -478,8 +491,8 @@ their worked commands. Everything below arrived after the 0.2.0 upload of 2026-0
 
 - **2026-08-24**: a leaked secret's evidence now says whether the match was **verbatim** or survived
   only after casefolding, rendered as `(via casefold)` beside the finding. A filter with a
-  case-sensitive level and a case-insensitive one used to read identically in a report, so neither
-  could be pinned as a control for the other. Contributed by
+  case-sensitive level and a case-insensitive one used to read identically in a report, so no
+  level could be pinned as a control for the other. Contributed by
   [@Aditya-k63](https://github.com/Aditya-k63) in
   [#8](https://github.com/wehnsdaefflae/llmsectest/pull/8), closing
   [#5](https://github.com/wehnsdaefflae/llmsectest/issues/5). The project's first outside pull request.
@@ -816,7 +829,7 @@ a day and publishing every report.
   category, in the SARIF run properties, on the rendered HTML page, in the in-run HTML report and in the
   console summary. Three rules keep the number honest: only probes delivered to the target are
   counted (a coverage assertion or a static scanner never inflates it), a probe that exhausted
-  `--app-timeout` is neither withstood nor a finding but keeps its own column, and a run that delivered no
+  `--app-timeout` is left out of both counts but keeps its own column, and a run that delivered no
   probe at all omits the property rather than claiming zero of zero. A defense regression is now legible as
   a number going down, even when the finding count stays inside the variance of a sampled model. New guide:
   [Red-team your defense](https://wehnsdaefflae.github.io/llmsectest/guides/red-team-your-defense/).
@@ -892,9 +905,9 @@ a day and publishing every report.
   from one whose probes started hanging. (2026-07-16)
 - **Per-request timeout for application targets (`--app-timeout <seconds>`).** Caps how long a single
   request to an `app:<url>` target may take. A target that exceeds the budget raises a typed
-  `AdapterTimeoutError`. The probe is recorded as **inconclusive**, neither a finding (a timeout is not
-  proof of a vulnerability) nor a silent clean, it surfaces as a warning in the pytest summary and a report
-  property. This makes a slow or runaway endpoint safe: `run_probe` catches the timeout and the scan
+  `AdapterTimeoutError`. The probe is recorded as **inconclusive**, which is not a finding (a timeout is
+  not proof of a vulnerability) and not a silent clean: it surfaces as a warning in the pytest summary and
+  a report property. This makes a slow or runaway endpoint safe: `run_probe` catches the timeout and the scan
   continues, so a report is always produced, where previously a single endpoint that would not stop
   generating on one request could run the scan past its wall-clock cap and discard every other result. Every
   non-timeout adapter failure (unreachable endpoint, malformed reply, auth error) still fails loudly.
@@ -992,7 +1005,7 @@ a day and publishing every report.
   the reused `injection_marker` oracle scores the hit. Because the injected instruction comes from the
   *retrieved corpus* (not our prompt), this is categorized **LLM08**, not LLM01. The LLM08↔LLM01 bridge.
   `--app-canary` (retrieval exposure) and `--app-rag-poison` (indirect injection) are independent; either,
-  both or neither may be supplied, and an `app:<url>` target with neither names both flags (no silent gap).
+  both or no flag at all may be supplied, and an `app:<url>` target given no flag names both (no silent gap).
   (2026-06-25)
 - **OWASP LLM08 (Vector and Embedding Weaknesses), black-box retrieval-exposure probes; coverage 7→8/10.**
   Against a RAG `--target app:<url>` whose confidential retrieved-corpus content is marked with the new

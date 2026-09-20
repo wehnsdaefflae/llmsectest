@@ -6,7 +6,7 @@
 
 Your LLM application can be talked into ignoring its instructions, into repeating a secret it
 was told to keep, or into acting on an instruction hidden in a document it retrieved. Your
-test suite cannot see any of that. Neither can the scanners already in your pipeline.
+test suite cannot see any of that. The scanners already in your pipeline cannot either.
 
 LLMSecTest attacks your running application the way an attacker would, then tells you what
 got out. It runs the
@@ -172,9 +172,8 @@ delivered and how many the target held off, per OWASP category: in the console, 
 HTML report and as an `attacks_withstood` property in the SARIF. Without it an empty
 findings list is just silence. The report of a well-defended app reads the same as the
 report of a scan that attacked nothing. Only real probes count (a coverage assertion or a static
-scanner never inflates the number). A probe that ran out of `--app-timeout` is neither
-withstood nor a finding, because a target that stops answering must not look like one that
-resisted. See [Red-team your defense](https://docs.llmsec.dev/guides/red-team-your-defense/).
+scanner never inflates the number). A probe that ran out of `--app-timeout` is left out of both
+counts, because a target that stops answering must not look like one that resisted. See [Red-team your defense](https://docs.llmsec.dev/guides/red-team-your-defense/).
 
 **A target we could not reach is never reported as a vulnerable one.** If your endpoint is
 unreachable, replies with something that isn't JSON, or dies partway through, those probes are
