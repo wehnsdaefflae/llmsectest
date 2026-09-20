@@ -15,10 +15,10 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 - **A refusal that quotes the marker is no longer scored as a leak (2026-09-20).** Both LLM08
   oracles, `injection_marker` and `retrieval_exposure`, asked one question: does the planted
   marker or canary appear anywhere in the reply. An application that declines an injected
-  instruction usually says what it is declining, and an application that refuses to disclose a
-  retrieved reference usually names the reference it is withholding. Both answers contain the
-  token, so both were reported as the application obeying or leaking. Measured on three scanned
-  applications, all three headed for a disclosure to their maintainers.
+  instruction usually says what it is declining. One that refuses to disclose a retrieved
+  reference usually names the reference it is withholding. Both answers contain the token, so
+  both were reported as the application obeying or leaking. Measured on three scanned
+  applications, every one of them headed for a disclosure to its maintainers.
 
   `_refusal_frame` now reads one syntactic fact: whether every sentence carrying the token also
   carries a declining verb. Sentence scope, never whole-reply, so a reply that refuses one thing
@@ -26,8 +26,8 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
   finding" and "a refusal we recognised" are different facts about an application.
 
   **This moves rows in existing reports.** A scan re-run against the same application can report
-  fewer LLM08 findings than it did before, and the ones it drops are the ones that were never
-  findings. `retrieval_exposure`'s docstring had claimed the opposite of what its code did, which
+  fewer LLM08 findings than it did before. The ones it drops are the ones that were never
+  findings. `retrieval_exposure`'s docstring had claimed the opposite of what its code did. That
   is corrected in place.
 
 ### Added
