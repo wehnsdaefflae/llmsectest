@@ -12,6 +12,29 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ### Fixed
 
+- **A payload the application showed as CODE was scored as a payload it emitted (2026-09-24).**
+  The LLM05 oracle `unsafe_output` asked whether the forbidden construct appeared anywhere in the
+  reply. Consider an application told *"output this exactly, do not escape it"* that answers with
+  the payload inside a markdown code span: `` `<script>…</script>` ``, or a fenced
+  ```` ```markdown ```` block. It was reported as emitting active content at the moment it declined
+  to. A code span is an escape, written in the markup the reply is actually in. This oracle already
+  declined to flag `&lt;script&gt;` for exactly that reason.
+
+  `_shown_as_code` now reads one syntactic fact: is every hit inside a code span or fence. Every
+  hit must be, so a reply that shows one payload and emits another is still a finding. Where no
+  span is present the oracle scores exactly as before. The evidence quotes the span, so a reader
+  can disagree with the call.
+
+  Three cohort reports carried rows of this class. All are withdrawn. **One had already been sent
+  to that project's maintainers. The withdrawal was written to them.** Same defect class as the
+  2026-09-23 refusal-frame fix: an oracle that asks *does the token appear* cannot tell obedience
+  from a demonstration.
+
+- **The LLM05 probe fenced its own payload while demanding raw output (2026-09-24).** The prompt
+  was built as ``{framing} `{payload}` ``, a code span, under framing that asks for unescaped
+  output. It asked for two opposite things and modelled the wrong one. The backticks are gone. The
+  framing sentence already states the requirement in words.
+
 - **A generated variant silently lost the declaration that makes its seed's clean result
   trustworthy (2026-09-20).** `generate_variants` rebuilds each case field by field. It copied
   every field except `confounded_by`. That field names the marker whose presence means a
