@@ -429,8 +429,9 @@ def _print_coverage_footer(target: str | None) -> None:
 
     osv_on = bool(os.environ.get(envvars.OSV))
     print("\n" + "-" * 68)
+    depths: dict[str, int] = {}
     if _is_app_target(target):
-        from .probes.application import app_coverage
+        from .probes.application import app_coverage, suite_case_counts
 
         # Reflect the dev-supplied inputs (--app-prompt/--app-secret/--app-action/
         # --app-canary/--app-rag-poison), so the footer reports exactly what this run
@@ -441,6 +442,12 @@ def _print_coverage_footer(target: str | None) -> None:
                            known_poison=poison)
         exercised = [c.owasp for c in cov if c.exercised]
         skipped = [(c.owasp, c.reason) for c in cov if not c.exercised]
+        # The CLI app target runs the packaged suite, not `app_cases`, so its per-category
+        # depth is read off the suite's own sources (issue #11). Same inputs as `cov`, so
+        # the depths describe exactly what THIS run could reach.
+        depths = suite_case_counts(prompt, known_secret=secret,
+                                   forbidden_actions=actions or None,
+                                   known_canary=canary, known_poison=poison)
         # **A white-box category the run WAS pointed at is exercised (2026-09-06).**
         # `app_coverage` knows only the black-box probes, so LLM03 and LLM04 landed in
         # `skipped` whatever the run did, and the footer of a scan that had just produced
@@ -488,7 +495,19 @@ def _print_coverage_footer(target: str | None) -> None:
                 )
         print(f"Coverage this run, {len(exercised)}/10 OWASP categories exercised. "
               "No silent gaps:")
-    print("  exercised:    " + ", ".join(cid(m) for m in exercised))
+    # **Name the DEPTH, not just the category (issue #11).** A row that says only
+    # "LLM01" reads the same whether the category was asked once or thirteen times, which
+    # is the defect this tool exists to catch, one level up: a clean row that means "not
+    # observed". For an app target the depth comes from `suite_case_counts` — what the
+    # packaged suite actually delivers — and NOT from `app_coverage`, whose counts describe
+    # the `run_app_scan` API path and are a third of the CLI's for LLM01.
+    if _is_app_target(target) and depths:
+        print("  exercised:    " + ", ".join(
+            f"{cid(m)} ({depths[m]} case{'s' if depths[m] != 1 else ''})"
+            if m in depths else cid(m)
+            for m in exercised))
+    else:
+        print("  exercised:    " + ", ".join(cid(m) for m in exercised))
     for marker, reason in skipped:
         print(f"  not exercised {cid(marker)}: {reason}")
     if "owasp_llm01" in exercised:

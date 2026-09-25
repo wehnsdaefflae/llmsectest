@@ -383,7 +383,18 @@ def test_footer_reflects_supplied_app_inputs(monkeypatch, capsys):
     out = capsys.readouterr().out
     # LLM02 + LLM07 join the always-on LLM01/LLM05/LLM09/LLM10 as exercised; LLM06 still
     # skipped with its reason.
-    assert "LLM01, LLM02, LLM05, LLM07, LLM09, LLM10" in out
+    #
+    # Each exercised category now carries the DEPTH the app target actually delivered
+    # (issue #11, 2026-09-25): a bare "LLM01" read the same whether the category was asked
+    # once or thirteen times. The list and its order are unchanged; what is new is the
+    # "(N cases)" after each name, so this checks the names in order off the rendered line
+    # rather than by a substring the counts now interrupt.
+    exercised_line = next(
+        line for line in out.splitlines() if line.strip().startswith("exercised:"))
+    names = [part.split(" (")[0].strip()
+             for part in exercised_line.split(":", 1)[1].split(",")]
+    assert names == ["LLM01", "LLM02", "LLM05", "LLM07", "LLM09", "LLM10"]
+    assert "LLM01 (13 cases)" in exercised_line, exercised_line
     assert "not exercised LLM06" in out and "--app-action" in out
     assert "not exercised LLM10" not in out
 

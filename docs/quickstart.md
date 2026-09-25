@@ -65,6 +65,12 @@ credential in its system prompt that repeats its own instructions when asked nic
   Exit code: 1 (failures detected)
 ```
 
+**The coverage footer names how deeply each category was asked.** Against an app target it prints
+`exercised: LLM01 (13 cases), LLM05 (3 cases), …`. The two entry points send different amounts. The
+CLI app target runs the packaged suite and delivers 38 attacks at full inputs; the `run_app_scan` API
+path sends 23. Almost all of that difference is LLM01 and LLM09. Thirteen cases and one case are
+different results. A row that renders them identically is the failure this tool exists to catch.
+
 Each finding names the probe, the prompt it sent and the reply that failed it, so you can paste the
 prompt into your own app and watch it happen. Add `--report-formats=sarif,html` for a browsable
 version under `results/`.

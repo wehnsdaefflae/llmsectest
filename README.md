@@ -260,6 +260,13 @@ rather than a silence. And if the value you named for a category never appeared 
 run, the report says that too: a defended application and a mistyped flag produce the same clean row,
 and only you can tell them apart.
 
+The footer also names how many cases each category ran, because the two application entry points send
+different amounts. `--target app:<url>` runs the packaged suite and delivers 38 attacks at full
+inputs; the `run_app_scan` API path sends the 23 in `app_cases`. Almost all of that difference is
+LLM01 and LLM09. So an app-target run prints `exercised: LLM01 (13 cases), LLM05 (3 cases), …`.
+Thirteen cases are a different result from one case. A row that renders both the same way is the
+failure this tool exists to catch.
+
 Live providers import their SDK lazily and read the relevant API key from the
 environment. The corpus and detectors are importable, too:
 

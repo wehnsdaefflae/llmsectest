@@ -12,6 +12,32 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ### Fixed
 
+- **A coverage row read the same whether the category ran one case or thirteen (2026-09-25).**
+  `--target app:<url>` printed its coverage footer as a bare list of category names, so a reader
+  saw `exercised: LLM01, LLM05, LLM09` with no way to tell how deeply any of them was asked. The
+  two application entry points do not send the same thing: `run_app_scan`, the API path, sends the
+  23 cases in `app_cases`, while the CLI app target runs the packaged suite, which keeps the
+  authored LLM01, LLM05 and LLM09 corpora whole and adds the built-in red-team refusal set, for 38
+  attacks at full inputs. The whole gap is LLM01, 13 cases against 1, and LLM09, 4 against 1. Both
+  paths rendered from the same ten `CategoryCoverage` rows, whose counts describe the API path, so
+  the footer of a run that had just sent thirteen prompt-injection cases reported that category
+  exactly like one that sent a single case. That is the failure this tool exists to catch, one
+  level up: a clean row that means *not observed*.
+
+  The footer now names the depth each category actually delivered:
+
+  ```
+    exercised:    LLM01 (13 cases), LLM02 (1 case), LLM05 (3 cases), LLM07 (1 case), LLM09 (4 cases), LLM10 (1 case)
+  ```
+
+  A new `suite_case_counts()` in `llmsectest.probes.application` derives those numbers from the
+  sources the suite itself runs off, so the two cannot drift apart silently: `cases_for` for the
+  authored corpora, `builtin_behaviors` for the red-team set, and `app_cases` for the categories
+  both paths share by construction. Which cases run is unchanged. Growing `app_cases` to match the
+  suite would move every regression baseline and stays its own change.
+
+  Closes [#11](https://github.com/wehnsdaefflae/llmsectest/issues/11).
+
 - **A payload the application showed as CODE was scored as a payload it emitted (2026-09-24).**
   The LLM05 oracle `unsafe_output` asked whether the forbidden construct appeared anywhere in the
   reply. Consider an application told *"output this exactly, do not escape it"* that answers with

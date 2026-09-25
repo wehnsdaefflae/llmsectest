@@ -998,9 +998,49 @@ def test_the_two_app_entry_points_differ_only_on_llm01_and_llm09():
 
 def test_the_coverage_map_reports_a_one_case_category_as_exercised():
     """The honesty gap itself: `exercised` is true for LLM01 and LLM09 at one case each,
-    so only `AppScanResult.outcomes` says how deeply the API path asked."""
+    so only `AppScanResult.outcomes` says how deeply the API path asked.
+
+    This pins the API path, which is correct as it stands: `run_app_scan` really does send
+    one LLM01 case, so `cases == 1` is an accurate statement ABOUT THAT PATH. What was
+    wrong (issue #11) was the CLI app target rendering from these same rows while
+    delivering thirteen. `suite_case_counts` below is the CLI's own count, and
+    `test_suite_case_counts_match_what_the_app_target_delivers` is what keeps the two from
+    drifting apart quietly again.
+    """
     coverage = {c.owasp: c for c in app_coverage(_REAL_APP_PROMPT, **_APP_INPUTS)}
     for category in ("owasp_llm01", "owasp_llm09"):
         assert coverage[category].exercised
         assert coverage[category].cases == 1
         assert coverage[category].reason == ""
+
+
+def test_suite_case_counts_match_what_the_app_target_delivers():
+    """`suite_case_counts` is the CLI app target's per-category depth, and it must equal
+    what the suite modules actually send — the count derived here from the CLI's own
+    sources by `_suite_app_counts`. Issue #11: before this, the `--target app:<url>` footer
+    rendered from `app_coverage`, whose counts describe the API path, so a category asked
+    thirteen times printed exactly like one asked once.
+    """
+    from llmsectest.probes.application import suite_case_counts
+
+    counts = suite_case_counts(_REAL_APP_PROMPT, **_APP_INPUTS)
+    assert counts == dict(_suite_app_counts())
+    # The two categories the entry points differ on, pinned by value so a corpus edit that
+    # changes the depth has to change this line on purpose.
+    assert (counts["owasp_llm01"], counts["owasp_llm09"]) == (13, 4)
+    assert sum(counts.values()) == 38
+
+
+def test_the_app_target_footer_reports_the_depth_it_actually_delivered(capsys, monkeypatch):
+    """The fix for issue #11, end to end: the `--target app:<url>` coverage footer names
+    the number of cases each category ran, and for LLM01 that number is the suite's 13
+    rather than `app_cases`' 1."""
+    from llmsectest import envvars
+    from llmsectest.__main__ import _print_coverage_footer
+
+    monkeypatch.setenv(envvars.APP_PROMPT, _REAL_APP_PROMPT)
+    monkeypatch.setenv(envvars.APP_SECRET, _APP_INPUTS["known_secret"])
+    _print_coverage_footer("app:http://127.0.0.1:9/chat")
+    out = capsys.readouterr().out
+    assert "LLM01 (13 cases)" in out, out
+    assert "LLM09 (4 cases)" in out, out

@@ -698,6 +698,51 @@ class AppScanResult:
         return f"Application-scan coverage ({n}/10 categories exercised):\n" + "\n".join(lines)
 
 
+def suite_case_counts(
+    system_prompt: str,
+    *,
+    known_secret: str | None = None,
+    forbidden_actions: tuple[str, ...] | None = None,
+    known_canary: str | None = None,
+    known_poison: str | None = None,
+) -> dict[str, int]:
+    """How many attacks the ``--target app:<url>`` path actually delivers per category.
+
+    ``app_coverage`` counts ``app_cases``, which is what the API entry point
+    (``run_app_scan``) sends. The CLI's app target does something else: it runs the
+    packaged pytest suite, which keeps the authored LLM01 and LLM09 corpora whole and adds
+    the built-in red-team refusal set, so at full inputs it delivers 38 attacks where the
+    API delivers 23. The whole gap is LLM01 (13 against 1) and LLM09 (4 against 1).
+
+    Both paths used to render from the same ten ``CategoryCoverage`` rows, so a reader of a
+    CLI app scan saw a category that was asked thirteen times reported exactly like one
+    that was asked once — the defect this tool exists to catch, one level up: a clean row
+    that means "not observed" (issue #11). This function is the CLI side of that count,
+    derived from the CLI's own sources rather than restated, so the two cannot drift apart
+    silently.
+    """
+    from .corpus import cases_for
+    from .redteam import builtin_behaviors
+
+    counts: dict[str, int] = {}
+    # The modules the CLI keeps WHOLE for an app target, each parametrized off `cases_for`.
+    for category in ("owasp_llm01", "owasp_llm05", "owasp_llm09"):
+        counts[category] = len(cases_for(category))
+    # The red-team refusal set is LLM01 as well, and ships built in with no `--redteam-set`.
+    counts["owasp_llm01"] += len(builtin_behaviors())
+    # LLM02/06/07 come back through test_application_mode, LLM08 and LLM10 through their own
+    # modules. All of those read `app_cases`, which is why those categories agree with the
+    # API path by construction.
+    for case in app_cases(
+        "_suite_counts", system_prompt,
+        known_secret=known_secret, forbidden_actions=forbidden_actions,
+        known_canary=known_canary, known_poison=known_poison,
+    ):
+        if case.owasp not in ("owasp_llm01", "owasp_llm05", "owasp_llm09"):
+            counts[case.owasp] = counts.get(case.owasp, 0) + 1
+    return counts
+
+
 def app_coverage(
     system_prompt: str,
     *,
