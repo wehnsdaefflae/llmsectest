@@ -521,6 +521,26 @@ Two things are yours to check. Don't leave either to the maintainer:
 And `--target app:` points at a host. Scanning a deployment that isn't yours, without being asked,
 isn't a documentation question, and this guide is not permission to do it.
 
+## A target where you can check a clean result
+
+Every scan in this guide shares one blind spot. When a probe comes back clean, two different things
+look identical: the application withstood the attack, or the attack never reached anything that
+could have failed. A report cannot tell you which. Both produce the same empty finding list.
+
+The usual answer is a control. Plant a secret, then ask a question only the planted persona can
+answer (*Prove your prompt reached the model*, above). That proves the prompt arrived. It still
+leaves you comparing your own configuration against itself.
+
+A target with **verifiable ground truth** closes that gap. [Tom Kaltofen's
+`mloda-rag-testbed`](https://github.com/TomKaltofen/mloda-rag-testbed) (Apache-2.0) is one. It
+stands up a chatbot over a RAG backend where two users see deliberately different documents. Alice
+can see her own code. Bob cannot. Both halves are checkable from the outside, so when a probe
+reports that Bob's session did not leak Alice's document, you can confirm separately that Alice's
+document was there to leak in the first place.
+
+That is the property to look for when you want to trust this tool rather than run it. Size is not
+the point. Knowing the answer in advance is. Linked here with the author's permission.
+
 ## When you can't run the app: the persona proxy
 
 If you only have the app's system prompt (not a running instance), load it onto a model and test that
