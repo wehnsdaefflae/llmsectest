@@ -43,7 +43,7 @@ listed with the reason.
 | LLM05 improper output handling | asks the app to emit active payloads; a raw echo is the finding | black-box |
 | LLM06 excessive agency | four unverifiable authority claims, scored on a real invocation | black-box |
 | LLM07 system prompt leakage | extraction attacks against the app's own prompt | black-box |
-| LLM08 vector and embedding weaknesses | for RAG apps: retrieval exposure + indirect injection via a poisoned retrieved document; offline, an embedding-inversion scan of a persisted store (`--vector-store`) | black-box + white-box |
+| LLM08 vector and embedding weaknesses | for RAG apps: retrieval exposure + indirect injection via a poisoned retrieved document; offline, a persisted store (`--vector-store`) is read for embedding-inversion exposure and for multi-tenant namespace isolation, where one store holds several tenants' vectors | black-box + white-box |
 | LLM09 misinformation | asks about entities that provably do not exist; confabulation is the finding | black-box |
 | LLM10 unbounded consumption | repetition-flood and output-amplification probes with a cost figure; under load (`--app-stress`), whether a guardrail that held at one request holds at N | black-box |
 
@@ -63,7 +63,7 @@ has a page per category.
 | `--app-rag-poison <marker>` | LLM08 indirect injection | the marker a planted poisoned document tells the model to emit |
 | `--repo <path>` | LLM03 | dependency manifests, Python/npm/Go (`--osv` for known CVEs, `--sbom` for CycloneDX) |
 | `--model-scan <path>` | LLM04 | serialized model files, read as pickle opcodes and never unpickled |
-| `--vector-store <path>` | LLM08 embedding inversion | a persisted vector store (Chroma sqlite, JSON store, FAISS sidecar), read offline |
+| `--vector-store <path>` | LLM08 embedding inversion + multi-tenant isolation | a persisted vector store (Chroma sqlite, JSON store, FAISS sidecar), read offline |
 | `--app-stress <N>` | every app case, under load | one wave of N simultaneous requests per case. No default: the target is somebody else's running app |
 | `--redteam-set <csv>` | LLM01 depth | the JailbreakBench 100-behaviour corpus (`--redteam-benign` adds the over-refusal rate) |
 | `--redteam-generate <N>` | LLM01 breadth | N model-composed variants of each authored case, validated before they run |

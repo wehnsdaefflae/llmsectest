@@ -10,13 +10,13 @@ exposure). **Status:** covered (three dimensions).
     Retrieval exposure and RAG indirect injection are black-box and need a running application.
     Embedding-inversion exposure is white-box and needs only a path to the persisted store, so it runs
     offline with no application at all. **Multi-tenant namespace isolation** joined them on
-    2026-09-29 and is white-box too: where a store's per-vector metadata carries a tenant
+    2026-09-29 and is white-box too. Where a store's per-vector metadata carries a tenant
     discriminator (`tenant_id`, `customer_id`, `workspace`, and the rest of the documented
-    filtering idiom), the scan reports a store holding SEVERAL tenants' vectors, because the
-    separation then rests entirely on every retrieval call remembering its filter — and a
-    query that omits it returns the union rather than failing. A store carrying one tenant
-    value is not reported: labelling a single-tenant store is good practice, and a finding
-    that fires on good practice is one maintainers learn to ignore. The one still tracked is
+    filtering idiom), the scan reports a store holding SEVERAL tenants' vectors. The
+    separation then rests entirely on every retrieval call remembering its filter. A query
+    that omits it returns the union rather than failing. A store carrying one tenant value is
+    not reported. Labelling a single-tenant store is good practice, so a finding that fires on
+    good practice is one maintainers learn to ignore. The one still tracked is
     **embedding/data poisoning** of the store. As
     always, a dimension that did not run is reported as *not exercised* with a reason, never silently
     passed: without `--app-canary` and without `--app-rag-poison` (or against a bare model, which has no
