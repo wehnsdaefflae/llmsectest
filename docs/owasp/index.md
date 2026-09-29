@@ -43,7 +43,8 @@ ships three dimensions for RAG apps: retrieval exposure and indirect injection v
 retrieved document, both black-box, plus the white-box embedding-inversion-exposure scan of a persisted
 store with `--vector-store <path>` (see the [LLM08 deep-dive](llm08.md)); **LLM09 (misinformation)** ships
 black-box confabulation probes (see the [LLM09 deep-dive](llm09.md)). What remains is *depth*: embedding
-poisoning, multi-tenant isolation, inversion itself, plus a classifier refusal oracle.
+poisoning, inversion itself, plus a classifier refusal oracle. **Multi-tenant isolation ships as of
+2026-09-29**, white-box off the persisted store.
 
 ## Testing a real application (black-box)
 
@@ -78,8 +79,9 @@ as a silent pass:
   the model files (add `--model-scan <path>`). **LLM08** runs from the persisted store with
   `--vector-store <path>`, which measures how much of the corpus a reader of the store recovers with no
   inversion, alongside its two black-box dimensions, retrieval exposure and indirect injection via a
-  poisoned retrieved document (see the [LLM08 deep-dive](llm08.md)). Embedding poisoning, multi-tenant
-  isolation and inversion itself remain not-exercised.
+  poisoned retrieved document (see the [LLM08 deep-dive](llm08.md)). The same `--vector-store` pass also
+  reports **multi-tenant namespace isolation**, where the store's own per-vector metadata shows several
+  tenants sharing one store. Embedding poisoning and inversion itself remain not-exercised.
 
 Every scan prints a coverage footer accounting for **all ten** categories, so the report never overstates
 what was tested.

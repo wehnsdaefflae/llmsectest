@@ -61,9 +61,11 @@ What black-box application testing can reach, and what it needs:
 The remaining categories are **white-box** (need the app's internals) or need an
 oracle we don't yet ship; application mode lists them as not-exercised with the
 reason, never as a silent pass. (LLM08's remaining white-box dimensions —
-embedding/data poisoning, multi-tenant namespace isolation, embedding inversion —
-likewise stay not-exercised-with-reason; the two black-box probes above are the
-shipped increments.)
+embedding/data poisoning and embedding inversion itself — likewise stay
+not-exercised-with-reason; the two black-box probes above are the shipped
+increments. Multi-tenant namespace isolation and embedding-inversion EXPOSURE both
+ship, but white-box off a persisted store via ``--vector-store``, so they are not
+reachable from application mode either.)
 """
 
 from __future__ import annotations
@@ -621,8 +623,10 @@ def app_cases(
     # LLM08 — vector & embedding weaknesses (black-box). Two dimensions, each gated on
     # its own dev-supplied marker: retrieval exposure (``known_canary``) and indirect
     # injection via a poisoned retrieved document (``known_poison``). The white-box
-    # dimensions (embedding/data poisoning, multi-tenant isolation, embedding
-    # inversion) need the store's internals and are reported skipped-with-reason.
+    # dimensions need the store's internals and are reported skipped-with-reason here:
+    # multi-tenant isolation and embedding-inversion exposure DO ship, but off a
+    # persisted store via ``--vector-store``, which application mode has no path to;
+    # embedding/data poisoning is still unshipped.
     cases.extend(_llm08_cases(
         app_name, system_prompt, known_canary=known_canary, known_poison=known_poison,
     ))

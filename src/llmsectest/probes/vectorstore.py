@@ -35,6 +35,13 @@ What it flags, per store:
   vector came from is often the whole attack, and no inversion is involved.
 * **world-readable store** (``medium``) — the store file grants read to group or
   other, so the two findings above are available to every local account.
+* **multi-tenant namespace isolation** (``medium``) — one store holds vectors for
+  several distinct tenant values (:data:`TENANT_KEYS`), so the boundary between two
+  customers' corpora is a metadata filter every retrieval call has to remember. A
+  call that omits it does not fail; it returns the union. Raised on several VALUES
+  of a tenant key, never on the presence of the key: a single-tenant store that
+  labels its rows is doing the right thing. This is the LLM08 dimension this module
+  listed as not-exercised until 2026-09-29.
 
 Formats read, standard library only, no network and no model load:
 
@@ -132,6 +139,52 @@ PUBLICLY_INVERTIBLE_SPACES = (
 #: and the question here is "does this store hold plaintext at all", which the
 #: first megabyte answers as well as the last.
 TEXT_SAMPLE_BYTES = 1_000_000
+
+#: Per-vector metadata keys a multi-tenant deployment uses to say WHOSE document a
+#: vector is. This is the LLM08 dimension the module's own docstring has carried as
+#: not-exercised since the probe was written: *multi-tenant namespace isolation*.
+#:
+#: Read off the documented filtering idiom of the stores we can open, rather than
+#: invented: Chroma, Qdrant, Weaviate and pgvector all implement per-tenant separation
+#: the same way, by writing a discriminator into each vector's metadata and passing a
+#: `where`-style filter at query time. So these key names are what tenancy LOOKS like
+#: from inside a store file.
+#:
+#: Why finding them is a finding at all. A single store holding several tenants'
+#: documents is not itself a defect — it is the standard deployment. The defect is that
+#: the ONLY thing between customer A's documents and customer B's is a filter the
+#: application has to remember to apply on every query, and a retrieval call that
+#: forgets it returns the union. That is an application-level invariant with no
+#: enforcement underneath it, which is precisely the class our black-box probes cannot
+#: see: nothing about one tenant's session reveals that another tenant's rows are in
+#: the same table.
+TENANT_KEYS = (
+    "tenant",
+    "tenant_id",
+    "tenantid",
+    "customer",
+    "customer_id",
+    "org",
+    "org_id",
+    "organization",
+    "organization_id",
+    "organisation_id",
+    "account",
+    "account_id",
+    "workspace",
+    "workspace_id",
+    "namespace",
+    "user",
+    "user_id",
+    "owner",
+    "owner_id",
+    "group_id",
+)
+
+#: Distinct tenant keys sampled per store. The question is "does this one store hold
+#: more than one tenant", which two values answer as well as two million; the cap exists
+#: so a large production store cannot turn a read-only scan into a memory problem.
+MAX_TENANTS_SAMPLED = 64
 
 
 @dataclass(frozen=True, repr=False)
@@ -253,6 +306,7 @@ def _read_chroma(path: Path) -> tuple[list[str], list[str], list[str], bool]:
                         sources.add(str(key))
                     elif key in _MODEL_KEYS:
                         models.add(f"{key}={value}")
+
             elif "c0" in cols:
                 for (value,) in conn.execute(f"SELECT c0 FROM {table}"):
                     if value:
@@ -368,6 +422,50 @@ def _read_pickle_strings(path: Path) -> tuple[list[str], list[str], list[str], b
 _READERS = {"chroma": _read_chroma, "json": _read_json, "pickle": _read_pickle_strings}
 
 
+def read_tenant_discriminators(path: Path) -> dict[str, set[str]]:
+    """Which tenant/namespace keys a Chroma store carries, and the distinct values of each.
+
+    Its own function rather than a fifth element on every reader's tuple: only the Chroma
+    reader can answer this today, and widening a tuple three readers share in order to
+    return an empty set from two of them buys nothing and breaks every caller.
+
+    A `{}` return means one of three different things and the caller must not read it as
+    "isolated": the store is not Chroma, the store carries no tenant key at all, or it
+    could not be opened. Single-tenant deployments are the common case and they look
+    exactly like the second of those, which is why the finding below is raised on the
+    presence of SEVERAL values rather than on the absence of anything.
+    """
+    tenants: dict[str, set[str]] = {}
+    if _kind(path) != "chroma":
+        return tenants
+    try:
+        conn = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
+    except sqlite3.Error:
+        return tenants
+    try:
+        tables = {r[0] for r in conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table'")}
+        if "embedding_metadata" not in tables:
+            return tenants
+        cols = {r[1] for r in conn.execute("PRAGMA table_info(embedding_metadata)")}
+        if not {"key", "string_value"} <= cols:
+            return tenants
+        for key, value in conn.execute(
+                "SELECT key, string_value FROM embedding_metadata "
+                "WHERE string_value IS NOT NULL"):
+            lowered = str(key).lower()
+            if lowered not in TENANT_KEYS:
+                continue
+            seen = tenants.setdefault(lowered, set())
+            if len(seen) <= MAX_TENANTS_SAMPLED:
+                seen.add(str(value))
+    except sqlite3.Error:
+        pass
+    finally:
+        conn.close()
+    return tenants
+
+
 def _world_readable(path: Path) -> str:
     try:
         mode = path.stat().st_mode
@@ -391,6 +489,42 @@ def scan_vector_store(path: Path, root: Path | None = None) -> list[VectorStoreF
         where = str(path)
     texts, sources, models, vectors = reader(path)
     findings: list[VectorStoreFinding] = []
+
+    # LLM08, multi-tenant namespace isolation — the white-box dimension this module's
+    # own docstring has listed as not-exercised since it was written, and the published
+    # roadmap's phase-03 item (c). Raised on SEVERAL tenant values in ONE store, never on
+    # the presence of a tenant key: labelling a single-tenant store is good practice and
+    # flagging it would make the check noise on the common case.
+    tenants = read_tenant_discriminators(path)
+    for key, values in sorted(tenants.items()):
+        if len(values) < 2:
+            continue
+        shown = ", ".join(sorted(values)[:3])
+        more = f" and {len(values) - 3} more" if len(values) > 3 else ""
+        capped = " (sampling stopped at the cap, so there may be more)" if (
+            len(values) > MAX_TENANTS_SAMPLED) else ""
+        findings.append(VectorStoreFinding(
+            id=f"vectorstore-multi-tenant-{_slug(key)}-{_slug(where)}",
+            severity="medium",
+            store_file=where,
+            technique="multi-tenant namespace isolation",
+            evidence=(
+                f"one store holds vectors for {len(values)} distinct {key!r} value(s): "
+                f"{shown}{more}{capped}. Separation between them rests entirely on every "
+                f"retrieval call passing the right metadata filter. A query that omits it "
+                f"does not fail — it returns the union, so one tenant's answer can be "
+                f"assembled out of another tenant's documents, and nothing in either "
+                f"tenant's session shows that the rows were ever in the same table."
+            ),
+            recommendation=(
+                "Make the boundary structural rather than conventional: a collection, "
+                "index or database per tenant, so a forgotten filter returns nothing "
+                "instead of somebody else's corpus. Where one store is a hard "
+                "requirement, put the filter in a single retrieval wrapper that cannot "
+                "be called without a tenant, and add a test that asserts a query for "
+                "tenant A returns no document belonging to tenant B."
+            ),
+        ))
 
     if vectors and texts:
         sample = _sample_text(texts)

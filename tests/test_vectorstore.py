@@ -24,6 +24,7 @@ import pytest
 from llmsectest.probes.vectorstore import (
     VectorStoreFinding,
     discover_vector_stores,
+    read_tenant_discriminators,
     scan_vector_store,
     scan_vector_stores,
     unreadable_stores,
@@ -374,3 +375,70 @@ def test_an_unknown_severity_is_refused(tmp_path):
     with pytest.raises(ValueError):
         VectorStoreFinding(id="x", severity="catastrophic", store_file="s",
                            technique="t", evidence="e", recommendation="r")
+
+
+# ------------------------------------------------- LLM08: multi-tenant namespace isolation
+#
+# The dimension this module's own docstring has listed as not-exercised since the probe was
+# written, and phase-03 item (c) of the published roadmap. The point of the pair below is
+# that the check has to distinguish two stores that look almost identical: one tenant key
+# with one value (a single-tenant deployment, correctly labelled — not a finding) against
+# one tenant key with several values (one store holding several customers' documents, where
+# the only thing between them is a filter the application must remember).
+
+
+def test_multi_tenant_store_is_reported(tmp_path):
+    """Two tenants in one store is the finding: separation rests on a query-time filter."""
+    store = _chroma(
+        tmp_path / "chroma.sqlite3",
+        documents=["quarterly figures for Halden", "quarterly figures for Pellworth"],
+        metadata=[("tenant_id", "halden"), ("tenant_id", "pellworth")],
+    )
+    findings = scan_vector_store(store, root=tmp_path)
+    assert "multi-tenant namespace isolation" in _ids(findings), (
+        f"a store holding two tenant_id values produced no isolation finding; got "
+        f"{_ids(findings)}")
+    finding = next(f for f in findings if f.technique == "multi-tenant namespace isolation")
+    assert "halden" in finding.evidence and "pellworth" in finding.evidence, (
+        "the evidence must name the tenant values it actually read, so a maintainer can "
+        f"check the claim against their own store; got {finding.evidence!r}")
+    assert "2" in finding.evidence, "the evidence should state how many tenants were found"
+
+
+def test_single_tenant_store_is_not_reported(tmp_path):
+    """The other direction, and the one that decides whether this check is usable.
+
+    Writing a tenant id into per-vector metadata is what a well-run single-tenant
+    deployment does. A check that fired on the KEY rather than on several VALUES would
+    flag every correctly-labelled store, and a finding that fires on good practice is
+    one maintainers learn to ignore.
+    """
+    store = _chroma(
+        tmp_path / "chroma.sqlite3",
+        documents=["quarterly figures for Halden"],
+        metadata=[("tenant_id", "halden"), ("file_path", "/corpus/halden.md")],
+    )
+    findings = scan_vector_store(store, root=tmp_path)
+    assert "multi-tenant namespace isolation" not in _ids(findings), (
+        "a single-tenant store was reported as a tenancy problem; the check must fire on "
+        "several tenant values in one store, never on the presence of a tenant key")
+
+
+def test_tenant_read_says_nothing_about_a_store_it_cannot_open(tmp_path):
+    """A `{}` from the tenant read is 'I could not tell', and must not become 'isolated'.
+
+    `read_tenant_discriminators` answers only for Chroma. A JSON store returns an empty
+    map, and the caller has to treat that as no evidence rather than as a clean bill —
+    the same unexamined-is-not-clean trap the ship gate's WARN branch fell into.
+    """
+    store = _json_store(tmp_path / "store.json", {
+        "embeddings": [[0.1, 0.2, 0.3]],
+        "documents": ["quarterly figures for Halden"],
+        "metadatas": [{"tenant_id": "halden"}, {"tenant_id": "pellworth"}],
+    })
+    assert read_tenant_discriminators(store) == {}, (
+        "the tenant read claimed to have read a non-Chroma store; it can only open "
+        "Chroma today and must say nothing about the rest")
+    findings = scan_vector_store(store, root=tmp_path)
+    assert "multi-tenant namespace isolation" not in _ids(findings), (
+        "an isolation finding was raised against a store whose tenancy could not be read")

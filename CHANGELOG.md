@@ -10,6 +10,32 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ## [Unreleased]
 
+### Added
+
+- **LLM08 multi-tenant namespace isolation, white-box off the persisted store (2026-09-29).**
+  `--vector-store <path>` now also answers the question this module had listed as
+  *not exercised* since it was written, and which the published roadmap carries as phase-03
+  item (c). Where a store's per-vector metadata holds a tenant discriminator — `tenant_id`,
+  `customer_id`, `workspace`, `namespace` and the rest of the filtering idiom Chroma, Qdrant,
+  Weaviate and pgvector all share — the scan reports a store that holds vectors for **several**
+  tenants.
+
+  Why that is a finding at all, since one store per deployment is the normal shape: the only
+  thing between customer A's documents and customer B's is a filter the application has to
+  apply on every retrieval call, and a call that forgets it **does not fail — it returns the
+  union**. One tenant's answer can then be assembled out of another tenant's corpus, and
+  nothing in either tenant's session reveals that the rows were ever in the same table. That
+  is an application-level invariant with no enforcement underneath it, which is exactly the
+  class a black-box probe cannot see.
+
+  It fires on several tenant **values**, never on the presence of a tenant **key**: writing a
+  tenant id into metadata is what a well-run single-tenant deployment does, and a check that
+  flagged it would be noise on the common case. A store whose tenancy cannot be read (a
+  non-Chroma format, an unopenable file) reports *nothing* rather than *isolated* — the
+  distinction the accompanying test pins, because "I could not tell" and "it is fine" are
+  different answers. Sampling is capped at `MAX_TENANTS_SAMPLED`, since two values settle the
+  question as well as two million.
+
 ### Fixed
 
 - **A coverage row read the same whether the category ran one case or thirteen (2026-09-25).**
