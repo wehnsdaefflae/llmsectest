@@ -110,9 +110,26 @@ jobs:
   #
   # The notes come from CHANGELOG.md rather than from generated commit titles, because the
   # changelog is the one written for a reader.
+  #
+  # ‼ 2026-10-01: THIS JOB WAS WRITTEN TO STOP THE RELEASES PAGE DRIFTING AND NEVER RAN ONCE.
+  # It was gated on `workflow_dispatch` AND `needs: publish`, and `publish` is itself dispatch
+  # only. So a TAG PUSH ran check and build and stopped there, and only a manual dispatch could
+  # ever reach here. The fresh-eyes pass of 2026-10-01 met the consequence from the visitor's
+  # side: three tags on the repository (v0.1.0, v0.2.0, v0.3.0) and `GET /repos/.../releases`
+  # returning an empty list, on a project whose CHANGELOG.md is 1327 lines of exactly what that
+  # page is for. The guard that was supposed to prevent the drift had the drift inside it.
+  #
+  # The fix is to let a TAG PUSH announce too, and to stop requiring `publish`:
+  #   - `needs: build` rather than `needs: publish`, because what a release note describes is a
+  #     tree that built, not an upload. On a dispatch, `build` has already run and `publish`
+  #     runs beside this job; the `skip-existing` upload and the `gh release view` guard below
+  #     mean neither can spoil the other.
+  #   - the condition now accepts either trigger, so pushing a tag publishes its release.
+  # A release for a version that never reached PyPI is still the right thing on this page: the
+  # tag exists, the tree is real, and a reader looking for what changed should find it.
   announce:
-    if: github.event_name == 'workflow_dispatch' && startsWith(github.ref, 'refs/tags/v')
-    needs: publish
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: write   # creating a release is a write to the repository; nothing else
