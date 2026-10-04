@@ -36,7 +36,7 @@ from .reporting import (
 #: SARIF as the driver version, and the HTML report puts it in its header. It read
 #: ``0.1.0`` from 2026-06-10 to 2026-09-05 while two releases went out, so every published
 #: report in ``qa/reports/`` names a version that never scanned anything.
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 __all__ = [
     "CompletionRequest",

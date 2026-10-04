@@ -1,4 +1,4 @@
-!!! info "These pages describe v0.3.0"
+!!! info "These pages describe v0.4.0"
 
     The site is built from `main`, so it can describe a version newer than the one
     `pip install llmsectest` gives you. Run `llmsectest --version` to see what you have.

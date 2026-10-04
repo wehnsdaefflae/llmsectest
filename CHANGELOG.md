@@ -10,6 +10,18 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-04
+
+Cut because the documentation and the repository had again run ahead of the release a reader
+installs. `pip install llmsectest` gave 0.3.0 from 2026-09-06. The four weeks since landed a
+new white-box probe. They also landed a new adapter and five scoring fixes. Three of those
+fixes WITHDREW findings this project had already published. One of those three had gone to a
+project's maintainers. For a security tool that is the release's most important content. An
+oracle that
+cannot tell obedience from a demonstration, or a refusal from a leak, produces false findings
+about other people's software. The fixes below are what stopped it. Everything here arrived
+after the 0.3.0 upload of 2026-09-06.
+
 ### Added
 
 - **LLM08 multi-tenant namespace isolation, white-box off the persisted store (2026-09-29).**
