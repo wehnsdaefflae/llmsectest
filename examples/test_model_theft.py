@@ -1,4 +1,4 @@
-"""Security tests for model theft vulnerabilities (OWASP LLM10)."""
+"""Legacy model theft tests; model theft has no OWASP LLM Top 10 (2025) category."""
 
 import pytest
 

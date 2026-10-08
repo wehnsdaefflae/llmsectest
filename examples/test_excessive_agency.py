@@ -1,4 +1,4 @@
-"""Security tests for excessive agency vulnerabilities (OWASP LLM08)."""
+"""Security tests for excessive agency vulnerabilities (OWASP 2025 LLM06)."""
 
 import pytest
 

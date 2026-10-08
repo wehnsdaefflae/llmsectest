@@ -1,4 +1,4 @@
-"""Security tests for denial of service vulnerabilities (OWASP LLM04)."""
+"""Security tests for unbounded consumption (OWASP 2025 LLM10)."""
 
 import pytest
 

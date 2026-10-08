@@ -1,4 +1,4 @@
-"""Security tests for overreliance vulnerabilities (OWASP LLM09)."""
+"""Security tests for misinformation vulnerabilities (OWASP 2025 LLM09)."""
 
 import pytest
 
