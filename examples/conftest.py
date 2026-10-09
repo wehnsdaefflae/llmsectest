@@ -236,7 +236,7 @@ def mock_output_handler():
 
 
 # =============================================================================
-# OWASP LLM08: Excessive Agency Fixtures
+# OWASP 2025 LLM06: Excessive Agency Fixtures
 # =============================================================================
 
 class MockAgent:
@@ -319,7 +319,7 @@ def mock_financial_agent():
 
 
 # =============================================================================
-# OWASP LLM09: Overreliance Fixtures
+# OWASP 2025 LLM09: Misinformation Fixtures
 # =============================================================================
 
 class MockAdvisor:
@@ -416,7 +416,7 @@ def mock_hallucination_detector():
 
 
 # =============================================================================
-# OWASP LLM10: Model Theft Fixtures
+# Legacy Model Theft Fixtures (no OWASP LLM Top 10 2025 category)
 # =============================================================================
 
 class MockAPIGateway:

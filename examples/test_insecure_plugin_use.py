@@ -1,4 +1,4 @@
-"""Security tests for insecure plugin/tool use vulnerabilities (OWASP LLM06)."""
+"""Legacy insecure plugin tests; this risk has no OWASP LLM Top 10 (2025) category."""
 
 import pytest
 
