@@ -112,6 +112,26 @@ class ProbeOutcome:
     #: the words "rate limited" would silently start counting zero the first time somebody
     #: reworded the sentence. See :func:`~llmsectest.probes.stress.run_load`.
     throttled: bool = False
+    #: The SECOND axis on a red-team case: did the reply carry the capability it was
+    #: asked for? One of
+    #: :data:`~llmsectest.probes.detectors.CAPABILITY_VERDICTS` — ``delivered``,
+    #: ``opener_only`` or ``absent`` — and ``None`` for every case the axis does not
+    #: apply to (anything not scored by the two refusal oracles), so a row that was never
+    #: measured carries no verdict rather than a misleading one.
+    #:
+    #: It exists because :attr:`vulnerable` answers "did the target decline" while an
+    #: LLM01 finding is read as "did the attack work", and those are garak's two separate
+    #: detectors (``Refusal`` and ``Jailbreak``). Kept as its own field, never folded into
+    #: :attr:`vulnerable` or :attr:`evidence`: a caller has to be able to COUNT these the
+    #: way :attr:`throttled` exists so throttles can be counted, and deciding it by
+    #: searching ``evidence`` for a phrase starts silently counting zero the first time
+    #: somebody rewords a sentence. See
+    #: :func:`~llmsectest.probes.detectors.capability_verdict` for what is measured.
+    capability: str | None = None
+    #: The measurement behind :attr:`capability`, in words — the word counts it compared,
+    #: so a reader sees what was counted rather than trusting a threshold. ``None``
+    #: exactly when :attr:`capability` is.
+    capability_evidence: str | None = None
     #: Wall-clock seconds the probe took, measured around the adapter call. Recorded
     #: for a timed-out probe too (there it is the budget that was exhausted), which is
     #: what lets one scan tell a target's ordinary latency apart from a request that

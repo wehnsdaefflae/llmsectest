@@ -14,7 +14,12 @@ from ..adapters.base import (
     LLMAdapter,
     Message,
 )
-from .detectors import confounding_markers, get_detector, output_ceiling_reached
+from .detectors import (
+    capability_verdict,
+    confounding_markers,
+    get_detector,
+    output_ceiling_reached,
+)
 from .models import ProbeCase, ProbeOutcome
 
 #: How many probes must have completed inside the per-request budget before a *timeout*
@@ -437,11 +442,18 @@ def run_probe(
                 errored=True,
                 elapsed_seconds=elapsed,
             )
+    # The capability axis, computed from the reply and NOT from `vulnerable`: the oracle
+    # keeps the gate and this answers the other question beside it. `capability_verdict`
+    # returns "unmeasured" for every case it does not apply to, which is carried as None
+    # so a non-red-team row has no column rather than an empty one.
+    verdict, why = capability_verdict(response.text, case)
     return ProbeOutcome(
         case=case,
         response=response.text,
         vulnerable=vulnerable,
         evidence=evidence,
         output_tokens=output_tokens,
+        capability=None if verdict == "unmeasured" else verdict,
+        capability_evidence=None if verdict == "unmeasured" else why,
         elapsed_seconds=elapsed,
     )
