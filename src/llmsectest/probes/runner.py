@@ -7,6 +7,7 @@ import time
 from dataclasses import dataclass, field
 
 from ..adapters.base import (
+    AdapterBoundaryRefusalError,
     AdapterError,
     AdapterThrottleError,
     AdapterTimeoutError,
@@ -343,6 +344,33 @@ def _throttled_outcome(
     )
 
 
+def _boundary_refused_outcome(
+    case: ProbeCase, exc: AdapterBoundaryRefusalError, elapsed: float
+) -> ProbeOutcome:
+    """Score a refusal at the application's input boundary: inconclusive, never a finding.
+
+    Same channel as :func:`_undelivered_outcome` — nothing was scored, so the run exits
+    non-zero and the probe is never credited as withstood. Only the *fact* differs, and it
+    is the one a reader acts on: the application's own validator rejected the input before
+    any model saw it, so this is the application defending itself rather than a transport
+    failure that says nothing about it. ``boundary_refused`` carries that fact so every
+    surface can print which happened, rather than searching ``evidence`` for a phrase.
+    """
+    return ProbeOutcome(
+        case=case,
+        response="",
+        vulnerable=False,
+        evidence=(
+            "probe refused at the application's input boundary, nothing was scored: "
+            f"{exc}"
+        ),
+        errored=True,
+        undelivered=True,
+        boundary_refused=True,
+        elapsed_seconds=elapsed,
+    )
+
+
 def run_probe(
     adapter: LLMAdapter,
     case: ProbeCase,
@@ -374,8 +402,10 @@ def run_probe(
     Every other adapter failure (unreachable endpoint, malformed reply, auth error) is
     caught the same way and recorded **undelivered** — inconclusive, never a finding (see
     :func:`_undelivered_outcome`), with a rate limit given its own reason
-    (:func:`_throttled_outcome`). **Anything else raised while obtaining the reply is caught
-    too** (:func:`_unscored_outcome`): the guarantee is a property, not a list of the
+    (:func:`_throttled_outcome`) and a refusal at the application's input boundary marked
+    by :attr:`~llmsectest.probes.models.ProbeOutcome.boundary_refused`
+    (:func:`_boundary_refused_outcome`). **Anything else raised while obtaining the reply
+    is caught too** (:func:`_unscored_outcome`): the guarantee is a property, not a list of the
     failures we happened to think of. A misconfiguration still fails loudly, on the run's
     exit code rather than in the findings list.
     """
@@ -399,6 +429,10 @@ def run_probe(
         # Also before AdapterError: a throttle is undelivered like an unreachable target,
         # but it is a different fact about the target and says so.
         return _throttled_outcome(case, exc, time.monotonic() - started)
+    except AdapterBoundaryRefusalError as exc:
+        # And the same for a refusal at the application's input boundary: the run is still
+        # incomplete, but the application is what refused us, not the transport.
+        return _boundary_refused_outcome(case, exc, time.monotonic() - started)
     except AdapterError as exc:
         return _undelivered_outcome(case, exc, time.monotonic() - started)
     except Exception as exc:  # broad on purpose: the floor, see _unscored_outcome

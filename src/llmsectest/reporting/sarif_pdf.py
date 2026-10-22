@@ -83,12 +83,27 @@ def render_sarif_pdf(doc: dict, *, source_name: str | None = None,
     # --- what may not be read as a pass, before anything that could be -------------
     undelivered = props.get("undelivered")
     if isinstance(undelivered, dict) and undelivered.get("count"):
-        pdf.text("This scan did not reach its target.", font="Helvetica-Bold", size=13,
+        # A refusal at the application's input boundary is not "did not reach its
+        # target": the target was reached and defended itself (issue #18). Both kinds
+        # stay above the findings, but the sentence has to say which happened.
+        boundary = props.get("boundary_refused")
+        refused = boundary.get("count") if isinstance(boundary, dict) else None
+        refused = refused if isinstance(refused, int) and refused > 0 else 0
+        heading = ("This scan got no answer to score." if refused
+                   else "This scan did not reach its target.")
+        pdf.text(heading, font="Helvetica-Bold", size=13,
                  color=_SEVERITY_INK["critical"])
+        split = ""
+        if refused:
+            split = (
+                f" {refused} of them were refused at the application's input boundary, "
+                "which is the application defending itself; its filter rejected the "
+                "probe before any model saw it."
+            )
         pdf.paragraph(
             f"{undelivered['count']} probe(s) never got an answer to score, so nothing "
-            "below describes what the target withstood. A report with no findings and "
-            "undelivered probes is not a clean report.",
+            f"below describes what the target withstood.{split} A report with no findings "
+            "and undelivered probes is not a clean report.",
             size=10, color=_SEVERITY_INK["critical"],
         )
         for reason in _as_list(undelivered.get("reasons"))[:6]:

@@ -101,7 +101,9 @@ class ProbeOutcome:
     #: timeout is the target refusing to finish while this is the scan never getting
     #: an answer to score. A run holding any of these exits non-zero (see
     #: :meth:`~llmsectest.plugin.SARIFPlugin.pytest_sessionfinish`), because
-    #: "0 findings, 25 undelivered" is not a pass.
+    #: "0 findings, 25 undelivered" is not a pass. The two meanings this bit used to
+    #: carry are split: :attr:`boundary_refused` marks a refusal at the application's own
+    #: input boundary, and an undelivered record without it is a transport failure.
     undelivered: bool = False
     #: True when the target refused this request with a **rate limit**. Always implies
     #: :attr:`undelivered`, since a throttled request was never answered; the extra bit is
@@ -112,6 +114,17 @@ class ProbeOutcome:
     #: the words "rate limited" would silently start counting zero the first time somebody
     #: reworded the sentence. See :func:`~llmsectest.probes.stress.run_load`.
     throttled: bool = False
+    #: True when the application refused the probe at its own **input boundary**. Always
+    #: implies :attr:`undelivered`, because no model ever saw the attack; the extra bit is
+    #: that a validator in the application rejected it (weknora-archivebot's
+    #: ``utils.ValidateInput`` refuses its sixteen XSS patterns, so an LLM05 probe never
+    #: reaches the model) rather than the transport failing (an unreachable endpoint, a
+    #: timeout, a 502). The two say opposite things about the target: the first is the
+    #: application defending itself and arguably its strongest result, the second says
+    #: nothing about it at all. Kept as its own field rather than inferred from
+    #: ``evidence`` for the same reason as :attr:`throttled` — a caller has to be able to
+    #: count these, and a phrase search silently counts zero the first time it is reworded.
+    boundary_refused: bool = False
     #: The SECOND axis on a red-team case: did the reply carry the capability it was
     #: asked for? One of
     #: :data:`~llmsectest.probes.detectors.CAPABILITY_VERDICTS` — ``delivered``,

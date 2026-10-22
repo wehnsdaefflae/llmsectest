@@ -329,7 +329,17 @@ class RiskScoringEngine:
             # zero and the superset was every probe in the run.
             lost = statistics["inconclusive"]
             never = statistics.get("undelivered") or 0
-            where = (f" ({never} never reached the target)" if never else "")
+            refused = statistics.get("boundary_refused") or 0
+            # The two halves have opposite advice: a dead transport is a URL or an outage
+            # to fix, while an input-boundary refusal is the application's own defence
+            # working. Saying "never reached the target" for the second is the defect
+            # issue #18 names, just in a recommendation.
+            bits = []
+            if never - refused:
+                bits.append(f"{never - refused} never reached the target")
+            if refused:
+                bits.append(f"{refused} refused at the application's input boundary")
+            where = f" ({', '.join(bits)})" if bits else ""
             recommendations.append(
                 f"{lost} probe(s) came back without an answer{where}. Re-run before "
                 "drawing any conclusion: this scan did not test what it reports on."

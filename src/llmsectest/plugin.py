@@ -203,11 +203,31 @@ class SARIFPlugin:
                 if r.properties.get("llmsec_undelivered") is not None
             ]
             if undelivered:
+                # Two opposite facts share this channel, so name both rather than print
+                # one word for the pair (issue #18). A refusal at the application's input
+                # boundary is the application defending itself; a transport failure says
+                # nothing about it. "How many" was never the question a reader had.
+                boundary = [
+                    r for r in undelivered
+                    if r.properties.get("llmsec_boundary_refused") is not None
+                ]
+                transport = len(undelivered) - len(boundary)
                 print("\n" + "=" * 70)
                 print(
-                    f"❌ SCAN INCOMPLETE: {len(undelivered)} probe(s) were never delivered "
-                    "to the target, the results below do not describe its security"
+                    f"❌ SCAN INCOMPLETE: {len(undelivered)} probe(s) got no answer to "
+                    "score, the results below do not describe its security"
                 )
+                if boundary:
+                    print(
+                        f"  {len(boundary)} were refused at the application's input "
+                        "boundary (the application defended itself; the model never saw "
+                        "them)"
+                    )
+                if transport:
+                    print(
+                        f"  {transport} were lost to a transport failure (the probe never "
+                        "reached the application)"
+                    )
                 for result in undelivered[:5]:
                     print(f"  {result.properties['llmsec_undelivered']}")
                 if len(undelivered) > 5:

@@ -125,6 +125,9 @@ def generate_console_summary(
     undelivered = sum(
         1 for r in results if r.properties.get("llmsec_undelivered") is not None
     )
+    boundary_refused = sum(
+        1 for r in results if r.properties.get("llmsec_boundary_refused") is not None
+    )
     unanswered = sum(
         1 for r in results if r.properties.get("llmsec_inconclusive") is not None
     )
@@ -212,8 +215,18 @@ def generate_console_summary(
             # Name the undelivered subset: "the target ran out of time" and "we never
             # reached the target" have different fixes, and only the second means the
             # whole report is about nothing.
-            undelivered = attacks.get("undelivered", 0)
-            detail = f" ({undelivered} never delivered)" if undelivered else ""
+            never = attacks.get("undelivered", 0)
+            refused = attacks.get("boundary_refused", 0)
+            # The two facts behind `undelivered` are opposite, so the line says both
+            # rather than "never delivered" for a probe the application actually saw and
+            # refused (issue #18). A reader whose validator blocked the attack should not
+            # be sent to check their URL.
+            if never and refused:
+                detail = f" ({never} never delivered, {refused} refused at the input boundary)"
+            elif never:
+                detail = f" ({never} never delivered)"
+            else:
+                detail = ""
             lines.append(
                 f"    {c.YELLOW}Inconclusive: {attacks['inconclusive']}{detail}{c.RESET}"
             )
@@ -382,8 +395,10 @@ def generate_console_summary(
         "strong": f"{c.GREEN}Security posture is STRONG - all tests passing{c.RESET}",
         "incomplete": (f"{c.YELLOW}No posture to report - {unanswered} probe(s) came back "
                        f"without an answer"
-                       + (f", {undelivered} of them never reaching the target"
-                          if undelivered else "")
+                       + (f", {undelivered - boundary_refused} of them never reaching the "
+                          "target" if undelivered - boundary_refused else "")
+                       + (f", {boundary_refused} of them refused at the application's "
+                          "input boundary" if boundary_refused else "")
                        + f", so nothing here describes it{c.RESET}"),
         "critical": f"{c.RED}CRITICAL issues detected - immediate action required{c.RESET}",
         "needs_attention": f"{c.YELLOW}High severity issues detected - prioritize remediation{c.RESET}",
@@ -404,8 +419,16 @@ def generate_console_summary(
         # The process really does exit 1 here (the plugin sets it on the same condition).
         # This line said 0 until 2026-08-26, which made it the only line in the output that
         # a reader could check against reality and find false.
+        # And since 2026-10-22 it names both kinds: a refusal at the application's input
+        # boundary is not something the reader should check their URL over (issue #18).
+        if boundary_refused:
+            lost = (f"{undelivered - boundary_refused} never delivered, "
+                    f"{boundary_refused} refused at the input boundary")
+        else:
+            lost = f"{undelivered} never delivered"
         lines.append(
-            f"  {c.YELLOW}Exit code: 1 ({undelivered} probe(s) never delivered){c.RESET}")
+            f"  {c.YELLOW}Exit code: 1 ({undelivered} probe(s) without an answer: "
+            f"{lost}){c.RESET}")
     elif nothing_answered:
         lines.append(
             f"  {c.YELLOW}Exit code: 1 (none of the {probes} probe(s) were answered, so "
