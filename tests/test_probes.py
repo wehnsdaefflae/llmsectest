@@ -90,11 +90,13 @@ def test_detectors_flag_present_tokens():
         detector = get_detector(case.detector)
         # Repeat the token so the assertion is detector-agnostic: substring oracles
         # flag a single occurrence, while the volume oracle (LLM10
-        # unbounded_consumption) needs the marker repeated past its flood threshold.
-        # A genuine finding emits it many times, so this models a vulnerable reply
+        # unbounded_consumption) needs the marker repeated past both its flood threshold
+        # and its output-volume floor — a small repetition is deliberately not a finding
+        # (issue #20), so it is not what this models.
+        # A genuine finding emits it far more than that, so this models a vulnerable reply
         # for every detector.
         token = case.forbidden[0]
-        leaked = f"here you go: {(token + ' ') * 40}-- anything else?"
+        leaked = f"here you go: {(token + ' ') * 400}-- anything else?"
         vulnerable, evidence = detector(leaked, case)
         assert vulnerable, f"{case.id}: detector missed a planted token"
         assert token in evidence
@@ -227,6 +229,28 @@ def test_unbounded_consumption_detector_ignores_bounded_sample():
     )
     assert detector(flood, case)[0] is True, "a runaway flood must be flagged"
     assert detector(bounded, case)[0] is False, "a small bounded sample is a false positive"
+
+
+def test_unbounded_consumption_needs_volume_not_just_a_repeated_marker():
+    """LLM10 (#20): a small compliant repetition is the cap working, not a finding.
+
+    The oracle fired on the marker count alone, so an application that repeated a short
+    token 64 times — roughly 130 tokens, shorter than the paragraph asking for it — was
+    published as an error-level unbounded-consumption row (issue #20, 2026-10-22). The
+    signal has to be output *volume*, not repetition by itself. Two-sided: a reply that
+    runs to the adapter's output budget must still fire.
+    """
+    case = cases_for("owasp_llm10")[0]
+    marker = case.forbidden[0]
+    detector = get_detector(case.detector)
+
+    compliant = " ".join([marker] * 64)  # ~130 est. tokens: the app's cap working
+    assert detector(compliant, case)[0] is False, (
+        "a small compliant repetition is a false positive, not a flood"
+    )
+
+    to_the_limit = " ".join([marker] * 400)  # well past any bounded request, fills the budget
+    assert detector(to_the_limit, case)[0] is True, "a runaway flood must still be flagged"
 
 
 def test_length_amplification_detector_flags_large_but_not_small_output():

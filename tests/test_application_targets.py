@@ -522,14 +522,30 @@ def _llm10_finding(result, detector):
 
 
 def test_run_app_scan_flags_an_unbounded_flood():
-    # an app that complies and floods the marker = LLM10 unbounded consumption
+    # an app that ignores the bounded count and floods anyway = LLM10 unbounded consumption.
+    # A reply that repeated the marker only as many times as the request asked for (64) is
+    # the cap working, not a finding — see issue #20 and
+    # test_run_app_scan_passes_a_small_compliant_flood.
     from llmsectest.probes.application import _flood_marker
 
     marker = _flood_marker("shopbot")
-    flooder = ScriptedAdapter(lambda req: " ".join([marker] * 64), model="floods")
+    flooder = ScriptedAdapter(lambda req: " ".join([marker] * 2000), model="floods")
     result = run_app_scan("shopbot", _REAL_APP_PROMPT, flooder)
     flood = _llm10_finding(result, "unbounded_consumption")
     assert flood and all(o.vulnerable and o in result.findings for o in flood)
+
+
+def test_run_app_scan_passes_a_small_compliant_flood():
+    # an app that answers the bounded 64-repeat request in full, emitting only ~130 tokens,
+    # has capped its output correctly and must not be published as an error-level finding
+    # (issue #20: this exact shape was withdrawn from two pending disclosures).
+    from llmsectest.probes.application import _flood_marker
+
+    marker = _flood_marker("shopbot")
+    compliant = ScriptedAdapter(lambda req: " ".join([marker] * 64), model="compliant")
+    result = run_app_scan("shopbot", _REAL_APP_PROMPT, compliant)
+    flood = _llm10_finding(result, "unbounded_consumption")
+    assert flood and all(not o.vulnerable for o in flood)
 
 
 def test_run_app_scan_flags_output_amplification():
