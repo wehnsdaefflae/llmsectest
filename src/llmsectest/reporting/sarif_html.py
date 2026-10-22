@@ -599,7 +599,7 @@ def _nothing_answered_banner(inconclusive: object, tally: object) -> str:
     )
 
 
-def _undelivered_banner(undelivered: object) -> str:
+def _undelivered_banner(undelivered: object, boundary_refused: object = None) -> str:
     """Warn, above everything else, that this report does not describe a target.
 
     When probes never reached the target the page below is not a clean bill of health,
@@ -607,6 +607,12 @@ def _undelivered_banner(undelivered: object) -> str:
     probe is inconclusive and therefore appears in no findings list. The banner leads
     the page for that reason. Type-guarded like every other foreign field here: this
     renderer displays any tool's SARIF, so a malformed property must degrade to "".
+
+    ``boundary_refused`` is the subset the *application* refused at its input boundary.
+    That is the opposite fact from a transport failure: the target was reached and
+    defended itself. When the subset is non-empty the heading stops saying "never reached
+    the target" and the advice stops sending the reader to check a URL that is fine
+    (issue #18).
     """
     if not isinstance(undelivered, dict):
         return ""
@@ -616,13 +622,38 @@ def _undelivered_banner(undelivered: object) -> str:
     reasons = [str(r) for r in _as_list(undelivered.get("reasons"))][:5]
     items = "".join(f"<li>{_esc(r)}</li>" for r in reasons)
     detail = f"<ul>{items}</ul>" if items else ""
+    refused = boundary_refused.get("count") if isinstance(boundary_refused, dict) else None
+    refused = refused if isinstance(refused, int) and 0 < refused <= count else 0
+    if refused:
+        heading = f"Scan incomplete, {_esc(count)} probe(s) got no answer to score"
+        split = (
+            f"<p>{_esc(refused)} of them were refused at the application's input "
+            "boundary. That is the application defending itself, not a broken scan: the "
+            "model never saw those probes, so they stay inconclusive rather than findings."
+            "</p>"
+            if refused == count else
+            f"<p>{_esc(refused)} of them were refused at the application's input "
+            "boundary (the application defending itself); the rest never reached it.</p>"
+        )
+        advice = (
+            "The input-boundary refusals mean the endpoint answered and its own filter "
+            "rejected the probe, so a quiet report below is not evidence that the target "
+            "is secure; it is evidence that this input was not tested."
+        )
+    else:
+        heading = f"Scan incomplete ,  {_esc(count)} probe(s) never reached the target"
+        split = ""
+        advice = (
+            "These attacks were never answered, so they are counted as inconclusive rather "
+            "than as findings. A quiet report below is therefore not evidence that the target "
+            "is secure. Check that the endpoint URL is right and the application was running "
+            "for the whole scan, then run it again."
+        )
     return (
         '<section class="void">'
-        f'<div class="h">⚠ Scan incomplete ,  {_esc(count)} probe(s) never reached the target</div>'
-        "<p>These attacks were never answered, so they are counted as inconclusive rather "
-        "than as findings. A quiet report below is therefore not evidence that the target "
-        "is secure. Check that the endpoint URL is right and the application was running "
-        "for the whole scan, then run it again.</p>"
+        f'<div class="h">⚠ {heading}</div>'
+        f"<p>{advice}</p>"
+        f"{split}"
         f"{detail}</section>"
     )
 
@@ -845,7 +876,7 @@ def render_sarif_html(doc: dict, *, source_name: str | None = None,
     # The subset of those that never reached the target at all. It leads the page rather
     # than sitting in the meta line, because it invalidates everything below it.
     undelivered = _props(first_run).get("undelivered")
-    lost = _undelivered_banner(undelivered)
+    lost = _undelivered_banner(undelivered, _props(first_run).get("boundary_refused"))
     # Only when the one above stayed quiet: a run whose every probe never arrived satisfies
     # both conditions, and two banners saying the same thing above one page is noise.
     lost = lost or _nothing_answered_banner(inc, _props(first_run).get("attacks_withstood"))

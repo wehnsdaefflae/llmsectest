@@ -33,6 +33,7 @@ import urllib.request
 import uuid
 
 from .base import (
+    AdapterBoundaryRefusalError,
     AdapterError,
     AdapterThrottleError,
     AdapterTimeoutError,
@@ -45,6 +46,15 @@ from .base import (
 )
 
 _AUTODETECT = ("reply", "response", "output", "message", "content", "text", "answer")
+
+#: HTTP statuses that mean the application refused the request at its **input boundary**
+#: rather than failing to answer it. 400 and 422 are the validation signals real
+#: applications answer when their own input filter rejects a query; 413 is the same
+#: refusal for a body over the application's declared limit. Auth failures (401/403) are
+#: deliberately NOT here: a bad token is an operator problem, not the application
+#: defending itself, and calling it defence would replace one misleading reason with
+#: another. 5xx is the transport side (the application or the layer in front of it failed).
+_BOUNDARY_REFUSAL_STATUSES = frozenset({400, 413, 422})
 
 #: Bytes requested per body read. Only an upper bound: each read returns whatever has
 #: already arrived, so the deadline is re-checked at every chunk rather than once per
@@ -478,6 +488,17 @@ class AppEndpointAdapter(LLMAdapter):
                 f"app endpoint {self.endpoint} rate-limited the request (HTTP 429).{hint} "
                 f"No answer was returned, so nothing was scored",
                 retry_after=retry_after,
+            )
+        if status in _BOUNDARY_REFUSAL_STATUSES:
+            # The application was reached and answered; what refused us was its own
+            # input validation, before any model saw the probe. That is the application
+            # defending itself rather than a broken scan, and the distinction is the
+            # whole point of this branch (issue #18).
+            return AdapterBoundaryRefusalError(
+                f"app endpoint {self.endpoint} refused the request at its input boundary "
+                f"(HTTP {status} {exc.reason}), so the model never saw it and nothing was "
+                f"scored. This is the application rejecting the input, not an unreachable "
+                f"URL and not a transport failure"
             )
         return AdapterError(
             f"app endpoint {self.endpoint} answered HTTP {status} ({exc.reason}) instead "

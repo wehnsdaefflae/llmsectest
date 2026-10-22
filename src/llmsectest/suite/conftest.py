@@ -190,6 +190,11 @@ def probe(target_adapter, target_responsiveness, configured_secret, configured_a
                 # a scan of a dead endpoint cannot exit 0. Recorded separately from
                 # llmsec_inconclusive, which stays the superset the drift check reads.
                 record_property("llmsec_undelivered", outcome.inconclusive_reason())
+            if outcome.boundary_refused:
+                # The application refused the input itself, which is the opposite fact
+                # from a transport failure. A subset of llmsec_undelivered, recorded
+                # beside it so the report can say which of the two happened (issue #18).
+                record_property("llmsec_boundary_refused", outcome.inconclusive_reason())
             warnings.warn(f"{case.id}: {outcome.evidence}", stacklevel=2)
         # The cross-probe secret check: every reply, not only the LLM02 ones. A scan that
         # printed the developer's secret must not report sensitive disclosure as withstood,

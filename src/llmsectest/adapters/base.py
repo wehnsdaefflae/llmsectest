@@ -194,6 +194,27 @@ class AdapterThrottleError(AdapterError):
         self.retry_after = retry_after
 
 
+class AdapterBoundaryRefusalError(AdapterError):
+    """Raised when the application refused the request at its own input boundary.
+
+    A subclass of :class:`AdapterError` so it lands in the same *inconclusive, never a
+    finding* channel as a dead endpoint, but distinguishable, and the distinction is the
+    point. A probe that never reached the model can mean two unrelated things:
+
+    * the application's own input validation rejected it (weknora-archivebot's
+      ``utils.ValidateInput`` matches sixteen XSS patterns, so two LLM05 probes were
+      refused before the model saw them). That is the application defending itself, and
+      arguably the strongest possible result for it.
+    * the transport failed (a timeout, a 502, an unreachable endpoint). That says nothing
+      about the application at all.
+
+    Both are correctly *not* findings, but a report that prints one ``UNDELIVERED`` line
+    for both cannot tell a defender their control worked from an operator whose scan
+    never arrived. The class exists so a caller can count the difference without matching
+    a phrase in the evidence, the same reason :class:`AdapterThrottleError` exists.
+    """
+
+
 #: Class names of a rate-limit refusal, matched across the exception's whole MRO. Name
 #: matching catches ``openai``/``anthropic``'s ``RateLimitError`` and the ``TooManyRequests``
 #: spelling used by ``requests``-style stacks. It is only half the test, because a provider

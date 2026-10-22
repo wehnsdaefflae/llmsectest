@@ -213,7 +213,7 @@ def attack_tally(results: list[TestResult]) -> dict | None:
             key,
             {"name": category.name if category else "",
              "attempted": 0, "withstood": 0, "findings": 0, "inconclusive": 0,
-             "undelivered": 0, "voided": 0},
+             "undelivered": 0, "boundary_refused": 0, "voided": 0},
         )
         tally["attempted"] += 1
         if result.outcome == "failed":
@@ -222,6 +222,8 @@ def attack_tally(results: list[TestResult]) -> dict | None:
             tally["inconclusive"] += 1
             if result.properties.get("llmsec_undelivered") is not None:
                 tally["undelivered"] += 1
+                if result.properties.get("llmsec_boundary_refused") is not None:
+                    tally["boundary_refused"] += 1
         elif secret_out and key == SECRET_CATEGORY:
             tally["voided"] += 1
         else:
@@ -271,7 +273,7 @@ def attack_tally(results: list[TestResult]) -> dict | None:
     totals = {
         field: sum(t[field] for t in by_category.values())
         for field in ("attempted", "withstood", "findings", "inconclusive", "undelivered",
-                      "voided")
+                      "boundary_refused", "voided")
     }
     return {**totals,
             **({"voided_reason": VOIDED_REASON} if totals["voided"] else {}),
@@ -297,6 +299,13 @@ def calculate_statistics(results: list[TestResult]) -> dict:
     undelivered = sum(
         1 for r in results if r.properties.get("llmsec_undelivered") is not None
     )
+    # The subset that was refused by the application's own input boundary rather than
+    # lost on the wire. It shares `undelivered`'s channel (nothing was scored, the run
+    # exits non-zero) but carries the opposite fact about the target, so the reports can
+    # say which happened instead of printing one word for both (issue #18).
+    boundary_refused = sum(
+        1 for r in results if r.properties.get("llmsec_boundary_refused") is not None
+    )
     # And the superset it is a subset of: every probe that came back without an answer,
     # a timeout as much as a transport failure. Carried here for the same reason
     # `undelivered` is (2026-08-26) and because keying the verdict on the subset alone
@@ -314,6 +323,7 @@ def calculate_statistics(results: list[TestResult]) -> dict:
         "failed": failed,
         "skipped": skipped,
         "undelivered": undelivered,
+        "boundary_refused": boundary_refused,
         "inconclusive": inconclusive,
         "pass_rate": round((passed / total * 100), 2) if total > 0 else 0,
         "fail_rate": round((failed / total * 100), 2) if total > 0 else 0,
