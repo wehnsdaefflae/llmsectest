@@ -530,6 +530,15 @@ h2.cat .cnt { color:var(--muted); font-weight:500; font-size:14px; }
 .f-fixes summary { cursor:pointer; color:#1f7a52; font-weight:600; font-size:13px; }
 .f-fixes ol { margin:9px 0 2px; padding-left:22px; color:#33414f; font-size:13.5px; }
 .f-fixes li { margin:3px 0; }
+.transcripts { margin-top:34px; }
+.transcripts h2, .transcripts h2 .cnt { font-size:16px; }
+.transcripts h2 { border-bottom:2px solid var(--line); padding-bottom:6px; }
+.transcripts h2 .cnt { color:var(--muted); font-weight:500; font-size:14px; }
+.transcript-note { color:var(--muted); font-size:13.5px; }
+.transcript { background:var(--card); border:1px solid var(--line); border-radius:9px;
+  padding:10px 14px; margin-bottom:8px; }
+.transcript summary { cursor:pointer; font-size:13.5px; }
+.transcript .cut { color:var(--muted); font-size:12px; margin-left:6px; }
 .glossary { margin-top:38px; }
 .glossary h2 { font-size:16px; border-bottom:2px solid var(--line); padding-bottom:6px; }
 .rule { background:var(--card); border:1px solid var(--line); border-radius:9px; padding:10px 14px;
@@ -680,6 +689,44 @@ def _unconfirmed_marker_banner(unconfirmed: object) -> str:
     )
 
 
+def _withstood_transcripts(transcripts: list[tuple[dict, dict]]) -> str:
+    """Render the replies a defended target gave, one collapsible transcript each.
+
+    These rows are ``kind: pass`` in the SARIF and must never be counted as findings:
+    the summary and the category groups are built before this runs. They exist so a
+    reader can see *what the application said when it refused* (issue #21), which the
+    withstood tally alone cannot answer.
+    """
+    if not transcripts:
+        return ""
+    items = ""
+    for result, rule in transcripts:
+        props = _props(result)
+        cat, name = _owasp_of(result, rule)
+        label = f"{cat} {name}".strip() or _title_of(result, rule)
+        probe = props.get("probe") or _title_of(result, rule)
+        reply = props.get("reply")
+        reply = reply if isinstance(reply, str) else ""
+        cut = ""
+        if props.get("reply_truncated"):
+            total = props.get("reply_characters")
+            cut = (f'<span class="cut">truncated · showing 4000 of '
+                   f'{_esc(total)} characters</span>')
+        items += (
+            '<details class="transcript">'
+            f'<summary><b>{_esc(label)}</b> {_esc(probe)} {cut}</summary>'
+            f'<pre class="f-msg">{_esc(reply)}</pre></details>'
+        )
+    return (
+        '<section class="transcripts"><h2>Withstood probe replies '
+        f'<span class="cnt">· {len(transcripts)}</span></h2>'
+        '<p class="transcript-note">What the target actually said when it held. These are '
+        "not findings: each row is a probe the target withstood, kept so the refusal can "
+        "be audited instead of surviving only as a count.</p>"
+        f"{items}</section>"
+    )
+
+
 def _withstood_section(tally: object) -> str:
     """Render the run-level "attacks withstood" block, or "" if the run has none.
 
@@ -756,6 +803,10 @@ def render_sarif_html(doc: dict, *, source_name: str | None = None,
     # semgrep) are unaffected, which is why a category we test and did not trip still
     # appears in our own reports.
     findings: list[tuple[dict, dict]] = []
+    # Withstood probes are results in the file (kind: pass) so the count and the
+    # transcripts can be checked against each other, but they are not findings and must
+    # not enter the summary, the severity bar or the category groups.
+    transcripts: list[tuple[dict, dict]] = []
     glossary_rules: dict[str, dict] = {}
     for run in runs:
         run = _as_dict(run)
@@ -769,7 +820,10 @@ def render_sarif_html(doc: dict, *, source_name: str | None = None,
             rule = rules.get(result.get("ruleId"), {})
             if rule.get("id"):
                 glossary_rules[rule["id"]] = rule
-            findings.append((result, rule))
+            if _props(result).get("llmsec_withstood"):
+                transcripts.append((result, rule))
+            else:
+                findings.append((result, rule))
 
     generated = generated or datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")
     # Run-level denial-of-wallet cost (real provider output-token spend), when present.
@@ -840,6 +894,7 @@ def render_sarif_html(doc: dict, *, source_name: str | None = None,
             + "</div>"
         )
     body.append(_withstood_section(tally))
+    body.append(_withstood_transcripts(transcripts))
     for (cat, name), items in sorted(groups.items(), key=lambda kv: _OWASP_ORDER.get(kv[0][0], 99)):
         items.sort(key=lambda rr: _SEVERITY.get(_severity_of(*rr), (None, 0))[1], reverse=True)
         label = f"{cat} {name}".strip()

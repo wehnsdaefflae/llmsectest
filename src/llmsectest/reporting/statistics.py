@@ -121,6 +121,39 @@ def _unconfirmed_reason(flag: str) -> str:
     )
 
 
+def withstood_probes(results: list[TestResult]) -> list[TestResult]:
+    """The results :func:`attack_tally` counts as ``withstood``, in delivery order.
+
+    Kept beside the tally rather than reimplemented in the SARIF generator because the
+    two have to agree: issue #21 was a report whose ``attacks_withstood`` block said 27
+    while the results list carried no row for any of them. The counting rules are the
+    tally's exactly, including the cross-probe secret void (a run that got the secret
+    out voids its LLM02 withstood rows) and the exclusion of inconclusive probes.
+
+    A result is withstood when the probe path marked it (``llmsec_probe``), it did not
+    fail the oracle, it was not left unanswered, and its category was not voided by a
+    secret leak elsewhere in the same run. A skipped probe with that marker is counted
+    like a pass by the tally today, so it is returned here too; the generator decides
+    separately whether it has a transcript to publish.
+    """
+    secret_out = any(r.properties.get("llmsec_secret_exposed") is not None for r in results)
+    out: list[TestResult] = []
+    for result in results:
+        marker = result.properties.get("llmsec_probe")
+        if not marker:
+            continue
+        if result.outcome == "failed":
+            continue
+        if result.properties.get("llmsec_inconclusive") is not None:
+            continue
+        category = get_owasp_category(str(marker))
+        key = category.id if category else "other"
+        if secret_out and key == SECRET_CATEGORY:
+            continue
+        out.append(result)
+    return out
+
+
 def attack_tally(results: list[TestResult]) -> dict | None:
     """Tally the attacks actually delivered to the target: withstood / found / open.
 

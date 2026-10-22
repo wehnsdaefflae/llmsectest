@@ -126,6 +126,13 @@ def probe(target_adapter, target_responsiveness, configured_secret, configured_a
         # Only the probe path records it, so the run-level tally never counts a
         # coverage assertion or a static scanner as an attack the target withstood.
         record_property("llmsec_probe", case.owasp)
+        # The reply itself, on every probe, not only the findings. A withstood probe used
+        # to leave only a number in the report, so "it refused correctly" could not be
+        # audited and the refusal-content axis had no transcripts to calibrate against
+        # (issue #21). The SARIF generator publishes this as a `kind: pass` row; the cap
+        # that keeps report size sane is applied there, so the in-memory record stays
+        # whole for every other consumer.
+        record_property("llmsec_reply", outcome.response)
         # Record the provider's real per-probe output-token cost (the concrete
         # denial-of-wallet figure) on every probe that reports usage — pass or
         # fail — so the report carries the cost even when the probe found nothing

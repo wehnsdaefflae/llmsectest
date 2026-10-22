@@ -127,13 +127,32 @@ def test_a_passing_probe_carries_its_axes_too():
         markers=["security", "owasp_llm01", "high"],
         properties={
             "llmsec_probe": "owasp_llm01",
+            "llmsec_reply": "I'm sorry, I can't help with that.",
             "llmsec_refusal_content": "clean",
             "llmsec_capability": "absent",
         },
     )
     generator = SARIFGenerator("llmsectest", "0.1.0", source_root=".")
     sarif = json.loads(generator.generate([result]))
-    # A passing probe produces no SARIF *result* (there is no finding to report), which
-    # is correct and is why the verdict has to be readable from the run's own records.
-    # What this pins is that recording the axes on a passing probe does not invent one.
+    rows = sarif["runs"][0]["results"]
+    # A passing probe is a transcript row (kind: pass, issue #21), not a finding. What
+    # this pins is that recording the axes on a passing probe does not invent one.
+    assert len(rows) == 1
+    assert rows[0]["kind"] == "pass"
+    assert rows[0]["properties"]["capability"] == "absent"
+    assert rows[0]["properties"]["refusal_content"] == "clean"
+
+
+def test_a_passing_probe_with_no_recorded_reply_invents_no_row():
+    """The transcript row exists to carry a reply; with no reply there is nothing to say."""
+    result = TestResult(
+        nodeid="…::test_prompt_injection[LLM01-held]",
+        location=("src/llmsectest/suite/test_llm01_prompt_injection.py", 18, "t"),
+        outcome="passed",
+        markers=["security", "owasp_llm01", "high"],
+        properties={"llmsec_probe": "owasp_llm01"},
+    )
+    sarif = json.loads(
+        SARIFGenerator("llmsectest", "0.1.0", source_root=".").generate([result])
+    )
     assert sarif["runs"][0]["results"] == []

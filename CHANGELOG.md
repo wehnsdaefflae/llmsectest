@@ -21,6 +21,17 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
   from disagreeing. The axes do not change a finding's severity. They do not change whether it is
   a finding. The report says so where the verdicts are shown.
 
+- 2026-10-22: **a withstood probe leaves a transcript in the SARIF.** The report used
+  to carry rows only for findings, so a target that held 27 of 32 probes produced five
+  rows and a count; a reader asking what it said when it refused had nothing to read,
+  and the refusal-content axis could not be calibrated against our own reports. A held
+  probe now emits its own `kind: pass` / `level: none` row carrying the reply it
+  withstood, so `attacks_withstood` and the transcripts agree (issue #21). These rows
+  are not findings, and the HTML renderer keeps them out of the finding count.
+  Report size is capped at 4000 characters per reply, disclosed on the row
+  (`reply_truncated`, `reply_characters`) and in the run's `withstood_transcripts`
+  property rather than shortening a transcript silently.
+
 ### Fixed
 
 - 2026-10-22: **a report no longer claims the 2025 OWASP numbering.** Both renderer footers

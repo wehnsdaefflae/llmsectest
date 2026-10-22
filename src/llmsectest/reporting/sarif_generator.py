@@ -22,7 +22,16 @@ from .owasp_metadata import (
     get_security_tags,
     resolve_edition,
 )
-from .statistics import attack_tally, exercised_categories
+from .statistics import attack_tally, exercised_categories, withstood_probes
+
+#: How much of a withstood probe's reply travels into the SARIF result. The full reply
+#: lives in the pytest run, but publishing every one of 30+ transcripts in full can turn
+#: a small report into a large one for a defended target; issue #21 names report size as
+#: the objection and accepts a cap as the answer. The cap is disclosed per row
+#: (``reply_truncated`` / ``reply_characters``) and in the run property
+#: ``withstood_transcripts``, so a truncated transcript can never be mistaken for a
+#: complete one.
+WITHSTOOD_REPLY_LIMIT = 4000
 
 
 def _as_int(value: Any) -> int | None:
@@ -347,6 +356,23 @@ class SARIFGenerator:
             if withstood.get("unconfirmed_markers"):
                 properties["unconfirmed_markers"] = withstood["unconfirmed_markers"]
 
+        # How many of those withstood probes left a transcript, and what was cut from it.
+        # Issue #21 asked for the count and the rows to agree; this makes the one case
+        # where they cannot, a reply over the size cap, visible in the file rather than
+        # leaving a silently shortened transcript.
+        transcript_rows = [
+            r for r in (sarif_results or [])
+            if r["properties"].get("llmsec_withstood")
+        ]
+        if transcript_rows:
+            properties["withstood_transcripts"] = {
+                "count": len(transcript_rows),
+                "reply_limit_characters": WITHSTOOD_REPLY_LIMIT,
+                "truncated": sum(
+                    1 for r in transcript_rows if r["properties"].get("reply_truncated")
+                ),
+            }
+
         # Add properties to run if any exist
         if properties:
             run["properties"] = properties
@@ -481,11 +507,14 @@ class SARIFGenerator:
         }
 
     def _generate_results(self, results: list[TestResult], baseline_analysis=None) -> list[dict[str, Any]]:
-        """Generate SARIF result objects for failed tests."""
+        """Generate SARIF result objects for findings, plus a pass row per held probe."""
         sarif_results = []
 
         # Create set of regressed test IDs for quick lookup
         regressed_test_ids = set(baseline_analysis.regressed_tests) if baseline_analysis else set()
+        # The same set attack_tally counts, so a report's withstood number and its
+        # transcript rows cannot disagree. See statistics.withstood_probes.
+        withstood = {id(r) for r in withstood_probes(results)}
 
         for result in results:
             if result.outcome == "failed":
@@ -575,8 +604,63 @@ class SARIFGenerator:
                         sarif_result["properties"][prop.removeprefix("llmsec_")] = value
 
                 sarif_results.append(sarif_result)
+            elif id(result) in withstood and result.properties.get("llmsec_reply") is not None:
+                sarif_results.append(self._withstood_result(result))
 
         return sarif_results
+
+    def _withstood_result(self, result: TestResult) -> dict[str, Any]:
+        """A SARIF row for a probe the target survived, carrying what it said.
+
+        ``kind: pass`` and ``level: none`` are what keep this apart from a finding: a
+        consumer that counts ``results`` as vulnerabilities would otherwise read every
+        refusal as a defect. The reply is the point of the row (issue #21), capped for
+        size with the cut disclosed on the row itself.
+        """
+        reply = str(result.properties.get("llmsec_reply", ""))
+        truncated = len(reply) > WITHSTOOD_REPLY_LIMIT
+        case = str(result.properties.get("llmsec_case") or result.test_name)
+
+        sarif_result = {
+            "ruleId": self._get_rule_id(result),
+            "kind": "pass",
+            "level": "none",
+            "message": {"text": f"attack withstood: {case}"},
+            "locations": [
+                {"physicalLocation": self._physical_location(result)}
+            ],
+            "properties": {
+                "test_outcome": result.outcome,
+                "test_duration": result.duration,
+                "test_markers": result.markers,
+                "llmsec_withstood": True,
+                "probe": case,
+                "reply": reply[:WITHSTOOD_REPLY_LIMIT],
+                "reply_characters": len(reply),
+            },
+        }
+        if truncated:
+            sarif_result["properties"]["reply_truncated"] = True
+
+        # The axes answer questions that arise when the target held, too — a refusal that
+        # leaks its own instructions is a held probe whose transcript matters most.
+        for prop in (
+            "llmsec_capability",
+            "llmsec_capability_evidence",
+            "llmsec_refusal_content",
+            "llmsec_refusal_content_evidence",
+        ):
+            value = result.properties.get(prop)
+            if value:
+                sarif_result["properties"][prop.removeprefix("llmsec_")] = value
+
+        owasp_markers = get_owasp_markers_from_test(result.markers)
+        owasp_category = get_owasp_category(owasp_markers[0]) if owasp_markers else None
+        if owasp_category:
+            sarif_result["properties"]["owasp_category"] = owasp_category.id
+            sarif_result["properties"]["owasp_name"] = owasp_category.name
+
+        return sarif_result
 
     def _generate_artifacts(self, results: list[TestResult]) -> list[dict[str, Any]]:
         """Generate SARIF artifact objects, consistent with each finding's location.
