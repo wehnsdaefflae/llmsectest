@@ -215,14 +215,18 @@ def generate_console_summary(
             # Name the undelivered subset: "the target ran out of time" and "we never
             # reached the target" have different fixes, and only the second means the
             # whole report is about nothing.
-            never = attacks.get("undelivered", 0)
             refused = attacks.get("boundary_refused", 0)
+            # `undelivered` is the superset and already counts the boundary refusals,
+            # so subtract them first, as risk_scorer and the exit-code line do.
+            never = attacks.get("undelivered", 0) - refused
             # The two facts behind `undelivered` are opposite, so the line says both
             # rather than "never delivered" for a probe the application actually saw and
             # refused (issue #18). A reader whose validator blocked the attack should not
             # be sent to check their URL.
             if never and refused:
                 detail = f" ({never} never delivered, {refused} refused at the input boundary)"
+            elif refused:
+                detail = f" ({refused} refused at the input boundary)"
             elif never:
                 detail = f" ({never} never delivered)"
             else:

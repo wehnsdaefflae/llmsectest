@@ -384,8 +384,25 @@ def test_console_summary_names_input_boundary_refusals_separately():
                 inconclusive=f"probe not delivered ? {UNREACHABLE}", undelivered=UNREACHABLE),
     ])
 
-    assert "2 never delivered" in summary
+    assert "1 never delivered" in summary
+    assert "2 never delivered" not in summary
     assert "1 refused at the input boundary" in summary
+
+
+def test_console_summary_does_not_count_boundary_refusals_as_never_delivered():
+    """Every undelivered probe was refused at the boundary, and none was lost."""
+    summary = generate_console_summary([
+        _result("t_400a", "passed", "owasp_llm05",
+                inconclusive=f"probe not scored ? {BOUNDARY}", undelivered=BOUNDARY,
+                boundary_refused=BOUNDARY),
+        _result("t_400b", "passed", "owasp_llm05",
+                inconclusive=f"probe not scored ? {BOUNDARY}", undelivered=BOUNDARY,
+                boundary_refused=BOUNDARY),
+    ])
+
+    assert "Inconclusive: 2 (2 refused at the input boundary)" in summary
+    line = next(l for l in summary.splitlines() if "Inconclusive:" in l)
+    assert "never delivered" not in line
 
 
 def test_console_summary_names_the_slowest_probe_on_a_clean_run():
