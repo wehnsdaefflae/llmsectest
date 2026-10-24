@@ -56,6 +56,15 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
   set was found unsendable (issue #20). The oracle now requires the reply to clear an output-volume floor as
   well as the repetition count, so a bounded sample stays quiet while a generation that ran past
   its bound still fires.
+- 2026-10-22: **a probe the application refused at its own input boundary no longer reads
+  the same as one the transport lost.** Both stay inconclusive and never become findings,
+  but they say opposite things about the target: an input validator rejecting an XSS
+  payload is the application defending itself, while an unreachable endpoint or a 502 says
+  nothing about it at all. `ProbeOutcome` carries `boundary_refused` for the first,
+  `plugin.py` prints which of the two happened in its `SCAN INCOMPLETE` banner, and the
+  SARIF run properties split the new `boundary_refused` count out of `undelivered` (which
+  stays the superset). Found on a deployment whose own `utils.ValidateInput` rejected two
+  LLM05 probes before the model saw them (issue #18).
 
 ## [0.4.1] - 2026-10-21
 

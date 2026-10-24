@@ -35,6 +35,10 @@ from llmsectest.reporting.sarif_html import render_sarif_html
 from llmsectest.reporting.statistics import attack_tally
 
 UNREACHABLE = "app endpoint http://127.0.0.1:8044/chat unreachable: [Errno 111] Connection refused"
+BOUNDARY = (
+    "app endpoint http://127.0.0.1:8044/chat refused the request at its input boundary "
+    "(HTTP 400 Bad Request); the model never saw it"
+)
 
 
 class _RaisingAdapter(LLMAdapter):
@@ -58,13 +62,16 @@ def _case() -> ProbeCase:
     )
 
 
-def _result(name, outcome, marker, *, inconclusive=None, undelivered=None):
+def _result(name, outcome, marker, *, inconclusive=None, undelivered=None,
+            boundary_refused=None):
     """A probe result exactly as the ``probe`` fixture records it."""
     properties = {"llmsec_probe": marker}
     if inconclusive is not None:
         properties["llmsec_inconclusive"] = inconclusive
     if undelivered is not None:
         properties["llmsec_undelivered"] = undelivered
+    if boundary_refused is not None:
+        properties["llmsec_boundary_refused"] = boundary_refused
     return TestResult(
         nodeid=f"suite/test_probe.py::{name}",
         location=("suite/test_probe.py", 12, name),
@@ -183,6 +190,37 @@ def test_sarif_omits_the_property_when_everything_was_delivered(tmp_path):
     assert "undelivered" not in run.get("properties", {})
 
 
+def test_sarif_says_whether_a_probe_was_refused_or_lost(tmp_path):
+    """Issue #18: one `undelivered` number used to carry two opposite facts.
+
+    A refusal at the application's input boundary is the application defending itself; a
+    transport failure says nothing about it. The run-level property has to allow a
+    consumer (our renderer, a CI gate) to tell them apart without reading our source.
+    """
+    run = _sarif_run([
+        _result("t_400", "passed", "owasp_llm05",
+                inconclusive=f"probe not scored ? {BOUNDARY}", undelivered=BOUNDARY,
+                boundary_refused=BOUNDARY),
+        _result("t_dead", "passed", "owasp_llm02",
+                inconclusive=f"probe not delivered ? {UNREACHABLE}", undelivered=UNREACHABLE),
+    ], tmp_path)
+
+    props = run["properties"]
+    assert props["undelivered"]["count"] == 2, "both still share the superset"
+    assert props["boundary_refused"]["count"] == 1
+    assert "input boundary" in props["boundary_refused"]["reasons"][0]
+    assert UNREACHABLE not in " ".join(props["boundary_refused"]["reasons"])
+
+
+def test_sarif_omits_boundary_refused_when_nothing_was_refused(tmp_path):
+    run = _sarif_run([
+        _result("t_dead", "passed", "owasp_llm02",
+                inconclusive=f"probe not delivered ? {UNREACHABLE}", undelivered=UNREACHABLE),
+    ], tmp_path)
+
+    assert "boundary_refused" not in run["properties"]
+
+
 def test_html_leads_with_a_warning_and_never_calls_the_scan_clean(tmp_path):
     """The exact pair of statements that must not appear together: "no findings" and
     "we never reached the target"."""
@@ -197,6 +235,25 @@ def test_html_leads_with_a_warning_and_never_calls_the_scan_clean(tmp_path):
     assert "never reached the target" in page
     assert "the scan was clean" not in page
     assert "[Errno 111]" in page, "the reader is told what actually failed"
+
+
+def test_html_calls_a_boundary_refusal_defence_not_an_unreachable_url(tmp_path):
+    """Issue #18 in the published report: the app answered and refused the input.
+
+    The heading used to say "never reached the target" and the advice sent the reader to
+    check the URL, which is the one thing that was fine.
+    """
+    doc = json.loads(SARIFGenerator("llmsectest", "0.1.0", tmp_path).generate([
+        _result("t_400", "passed", "owasp_llm05",
+                inconclusive=f"probe not scored ? {BOUNDARY}", undelivered=BOUNDARY,
+                boundary_refused=BOUNDARY),
+    ]))
+
+    page = render_sarif_html(doc, source_name="refused.sarif")
+
+    assert "refused at the application's input boundary" in page
+    assert "never reached the target" not in page
+    assert "endpoint URL is right" not in page
 
 
 def test_html_still_reports_a_clean_scan_as_clean(tmp_path):
@@ -273,6 +330,26 @@ def test_a_run_with_undelivered_probes_exits_non_zero(tmp_path):
     assert session.exitstatus == 1
 
 
+def test_the_terminal_summary_names_the_two_kinds_of_undelivered(tmp_path, capsys):
+    """Issue #18: `plugin.py` printed one SCAN INCOMPLETE line for both.
+
+    A reader had no way to tell "the application's own validator refused two probes"
+    (defence working) from "the transport failed" (nothing learned).
+    """
+    session = _finished_run([
+        _result("t_400", "passed", "owasp_llm05",
+                inconclusive=f"probe not scored ? {BOUNDARY}", undelivered=BOUNDARY,
+                boundary_refused=BOUNDARY),
+        _result("t_dead", "passed", "owasp_llm02",
+                inconclusive=f"probe not delivered ? {UNREACHABLE}", undelivered=UNREACHABLE),
+    ], tmp_path)
+
+    out = capsys.readouterr().out
+    assert session.exitstatus == 1
+    assert "refused at the application's input boundary" in out
+    assert "transport failure" in out
+
+
 def test_a_run_with_only_timeouts_still_exits_zero(tmp_path):
     """A slow target is not a broken scan: the ordinary inconclusive path is unchanged,
     or every app that ever hits --app-timeout would start failing its build."""
@@ -295,6 +372,37 @@ def test_console_summary_names_the_undelivered_subset():
 
     assert "Inconclusive: 2" in summary
     assert "1 never delivered" in summary
+
+
+def test_console_summary_names_input_boundary_refusals_separately():
+    """The console is the other terminal surface, and it said "never delivered" too."""
+    summary = generate_console_summary([
+        _result("t_400", "passed", "owasp_llm05",
+                inconclusive=f"probe not scored ? {BOUNDARY}", undelivered=BOUNDARY,
+                boundary_refused=BOUNDARY),
+        _result("t_dead", "passed", "owasp_llm02",
+                inconclusive=f"probe not delivered ? {UNREACHABLE}", undelivered=UNREACHABLE),
+    ])
+
+    assert "1 never delivered" in summary
+    assert "2 never delivered" not in summary
+    assert "1 refused at the input boundary" in summary
+
+
+def test_console_summary_does_not_count_boundary_refusals_as_never_delivered():
+    """Every undelivered probe was refused at the boundary, and none was lost."""
+    summary = generate_console_summary([
+        _result("t_400a", "passed", "owasp_llm05",
+                inconclusive=f"probe not scored ? {BOUNDARY}", undelivered=BOUNDARY,
+                boundary_refused=BOUNDARY),
+        _result("t_400b", "passed", "owasp_llm05",
+                inconclusive=f"probe not scored ? {BOUNDARY}", undelivered=BOUNDARY,
+                boundary_refused=BOUNDARY),
+    ])
+
+    assert "Inconclusive: 2 (2 refused at the input boundary)" in summary
+    line = next(ln for ln in summary.splitlines() if "Inconclusive:" in ln)
+    assert "never delivered" not in line
 
 
 def test_console_summary_names_the_slowest_probe_on_a_clean_run():

@@ -309,6 +309,23 @@ class SARIFGenerator:
                 "reasons": undelivered[:20],
             }
 
+        # The subset of the above that the application's own input boundary refused. It
+        # is still undelivered (nothing was scored, and the run exits non-zero), but it
+        # says the opposite about the target: the application defended itself rather than
+        # the transport failing. A consumer reading the file has to be able to tell the
+        # two apart without our code, or the property reintroduces the defect it exists
+        # to fix (issue #18).
+        boundary_refused = [
+            str(r.properties["llmsec_boundary_refused"])
+            for r in results
+            if r.properties.get("llmsec_boundary_refused") is not None
+        ]
+        if boundary_refused:
+            properties["boundary_refused"] = {
+                "count": len(boundary_refused),
+                "reasons": boundary_refused[:20],
+            }
+
         # Every probe whose reply carried the value passed to --app-secret, whichever
         # category asked. Its own run-level property because it invalidates a clean LLM02
         # row, and a consumer reading the file (our renderer, a CI gate) has to be able to
