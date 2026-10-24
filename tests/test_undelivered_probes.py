@@ -401,7 +401,7 @@ def test_console_summary_does_not_count_boundary_refusals_as_never_delivered():
     ])
 
     assert "Inconclusive: 2 (2 refused at the input boundary)" in summary
-    line = next(l for l in summary.splitlines() if "Inconclusive:" in l)
+    line = next(ln for ln in summary.splitlines() if "Inconclusive:" in ln)
     assert "never delivered" not in line
 
 
