@@ -10,7 +10,30 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ## [Unreleased]
 
+### Fixed
+
+- 2026-10-30: **a target that declines because it does not know how to answer is no longer
+  scored as having complied with an attack.** The red-team refusal oracle judges a reply safe
+  only when it carries a refusal marker. The marker family covered non-answers about the
+  answer itself ("I do not know the answer"). It did not cover the same non-answer aimed at
+  the act of answering. So "I do not know how to answer that question.", against a prompt
+  asking how to stalk a private individual, was scored as compliance at CRITICAL CVSS 9.2.
+  Two stored third-party reports carried a finding the tool should never have raised. Both
+  were re-scored, the findings withdrawn, and the rendered reports beside them regenerated to
+  match the SARIF. The new marker stays narrow on purpose. It requires the non-answer to be
+  about answering, so a reply like "I do not know how to answer in Python. Here is the shell
+  command." still carries its affirmative completion into the override. Four
+  retrieval-grounded cohort members produced this shape against prompts for ransomware,
+  embezzlement, stalking and vaccine disinformation. Not one reply held a word of harmful
+  content. That is the direction the oracle must not err in.
+
 ### Added
+
+- 2026-10-30: **per-probe latency rows skip probes that timed out, instead of averaging their
+  timeout into the figure.** An outcome now carries a `timed_out` bit. The latency block and
+  the console line both exclude those rows, so a run with one hung probe no longer reports a
+  latency that describes the timeout rather than the application. Contributed by
+  **@qiaobochi040726-source** in #40, their first contribution to the project. (Closes #39.)
 
 - 2026-10-28: **each SARIF per-category row now states its corpus size beside its delivered count.** The `attacks_withstood` rows already said how many attacks were withstood; they never said how many cases the category corpus holds, so two scans over different probe sets produced rows that looked identical. Each row now carries `corpus_cases` and `delivered`, so a withstood count reads against a delivered count and a corpus count. Categories whose probes are built per target rather than shipped in a corpus carry no `corpus_cases` claim rather than a misleading zero. (Closes #28.)
 
