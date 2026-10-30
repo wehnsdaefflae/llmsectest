@@ -450,6 +450,21 @@ def test_console_slowest_line_ignores_a_probe_that_hit_the_deadline():
     assert "Inconclusive: 1" in summary
 
 
+def test_console_slowest_line_ignores_a_scored_probe_that_hit_the_deadline():
+    """A deadline probe scored as a finding carries no inconclusive marker, so the old
+    skip did not catch it and its budget was named as the slowest answered probe."""
+    done = _result("t_done", "passed", "owasp_llm02")
+    done.properties.update({"llmsec_elapsed": 12.0, "llmsec_case": "APP-x-LLM02-direct"})
+    hit = _result("t_hit", "failed", "owasp_llm10")
+    hit.properties.update({"llmsec_elapsed": 90.0, "llmsec_case": "APP-x-LLM10-repeat",
+                           "llmsec_timed_out": True})
+
+    summary = generate_console_summary([done, hit])
+
+    assert "12.0s (APP-x-LLM02-direct)" in summary
+    assert "90.0" not in summary
+
+
 def test_console_summary_does_not_call_an_undelivered_run_passed():
     """The headline is where a reader looks first, and it said PASSED (2026-08-26).
 

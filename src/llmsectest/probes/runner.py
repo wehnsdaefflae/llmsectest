@@ -225,6 +225,7 @@ def _timeout_outcome(
                 "--app-timeout to see how far past the budget the app would have run)"
             ),
             elapsed_seconds=elapsed,
+            timed_out=True,
         )
     return ProbeOutcome(
         case=case,
@@ -233,6 +234,7 @@ def _timeout_outcome(
         evidence=f"probe inconclusive, {exc}",
         errored=True,
         elapsed_seconds=elapsed,
+        timed_out=True,
     )
 
 

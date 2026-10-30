@@ -175,6 +175,9 @@ class ProbeOutcome:
     #: provoked disproportionate work. ``None`` only when a caller builds an outcome
     #: without running one. See :class:`~llmsectest.probes.runner.TargetResponsiveness`.
     elapsed_seconds: float | None = None
+    #: True when the probe spent its whole per-request budget, so ``elapsed_seconds``
+    #: measures the budget and not the target.
+    timed_out: bool = False
 
     def inconclusive_reason(self) -> str:
         """This outcome's ``evidence``, prefixed with the probe that produced it.

@@ -679,7 +679,7 @@ class TestSARIFGeneration:
         untimed = json.loads(generator.generate(results[2:]))["runs"][0]
         assert "latency" not in untimed.get("properties", {})
 
-    def _timed_probe(self, case, elapsed, inconclusive=None):
+    def _timed_probe(self, case, elapsed, inconclusive=None, timed_out=False):
         return TestResult(
             nodeid=f"…::probe[{case}]",
             location=("src/llmsectest/suite/test_llm02.py", 20, "t"),
@@ -688,6 +688,7 @@ class TestSARIFGeneration:
             properties=(
                 {"llmsec_elapsed": elapsed, "llmsec_case": case}
                 | ({"llmsec_inconclusive": inconclusive} if inconclusive else {})
+                | ({"llmsec_timed_out": True} if timed_out else {})
             ),
         )
 
@@ -718,6 +719,23 @@ class TestSARIFGeneration:
         # just never as a fact about how fast the target answers.
         assert lat["probes_unfinished"] == 2
         assert lat["unfinished_seconds"] == 180.3
+
+    def test_probe_latency_keeps_a_scored_deadline_probe_out_of_the_speed_claim(self):
+        """A timeout scored as a finding is not inconclusive, so it slipped into the
+        finished population and its budget read as the slowest answered probe."""
+        results = [
+            self._timed_probe("APP-x-LLM10-repeat", 90.0, timed_out=True),
+            self._timed_probe("APP-x-LLM02-handover", 88.0),
+        ]
+        generator = SARIFGenerator("llmsectest", "0.1.0", source_root=".")
+        lat = json.loads(generator.generate(results))["runs"][0]["properties"]["latency"]
+        assert lat["probes_measured"] == 1
+        assert lat["total_seconds"] == 88.0
+        assert lat["mean_seconds"] == 88.0
+        assert lat["peak_seconds"] == 88.0
+        assert lat["peak_probe"] == "APP-x-LLM02-handover"
+        assert lat["probes_hit_deadline"] == 1
+        assert lat["deadline_seconds"] == 90.0
 
     def test_probe_latency_makes_no_speed_claim_when_every_probe_timed_out(self):
         """Nothing answered, so there is no mean to report and the block says so rather

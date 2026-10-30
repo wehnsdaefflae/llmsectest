@@ -81,6 +81,7 @@ def _slowest_probe(results: list[TestResult]) -> tuple[float, str] | None:
         if isinstance(secs := r.properties.get("llmsec_elapsed"), (int, float))
         and not isinstance(secs, bool) and secs >= 0
         and r.properties.get("llmsec_inconclusive") is None
+        and r.properties.get("llmsec_timed_out") is None
     ]
     return max(timed) if timed else None
 

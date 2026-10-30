@@ -327,15 +327,18 @@ class SARIFGenerator:
         # ones that did not get two keys of their own rather than being folded in.
         finished: list[tuple[float, str]] = []
         unfinished: list[float] = []
+        hit_deadline: list[float] = []
         for r in results:
             secs = _as_float(r.properties.get("llmsec_elapsed"))
             if secs is None:
                 continue
             if r.properties.get("llmsec_inconclusive") is not None:
                 unfinished.append(secs)
+            elif r.properties.get("llmsec_timed_out") is not None:
+                hit_deadline.append(secs)
             else:
                 finished.append((secs, str(r.properties.get("llmsec_case", ""))))
-        if finished or unfinished:
+        if finished or unfinished or hit_deadline:
             latency: dict[str, Any] = {"probes_measured": len(finished)}
             if finished:
                 peak_seconds, peak_probe = max(finished)
@@ -351,6 +354,11 @@ class SARIFGenerator:
                 # nothing about the target.
                 latency["probes_unfinished"] = len(unfinished)
                 latency["unfinished_seconds"] = round(sum(unfinished), 1)
+            if hit_deadline:
+                # These timed out but were scored as findings, so they are not
+                # inconclusive; their seconds are the budget, not the target's latency.
+                latency["probes_hit_deadline"] = len(hit_deadline)
+                latency["deadline_seconds"] = round(max(hit_deadline), 1)
             properties["latency"] = latency
 
         # Run-level generation tally. What matters here is the *rejected* count, not

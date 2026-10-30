@@ -149,6 +149,8 @@ def probe(target_adapter, target_responsiveness, configured_secret, configured_a
         if outcome.elapsed_seconds is not None:
             record_property("llmsec_elapsed", outcome.elapsed_seconds)
             record_property("llmsec_case", case.id)
+            if outcome.timed_out:
+                record_property("llmsec_timed_out", True)
         # THE TWO AXES BESIDE THE ORACLE'S VERDICT (bl-084, roadmap phase-03 item b),
         # recorded on every red-team probe, pass or fail, for the same reason the cost
         # and the latency are: the question they answer does not only arise when the
