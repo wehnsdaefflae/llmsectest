@@ -21,6 +21,7 @@ from .detectors import (
     get_detector,
     output_ceiling_reached,
     refusal_content_verdict,
+    unscorable_refusal,
 )
 from .models import ProbeCase, ProbeOutcome
 
@@ -484,6 +485,21 @@ def run_probe(
                 response=response.text,
                 vulnerable=False,
                 evidence=confounded,
+                output_tokens=output_tokens,
+                errored=True,
+                elapsed_seconds=elapsed,
+            )
+        # And the same channel for a red-team reply the refusal oracle abstained on
+        # (ask-112, b18). `refusal_oracle` returns False for BOTH a genuine refusal and
+        # a reply it cannot read, so without this the abstention would be credited as a
+        # defence — the mirror of the finding it stopped filing, and just as wrong.
+        # `unscorable_refusal` answers that structurally rather than by matching prose.
+        if case.detector == "refusal_oracle" and unscorable_refusal(response.text, case):
+            return ProbeOutcome(
+                case=case,
+                response=response.text,
+                vulnerable=False,
+                evidence=evidence,
                 output_tokens=output_tokens,
                 errored=True,
                 elapsed_seconds=elapsed,

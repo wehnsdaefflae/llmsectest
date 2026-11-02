@@ -147,6 +147,34 @@ def _severity_of(result: dict, rule: dict) -> str:
     return {"error": "high", "warning": "medium", "note": "low"}.get(level, "none")
 
 
+#: What a withdrawal looks like in a stored report. `scripts/rescore_sarif.py --apply`
+#: has always written this prefix onto the message, so the marker has to be accepted
+#: even on rows written before `llmsec_withdrawn` existed. New rows carry the property.
+_WITHDRAWN_MARKER = "[WITHDRAWN"
+
+
+def _is_withdrawn(result: dict) -> bool:
+    """Has a re-score retracted this row?
+
+    WHY THIS EXISTS (bl-204). A withdrawn row kept its CVSS properties, and
+    ``_severity_of`` resolves CVSS **before** the SARIF level, so dropping ``level`` to
+    ``note`` left every number untouched: the headline total, the severity bar, the
+    row's own badge and the category table all still counted a finding the current
+    oracle does not support. Measured 2026-10-30 on two members; ``ask-112`` then
+    committed the project to re-scoring the whole corpus, which would have published
+    many reports contradicting their own withdrawal text.
+
+    Two markers, deliberately. The property is what a writer should set. The message
+    prefix is what every already-withdrawn row in the stored corpus carries, and
+    rewriting those to add a property would be a second mass edit over reports that are
+    attached to filed advisories.
+    """
+    if _props(result).get("llmsec_withdrawn"):
+        return True
+    text = _as_dict(result.get("message")).get("text")
+    return isinstance(text, str) and text.lstrip().startswith(_WITHDRAWN_MARKER)
+
+
 def _owasp_of(result: dict, rule: dict) -> tuple[str, str]:
     """Return (category id, name), e.g. ('LLM01', 'Prompt Injection'); ('Other','')."""
     rp, xp = _props(rule), _props(result)
@@ -758,8 +786,62 @@ def _withstood_transcripts(transcripts: list[tuple[dict, dict]]) -> str:
     )
 
 
-def _withstood_section(tally: object) -> str:
+def _withdrawn_section(withdrawn: list[tuple[dict, dict]]) -> str:
+    """Render the rows a re-score has retracted, counted nowhere (bl-204).
+
+    Withdrawing is not deleting. The row stays on the page with its evidence, because a
+    reader comparing this report against an earlier one needs to see that the finding
+    was retracted rather than find it missing. It carries no severity badge: the badge
+    is what read ``CRITICAL`` on a row the current oracle does not support.
+    """
+    if not withdrawn:
+        return ""
+    items = ""
+    for result, rule in withdrawn:
+        cat, name = _owasp_of(result, rule)
+        label = f"{cat} {name}".strip() or _title_of(result, rule)
+        text = _as_dict(result.get("message")).get("text")
+        items += (
+            '<details class="transcript">'
+            f'<summary><b>{_esc(label)}</b> withdrawn</summary>'
+            f'<pre class="f-msg">{_esc(text if isinstance(text, str) else "")}</pre>'
+            "</details>"
+        )
+    return (
+        '<section class="transcripts"><h2>Withdrawn rows '
+        f'<span class="cnt">· {len(withdrawn)}</span></h2>'
+        '<p class="transcript-note">Each of these was published as a finding by an earlier '
+        "oracle and the current oracle does not support it. They are counted nowhere on this "
+        "page: not in the total, not in the severity bar, not in the category table. They stay "
+        "so the report still reconciles one to one against the pass that produced it.</p>"
+        f"{items}</section>"
+    )
+
+
+def _less_withdrawn(stored: object, retracted: int) -> object:
+    """``stored`` minus ``retracted``, never below zero, and unchanged if not a number.
+
+    The stored tally is a foreign field — this renderer displays any tool's SARIF — so a
+    string or a null must pass through rather than crash the page. Floored at zero because
+    a negative finding count is a worse lie than a stale one.
+    """
+    if not isinstance(stored, int) or isinstance(stored, bool) or not retracted:
+        return stored
+    return max(0, stored - retracted)
+
+
+def _withstood_section(tally: object, withdrawn: list | None = None) -> str:
     """Render the run-level "attacks withstood" block, or "" if the run has none.
+
+    ‼ THE FOURTH COUNTER (bl-204, found by the fresh-context review on 2026-11-02 after
+    three others had been fixed and the fix called done). This table does not count the
+    results at all: it prints the per-category tally STORED IN THE SARIF AT SCAN TIME.
+    A row withdrawn by a later re-score is therefore still inside those numbers, and the
+    page contradicted itself in print — one real report headlined **14 findings** with a
+    category table reading LLM01 → 8, while this table's own findings column said
+    **9**. Correcting the stored tally by the withdrawals is the only honest option:
+    re-deriving the whole tally from the results would discard the attempted/withstood
+    counts, which nothing in the results can reconstruct.
 
     The positive half of the report. A defender who has hardened a target reads this
     first: an empty findings list means something only once you can see how many
@@ -769,6 +851,12 @@ def _withstood_section(tally: object) -> str:
     """
     if not isinstance(tally, dict) or not tally.get("attempted"):
         return ""
+    # How many rows a later re-score retracted, per OWASP category. Subtracted from the
+    # stored counts below so this table cannot disagree with the findings list beside it.
+    retracted: dict[str, int] = {}
+    for result, rule in (withdrawn or []):
+        cat, _ = _owasp_of(result, rule)
+        retracted[cat] = retracted.get(cat, 0) + 1
     by_cat = tally.get("by_category")
     rows = ""
     if isinstance(by_cat, dict):
@@ -782,7 +870,7 @@ def _withstood_section(tally: object) -> str:
                 f'<tr><td>{_esc(label)}</td>'
                 f'<td class="num">{_esc(counts.get("attempted", 0))}</td>'
                 f'<td class="num">{_esc(counts.get("withstood", 0))}</td>'
-                f'<td class="num">{_esc(counts.get("findings", 0))}</td>'
+                f'<td class="num">{_esc(_less_withdrawn(counts.get("findings", 0), retracted.get(cat, 0)))}</td>'
                 f'<td class="num">{_esc(inconclusive) if inconclusive else ""}</td>'
                 f'<td class="num">{_esc(voided) if voided else ""}</td></tr>'
             )
@@ -838,6 +926,10 @@ def render_sarif_html(doc: dict, *, source_name: str | None = None,
     # transcripts can be checked against each other, but they are not findings and must
     # not enter the summary, the severity bar or the category groups.
     transcripts: list[tuple[dict, dict]] = []
+    # Rows a re-score has retracted. Kept and rendered, never counted: a report that
+    # silently loses a row cannot be reconciled against the pass that produced it, and
+    # the retraction is itself the interesting fact.
+    withdrawn: list[tuple[dict, dict]] = []
     glossary_rules: dict[str, dict] = {}
     for run in runs:
         run = _as_dict(run)
@@ -853,6 +945,11 @@ def render_sarif_html(doc: dict, *, source_name: str | None = None,
                 glossary_rules[rule["id"]] = rule
             if _props(result).get("llmsec_withstood"):
                 transcripts.append((result, rule))
+            elif _is_withdrawn(result):
+                # bl-204. Diverted at the same gate the withstood rows use, which is the
+                # only place every count agrees: the summary, the severity bar, the
+                # category table and the groups are all built from `findings`.
+                withdrawn.append((result, rule))
             else:
                 findings.append((result, rule))
 
@@ -914,7 +1011,10 @@ def render_sarif_html(doc: dict, *, source_name: str | None = None,
         groups.setdefault(_owasp_of(result, rule), []).append((result, rule))
 
     body = [banner, _summary(findings)]
-    if not findings and not banner:
+    # `withdrawn` joins the condition: a page whose only rows were retracted is not a
+    # clean scan, and the tick would say the target held attacks it was never shown to
+    # have held. The withdrawn section below says what actually happened.
+    if not findings and not banner and not withdrawn:
         # Suppressed under the banner: "no findings" plus "we never reached the target"
         # is the exact pair of statements that must not be read together as a pass.
         body.append(
@@ -924,8 +1024,9 @@ def render_sarif_html(doc: dict, *, source_name: str | None = None,
                if held_bit else "the scan was clean.")
             + "</div>"
         )
-    body.append(_withstood_section(tally))
+    body.append(_withstood_section(tally, withdrawn))
     body.append(_withstood_transcripts(transcripts))
+    body.append(_withdrawn_section(withdrawn))
     for (cat, name), items in sorted(groups.items(), key=lambda kv: _OWASP_ORDER.get(kv[0][0], 99)):
         items.sort(key=lambda rr: _SEVERITY.get(_severity_of(*rr), (None, 0))[1], reverse=True)
         label = f"{cat} {name}".strip()

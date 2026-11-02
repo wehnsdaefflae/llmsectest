@@ -25,6 +25,7 @@ from .sarif_html import (
     _as_list,
     _axes_of,
     _edition_sentence,
+    _is_withdrawn,
     _location_of,
     _owasp_of,
     _props,
@@ -60,16 +61,24 @@ def render_sarif_pdf(doc: dict, *, source_name: str | None = None,
     tool = f"{driver.get('name', 'unknown tool')} {driver.get('version', '')}".strip()
 
     findings: list[tuple[dict, dict]] = []
+    withdrawn: list[tuple[dict, dict]] = []
     # A `kind: pass` row is a probe the target withstood, kept in the SARIF so its reply
     # can be audited (issue #21). SARIF's own vocabulary says it is not a failure, and
     # counting it here would print every refusal as a finding in the PDF.
+    #
+    # A WITHDRAWN row is diverted at the same gate (bl-204). This module's own docstring
+    # is the reason: the two renderers share every helper so a figure cannot say one
+    # thing on screen and another on paper, and a withdrawal counted here after the HTML
+    # stopped counting it would be exactly that disagreement. It is the worse half,
+    # because the PDF is the artefact a maintainer receives.
     for run in runs:
         run = _as_dict(run)
         rules = _rule_index(run)
         for result in _as_list(run.get("results")):
             if not isinstance(result, dict) or result.get("kind") == "pass":
                 continue
-            findings.append((result, rules.get(result.get("ruleId"), {})))
+            row = (result, rules.get(result.get("ruleId"), {}))
+            (withdrawn if _is_withdrawn(result) else findings).append(row)
 
     generated = generated or datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")
     props = _props(first_run)
@@ -157,10 +166,23 @@ def render_sarif_pdf(doc: dict, *, source_name: str | None = None,
         )
         pdf.space(4)
 
+    if withdrawn:
+        # Visible, never counted. A retraction that vanishes from the page is not a
+        # correction a reader can check, and this is the copy a maintainer holds.
+        pdf.paragraph(
+            f"{len(withdrawn)} finding(s) in this report have been WITHDRAWN by a "
+            "later re-score and are listed at the end. They are counted nowhere above: "
+            "the current oracles do not support them.",
+            size=10, color=_GREY,
+        )
+        pdf.space(4)
+
     if not findings:
         pdf.space(4)
         pdf.paragraph(
-            "No findings in this report."
+            ("No findings stand in this report; see the withdrawn section at the end "
+             "for what was retracted.") if withdrawn
+            else "No findings in this report."
             if not (isinstance(undelivered, dict) and undelivered.get("count"))
             else "No findings, and see the undelivered notice above before reading that "
                  "as a pass.",
@@ -203,6 +225,28 @@ def render_sarif_pdf(doc: dict, *, source_name: str | None = None,
                 pdf.paragraph(line, font="Helvetica-Bold", size=9, indent=8)
                 if evidence:
                     pdf.paragraph(evidence, size=8.5, indent=16, color=_GREY)
+
+    # --- withdrawn rows, after everything that counts ------------------------------
+    if withdrawn:
+        pdf.space(10)
+        pdf.rule()
+        pdf.text(f"Withdrawn  ({len(withdrawn)})", font="Helvetica-Bold", size=13,
+                 color=_GREY)
+        pdf.paragraph(
+            "Raised by an earlier version of this tool and retracted by a later "
+            "re-score. Shown so the correction is checkable; counted in none of the "
+            "numbers above.",
+            size=9, color=_GREY,
+        )
+        for result, rule in withdrawn:
+            pdf.space(4)
+            cat, name = _owasp_of(result, rule)
+            pdf.text(f"{cat} {name}".strip(), font="Helvetica-Bold", size=8.5,
+                     color=_GREY)
+            pdf.paragraph(_title_of(result, rule), size=10, color=_GREY)
+            message = _fmt(_as_dict(result.get("message")).get("text"))
+            if message:
+                pdf.paragraph(message, size=9, indent=8, color=_GREY)
 
     pdf.space(10)
     pdf.rule()
