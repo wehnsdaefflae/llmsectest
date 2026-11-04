@@ -12,6 +12,16 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ### Fixed
 
+- 2026-11-03: **the LLM08 test suite can now show a retrieval-exposure finding and an
+  indirect-injection finding from the same run.** Every existing LLM08 test shared one mock
+  adapter that answered every probe with the same fixed reply, so a poisoned document always
+  crowded out the canary: the retrieval-exposure probes could only ever read `errored`
+  (confounded), never confirm a real leak, in the same run an injection probe fired. Added
+  `tests/test_llm08_fixture_design.py`, with a fixture that routes each query to whichever of
+  two topically distinct planted documents it actually matches — the way a real vector store
+  with a bounded `top_k` would. No change to `probes/application.py`, `probes/detectors.py`, or
+  `probes/runner.py`; the scoring logic already did the right thing with what the old fixture
+  gave it.
 - 2026-11-02: **a withdrawn finding is no longer counted as a live one on any surface.** When a
   re-score retracts a finding it is marked withdrawn. The report said so in words while every
   number still counted it: the headline total, the severity bar, the row's own badge, the category
