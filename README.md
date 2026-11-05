@@ -32,8 +32,8 @@ inbox. Every release note says in full what the new version detects that the old
 It also says what the tool stopped claiming.
 
 > **Status: pre-alpha, under active grant development.** All ten OWASP categories ship a real
-> probe or scanner and none is a placeholder. A scan that cannot reach one says so instead of
-> passing it silently.
+> probe or scanner, 10 of 10 as the tool's own `--check` run reports. A scan that cannot reach
+> one reports it as an explicit skip, with the input it was missing.
 
 ## What it covers
 
@@ -93,10 +93,9 @@ everywhere it can be, is most of what the list below says.
   gave (`kind: pass`, `level: none`), so you can read what your app said when it refused. Those
   rows never count as findings.
 - **Your app refusing a probe is not the same as our scan failing to send it.** One is your input
-  guard working; the other is a measurement that did not happen. Both stay undelivered, so nothing
-  is claimed about what was never tested, but the refusal is marked as a refusal in the console
-  summary and in the SARIF rather than being filed under transport errors. A `401` or `403` is not
-  counted as one: that is the scan being unauthenticated.
+  guard working; the other is a measurement that did not happen. Both stay undelivered. The report
+  keeps them apart: a refusal is marked as a refusal in the console summary and in the SARIF, a
+  transport error as a transport error. A `401` or `403` counts as the scan being unauthenticated.
 - **Two scans of the same target produce the same result identities.** Every result carries a
   `partialFingerprints` entry computed from the target, the rule and the probe. The run carries an
   `automationDetails.id`. Upload to GitHub code scanning twice and your alerts get updated. Without
@@ -110,11 +109,10 @@ everywhere it can be, is most of what the list below says.
   read as a wrong address.
 - **Encoded leaks still count.** The leak oracles de-obfuscate a reply first, so a secret returned
   base64, hex, ROT13, full-width, zero-width or split across separators is caught.
-- **A category you gave nothing to is a skipped test naming the flag it needs**, never a silent
-  pass, and every run ends with a footer accounting for all ten.
-- **An app that hands your own prompt back is never scored as a finding.** A misread
-  `--app-response-path` stops the probe with the flag named instead of reporting a near-total
-  failure of an application that was never asked anything.
+- **A category you gave nothing to is a skipped test naming the flag it needs.** Every run ends
+  with a footer accounting for all ten.
+- **An app that hands your own prompt back stops the probe.** A misread `--app-response-path`
+  halts with the flag named, so a scan that reached nothing reads as a scan that reached nothing.
 
 Each of these is a checked property with a test behind it. What each one cost us to learn is in
 [Red-team your defense](https://docs.llmsec.dev/guides/red-team-your-defense/).
@@ -181,8 +179,8 @@ pytest
 - **What changed:** the [changelog](https://github.com/wehnsdaefflae/llmsectest/blob/main/CHANGELOG.md),
   which also carries the known limitations. One is open today:
   [LLM03 excessive agency](https://docs.llmsec.dev/owasp/llm06/) reports only what your application
-  emits. On an app that describes an action in prose instead of emitting the signature you passed, a
-  clean row means *not observed* rather than *not vulnerable*. The page keeps its `llm06` address
+  emits. On an app that describes an action in prose, with no sign of the signature you passed, a
+  clean row means *not observed*. That is weaker than *not vulnerable*. The page keeps its `llm06` address
   from the 2025 numbering so existing links still work.
 - **What is planned:** the [roadmap](https://llmsec.dev/#roadmap).
 
