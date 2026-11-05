@@ -18,8 +18,8 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
   crowded out the canary: the retrieval-exposure probes could only ever read `errored`
   (confounded), never confirm a real leak, in the same run an injection probe fired. Added
   `tests/test_llm08_fixture_design.py`, with a fixture that routes each query to whichever of
-  two topically distinct planted documents it actually matches — the way a real vector store
-  with a bounded `top_k` would. No change to `probes/application.py`, `probes/detectors.py`, or
+  two topically distinct planted documents it actually matches, the way a real vector store
+  with a bounded `top_k` does. No change to `probes/application.py`, `probes/detectors.py`, or
   `probes/runner.py`; the scoring logic already did the right thing with what the old fixture
   gave it.
 - 2026-11-02: **a withdrawn finding is no longer counted as a live one on any surface.** When a
