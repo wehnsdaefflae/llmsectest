@@ -67,7 +67,7 @@ has a page per category.
 | `--repo <path>` | LLM04 | dependency manifests, Python/npm/Go (`--osv` for known CVEs, `--sbom` for CycloneDX) |
 | `--model-scan <path>` | LLM05 | serialized model files, read as pickle opcodes and never unpickled |
 | `--vector-store <path>` | LLM09 embedding inversion + multi-tenant isolation | a persisted vector store (Chroma sqlite, JSON store, FAISS sidecar), read offline |
-| `--app-stress <N>` | every app case, under load | one wave of N simultaneous requests per case. No default: the target is somebody else's running app |
+| `--app-stress <N>` | every app case, under load | one wave of N simultaneous requests per case. There is no default, because the target is somebody else's running app |
 | `--redteam-set <csv>` | LLM01 depth | the JailbreakBench 100-behaviour corpus (`--redteam-benign` adds the over-refusal rate) |
 | `--redteam-generate <N>` | LLM01 breadth | N model-composed variants of each authored case, validated before they run |
 | `--render-pdf <file.sarif>` | any SARIF | a PDF report written directly, with no rendering dependency |
@@ -76,12 +76,12 @@ Every flag, with its defaults and failure modes, is in the
 [CLI reference](https://docs.llmsec.dev/cli/). The app-target ones are walked through end to end
 in [Test your own app](https://docs.llmsec.dev/guides/target-app/).
 
-## What a clean row actually means
+## What a clean row means
 
 Here is the trap. You scan your app, every row comes back clean, and you feel good. But there
-are two quite different ways to get an empty report: your application fought off every attack,
-or the attacks never arrived. A typo in one flag and nothing was ever sent. On paper that
-is perfect security.
+are two quite different ways to get an empty report. Your application may have fought the
+attacks off. The attacks may never have arrived. A typo in one flag sends zero probes. The
+report looks the same either way.
 
 So every scan counts what it delivered and what got held off. A run that could not reach
 your app says `INCOMPLETE` where another tool would say `PASSED`. That one rule, applied
@@ -94,8 +94,8 @@ everywhere it can be, is most of what the list below says.
   rows never count as findings.
 - **Your app refusing a probe is not the same as our scan failing to send it.** One is your input
   guard working; the other is a measurement that did not happen. Both stay undelivered. The report
-  keeps them apart: a refusal is marked as a refusal in the console summary and in the SARIF, a
-  transport error as a transport error. A `401` or `403` counts as the scan being unauthenticated.
+  keeps them apart. A refusal is marked as a refusal in the console summary and in the SARIF. A
+  transport error is marked as a transport error. A `401` or `403` counts as the scan being unauthenticated.
 - **Two scans of the same target produce the same result identities.** Every result carries a
   `partialFingerprints` entry computed from the target, the rule and the probe. The run carries an
   `automationDetails.id`. Upload to GitHub code scanning twice and your alerts get updated. Without
@@ -103,7 +103,7 @@ everywhere it can be, is most of what the list below says.
   port changes per run. That's what used to bring a dismissed false positive back.
 - **A target we could not reach is never reported as a safe one.** Unreachable, non-JSON, dead
   partway through, out of time: those probes are recorded inconclusive by name and technique, and a
-  run holding one withholds its verdict as `INCOMPLETE` rather than claiming `PASSED`.
+  run holding one withholds its verdict. It says `INCOMPLETE`. It does not say `PASSED`.
 - **An endpoint that answered is never called unreachable.** A `429` is reported as throttled with
   its own `Retry-After`; a `401` or `500` says the endpoint answered, so an expired token does not
   read as a wrong address.
@@ -114,7 +114,8 @@ everywhere it can be, is most of what the list below says.
 - **An app that hands your own prompt back stops the probe.** A misread `--app-response-path`
   halts with the flag named, so a scan that reached nothing reads as a scan that reached nothing.
 
-Each of these is a checked property with a test behind it. What each one cost us to learn is in
+Each of these is a checked property with a test behind it. The guide records the incident behind
+each one in
 [Red-team your defense](https://docs.llmsec.dev/guides/red-team-your-defense/).
 
 ## Use it from Python
@@ -170,8 +171,8 @@ pytest
 
 ## Where to go next
 
-- **Documentation:** [docs.llmsec.dev](https://docs.llmsec.dev). Getting started, the coverage
-  map, CLI and API reference.
+- **Documentation:** [docs.llmsec.dev](https://docs.llmsec.dev). The docs hold a getting-started
+  page, the coverage map, the CLI reference and the API reference.
 - **Contributing:** [CONTRIBUTING.md](https://github.com/wehnsdaefflae/llmsectest/blob/main/CONTRIBUTING.md).
   The most useful thing you can send is a bad first run: if you tried it and gave up, say where
   you stopped. Two people have. Both reports changed the tool.

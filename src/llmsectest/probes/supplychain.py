@@ -629,14 +629,85 @@ def discover_manifests(repo: Path) -> list[Path]:
     return sorted(found)
 
 
+#: A 40-hex git object name. A lockfile that resolves a VCS dependency to one of these has
+#: pinned it: the ref in the manifest may move, the commit cannot.
+_COMMIT_RE = re.compile(r"#([0-9a-f]{40})\b")
+
+#: Lockfiles we can read a resolution out of. Both npm ecosystems write the resolved URL
+#: verbatim, so one regex over the text answers the question without a JSON/yaml dependency.
+_LOCK_GLOBS = ("yarn.lock", "package-lock.json", "pnpm-lock.yaml", "npm-shrinkwrap.json")
+
+
+def lock_pinned_commits(repo: str | Path) -> dict[str, str]:
+    """Which VCS/URL dependencies a lockfile in ``repo`` pins to an immutable commit.
+
+    Maps a canonical package name to the commit the lockfile resolved it to.
+
+    ‼ WHY THIS EXISTS, measured 2026-11-06 before a finding was disclosed. The scanner
+    reported AnythingLLM's ``epub2`` (``collector/package.json``, installed from
+    ``git+https://github.com/Mintplex-Labs/epub2-static.git#main``) as
+    *"bypassing the package index's integrity, signing and yank guarantees"*, severity
+    **high**, and recommended *"pin it to an immutable commit hash"* — advice their
+    ``collector/yarn.lock`` had already taken: it resolves that dependency to
+    ``#eb0a45cd41ac1a5b4c97766e9935d97583104d35``. So a ``yarn install --frozen-lockfile``,
+    which is what their own Dockerfile runs, installs a byte-identical tree. The finding was
+    not wrong about the manifest and it was wrong about the risk, which is the worst shape a
+    disclosure can have: a maintainer who reads the next line knows more about his own
+    repository than the tool does, and every finding after it is discounted. A lockfile is
+    the FIRST thing a maintainer checks, so it is the first thing the oracle must read.
+
+    What a pin does NOT fix, and what the downgraded finding still says: the manifest's own
+    ref is mutable, so any resolution performed WITHOUT the lockfile (a fresh ``yarn add``,
+    ``--no-lockfile``, a dependant installing this package transitively) takes whatever the
+    branch points at that day, and no advisory feed reaches a dependency that has no
+    registry identity. That is a real, smaller risk, and `medium` is where it belongs.
+    """
+    repo = Path(repo)
+    pins: dict[str, str] = {}
+    for pattern in _LOCK_GLOBS:
+        for path in repo.rglob(pattern):
+            if is_pruned(repo, path) or not path.is_file():
+                continue
+            try:
+                text = path.read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                continue  # an unreadable lockfile is not evidence either way
+            # One pass over the text: a line naming a package, then the commit its
+            # resolution carries. Both npm lockfile dialects put them within a few lines
+            # of each other, and a yaml/JSON parse would buy nothing here while adding a
+            # dependency this package deliberately does not have.
+            current: str | None = None
+            for line in text.splitlines():
+                name = _LOCK_NAME_RE.match(line)
+                if name:
+                    current = canonicalize_name(name.group(1))
+                    continue
+                commit = _COMMIT_RE.search(line)
+                if commit and current and "resolved" in line:
+                    pins.setdefault(current, commit.group(1))
+    return pins
+
+
+#: The package a lockfile stanza is about. yarn writes `"epub2@git+https://…":` (quoted,
+#: trailing colon) and npm writes `"node_modules/epub2": {`; both start with the name.
+_LOCK_NAME_RE = re.compile(r'^\s*"?(?:node_modules/)?(@?[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)?)@?[^"]*"?\s*:')
+
+
 def _tag(dep: Dependency) -> str:
     """The ecosystem-qualified name used in a finding id, so two registries that both
     publish a `requests` produce two findings rather than one that silently wins."""
     return dep.name if dep.ecosystem == "PyPI" else f"{dep.ecosystem.lower()}-{dep.name}"
 
 
-def _classify(dep: Dependency) -> SupplyChainFinding | None:
-    """Return the highest-severity supply-chain risk for one dependency, or None."""
+def _classify(dep: Dependency,
+              lock_pins: dict[str, str] | None = None) -> SupplyChainFinding | None:
+    """Return the highest-severity supply-chain risk for one dependency, or None.
+
+    ``lock_pins`` is `lock_pinned_commits`' answer for the repository being scanned. It is
+    optional and defaults to "no lockfile was read", so every existing caller keeps the
+    behaviour it had; passing it is what lets a VCS install the lockfile already pins be
+    reported as the smaller risk it is.
+    """
     known_bad = _KNOWN_MALICIOUS.get(dep.ecosystem, {})
     if dep.name in known_bad:
         return SupplyChainFinding(
@@ -649,6 +720,23 @@ def _classify(dep: Dependency) -> SupplyChainFinding | None:
                            "install the legitimate package by its correct name.",
         )
     if dep.url:
+        pinned_commit = (lock_pins or {}).get(dep.name)
+        if pinned_commit:
+            # The lockfile has already taken the advice this finding used to give, so the
+            # finding says what is still true and nothing more (see lock_pinned_commits).
+            return SupplyChainFinding(
+                id=f"LLM03-direct-url-{_tag(dep)}", severity="medium",
+                package=dep.name, manifest=dep.manifest,
+                technique="direct VCS/URL install, pinned by the lockfile",
+                evidence=f"'{dep.name}' is installed from {dep.url!r}. The lockfile resolves "
+                         f"it to commit {pinned_commit[:12]}, so a locked install is "
+                         f"reproducible; the manifest's own ref is mutable, so any resolution "
+                         f"without the lockfile takes whatever that ref points at, and no "
+                         f"advisory feed covers a dependency with no registry identity.",
+                recommendation="Keep installing with the lockfile (e.g. "
+                               "`yarn install --frozen-lockfile`); pinning the manifest to "
+                               "the commit as well would close the unlocked path.",
+            )
         return SupplyChainFinding(
             id=f"LLM03-direct-url-{_tag(dep)}", severity="high",
             package=dep.name, manifest=dep.manifest,
@@ -720,11 +808,14 @@ def scan_dependencies(repo: str | Path) -> list[SupplyChainFinding]:
     # ecosystem is in the key because a monorepo can declare the same name in both, and
     # without it the second registry's risk would be silently swallowed by the first.
     seen: set[tuple[str, str, str]] = set()
+    # Read once per repository rather than per manifest: a monorepo has one lockfile per
+    # workspace at most, and the question asked of it is the same for every dependency.
+    lock_pins = lock_pinned_commits(repo)
     for manifest in discover_manifests(repo):
         deps, dir_findings = _parse_manifest(manifest, str(manifest.relative_to(repo)))
         findings.extend(dir_findings)
         for dep in deps:
-            finding = _classify(dep)
+            finding = _classify(dep, lock_pins)
             if finding is None:
                 continue
             key = (dep.ecosystem, dep.name, finding.technique)

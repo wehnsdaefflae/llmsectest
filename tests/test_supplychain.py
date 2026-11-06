@@ -8,6 +8,8 @@ packages.
 
 from __future__ import annotations
 
+import json
+
 from llmsectest.probes.supplychain import (
     KNOWN_MALICIOUS_NPM_PACKAGES,
     KNOWN_MALICIOUS_PACKAGES,
@@ -74,6 +76,67 @@ def test_direct_url_and_editable_installs_flagged(tmp_path):
     assert "bypasses the package index" in findings["widget"].technique
     assert findings["editablepkg"].severity == "high"
     assert findings["internaltool"].severity == "high"
+
+
+def test_a_vcs_install_the_lockfile_pins_is_medium_and_says_what_is_still_true(tmp_path):
+    """‼ MEASURED AGAINST A REAL REPOSITORY, 2026-11-06, before the finding went out.
+
+    AnythingLLM's `collector/package.json` installs `epub2` from
+    `git+https://github.com/Mintplex-Labs/epub2-static.git#main`, and the scanner called that
+    high severity, *"bypassing the package index's integrity, signing and yank guarantees"*,
+    recommending *"pin it to an immutable commit hash"*. Their `collector/yarn.lock` resolves
+    that same dependency to `#eb0a45cd41ac1a5b4c97766e9935d97583104d35` — the advice was
+    already taken, and their Dockerfile installs with the lockfile. Disclosing it as written
+    would have told a maintainer something about his own repository that is not so.
+    """
+    _write(tmp_path, "package.json", json.dumps({
+        "name": "app",
+        "dependencies": {"epub2": "git+https://github.com/Mintplex-Labs/epub2-static.git#main"},
+    }))
+    _write(tmp_path, "yarn.lock", "\n".join([
+        '"epub2@git+https://github.com/Mintplex-Labs/epub2-static.git#main":',
+        '  version "3.0.2"',
+        ('  resolved "git+https://github.com/Mintplex-Labs/epub2-static.git'
+         '#eb0a45cd41ac1a5b4c97766e9935d97583104d35"'),
+    ]))
+    f = _by_pkg(scan_dependencies(tmp_path))["epub2"]
+    assert f.severity == "medium", "a pinned install is not the same risk as an unpinned one"
+    assert "pinned by the lockfile" in f.technique
+    assert "eb0a45cd41ac" in f.evidence, "the finding names the commit it checked"
+    # What remains true has to survive the downgrade, or the finding becomes noise.
+    assert "without the lockfile" in f.evidence
+    assert "advisory feed" in f.evidence
+    assert "frozen-lockfile" in f.recommendation
+    assert "integrity, signing and yank" not in f.evidence
+
+
+def test_a_vcs_install_no_lockfile_pins_stays_high(tmp_path):
+    """The control arm. Without a lockfile, and with a lockfile that pins something else, the
+    finding must keep its full severity — otherwise the fix above would quietly excuse every
+    direct VCS install, which is the failure mode of a one-sided test."""
+    _write(tmp_path, "package.json", json.dumps({
+        "name": "app",
+        "dependencies": {"widget": "git+https://github.com/acme/widget.git#main"},
+    }))
+    bare = _by_pkg(scan_dependencies(tmp_path))["widget"]
+    assert bare.severity == "high"
+    assert "bypasses the package index" in bare.technique
+
+    _write(tmp_path, "yarn.lock", "\n".join([
+        '"other@git+https://github.com/acme/other.git#main":',
+        ('  resolved "git+https://github.com/acme/other.git'
+         '#aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"'),
+    ]))
+    still = _by_pkg(scan_dependencies(tmp_path))["widget"]
+    assert still.severity == "high", "a lockfile pinning a DIFFERENT package changes nothing"
+
+    # And a ref that is not a commit is not a pin, however much it looks like one.
+    _write(tmp_path, "yarn.lock", "\n".join([
+        '"widget@git+https://github.com/acme/widget.git#main":',
+        '  resolved "git+https://github.com/acme/widget.git#main"',
+    ]))
+    moving = _by_pkg(scan_dependencies(tmp_path))["widget"]
+    assert moving.severity == "high", "a branch ref in the lockfile is still mutable"
 
 
 def test_insecure_and_extra_index_directives(tmp_path):

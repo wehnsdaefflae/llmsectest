@@ -29,6 +29,11 @@ CycloneDX PURL each name the right registry. It then flags, per declared depende
   documented to have carried malware on PyPI or to squat a popular package / stdlib module. A hit is high-signal. These are real malicious uploads. We don't guess at typos.
 - **Direct VCS / URL install** (`high`), pulled from a git ref or arbitrary URL (`git+https://…`,
   `pkg @ https://…`) instead of the index, bypassing its integrity, signing and yank guarantees.
+  The scan reads the repository's lockfiles first, in all four npm formats (yarn, npm, pnpm and
+  shrinkwrap). A dependency a lockfile resolves to an immutable
+  commit drops one severity step, to `medium`, and the finding names that commit. Two paths stay
+  open and the text says so. An install that skips the lockfile takes whatever the branch points
+  at. A dependency with no registry identity reaches no advisory feed.
 - **Unpinned dependency** (`high`), no version constraint at all, so the build floats to *any* future
   version, including a compromised one.
 - **No upper bound** (`medium`), a lower bound only (`>=1.0`) still admits an unvetted future major.

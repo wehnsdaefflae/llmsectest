@@ -12,6 +12,21 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ### Fixed
 
+- 2026-11-06: **the supply-chain scan reads lockfiles before it judges a direct-URL
+  dependency.** A dependency installed from a git URL was reported at HIGH whatever the
+  repository's lockfile said. A real application in our cohort, AnythingLLM, declares `epub2`
+  from a fork at `#main` and its collector lockfile resolves that fork to the immutable commit
+  `eb0a45cd…`, so a frozen-lockfile install cannot drift and the finding overstated the
+  risk. `scan_dependencies` now builds a pin index once per repository from the four npm
+  lockfile formats (yarn, npm, pnpm, shrinkwrap). `_classify` downgrades a pinned dependency
+  one step, naming the commit it checked. The finding text states what is left. An install that
+  skips the lockfile still takes whatever the branch points at. A dependency with no registry
+  identity reaches no advisory feed. Verified against AnythingLLM's own collector manifest and
+  lockfile at master: `high` without the lockfile, `medium` with it, the commit `eb0a45cd…` in
+  the finding text. Two-sided tests in `tests/test_supplychain.py`. An unpinned dependency, a
+  lockfile for a different package and a branch ref inside a lockfile all keep the higher
+  severity.
+
 - 2026-11-03: **the LLM08 test suite can now show a retrieval-exposure finding and an
   indirect-injection finding from the same run.** Every existing LLM08 test shared one mock
   adapter that answered every probe with the same fixed reply, so a poisoned document always
