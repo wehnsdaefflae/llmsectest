@@ -637,6 +637,22 @@ _COMMIT_RE = re.compile(r"#([0-9a-f]{40})\b")
 #: verbatim, so one regex over the text answers the question without a JSON/yaml dependency.
 _LOCK_GLOBS = ("yarn.lock", "package-lock.json", "pnpm-lock.yaml", "npm-shrinkwrap.json")
 
+#: The public name, read by `qa/apps/_standup.py`.
+LOCK_GLOBS = _LOCK_GLOBS
+
+#: Every file a PINNED CHECKOUT has to fetch for LLM03 to reach its own verdict.
+#:
+#: ‼ WHY THIS IS SEPARATE FROM `MANIFEST_GLOBS`, measured 2026-11-09 on the real runner.
+#: `lock_pinned_commits` landed on 2026-11-06 and downgraded AnythingLLM's `epub2` finding
+#: locally against the maintainer's own files. The cohort pass over the SAME member on
+#: predator then returned it at `error` anyway, and the cause was neither the scanner nor
+#: the pass: `_standup.MANIFEST_PATTERNS` was `MANIFEST_GLOBS`, so the sparse checkout
+#: fetched 43 files of manifests and NOT ONE LOCKFILE. The downgrade could never fire on
+#: any cohort member, because the evidence it reads was never on disk. A lockfile stays out
+#: of `MANIFEST_GLOBS` because `discover_manifests` reports that list as the member's
+#: manifests, and a lockfile is not a declaration — it is the resolution of one.
+CHECKOUT_GLOBS = MANIFEST_GLOBS + LOCK_GLOBS
+
 
 def lock_pinned_commits(repo: str | Path) -> dict[str, str]:
     """Which VCS/URL dependencies a lockfile in ``repo`` pins to an immutable commit.

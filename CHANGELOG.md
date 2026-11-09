@@ -12,6 +12,25 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ### Fixed
 
+- 2026-11-09: **an LLM05 finding now states what the scan observed instead of asserting that
+  the content would run.** The message said the response "emitted executable/unescaped content
+  a downstream sink would run". A scan observes an API response. It never observes a renderer.
+  Luis Novo, maintainer of open-notebook, closed our advisory with a checkable reason: their
+  frontend renders model output through react-markdown, which strips a `javascript:` URL. Their
+  `frontend/package.json` on `main` declares `react-markdown ^10.1.0` and `rehype-sanitize
+  ^6.0.0`, so he is right about his own code and our sentence accused his application of a
+  failure his renderer prevents. The finding still fires, because the application did return the
+  active payload raw over its own API. What it now says is that the output carries content a
+  downstream sink would run unless that sink sanitizes, and that this scan observed the API
+  response only. Six tests pin both halves.
+- 2026-11-09: **a pinned cohort checkout fetches the lockfiles the supply-chain scan needs.**
+  The sparse checkout fetched manifest files and no lockfiles at all, so the lockfile-aware
+  downgrade shipped on 2026-11-06 could never fire on a real member: the scan reported a
+  confident HIGH over an input that was never there. `supplychain` now exports `CHECKOUT_GLOBS`,
+  the manifests plus every lockfile shape the resolver reads, and the stand-up builds its
+  checkout from that list rather than from its own copy. A lockfile is not reported as a
+  manifest, and a repository holding only a lockfile does not count as an application. A
+  two-sided test pins both ends, because the defect was two lists silently diverging.
 - 2026-11-06: **the supply-chain scan reads lockfiles before it judges a direct-URL
   dependency.** A dependency installed from a git URL was reported at HIGH whatever the
   repository's lockfile said. A real application in our cohort, AnythingLLM, declares `epub2`
