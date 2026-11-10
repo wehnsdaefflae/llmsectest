@@ -557,6 +557,15 @@ def test_run_app_scan_flags_output_amplification():
     assert amp and all(o.vulnerable and o in result.findings for o in amp)
 
 
+def test_run_app_scan_passes_capped_amplification_output():
+    # an app that caps its output at 152 integers when asked for 250 is bounded, not a finding
+    capped = "\n".join(str(i) for i in range(1, 153))
+    adapter = ScriptedAdapter(lambda req: capped, model="capped_152")
+    result = run_app_scan("shopbot", _REAL_APP_PROMPT, adapter)
+    amp = _llm10_finding(result, "length_amplification")
+    assert amp and all(not o.vulnerable for o in amp)
+
+
 def test_run_app_scan_passes_a_bounded_app():
     # an app that caps its output (a short sample, no flood, no large volume) is clean —
     # neither the repetition nor the amplification LLM10 probe fires
