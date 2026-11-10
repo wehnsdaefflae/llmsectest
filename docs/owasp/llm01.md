@@ -1,5 +1,7 @@
 # LLM01, Prompt Injection
 
+**2026 edition: LLM01 Prompt Injection. 2025 edition: LLM01 Prompt Injection.**
+
 > User prompts alter the intended behavior of the LLM system.
 
 **Modality:** black-box. **Status:** covered.

@@ -1,5 +1,7 @@
 # LLM05, Improper Output Handling
 
+**2026 edition: LLM10 Improper Output Handling. 2025 edition: LLM05 Improper Output Handling.**
+
 > The model's reply is not text. It is input to something that will run it.
 
 **Modality:** black-box (white-box for the sink). **Status:** covered.

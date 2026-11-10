@@ -1,5 +1,7 @@
 # LLM02, Sensitive Information Disclosure
 
+**2026 edition: LLM02 Sensitive Information Disclosure. 2025 edition: LLM02 Sensitive Information Disclosure.**
+
 > The model repeats something it was trusted with, an API key, a customer's details, the contents of its own configuration.
 
 **Modality:** black-box (white-box for the surrounding config). **Status:** covered.

@@ -91,6 +91,43 @@ def test_third_party_sarif_without_owasp_props_degrades_gracefully():
     assert "a generic finding" in html
 
 
+def test_an_oracle_downgrade_beats_the_categorys_cvss():
+    """A result graded below its category keeps the lower severity.
+
+    The CVSS properties are the CATEGORY's, stamped onto every finding in it; `level` is
+    the only per-finding signal. Measured on a third-party cohort member 2026-11-10: the
+    supply-chain probe wrote `level: warning` after downgrading a direct-URL dependency
+    and the report's headline still read "critical: 1".
+    """
+    downgraded = {**_RESULT_LLM01, "level": "warning"}
+    html = render_sarif_html(_doc([downgraded], [_RULE_LLM01]))
+    # The severity bar names only buckets that carry findings; the `sev-*` classes are
+    # all present in every report's stylesheet, so they prove nothing on their own.
+    assert 'title="medium: 1"' in html
+    assert 'title="critical: 1"' not in html
+    assert 'class="k">medium</span>' in html
+
+
+def test_a_genuine_critical_keeps_its_cvss_precision():
+    """`level: error` covers critical AND high, so it must not demote a critical.
+
+    This is the other half of the ceiling. Comparing severity BUCKETS instead of SARIF
+    levels would read every critical finding as a downgrade to high, because
+    SARIF_SEVERITY_MAP writes `error` for both.
+    """
+    html = render_sarif_html(_doc([_RESULT_LLM01], [_RULE_LLM01]))
+    assert 'title="critical: 1"' in html
+    assert 'class="k">high</span>' not in html
+
+
+def test_a_note_level_row_resolves_low_against_a_critical_category():
+    """The ceiling goes all the way down, which is what withdrawals rely on."""
+    noted = {**_RESULT_LLM01, "level": "note"}
+    html = render_sarif_html(_doc([noted], [_RULE_LLM01]))
+    assert 'title="low: 1"' in html
+    assert 'title="critical: 1"' not in html
+
+
 def test_renders_per_finding_output_token_cost():
     """A finding carrying an ``output_tokens`` cost shows it as a badge; the
     run-level denial-of-wallet total appears in the header meta line."""

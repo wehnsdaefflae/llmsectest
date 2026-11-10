@@ -1,5 +1,7 @@
 # LLM09, Misinformation
 
+**2026 edition: LLM07 Misinformation. 2025 edition: LLM09 Misinformation.**
+
 > Confident, plausible output that is false, fabricated facts, citations, APIs or identifiers a downstream user takes at face value.
 
 **Modality:** black-box. **Status:** covered.

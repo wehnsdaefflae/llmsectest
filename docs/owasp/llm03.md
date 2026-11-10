@@ -1,5 +1,7 @@
 # LLM03, Supply Chain
 
+**2026 edition: LLM04 Supply Chain. 2025 edition: LLM03 Supply Chain.**
+
 > Vulnerabilities in third-party packages, models and tooling an LLM application depends on.
 
 **Modality:** white-box (needs your repo). **Status:** covered.

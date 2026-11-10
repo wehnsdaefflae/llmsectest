@@ -1,5 +1,7 @@
 # LLM10, Unbounded Consumption
 
+**2026 edition: LLM06 Unbounded Consumption. 2025 edition: LLM10 Unbounded Consumption.**
+
 > Unrestricted, expensive inference that lets an attacker degrade service, run up cost, or extract the model.
 
 **Modality:** black-box. **Status:** covered.

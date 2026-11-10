@@ -32,14 +32,14 @@ target, run `llmsectest --check` to see the live map.
 |---|---|---|
 | LLM01 | Prompt Injection | **black-box**, your app endpoint |
 | LLM02 | Sensitive Information Disclosure | black-box (or white-box) |
-| LLM03 | Supply Chain | white-box, your deps (`--repo`) |
-| LLM04 | Data and Model Poisoning | white-box, your model files (`--model-scan`) |
-| LLM05 | Improper Output Handling | black-box (or white-box) |
-| LLM06 | Excessive Agency | black-box (or white-box) |
-| LLM07 | System Prompt Leakage | **black-box**, prompt extraction |
-| LLM08 | Vector and Embedding Weaknesses | **black-box**, your RAG app (`--app-canary` / `--app-rag-poison`); white-box, your vector store (`--vector-store`) |
-| LLM09 | Misinformation | **black-box**, nonexistent-entity confabulation |
-| LLM10 | Unbounded Consumption | **black-box**, flood / output amplification |
+| LLM03 | Excessive Agency | black-box (or white-box) |
+| LLM04 | Supply Chain | white-box, your deps (`--repo`) |
+| LLM05 | Data and Model Poisoning | white-box, your model files (`--model-scan`) |
+| LLM06 | Unbounded Consumption | **black-box**, flood / output amplification |
+| LLM07 | Misinformation | **black-box**, nonexistent-entity confabulation |
+| LLM08 | Hidden Context Exposure | **black-box**, prompt extraction |
+| LLM09 | Vector and Embedding Weaknesses | **black-box**, your RAG app (`--app-canary` / `--app-rag-poison`); white-box, your vector store (`--vector-store`) |
+| LLM10 | Improper Output Handling | black-box (or white-box) |
 
 → **[Getting started](getting-started.md)** · **[Test your running app](guides/target-app.md)** ·
 **[Red-team your defense](guides/red-team-your-defense.md)** · **[OWASP coverage](owasp/index.md)** ·

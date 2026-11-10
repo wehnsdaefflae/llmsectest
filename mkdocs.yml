@@ -1,5 +1,5 @@
 site_name: LLMSecTest
-site_description: Pytest-native security testing for LLM applications — OWASP LLM Top 10 (2025).
+site_description: Pytest-native security testing for LLM applications — OWASP LLM Top 10 (2026).
 site_url: https://docs.llmsec.dev/
 repo_url: https://github.com/wehnsdaefflae/llmsectest
 repo_name: wehnsdaefflae/llmsectest
@@ -77,14 +77,14 @@ nav:
       - Coverage map: owasp/index.md
       - LLM01 Prompt Injection: owasp/llm01.md
       - LLM02 Sensitive Information Disclosure: owasp/llm02.md
-      - LLM03 Supply Chain: owasp/llm03.md
-      - LLM04 Data and Model Poisoning: owasp/llm04.md
-      - LLM05 Improper Output Handling: owasp/llm05.md
-      - LLM06 Excessive Agency: owasp/llm06.md
-      - LLM07 System Prompt Leakage: owasp/llm07.md
-      - LLM08 Vector and Embedding Weaknesses: owasp/llm08.md
-      - LLM09 Misinformation: owasp/llm09.md
-      - LLM10 Unbounded Consumption: owasp/llm10.md
+      - LLM03 Excessive Agency: owasp/llm06.md
+      - LLM04 Supply Chain: owasp/llm03.md
+      - LLM05 Data and Model Poisoning: owasp/llm04.md
+      - LLM06 Unbounded Consumption: owasp/llm10.md
+      - LLM07 Misinformation: owasp/llm09.md
+      - LLM08 Hidden Context Exposure: owasp/llm07.md
+      - LLM09 Vector and Embedding Weaknesses: owasp/llm08.md
+      - LLM10 Improper Output Handling: owasp/llm05.md
   - CLI reference: cli.md
   - API reference: api.md
   - Changelog: changelog.md

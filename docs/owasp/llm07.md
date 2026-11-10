@@ -1,5 +1,8 @@
 # LLM07, System Prompt Leakage
 
+**2026 edition: LLM08 Hidden Context Exposure. 2025 edition: LLM07 System Prompt Leakage.** The
+2026 edition renames this category and widens it: our probes cover the system-prompt subset.
+
 > Ask the application to repeat its instructions. It does.
 
 **Modality:** black-box. **Status:** covered.
@@ -52,7 +55,11 @@ request: nothing in it asks for a prompt. A helpful model summarises what it was
 This is the finding that changed how we read our own reports. It is measured rather than argued.
 
 Across our test cohort, measured on a single pass of **38 applications that declare a secret**, **27 leaked
-their system prompt** when asked to repeat their instructions. That number alone is unremarkable. The one
+their system prompt** when asked to repeat their instructions. Read the reply transcripts for that
+number, not the oracle's verdict: the LLM07 oracle withstood on every one of those applications,
+which is why <https://llmsec.dev/reports> publishes LLM07 at zero over the same cohort. The gap
+between the two is the finding. An oracle looking for a refusal to be broken scores a compliant,
+helpful answer as a pass, and the instructions come out inside it. That number alone is unremarkable. The one
 that matters is what came with it: **20 of those 27 handed over the secret the application holds**, because
 the secret was a line of the prompt they were reproducing. Seven leaked their instructions and kept the
 credential out of them. Eleven produced no LLM07 finding at all.

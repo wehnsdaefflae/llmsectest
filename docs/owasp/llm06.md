@@ -1,5 +1,7 @@
 # LLM06, Excessive Agency
 
+**2026 edition: LLM03 Excessive Agency. 2025 edition: LLM06 Excessive Agency.**
+
 > The model is wired to *do* things. It does one it should not have. It moves money, changes an account, deletes data, or hands itself new rights.
 
 **Modality:** black-box (white-box for the tool surface itself). **Status:** covered.

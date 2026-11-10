@@ -134,17 +134,75 @@ def _score_of(result: dict, rule: dict) -> float | None:
     return None
 
 
+#: What a SARIF level means as a severity bucket. Three buckets against CVSS's five,
+#: which is why a level cannot simply outrank a score (see `_severity_of`).
+_LEVEL_BUCKET = {"error": "high", "warning": "medium", "note": "low"}
+
+#: SARIF levels from least to most severe. The comparison in `_severity_of` happens HERE
+#: rather than over severity buckets, because `critical` and `high` both write `error`
+#: (`reporting.constants.SARIF_SEVERITY_MAP`): comparing buckets would read every genuine
+#: critical as a downgrade to high.
+_LEVEL_ORDER = ("none", "note", "warning", "error")
+
+#: The level the writer emits for a given severity bucket, i.e. SARIF_SEVERITY_MAP read
+#: from the bucket side. Projecting the CVSS bucket through this is what makes the level
+#: comparable to it.
+_BUCKET_LEVEL = {
+    "critical": "error",
+    "high": "error",
+    "medium": "warning",
+    "low": "note",
+    "none": "none",
+}
+
+
 def _severity_of(result: dict, rule: dict) -> str:
-    """Resolve a finding's severity bucket from CVSS, then the SARIF level."""
-    sev = _props(result).get("cvss_base_severity") or _props(rule).get("cvss_base_severity")
-    if isinstance(sev, str) and sev.lower() in _SEVERITY:
-        return sev.lower()
-    score = _score_of(result, rule)
-    if score is not None:
-        return _severity_from_score(score)
-    # No CVSS ,  fall back to the SARIF level (error/warning/note).
+    """Resolve a finding's severity bucket from CVSS, with the SARIF level as a ceiling.
+
+    WHY A CEILING. The CVSS properties on a result are the OWASP CATEGORY's score,
+    stamped identically onto every finding in that category by
+    ``sarif_generator.SARIFGenerator._generate_results``. The ``level`` is the only
+    PER-FINDING severity signal the writer produces: ``_get_severity_level`` derives it
+    from the probe's own markers. Resolving CVSS first therefore let a constant override
+    a variable, and an oracle that deliberately graded one row down kept publishing it
+    at the category's severity.
+
+    Measured 2026-11-10 on a third-party cohort member: the supply-chain probe wrote
+    ``level: warning`` with marker ``medium`` after the lockfile reader downgraded a
+    direct-URL dependency, and the rendered report's headline read ``critical: 1``.
+    ``bl-204`` met the same ordering in 2026-10-30 through withdrawals and patched around
+    it with ``_is_withdrawn``, because a withdrawn row is the extreme case of a
+    downgraded one.
+
+    The level cannot simply win: it carries three buckets against CVSS's five, so
+    preferring it would demote every genuine ``critical`` to ``high``. So it acts as a
+    ceiling. A level resolving LOWER than the score is a deliberate downgrade and wins; a
+    level at or above it leaves the score's precision alone.
+    """
     level = result.get("level") or _as_dict(rule.get("defaultConfiguration")).get("level", "")
-    return {"error": "high", "warning": "medium", "note": "low"}.get(level, "none")
+    level_bucket = _LEVEL_BUCKET.get(level)
+
+    sev = _props(result).get("cvss_base_severity") or _props(rule).get("cvss_base_severity")
+    cvss_bucket: str | None = None
+    if isinstance(sev, str) and sev.lower() in _SEVERITY:
+        cvss_bucket = sev.lower()
+    else:
+        score = _score_of(result, rule)
+        if score is not None:
+            cvss_bucket = _severity_from_score(score)
+
+    if cvss_bucket is None:
+        # No CVSS at all ,  the level is the only signal there is.
+        return level_bucket or "none"
+    if level_bucket is None:
+        return cvss_bucket
+    # Project the score's bucket back to the level the writer would have emitted for it,
+    # and compare level to level. A result level BELOW that projection is a deliberate
+    # downgrade by an oracle and wins; anything else leaves the score's precision alone.
+    cvss_level = _BUCKET_LEVEL.get(cvss_bucket, "error")
+    if _LEVEL_ORDER.index(level) < _LEVEL_ORDER.index(cvss_level):
+        return level_bucket
+    return cvss_bucket
 
 
 #: What a withdrawal looks like in a stored report. `scripts/rescore_sarif.py --apply`

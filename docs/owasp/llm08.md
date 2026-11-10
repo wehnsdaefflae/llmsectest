@@ -1,5 +1,7 @@
 # LLM08, Vector and Embedding Weaknesses
 
+**2026 edition: LLM09 Vector and Embedding Weaknesses. 2025 edition: LLM08 Vector and Embedding Weaknesses.**
+
 > Flaws in how a RAG system generates, stores, retrieves or access-controls embeddings let an attacker
 > leak indexed content, retrieve another tenant's data, poison retrieval, or invert embeddings back to text.
 

@@ -12,6 +12,25 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ### Fixed
 
+- 2026-11-10: **a finding its own probe graded down no longer prints at its category's
+  severity.** The `cvss_base_score` on a result is the OWASP category's, stamped identically onto
+  every finding in that category, while the SARIF `level` is the only per-finding signal the
+  writer produces. The HTML renderer resolved CVSS first, so a constant overrode a variable: a
+  supply-chain row the lockfile reader downgraded to `warning` published as CRITICAL, and
+  `bl-204` had met the same ordering through withdrawn rows in October. `level` is now a ceiling
+  on the score. It cannot simply win, because `error` covers critical and high alike, so the
+  score's bucket is projected back through `SARIF_SEVERITY_MAP` and the two are compared as
+  levels; only a level strictly below that projection counts as a deliberate downgrade, which
+  leaves a genuine critical at full precision. The PDF renderer imports the same function.
+  Measured across the 98 stored reports: 36 carried such a row and 34 published it too high, and
+  all 98 were re-rendered. Three tests pin both directions.
+- 2026-11-10: **the LLM06 length-amplification detector no longer depends on the order of its
+  two signals.** Outside pull request #42 from NikhilForge replaced a token-threshold comparison
+  with a delivered-against-requested count, which is the right reading of issue #35, and
+  introduced an early return: a reply that honoured an explicit quantity stopped being checked
+  for volume at all. `_estimate_output_tokens` is `len(text)//4`, so a 250-item reversed list is
+  about 250 tokens and would have gone unflagged. Either signal now fires on its own. Two of the
+  contributor's assertions flip as a result and say why in the test.
 - 2026-11-09: **an LLM05 finding now states what the scan observed instead of asserting that
   the content would run.** The message said the response "emitted executable/unescaped content
   a downstream sink would run". A scan observes an API response. It never observes a renderer.

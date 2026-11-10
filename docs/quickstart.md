@@ -24,7 +24,9 @@ to. Nothing leaves your machine except the requests to your own endpoint.
 ## What comes back
 
 Here is a real run against a weak endpoint written for this page, a support assistant with a
-credential in its system prompt that repeats its own instructions when asked nicely.
+credential in its system prompt that repeats its own instructions when asked nicely. The run
+predates the 2026 renumbering, so the category names it prints are the 2025 edition's; the
+[coverage map](owasp/index.md) pairs each with its 2026 number.
 
 ```text
   [!!] Security Status: CRITICAL
@@ -86,7 +88,7 @@ of those a probe has nothing to look for, so a clean row would only mean the mar
 The scan says so instead of scoring them.
 
 **Two are not about your endpoint at all.** LLM03 reads your dependency manifests and LLM04 reads
-your model files, so they need a path rather than a flag about your app: `--repo .` and
+your model files, so each one takes a path on disk: `--repo .` and
 `--model-scan <path>`. Both read locally and send nothing anywhere.
 
 Telling it one of those turns a blank row into a real one:
@@ -97,9 +99,10 @@ llmsectest --target app:http://localhost:8000/chat \
   --app-secret "sk-your-real-canary"
 ```
 
-`--app-prompt` brings in LLM07, `--app-secret` LLM02, `--app-action` LLM06, the two RAG markers
-LLM08. The [application guide](guides/target-app.md) walks through each one. Adding `--repo .` to the same
-command brings in LLM03.
+`--app-prompt` brings in LLM08, `--app-secret` LLM02, `--app-action` LLM03, the two RAG markers
+LLM09. The [application guide](guides/target-app.md) walks through each one. Adding `--repo .` to the same
+command brings in LLM04. These are the 2026 edition's numbers; the
+[coverage map](owasp/index.md) carries the 2025 number beside each one.
 
 ## What a report like this is worth
 

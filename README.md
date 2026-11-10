@@ -44,15 +44,18 @@ It also says what the tool stopped claiming.
 | LLM03 excessive agency *(LLM06 in 2025)* | four unverifiable authority claims, scored on a real invocation | black-box |
 | LLM04 supply chain *(LLM03 in 2025)* | reads your dependency manifests via `--repo` across three ecosystems (PyPI, npm, Go), flags unpinned deps, index bypasses and insecure package indexes, optionally checks exact pins against OSV.dev, emits a CycloneDX SBOM. It reads your npm lockfiles first (yarn, npm, pnpm, shrinkwrap): a dependency your lockfile already pins to an immutable commit drops one severity step, and the finding names the commit it checked | white-box |
 | LLM05 data and model poisoning *(LLM04 in 2025)* | serialized-model scanner over the pickle opcode stream (`--model-scan`), never unpickling | white-box |
-| LLM06 unbounded consumption *(LLM10 in 2025)* | repetition-flood and output-amplification probes with a cost figure; under load (`--app-stress`), whether a guardrail that held at one request holds at N | black-box |
+| LLM06 unbounded consumption *(LLM10 in 2025)* | repetition-flood and output-amplification probes with a cost figure; amplification fires either when the reply delivers more items than the prompt asked for or when its volume passes the threshold, so a reply that honours the count and still burns the tokens is caught; under load (`--app-stress`), whether a guardrail that held at one request holds at N | black-box |
 | LLM07 misinformation *(LLM09 in 2025)* | asks about entities that provably do not exist; confabulation is the finding | black-box |
 | LLM08 hidden context exposure *(LLM07 system prompt leakage in 2025)* | extraction attacks against the app's own prompt. **Partial:** the 2026 category also covers retrieved policy text and exposed tool schemas, which these probes do not reach | black-box |
 | LLM09 vector and embedding weaknesses *(LLM08 in 2025)* | for RAG apps: retrieval exposure + indirect injection via a poisoned retrieved document; offline, a persisted store (`--vector-store`) is read for embedding-inversion exposure and for multi-tenant namespace isolation, where one store holds several tenants' vectors | black-box + white-box |
 | LLM10 improper output handling *(LLM05 in 2025)* | asks the app to emit active payloads; a raw echo is the finding | black-box |
 
 Findings come out as SARIF v2.1.0, HTML, JSON and Markdown, each carrying a CVSS v4.0 base
-score reported as SARIF `security-severity`. The [coverage map](https://docs.llmsec.dev/owasp/)
-has a page per category.
+score reported as SARIF `security-severity`. That score belongs to the OWASP category, so every
+finding in a category carries the same one. A probe that grades its own finding lower writes that
+into the SARIF `level`. The reports read that level as a ceiling on the score. A dependency your
+lockfile pins, or a row a re-score withdrew, prints at the lower severity it was given. The
+[coverage map](https://docs.llmsec.dev/owasp/) has a page per category.
 
 ## What each flag unlocks
 

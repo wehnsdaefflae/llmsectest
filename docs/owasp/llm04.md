@@ -1,5 +1,7 @@
 # LLM04, Data and Model Poisoning
 
+**2026 edition: LLM05 Data and Model Poisoning. 2025 edition: LLM04 Data and Model Poisoning.**
+
 > Tampered training/fine-tuning data or a tampered model artifact introduces backdoors, bias or, most
 > directly, code that runs when the model is loaded.
 
