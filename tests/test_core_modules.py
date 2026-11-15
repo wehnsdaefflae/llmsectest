@@ -8,6 +8,7 @@ import json
 
 import pytest
 
+from llmsectest.reporting import risk_scorer
 from llmsectest.reporting.baseline_manager import (
     BaselineManager,
     BaselineSnapshot,
@@ -1108,6 +1109,16 @@ class TestRiskScoringEngine:
         low = engine._calculate_confidence(5, False, False)
         high = engine._calculate_confidence(50, True, True)
         assert high > low
+
+    def test_risk_score_names_the_function_behind_each_score(self, engine, mixed_results):
+        """Each aggregated score says which function produced it, read from the function itself."""
+        stats = calculate_statistics(mixed_results)
+        score = engine.calculate_risk(mixed_results, stats)
+        assert score.aggregations == {
+            "category_scores": risk_scorer.capped_scaled_failure_rate.__name__,
+            "severity_scores": risk_scorer.weight_scaled_failure_rate.__name__,
+            "overall_score": risk_scorer.weighted_factor_sum.__name__,
+        }
 
     def test_recommendations_generated(self, engine, mixed_results):
         """Recommendations are non-empty."""

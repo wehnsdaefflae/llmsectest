@@ -4,10 +4,37 @@ Calculates comprehensive risk scores based on test results, severity,
 OWASP categories, trends, and organizational priorities.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import ClassVar
 
 from .owasp_metadata import get_owasp_markers_from_test
+
+
+def capped_scaled_failure_rate(failed: int, total: int, multiplier: float) -> float:
+    """Category score: the failure rate as a percentage, scaled by the category multiplier, capped at 100."""
+    return min(100.0, (failed / total) * 100 * multiplier)
+
+
+def weight_scaled_failure_rate(failed: int, total: int, weight: float) -> float:
+    """Severity score: the failure rate as a percentage, scaled by weight/10, capped at 100."""
+    return min(100.0, (failed / total) * 100 * (weight / 10))
+
+
+def weighted_factor_sum(
+    failure_score: float,
+    severity_score: float,
+    category_risk: float,
+    trend_score: float,
+    baseline_score: float,
+) -> float:
+    """Overall score: the weighted sum of the five risk factors."""
+    return (
+        failure_score * 0.30 +
+        severity_score * 0.25 +
+        category_risk * 0.20 +
+        trend_score * 0.15 +
+        baseline_score * 0.10
+    )
 
 
 @dataclass
@@ -25,6 +52,7 @@ class RiskScore:
 
     factors: dict[str, float]  # Individual factor contributions
     recommendations: list[str]
+    aggregations: dict[str, str] = field(default_factory=dict)  # score name -> name of the function that computed it
 
 
 class RiskScoringEngine:
@@ -94,12 +122,12 @@ class RiskScoringEngine:
         factors["regression_risk"] = baseline_score
 
         # Weighted overall score
-        overall_score = (
-            failure_score * 0.30 +
-            severity_score * 0.25 +
-            factors["category_risk"] * 0.20 +
-            trend_score * 0.15 +
-            baseline_score * 0.10
+        overall_score = weighted_factor_sum(
+            failure_score,
+            severity_score,
+            factors["category_risk"],
+            trend_score,
+            baseline_score,
         )
 
         # Determine risk level
@@ -130,6 +158,11 @@ class RiskScoringEngine:
             confidence=confidence,
             factors=factors,
             recommendations=recommendations,
+            aggregations={
+                "category_scores": capped_scaled_failure_rate.__name__,
+                "severity_scores": weight_scaled_failure_rate.__name__,
+                "overall_score": weighted_factor_sum.__name__,
+            },
         )
 
     def _calculate_failure_score(self, statistics: dict) -> float:
@@ -185,11 +218,10 @@ class RiskScoringEngine:
             if data["total"] == 0:
                 continue
 
-            failure_rate = data["failed"] / data["total"]
             multiplier = self.CATEGORY_MULTIPLIERS.get(category, 1.0)
-
-            # Category score with multiplier
-            category_scores[category] = min(100.0, failure_rate * 100 * multiplier)
+            category_scores[category] = capped_scaled_failure_rate(
+                data["failed"], data["total"], multiplier
+            )
 
         return category_scores
 
@@ -363,9 +395,8 @@ class RiskScoringEngine:
                 failed = data.get("failed", 0)
 
                 if total > 0:
-                    failure_rate = failed / total
                     weight = self.SEVERITY_WEIGHTS.get(severity, 1.0)
-                    scores[severity] = min(100.0, failure_rate * 100 * (weight / 10))
+                    scores[severity] = weight_scaled_failure_rate(failed, total, weight)
                 else:
                     scores[severity] = 0.0
             else:
