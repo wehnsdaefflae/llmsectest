@@ -1036,6 +1036,17 @@ class TestConsoleSummary:
         output = generate_console_summary(sample_results, show_colors=False, sarif_path="results/test.sarif")
         assert "results/test.sarif" in output
 
+    def test_summary_names_the_function_behind_each_risk_score(self, sample_results):
+        """The terminal states how the risk scores were produced, read from the functions."""
+        risk = RiskScoringEngine().calculate_risk(sample_results, calculate_statistics(sample_results))
+        output = generate_console_summary(sample_results, risk_score=risk, show_colors=False)
+        for function in (
+            risk_scorer.capped_scaled_failure_rate,
+            risk_scorer.weight_scaled_failure_rate,
+            risk_scorer.weighted_factor_sum,
+        ):
+            assert function.__name__ in output
+
 
 # =============================================================================
 # Risk Scoring Engine Tests
