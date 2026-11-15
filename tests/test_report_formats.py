@@ -21,11 +21,14 @@ import json
 
 import pytest
 
+from llmsectest.reporting import risk_scorer
 from llmsectest.reporting.html_generator import HTMLReportGenerator
 from llmsectest.reporting.json_summary_generator import JSONSummaryGenerator
 from llmsectest.reporting.markdown_generator import MarkdownReportGenerator
 from llmsectest.reporting.models import TestResult
 from llmsectest.reporting.report_manager import ReportManager
+from llmsectest.reporting.risk_scorer import RiskScoringEngine
+from llmsectest.reporting.statistics import calculate_statistics
 
 TOOL = "llmsectest"
 VERSION = "0.1.0"
@@ -176,6 +179,18 @@ class TestJSONSummary:
         data = json.loads(JSONSummaryGenerator(TOOL, VERSION).generate([]))
         assert data["summary"]["total_tests"] == 0
         assert data["summary"]["pass_rate"] == 0
+
+    def test_risk_assessment_names_the_function_behind_each_score(self, results):
+        """The report states how each aggregated score was produced, read from the function."""
+        risk = RiskScoringEngine().calculate_risk(results, calculate_statistics(results))
+        data = json.loads(
+            JSONSummaryGenerator(TOOL, VERSION).generate(results, risk_score=risk)
+        )
+        assert data["risk_assessment"]["aggregations"] == {
+            "category_scores": risk_scorer.capped_scaled_failure_rate.__name__,
+            "severity_scores": risk_scorer.weight_scaled_failure_rate.__name__,
+            "overall_score": risk_scorer.weighted_factor_sum.__name__,
+        }
 
 
 class TestReportManager:
