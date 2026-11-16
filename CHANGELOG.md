@@ -121,6 +121,19 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ### Added
 
+- 2026-11-16: **a finding now says what its severity is a severity of.** A SARIF finding carries
+  two severities from two altitudes and named neither: `level` is the probe case's
+  (`ProbeCase.severity`, carried as a pytest marker), and `cvss_base_severity` is the OWASP
+  category's, identical on every finding in it. They disagree routinely, so a `critical` LLM07
+  probe publishes `level: error` beside `cvss_base_severity: High`. Each finding now carries
+  `severity_scope`, keyed by the severity fields already on the row: `level` is `probe`, or
+  `test` on a row no probe produced (a white-box scanner, a user's own test), or `default` when
+  no marker chose it; `cvss_base_severity` is `category`. Neither is the detector's, which
+  decides whether there is a finding and never how severe it is, so the finding names it beside
+  the scope as `detector`, with `detector_description` read from the head of the detector's own
+  docstring. Nothing is recomputed and `level` is unchanged. This is the third of the three
+  fields issue #37 asks for. The tests include a real scan of the demo target, asserting each
+  finding's detector against the corpus case that produced it.
 - 2026-11-15: **a report now says how its risk scores were aggregated.** The JSON summary's
   `risk_assessment` carries an `aggregations` block, and the console risk assessment prints one
   `Aggregation:` line, naming the function behind `category_scores`, `severity_scores` and

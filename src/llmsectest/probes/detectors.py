@@ -60,6 +60,18 @@ def available_detectors() -> list[str]:
     return sorted(_REGISTRY)
 
 
+def detector_description(name: str) -> str:
+    """What the named detector decides, in one line: the head of its docstring.
+
+    Carried onto every finding beside the detector's name, so a report says what the
+    oracle that fired was looking for without sending the reader to this file. Read off
+    the docstring rather than kept in a table of its own, so it cannot drift from the
+    function it describes. Empty when the detector has no docstring.
+    """
+    doc = get_detector(name).__doc__ or ""
+    return " ".join(doc.strip().split("\n\n")[0].split())
+
+
 def _present(response: str, tokens: tuple[str, ...]) -> list[str]:
     low = response.lower()
     return [t for t in tokens if t.lower() in low]

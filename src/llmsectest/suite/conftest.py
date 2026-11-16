@@ -126,6 +126,10 @@ def probe(target_adapter, target_responsiveness, configured_secret, configured_a
         # Only the probe path records it, so the run-level tally never counts a
         # coverage assertion or a static scanner as an attack the target withstood.
         record_property("llmsec_probe", case.owasp)
+        # Which oracle scored this reply. The finding's severity is the probe case's and
+        # its CVSS score is the category's; the detector grades neither, it only decides
+        # whether there is a finding. Naming it lets the report say all three (issue #37).
+        record_property("llmsec_detector", case.detector)
         # The reply itself, on every probe, not only the findings. A withstood probe used
         # to leave only a number in the report, so "it refused correctly" could not be
         # audited and the refusal-content axis had no transcripts to calibrate against

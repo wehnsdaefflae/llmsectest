@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from .. import envvars
+from ..probes.detectors import detector_description
 from .compliance_mapper import (
     get_compliance_mappings,
     get_compliance_summary,
@@ -166,6 +167,49 @@ def _finding_identity(result: TestResult, rule_id: str, location: dict[str, Any]
     case = result.properties.get("llmsec_case") or ""
     parts = (rule_id, result.nodeid or result.test_name or "", str(case), _stable_target(str(artifact)))
     return hashlib.sha256("\x1f".join(parts).encode("utf-8")).hexdigest()
+
+
+def _severity_provenance(result: TestResult) -> dict[str, Any]:
+    """Name the level each severity on a finding belongs to, and the detector behind it.
+
+    A finding carries up to two severities that come from different altitudes and
+    routinely disagree, and a reader used to have to guess which was which:
+
+    * ``level`` is the **probe**'s: ``ProbeCase.severity``, carried as a pytest marker.
+      On a row no probe produced (a white-box scanner, a user's own test) it is the
+      **test**'s marker, and with no marker at all it is this generator's **default**.
+    * ``cvss_base_severity`` is the OWASP **category**'s, identical on every finding in
+      that category.
+
+    Neither is the detector's. A detector decides whether a reply is a finding, never how
+    severe one is, so it is named beside the scope with what it looks for rather than
+    listed as a third altitude it does not have. Nothing here is recomputed: the keys of
+    ``severity_scope`` are the severity fields already on the row.
+    """
+    has_marker = any(marker in SARIF_SEVERITY_MAP for marker in result.markers)
+    if not has_marker:
+        level_scope = "default"
+    elif result.properties.get("llmsec_probe"):
+        level_scope = "probe"
+    else:
+        level_scope = "test"
+    scope = {"level": level_scope}
+    owasp_markers = get_owasp_markers_from_test(result.markers)
+    if owasp_markers and cvss_for_category(owasp_markers[0]) is not None:
+        scope["cvss_base_severity"] = "category"
+
+    provenance: dict[str, Any] = {"severity_scope": scope}
+    detector = result.properties.get("llmsec_detector")
+    if detector:
+        provenance["detector"] = detector
+        try:
+            description = detector_description(str(detector))
+        except KeyError:
+            # Registered in another process, or since removed: the name still stands.
+            description = ""
+        if description:
+            provenance["detector_description"] = description
+    return provenance
 
 
 class SARIFGenerator:
@@ -704,7 +748,7 @@ class SARIFGenerator:
 
                 rule_id = self._get_rule_id(result)
                 physical = self._physical_location(result)
-                sarif_result = {
+                sarif_result: dict[str, Any] = {
                     "ruleId": rule_id,
                     "level": self._get_severity_level(result),
                     "message": {"text": message_text},
@@ -742,6 +786,10 @@ class SARIFGenerator:
                     # Add remediation suggestions as SARIF fixes
                     if owasp_category.remediation_steps:
                         sarif_result["fixes"] = self._generate_fixes(owasp_category)
+
+                # What each severity on this row is a severity OF, and which oracle
+                # decided there was a row at all (issue #37).
+                sarif_result["properties"].update(_severity_provenance(result))
 
                 # Add CWE information
                 cwe_ids = get_cwe_tags(result.markers)
