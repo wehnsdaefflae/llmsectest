@@ -121,6 +121,16 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ### Added
 
+- 2026-11-15: **a report now says how its risk scores were aggregated.** The JSON summary's
+  `risk_assessment` carries an `aggregations` block, and the console risk assessment prints one
+  `Aggregation:` line, naming the function behind `category_scores`, `severity_scores` and
+  `overall_score`. The names are read from the functions themselves
+  (`capped_scaled_failure_rate`, `weight_scaled_failure_rate`, `weighted_factor_sum`, extracted
+  from `RiskScoringEngine` with their arithmetic unchanged), so a label cannot drift from the
+  code. On the demo run the scores are identical before and after. This is the first of the
+  three fields issue #37 asks for; the absolute-versus-relative field and the severity
+  altitude are left for their own changes. Three tests pin the names on the score, in the JSON
+  and in the console.
 - 2026-10-30: **per-probe latency rows skip probes that timed out, instead of averaging their
   timeout into the figure.** An outcome now carries a `timed_out` bit. The latency block and
   the console line both exclude those rows, so a run with one hung probe no longer reports a

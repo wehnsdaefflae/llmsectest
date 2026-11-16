@@ -86,6 +86,7 @@ class JSONSummaryGenerator:
                 "severity_scores": risk_score.severity_scores,
                 "trend_score": risk_score.trend_score,
                 "baseline_score": risk_score.baseline_score,
+                "aggregations": risk_score.aggregations,
                 "factors": risk_score.factors,
                 "recommendations": risk_score.recommendations
             }

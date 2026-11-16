@@ -283,6 +283,12 @@ def generate_console_summary(
         lines.append(f"  {c.CYAN}Risk Assessment:{c.RESET}")
         lines.append(f"    Score:      {risk_color}{risk_score.overall_score:.1f}/100 ({risk_score.risk_level.upper()}){c.RESET}")
         lines.append(f"    Confidence: {risk_score.confidence * 100:.0f}%")
+        if risk_score.aggregations:
+            how = ", ".join(
+                f"{score.replace('_', ' ')}: {name}"
+                for score, name in risk_score.aggregations.items()
+            )
+            lines.append(f"    Aggregation: {how}")
         top_factors = sorted(risk_score.factors.items(), key=lambda x: x[1], reverse=True)[:3]
         if top_factors:
             for factor, value in top_factors:
