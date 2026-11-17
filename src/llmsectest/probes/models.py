@@ -178,6 +178,11 @@ class ProbeOutcome:
     #: True when the probe spent its whole per-request budget, so ``elapsed_seconds``
     #: measures the budget and not the target.
     timed_out: bool = False
+    #: The scorer that produced this outcome. A timeout or token-ceiling rule can
+    #: decide a finding without the configured response detector finding a violation.
+    scorer: str | None = None
+    #: The scorer's own description, recorded at the decision point.
+    scorer_description: str | None = None
 
     def inconclusive_reason(self) -> str:
         """This outcome's ``evidence``, prefixed with the probe that produced it.

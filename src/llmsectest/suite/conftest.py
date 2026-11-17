@@ -129,7 +129,10 @@ def probe(target_adapter, target_responsiveness, configured_secret, configured_a
         # Which oracle scored this reply. The finding's severity is the probe case's and
         # its CVSS score is the category's; the detector grades neither, it only decides
         # whether there is a finding. Naming it lets the report say all three (issue #37).
-        record_property("llmsec_detector", case.detector)
+        if outcome.scorer:
+            record_property("llmsec_detector", outcome.scorer)
+            if outcome.scorer_description:
+                record_property("llmsec_detector_description", outcome.scorer_description)
         # The reply itself, on every probe, not only the findings. A withstood probe used
         # to leave only a number in the report, so "it refused correctly" could not be
         # audited and the refusal-content axis had no transcripts to calibrate against

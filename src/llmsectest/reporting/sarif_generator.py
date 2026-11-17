@@ -202,11 +202,13 @@ def _severity_provenance(result: TestResult) -> dict[str, Any]:
     detector = result.properties.get("llmsec_detector")
     if detector:
         provenance["detector"] = detector
-        try:
-            description = detector_description(str(detector))
-        except KeyError:
-            # Registered in another process, or since removed: the name still stands.
-            description = ""
+        description = result.properties.get("llmsec_detector_description")
+        if not description:
+            try:
+                description = detector_description(str(detector))
+            except KeyError:
+                # Historical or externally recorded scorer: keep its name without a guess.
+                description = ""
         if description:
             provenance["detector_description"] = description
     return provenance

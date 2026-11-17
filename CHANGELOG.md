@@ -12,6 +12,13 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ### Fixed
 
+- 2026-11-17: SARIF findings now name the scorer that made the decision. A
+  differential timeout names `differential_timeout`; a token-ceiling finding names
+  `output_ceiling_reached`. Both paths previously named the configured response
+  detector. Three regression tests cover those paths and the ordinary-response
+  control. Verdicts and severity values remain unchanged. Florian Zindel
+  contributed the severity-scope fields in PR #46; this fix follows its review.
+
 - 2026-11-10: **a finding its own probe graded down no longer prints at its category's
   severity.** The `cvss_base_score` on a result is the OWASP category's, stamped identically onto
   every finding in that category, while the SARIF `level` is the only per-finding signal the

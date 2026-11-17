@@ -121,6 +121,16 @@ Each of these is a checked property with a test behind it. The guide records the
 each one in
 [Red-team your defense](https://docs.llmsec.dev/guides/red-team-your-defense/).
 
+## Read a finding's severity
+
+The unreleased SARIF output adds `severity_scope`, `detector` and
+`detector_description` to findings. The probe or test supplies `level`. The OWASP
+category supplies `cvss_base_severity`. The scorer decides whether an observation
+becomes a finding; it does not calculate severity. The report names the scorer
+that made the decision, including the differential-timeout and token-ceiling
+rules. This change leaves verdicts and severity values unchanged. The HTML and
+PDF renderers do not display these provenance fields yet.
+
 ## Use it from Python
 
 Every provider is wrapped in one `LLMAdapter` contract, so a probe targets any model the same way.

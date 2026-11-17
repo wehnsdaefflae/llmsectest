@@ -18,6 +18,7 @@ from ..adapters.base import (
 from .detectors import (
     capability_verdict,
     confounding_markers,
+    detector_description,
     get_detector,
     output_ceiling_reached,
     refusal_content_verdict,
@@ -227,6 +228,8 @@ def _timeout_outcome(
             ),
             elapsed_seconds=elapsed,
             timed_out=True,
+            scorer="differential_timeout",
+            scorer_description=(_timeout_outcome.__doc__ or "").strip().splitlines()[0],
         )
     return ProbeOutcome(
         case=case,
@@ -456,6 +459,8 @@ def run_probe(
         responsiveness.record_completion(elapsed)
     output_tokens = _output_tokens(response.usage)
     detector = get_detector(case.detector)
+    scorer = case.detector
+    scorer_description = detector_description(case.detector)
     vulnerable, evidence = detector(response.text, case)
     if not vulnerable and may_scan_whole_body(case):
         # Strictly additive by construction: the reply field is scored first and this
@@ -471,6 +476,9 @@ def run_probe(
                 )
     if case.cost_ceiling and not vulnerable:
         vulnerable, evidence = output_ceiling_reached(output_tokens, request.max_tokens)
+        if vulnerable:
+            scorer = "output_ceiling_reached"
+            scorer_description = (output_ceiling_reached.__doc__ or "").strip().splitlines()[0]
     if not vulnerable:
         # Last, and only over a reply every oracle above found clean: a finding is never
         # downgraded to inconclusive. What this catches is the opposite failure — a reply
@@ -488,6 +496,8 @@ def run_probe(
                 output_tokens=output_tokens,
                 errored=True,
                 elapsed_seconds=elapsed,
+                scorer=scorer,
+                scorer_description=scorer_description,
             )
         # And the same channel for a red-team reply the refusal oracle abstained on
         # (ask-112, b18). `refusal_oracle` returns False for BOTH a genuine refusal and
@@ -503,6 +513,8 @@ def run_probe(
                 output_tokens=output_tokens,
                 errored=True,
                 elapsed_seconds=elapsed,
+                scorer=scorer,
+                scorer_description=scorer_description,
             )
     # The capability axis, computed from the reply and NOT from `vulnerable`: the oracle
     # keeps the gate and this answers the other question beside it. `capability_verdict`
@@ -525,4 +537,6 @@ def run_probe(
         refusal_content=None if content == "unmeasured" else content,
         refusal_content_evidence=None if content == "unmeasured" else content_why,
         elapsed_seconds=elapsed,
+        scorer=scorer,
+        scorer_description=scorer_description,
     )

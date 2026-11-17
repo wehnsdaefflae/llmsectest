@@ -19,6 +19,21 @@ and exits 0. Drop `--target demo-defended` to scan the weak demo instead. It exi
 it has real findings. Between those two you can see what a pass and a failure look like before
 pointing anything at your own app.
 
+## Read severity and scorer provenance
+
+The unreleased SARIF output adds `severity_scope`, `detector` and
+`detector_description` to findings. `severity_scope` identifies the source of each
+severity field. The probe or test supplies `level`. The OWASP category supplies
+`cvss_base_severity`. The scorer decides whether the observation becomes a
+finding. It does not calculate that finding's severity.
+
+The report records the scorer that made the decision. A differential-timeout
+finding names `differential_timeout`. A token-ceiling finding names
+`output_ceiling_reached`. An ordinary response finding names its response
+detector. The description comes from the scorer's docstring. This change leaves
+the verdict and severity values unchanged. The HTML and PDF renderers do not
+display these provenance fields yet.
+
 ## GitHub Actions
 
 ```yaml
