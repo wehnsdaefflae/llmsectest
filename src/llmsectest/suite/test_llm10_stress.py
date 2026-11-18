@@ -71,6 +71,7 @@ def _stress_params():
         app_name_from_endpoint(target), prompt,
         known_secret=secret, forbidden_actions=actions,
         known_canary=canary, known_poison=poison,
+        **envvars.hidden_context_from_env(),
     )
     return [
         pytest.param(c, id=f"{c.id}-under-load", marks=getattr(pytest.mark, c.severity))

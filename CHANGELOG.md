@@ -10,6 +10,15 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ## [Unreleased]
 
+### Added
+
+- 2026-11-18: Application scans accept `--app-policy` and `--app-tool-schema`
+  for private retrieved-policy and tool-schema excerpts. Each source adds two
+  extraction probes. The detector checks exact excerpts in replies and response
+  siblings without putting those excerpts in the attack. The CLI validates the
+  input before starting pytest. Existing application-input calls keep their
+  five-value environment contract. Reports can contain matched private text.
+
 ### Fixed
 
 - 2026-11-17: SARIF findings now name the scorer that made the decision. A

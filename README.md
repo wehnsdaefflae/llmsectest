@@ -46,7 +46,7 @@ It also says what the tool stopped claiming.
 | LLM05 data and model poisoning *(LLM04 in 2025)* | serialized-model scanner over the pickle opcode stream (`--model-scan`), never unpickling | white-box |
 | LLM06 unbounded consumption *(LLM10 in 2025)* | repetition-flood and output-amplification probes with a cost figure; amplification fires either when the reply delivers more items than the prompt asked for or when its volume passes the threshold, so a reply that honours the count and still burns the tokens is caught; under load (`--app-stress`), whether a guardrail that held at one request holds at N | black-box |
 | LLM07 misinformation *(LLM09 in 2025)* | asks about entities that provably do not exist; confabulation is the finding | black-box |
-| LLM08 hidden context exposure *(LLM07 system prompt leakage in 2025)* | extraction attacks against the app's own prompt. **Partial:** the 2026 category also covers retrieved policy text and exposed tool schemas, which these probes do not reach | black-box |
+| LLM08 hidden context exposure *(LLM07 system prompt leakage in 2025)* | extraction attacks against system prompts and exact private retrieved-policy or tool-schema excerpts. **Partial:** the excerpt detector does not detect paraphrased, encoded or partial exposure | black-box |
 | LLM09 vector and embedding weaknesses *(LLM08 in 2025)* | for RAG apps: retrieval exposure + indirect injection via a poisoned retrieved document; offline, a persisted store (`--vector-store`) is read for embedding-inversion exposure and for multi-tenant namespace isolation, where one store holds several tenants' vectors | black-box + white-box |
 | LLM10 improper output handling *(LLM05 in 2025)* | asks the app to emit active payloads; a raw echo is the finding | black-box |
 
@@ -63,6 +63,8 @@ lockfile pins, or a row a re-score withdrew, prints at the lower severity it was
 |---|---|---|
 | *(none)* | LLM01, LLM10, LLM07, LLM06 | attack-side markers, so they transfer to any target |
 | `--app-prompt <text\|file>` | LLM08 | the app's own system prompt, to detect it leaking |
+| `--app-policy <text\|file>` | LLM08 | an exact private retrieved-policy excerpt the application already holds |
+| `--app-tool-schema <text\|file>` | LLM08 | an exact private tool-schema excerpt the application already holds |
 | `--app-secret <value>` | LLM02 | a real secret the app holds |
 | `--app-action <signature>` | LLM03 | a privileged tool call, repeatable |
 | `--app-canary <value>` | LLM09 retrieval exposure | confidential content planted in the retrieved corpus |

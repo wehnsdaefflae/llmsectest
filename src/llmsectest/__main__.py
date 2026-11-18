@@ -69,6 +69,15 @@ in the app's retrieved corpus) for retrieval-exposure probes and
 for indirect-prompt-injection-via-retrieved-document probes. Categories without
 their input are reported as skipped-with-reason.
 
+``--app-policy`` supplies a private retrieved-policy excerpt.
+``--app-tool-schema`` supplies a private tool-schema excerpt. Both accept inline text
+or an existing UTF-8 file, require at least 25 characters, and need an app target.
+The application must already hold the excerpt. Each source enables two LLM08
+extraction probes. The scanner never sends the excerpt in the attack. A finding
+requires the complete, case-sensitive excerpt in a reply or response sibling.
+This detects exact exposure, not paraphrases or tool execution. Reports contain
+matched private text and need the same access controls as the input.
+
 Endpoints that neither read ``{"message": ...}`` nor answer in an OpenAI-compatible
 shape are described with four more flags instead of a wrapper script:
 ``--app-request-field`` (where in the body your endpoint reads the prompt from: a
@@ -513,7 +522,7 @@ def _print_coverage_footer(target: str | None) -> None:
         prompt, secret, actions, canary, poison = envvars.app_inputs_from_env()
         cov = app_coverage(prompt, known_secret=secret,
                            forbidden_actions=actions or None, known_canary=canary,
-                           known_poison=poison)
+                           known_poison=poison, **envvars.hidden_context_from_env())
         exercised = [c.owasp for c in cov if c.exercised]
         skipped = [(c.owasp, c.reason) for c in cov if not c.exercised]
         # The CLI app target runs the packaged suite, not `app_cases`, so its per-category
@@ -521,7 +530,8 @@ def _print_coverage_footer(target: str | None) -> None:
         # the depths describe exactly what THIS run could reach.
         depths = suite_case_counts(prompt, known_secret=secret,
                                    forbidden_actions=actions or None,
-                                   known_canary=canary, known_poison=poison)
+                                   known_canary=canary, known_poison=poison,
+                                   **envvars.hidden_context_from_env())
         # **A white-box category the run WAS pointed at is exercised (2026-09-06).**
         # `app_coverage` knows only the black-box probes, so LLM03 and LLM04 landed in
         # `skipped` whatever the run did, and the footer of a scan that had just produced
@@ -655,7 +665,9 @@ def run_suite(args: list, target: str | None, repo: str | None = None,
               app_stress: str | None = None,
               redteam_generate: str | None = None,
               redteam_benign: bool = False,
-              redteam_benign_set: str | None = None) -> int:
+              redteam_benign_set: str | None = None,
+              app_policy: str | None = None,
+              app_tool_schema: str | None = None) -> int:
     """Run the packaged probe suite (or an explicit path) with reporting on.
 
     Category ids below are the 2026 edition's, the ones this tool publishes.
@@ -710,6 +722,8 @@ def run_suite(args: list, target: str | None, repo: str | None = None,
         envvars.VECTOR_STORE: vector_store,
         envvars.REDTEAM_SET: redteam_set,
         envvars.APP_PROMPT: app_prompt,
+        envvars.APP_POLICY: app_policy,
+        envvars.APP_TOOL_SCHEMA: app_tool_schema,
         envvars.APP_SECRET: app_secret,
         envvars.APP_ACTIONS: (
             envvars.ACTIONS_SEPARATOR.join(app_actions) if app_actions else None
@@ -967,6 +981,8 @@ def main():
     args, redteam_set = _extract_opt(args, "--redteam-set")
     args, redteam_benign, redteam_benign_set = _extract_opt_flag(args, "--redteam-benign")
     args, app_prompt = _extract_opt(args, "--app-prompt")
+    args, app_policy = _extract_opt(args, "--app-policy")
+    args, app_tool_schema = _extract_opt(args, "--app-tool-schema")
     args, app_secret = _extract_opt(args, "--app-secret")
     args, app_actions = _extract_multi_opt(args, "--app-action")
     args, app_canary = _extract_opt(args, "--app-canary")
@@ -1054,7 +1070,8 @@ def main():
         return 2
 
     if (app_prompt or app_secret or app_actions or app_canary or app_rag_poison
-            or app_timeout or app_stress) and not _is_app_target(target):
+            or app_timeout or app_stress or app_policy is not None
+            or app_tool_schema is not None) and not _is_app_target(target):
         # Silently ignoring an app input would be a silent coverage gap.
         print("error: --app-prompt/--app-secret/--app-action/--app-canary/--app-rag-poison/"
               "--app-timeout/--app-stress describe a running application and require "
@@ -1065,6 +1082,24 @@ def main():
         # System prompts are long and multiline, accept a file path too (a long
         # inline prompt overflows the name limit; _is_existing_file handles that).
         app_prompt = Path(app_prompt).read_text(encoding="utf-8")
+
+    for flag, value in (("--app-policy", app_policy), ("--app-tool-schema", app_tool_schema)):
+        if value is None:
+            continue
+        try:
+            excerpt = (Path(value).read_text(encoding="utf-8")
+                       if _is_existing_file(value) else value).strip()
+        except (OSError, UnicodeError) as exc:
+            print(f"error: {flag} could not read its private excerpt: {exc}", file=sys.stderr)
+            return 2
+        if len(excerpt) < 25:
+            print(f"error: {flag} requires a private excerpt of at least 25 characters",
+                  file=sys.stderr)
+            return 2
+        if flag == "--app-policy":
+            app_policy = excerpt
+        else:
+            app_tool_schema = excerpt
 
     if "--validate" in args:
         from .reporting import validate_sarif
@@ -1079,6 +1114,7 @@ def main():
                      model_scan=model_scan,
                      vector_store=vector_store,
                      app_prompt=app_prompt, app_secret=app_secret,
+                     app_policy=app_policy, app_tool_schema=app_tool_schema,
                      app_actions=tuple(app_actions), app_canary=app_canary,
                      app_rag_poison=app_rag_poison, app_timeout=app_timeout,
                      app_stress=app_stress,

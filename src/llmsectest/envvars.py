@@ -40,6 +40,17 @@ MODEL_SCAN = "LLMSECTEST_MODEL_SCAN"
 VECTOR_STORE = "LLMSECTEST_VECTOR_STORE"
 REDTEAM_SET = "LLMSECTEST_REDTEAM_SET"
 APP_PROMPT = "LLMSECTEST_APP_PROMPT"
+APP_POLICY = "LLMSECTEST_APP_POLICY"
+APP_TOOL_SCHEMA = "LLMSECTEST_APP_TOOL_SCHEMA"
+
+
+def hidden_context_from_env() -> dict[str, str | None]:
+    """Read private excerpts without changing app_inputs_from_env's public tuple."""
+    return {
+        "known_policy": os.environ.get(APP_POLICY) or None,
+        "known_tool_schema": os.environ.get(APP_TOOL_SCHEMA) or None,
+    }
+
 APP_SECRET = "LLMSECTEST_APP_SECRET"
 APP_ACTIONS = "LLMSECTEST_APP_ACTIONS"
 APP_CANARY = "LLMSECTEST_APP_CANARY"

@@ -1,7 +1,7 @@
 # LLM07, System Prompt Leakage
 
 **2026 edition: LLM08 Hidden Context Exposure. 2025 edition: LLM07 System Prompt Leakage.** The
-2026 edition renames this category and widens it: our probes cover the system-prompt subset.
+2026 edition widens this category. The application probes cover system prompts, private retrieved-policy text and private tool-schema excerpts.
 
 > Ask the application to repeat its instructions. It does.
 
@@ -33,8 +33,25 @@ application reproduced **your own text, verbatim**, not that a model said someth
 instruction. There is no scoring, no similarity threshold, and no way for a reply that merely talks about
 system prompts to be reported as a leak.
 
-Without `--app-prompt` the probe reports **skipped, naming the flag it needs**. It is never silently
-passed: we cannot know what a leak looks like for your app unless you tell us.
+The `--app-policy` and `--app-tool-schema` options add checks for private retrieved-policy text
+and private tool definitions. Each accepts inline text or an existing UTF-8 file. The application
+must already hold the supplied excerpt. The scanner does not plant it or send it in an attack.
+
+```bash
+llmsectest --target app:http://localhost:8000/chat \
+    --app-policy private-policy-excerpt.txt \
+    --app-tool-schema private-tool-schema-excerpt.txt
+```
+
+Each excerpt must contain at least 25 characters after surrounding whitespace is removed. Each
+source enables two extraction probes. The detector looks for the complete, case-sensitive
+excerpt in the reply and other string-valued response fields. A match establishes exposure of
+the configured private excerpt. It does not establish a tool invocation, privilege escalation or
+downstream execution. An absent match does not rule out paraphrased, encoded or partial exposure.
+Reports contain the matched excerpt, so reports need the same access controls as the private input.
+
+A scan without `--app-prompt`, `--app-policy` or `--app-tool-schema` reports this category as
+skipped and names the missing flags. The existing system-prompt probes remain available.
 
 Against a bare model (`--target ollama:…`), where LLMSecTest supplies the persona itself, it plants a
 canary in the system prompt and runs **five** techniques:

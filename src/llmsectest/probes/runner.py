@@ -115,6 +115,7 @@ _TOKEN_PRESENCE_DETECTORS = frozenset(
         "sensitive_disclosure",
         "system_prompt_leak",
         "disclosed_span",
+        "hidden_context_exposure",
         "retrieval_exposure",
         "excessive_agency",
         "unsafe_output",

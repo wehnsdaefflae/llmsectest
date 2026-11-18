@@ -42,11 +42,13 @@ def _params():
     prompt, secret, actions, _canary, _poison = envvars.app_inputs_from_env()
     cases = [
         c for c in app_cases(app_name_from_endpoint(target), prompt,
-                             known_secret=secret, forbidden_actions=actions or None)
+                             known_secret=secret, forbidden_actions=actions or None,
+                             **envvars.hidden_context_from_env())
         if c.owasp in _INPUT_CATEGORIES
     ]
     coverage = {c.owasp: c for c in app_coverage(prompt, known_secret=secret,
-                                                 forbidden_actions=actions or None)}
+                                                 forbidden_actions=actions or None,
+                                                 **envvars.hidden_context_from_env())}
     params = [
         pytest.param(c, id=c.id,
                      marks=(getattr(pytest.mark, c.severity), getattr(pytest.mark, c.owasp)))

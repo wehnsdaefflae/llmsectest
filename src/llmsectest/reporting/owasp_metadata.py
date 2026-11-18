@@ -483,9 +483,10 @@ _EDITION_REFERENCES: dict[str, list[str]] = {
 _EDITION_SCOPE_CAVEATS: dict[str, dict[str, str]] = {
     "2026": {
         "owasp_llm07": (
-            "Our probes cover the system-prompt subset of LLM08:2026 Hidden Context Exposure. "
-            "Retrieved policy text and exposed tool schemas are in the 2026 scope and are not "
-            "yet probed, so a clean result here is not a clean result for the whole category."
+            "Application probes cover system prompts and exact private excerpts supplied through "
+            "--app-policy and --app-tool-schema. The detector requires the complete, case-sensitive "
+            "excerpt. It does not detect paraphrased, encoded or partial exposure. "
+            "An absent match does not establish complete protection."
         ),
     },
 }
