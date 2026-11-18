@@ -1,0 +1,2268 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Pytest-native security testing for LLM applications — OWASP LLM Top 10 (2026).">
+      
+      
+      
+        <link rel="canonical" href="https://docs.llmsec.dev/guides/target-app/">
+      
+      
+        <link rel="prev" href="../../getting-started/">
+      
+      
+        <link rel="next" href="../adapter-prompt/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>Test your running app - LLMSecTest</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#test-your-running-application" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="LLMSecTest" class="md-header__button md-logo" aria-label="LLMSecTest" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            LLMSecTest
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Test your running app
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/wehnsdaefflae/llmsectest" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    wehnsdaefflae/llmsectest
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../quickstart/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Quickstart
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../getting-started/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Getting started
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="./" class="md-tabs__link">
+          
+  
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../owasp/" class="md-tabs__link">
+          
+  
+  
+  OWASP LLM Top 10
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../cli/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  CLI reference
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../api/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  API reference
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../changelog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Changelog
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="LLMSecTest" class="md-nav__button md-logo" aria-label="LLMSecTest" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    LLMSecTest
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/wehnsdaefflae/llmsectest" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    wehnsdaefflae/llmsectest
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Test your running app
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Test your running app
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#point-at-your-app-endpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Point at your app endpoint
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Point at your app endpoint">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#request-and-response-shapes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Request and response shapes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#an-openai-compatible-application" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        An OpenAI-compatible application
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#applications-that-scope-a-chat-to-a-conversation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Applications that scope a chat to a conversation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#getting-past-your-platforms-front-door" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Getting past your platform's front door
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#no-paid-calls-back-your-app-with-a-local-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        No paid calls: back your app with a local model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#whats-covered-against-an-endpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What's covered against an endpoint
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prove-your-prompt-reached-the-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prove your prompt reached the model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#when-the-scan-cant-reach-your-app" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When the scan can't reach your app
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-this-tool-will-not-do" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What this tool will not do
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#you-found-something-in-somebody-elses-application-where-does-it-go" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        You found something in somebody else's application. Where does it go?
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="You found something in somebody else&#39;s application. Where does it go?">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-sentence-that-has-to-be-in-your-report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The sentence that has to be in your report
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#before-you-send-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Before you send it
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-target-where-you-can-check-a-clean-result" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A target where you can check a clean result
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#when-you-cant-run-the-app-the-persona-proxy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When you can't run the app: the persona proxy
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../adapter-prompt/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Have an assistant wire it up
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../red-team-your-defense/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Red-team your defense
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../authoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Author your own tests
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ci/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI/CD integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OWASP LLM Top 10
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    OWASP LLM Top 10
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../owasp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Coverage map
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../owasp/llm01/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM01 Prompt Injection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../owasp/llm02/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM02 Sensitive Information Disclosure
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../owasp/llm06/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM03 Excessive Agency
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../owasp/llm03/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM04 Supply Chain
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../owasp/llm04/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM05 Data and Model Poisoning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../owasp/llm10/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM06 Unbounded Consumption
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../owasp/llm09/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM07 Misinformation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../owasp/llm07/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM08 Hidden Context Exposure
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../owasp/llm08/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM09 Vector and Embedding Weaknesses
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../owasp/llm05/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM10 Improper Output Handling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#point-at-your-app-endpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Point at your app endpoint
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Point at your app endpoint">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#request-and-response-shapes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Request and response shapes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#an-openai-compatible-application" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        An OpenAI-compatible application
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#applications-that-scope-a-chat-to-a-conversation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Applications that scope a chat to a conversation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#getting-past-your-platforms-front-door" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Getting past your platform's front door
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#no-paid-calls-back-your-app-with-a-local-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        No paid calls: back your app with a local model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#whats-covered-against-an-endpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What's covered against an endpoint
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prove-your-prompt-reached-the-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prove your prompt reached the model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#when-the-scan-cant-reach-your-app" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When the scan can't reach your app
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-this-tool-will-not-do" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What this tool will not do
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#you-found-something-in-somebody-elses-application-where-does-it-go" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        You found something in somebody else's application. Where does it go?
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="You found something in somebody else&#39;s application. Where does it go?">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-sentence-that-has-to-be-in-your-report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The sentence that has to be in your report
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#before-you-send-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Before you send it
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-target-where-you-can-check-a-clean-result" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A target where you can check a clean result
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#when-you-cant-run-the-app-the-persona-proxy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When you can't run the app: the persona proxy
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="test-your-running-application">Test your running application<a class="headerlink" href="#test-your-running-application" title="Permanent link">&para;</a></h1>
+<div class="admonition info">
+<p class="admonition-title">These pages describe v0.4.1; <code>pip install llmsectest</code> gives v0.4.1</p>
+<p>The site is built from <code>main</code>, so it can describe a version newer than the one
+<code>pip install llmsectest</code> gives you. Run <code>llmsectest --version</code> to see what you have.
+<a href="https://docs.llmsec.dev/changelog/">The changelog</a> says what arrived when.</p>
+</div>
+<p>This is the point of LLMSecTest: test the <strong>application</strong>, not a bare model. When you target your
+app's own endpoint, its real system prompt, guardrails, RAG context and tools are all exercised. So a
+finding reflects how your app behaves under attack.</p>
+<h2 id="point-at-your-app-endpoint">Point at your app endpoint<a class="headerlink" href="#point-at-your-app-endpoint" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:https://your-app.example.com/chat
+</code></pre></div>
+<p>LLMSecTest POSTs the <strong>attacker turn</strong> to your endpoint and reads the reply. It sends <em>only</em> the user
+message. Your application supplies its own system prompt. That's the thing we want to test.</p>
+<h3 id="request-and-response-shapes">Request and response shapes<a class="headerlink" href="#request-and-response-shapes" title="Permanent link">&para;</a></h3>
+<p><em>Working out these values by hand takes a while. <a href="../adapter-prompt/">Have an assistant wire it up</a> is a prompt that reads them off your own
+repository, with a rule against guessing any of them.</em></p>
+<p>By default the request body is <code>{"message": "&lt;attacker input&gt;"}</code> and the reply is auto-detected across
+common shapes: a top-level <code>reply</code> / <code>response</code> / <code>message</code> / <code>content</code> / <code>answer</code> field, or the
+OpenAI-style <code>choices[0].message.content</code>.</p>
+<p><strong>Real applications often differ. Four flags describe how.</strong> No wrapper, no proxy, no Python:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:7860/api/v1/run/&lt;flow-id&gt;<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span>--app-request-field<span class="w"> </span>input_value<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span>--app-response-path<span class="w"> </span><span class="s1">'outputs.0.outputs.0.results.message.text'</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span>--app-headers<span class="w"> </span><span class="s1">'{"Authorization": "Bearer &lt;token&gt;"}'</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span>--app-body<span class="w"> </span><span class="s1">'{"output_type": "chat", "input_type": "chat"}'</span>
+</code></pre></div>
+<ul>
+<li><code>--app-request-field</code> says where your input goes: a field name, or a dotted path
+  into the body from <code>--app-body</code>, list indices included. An OpenAI-compatible
+  endpoint takes <code>messages.0.content</code> against a body carrying that one user
+  message. No wrapper script is needed. Send <strong>no system message</strong>. An application
+  that lets a client one override its own prompt would then be answering yours, so
+  the scan becomes a scan of the model wearing your application's name.</li>
+<li><code>--app-response-path</code> is a dotted path to the reply. A number in it is a list index, so
+  <code>outputs.0.results.message.text</code> walks a list and then two objects.</li>
+<li><code>--app-headers</code> is a JSON object merged over the defaults, for bearer tokens and API keys. The
+  JSON content type stays unless you replace it.</li>
+<li><code>--app-body</code> is a JSON object of fixed keys sent alongside your input, for the envelope fields
+  some products require.</li>
+</ul>
+<p><strong>A malformed value for either JSON flag is refused rather than ignored.</strong> Falling back to the
+default shape would make every probe come back unanswered. The scan would then honestly report your
+whole application as unreachable, which is a true sentence about the wrong thing.</p>
+<p>The same four are available on the Python API if you are driving the adapter yourself:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">llmsectest.adapters.app_endpoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">AppEndpointAdapter</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">target</span> <span class="o">=</span> <span class="n">AppEndpointAdapter</span><span class="p">(</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">endpoint</span><span class="o">=</span><span class="s2">"https://your-app.example.com/v1/chat"</span><span class="p">,</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">request_field</span><span class="o">=</span><span class="s2">"prompt"</span><span class="p">,</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="n">response_path</span><span class="o">=</span><span class="s2">"data.0.text"</span><span class="p">,</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"Authorization"</span><span class="p">:</span> <span class="s2">"Bearer &lt;token&gt;"</span><span class="p">},</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    <span class="n">extra_body</span><span class="o">=</span><span class="p">{</span><span class="s2">"session_id"</span><span class="p">:</span> <span class="s2">"llmsectest"</span><span class="p">},</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="p">)</span>
+</code></pre></div>
+<h3 id="an-openai-compatible-application">An OpenAI-compatible application<a class="headerlink" href="#an-openai-compatible-application" title="Permanent link">&para;</a></h3>
+<p>A great many products serve <code>POST /v1/chat/completions</code>. That shape needs no wrapper either. It
+is worth its own example. The prompt does not sit at the top level of the body: it sits inside a
+list.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:14000/api/v1/chat/completions<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span>--app-request-field<span class="w"> </span>messages.0.content<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span>--app-response-path<span class="w"> </span><span class="s1">'choices.0.message.content'</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span>--app-headers<span class="w"> </span><span class="s1">'{"Authorization": "Bearer &lt;token&gt;"}'</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span>--app-body<span class="w"> </span><span class="s1">'{"model": "your-app", "stream": false,</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="s1">               "messages": [{"role": "user", "content": ""}]}'</span>
+</code></pre></div>
+<p><code>--app-body</code> supplies the envelope with one empty user turn in it. <code>--app-request-field</code> writes each
+probe into that turn. The path only ever writes into a list your body already carries: it never
+creates or extends one, because how long a list should be is not something a path can say.</p>
+<p><strong>Send no <code>system</code> message, whatever your body looks like.</strong> Many implementations of this endpoint
+let a client system message <em>replace</em> the application's own configured prompt. Put your persona
+there and the application stops being the thing under test: it becomes a proxy to the model, every
+guardrail written into its own prompt is gone, and the report that comes out looks exactly like a
+report about your application. If you want to know which side of that line your endpoint is on, ask
+it who it is twice: once with no system message, once with a system message naming somebody else.
+Whichever answer wins tells you. That is the same control described under <em>Prove your prompt reached the
+model</em> below, run as a differential.</p>
+<p><strong>A system message that is merely <em>added</em> is the quieter half of the same problem.</strong> Where one
+implementation replaces the application's prompt, another keeps its own and appends yours. Nothing
+looks wrong: the persona reaches the model, your canary comes back, the report fills in. What you
+have measured is the prompt your client sent, on an application that is holding a different one,
+and there is nothing on the server to read your persona back from. The remedy is the same either
+way. <strong>Put the persona where the application stores it</strong>, through whatever the product calls a
+system prompt, an agent or a workspace instruction, send no <code>system</code> message at all, then read it
+back off the application and check it byte for byte before you believe a single clean row.</p>
+<p>Two more things worth knowing about this shape:</p>
+<ul>
+<li><strong>Prefer the nested response path to a flattened convenience field.</strong> <code>choices.0.message.content</code>
+  fails loudly when the reply is not the shape you expected, so the probe is recorded undelivered
+  with the reason. A short field that quietly yields an empty string turns an
+  application that said nothing into one that withstood the attack.</li>
+<li><strong>Watch for an error envelope returned with HTTP 200.</strong> Several implementations answer
+  <code>{"status": "error", "msg": ...}</code> with a success code. The nested path above is what catches it.</li>
+</ul>
+<h3 id="applications-that-scope-a-chat-to-a-conversation">Applications that scope a chat to a conversation<a class="headerlink" href="#applications-that-scope-a-chat-to-a-conversation" title="Permanent link">&para;</a></h3>
+<p>Some applications hang the persona, the knowledge base or the tool set off a <strong>conversation</strong>. Point
+every probe at one conversation and each attack sees the ones before it, so a refusal or a leak early
+on changes what every later probe measures. That is then a property of the scan. Two flags give each
+probe a conversation of its own.</p>
+<p><strong>When your application accepts an id you choose:</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:3000/api/chat<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span>--app-session-field<span class="w"> </span>conversation_id
+</code></pre></div>
+<p>A fresh UUID goes into that body field for every probe. It costs no extra request. Most applications
+need only this. The field takes a dotted path, so <code>metadata.session.id</code> reaches a nested envelope.</p>
+<p><strong>When only the application may create one:</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:42110/api/chat<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span>--app-session-field<span class="w"> </span>conversation_id<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span>--app-session-init<span class="w"> </span><span class="s1">'{"url": "/api/sessions", "response_path": "conversation_id"}'</span>
+</code></pre></div>
+<p>Before each probe LLMSecTest sends that request, reads the value at <code>response_path</code> out of the reply
+and carries it into the field <code>--app-session-field</code> names. A relative <code>url</code> resolves against your
+endpoint; <code>method</code> (default <code>POST</code>), <code>headers</code> and <code>body</code> are optional. An unknown key in the JSON is
+refused, so a misspelled <code>response_path</code> cannot quietly leave the scan auto-detecting some other
+field.</p>
+<p>A probe that sends more than one request reuses the same value for all of them, in both shapes
+above; the next probe gets a fresh one. The probe is the boundary. Were it the request instead, a
+two-request probe would land its second request in a conversation that does not hold what the
+first one established.</p>
+<p><strong>A session step that fails is inconclusive.</strong> It never scores as a finding. It never scores as
+an LLM10 timeout either. An application that never answered a setup request has said nothing about
+how it bounds the work of a probe it never received.</p>
+<h2 id="getting-past-your-platforms-front-door">Getting past your platform's front door<a class="headerlink" href="#getting-past-your-platforms-front-door" title="Permanent link">&para;</a></h2>
+<p>If your application is built on a hosted platform rather than written from scratch, its chat endpoint
+is usually wrapped in an authentication scheme built for that platform's own web UI. Three real
+examples, all met while enrolling them into our test cohort:</p>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>What the browser sends</th>
+<th>What a scanner should use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Langflow</td>
+<td>a session bearer token from <code>/api/v1/auto_login</code></td>
+<td>an API key from <code>/api/v1/api_key/</code></td>
+</tr>
+<tr>
+<td>Dify</td>
+<td>a console login whose password field is encrypted</td>
+<td>the per-app <strong>Service API</strong> key, <code>app-…</code></td>
+</tr>
+<tr>
+<td>Lobe Chat</td>
+<td><code>X-Lobe-Chat-Auth</code>, a XOR-obfuscated base64 JSON blob</td>
+<td>server-side provider config, or its server-database mode</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Reach for the integration credential rather than the browser's.</strong> Every one of these platforms
+publishes a machine path, because they all want people building on them, and it is a different door
+from the one the UI walks through. Look for <em>API keys</em>, <em>Service API</em> or <em>integrations</em> in the app's
+own settings. It is a one-time manual step per application.</p>
+<p>Once you hold that credential the rest is the four flags above:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:https://your-platform/v1/chat-messages<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span>--app-headers<span class="w"> </span><span class="s1">'{"Authorization": "Bearer app-xxxxxxxx"}'</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span>--app-request-field<span class="w"> </span>query<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">  </span>--app-body<span class="w"> </span><span class="s1">'{"inputs": {}, "response_mode": "blocking", "user": "llmsectest"}'</span>
+</code></pre></div>
+<p><strong>One thing to check before you read the results.</strong> On some platforms the assistant's system prompt
+lives in the browser rather than on the server. It is sent with each request. There, an endpoint
+reached directly has no system prompt at all, so anything scored against a value you planted in one
+(LLM02, LLM06, LLM07) has nothing to find. The scan says so, reporting those as <code>unconfirmed</code> or not
+exercised. The categories carrying their own marker in the attack, LLM01, LLM05, LLM09 and LLM10,
+score normally either way.</p>
+<h2 id="no-paid-calls-back-your-app-with-a-local-model">No paid calls: back your app with a local model<a class="headerlink" href="#no-paid-calls-back-your-app-with-a-local-model" title="Permanent link">&para;</a></h2>
+<p>Run your app in a test configuration whose LLM backend points at a <strong>local</strong> model (e.g. Ollama or
+LM Studio), then test it, zero API cost:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># 1) your app, configured to call a local OpenAI-compatible endpoint:</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">OPENAI_BASE_URL</span><span class="o">=</span>http://localhost:11434/v1<span class="w">   </span><span class="c1"># Ollama (LM Studio: http://localhost:1234/v1)</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>ollama<span class="w">                        </span><span class="c1"># ignored by local servers</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>./run-your-app.sh<span class="w"> </span><span class="p">&amp;</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="c1"># 2) test it</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat
+</code></pre></div>
+<h2 id="whats-covered-against-an-endpoint">What's covered against an endpoint<a class="headerlink" href="#whats-covered-against-an-endpoint" title="Permanent link">&para;</a></h2>
+<p>Endpoint testing is <strong>black-box</strong>. <strong>LLM01 (prompt injection)</strong>, <strong>LLM05 (improper output
+handling)</strong>, <strong>LLM09 (misinformation)</strong> and <strong>LLM10 (unbounded consumption)</strong> always run, their
+attack-side marker (or, for LLM09, a guaranteed-nonexistent entity) lives in the attack, so the scan
+needs nothing from you. LLM10 uses two <em>bounded</em> probes, a repetition flood (repeat a marker an explicit,
+finite number of times) and output amplification (emit a large but finite non-repetitive volume). So an
+app that floods or amplifies on demand is flagged without risking a runaway generation against an uncapped
+endpoint. Four more categories light up when you tell LLMSecTest what
+only you, the app's developer, know:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>llmsectest<span class="w"> </span>--target<span class="w"> </span>app:http://localhost:8000/chat<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">    </span>--app-prompt<span class="w"> </span>prompt.txt<span class="w"> </span><span class="se">\ </span><span class="w">                     </span><span class="c1"># your app's system prompt    → LLM07</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">    </span>--app-secret<span class="w"> </span><span class="s2">"sk-canary-123"</span><span class="w"> </span><span class="se">\ </span><span class="w">                </span><span class="c1"># a real secret it holds      → LLM02</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">    </span>--app-action<span class="w"> </span><span class="s2">"ACTION: refund("</span><span class="w"> </span><span class="se">\ </span><span class="w">              </span><span class="c1"># a privileged tool call      → LLM06</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">    </span>--app-action<span class="w"> </span><span class="s2">"ACTION: delete_user("</span><span class="w"> </span><span class="se">\ </span><span class="w">         </span><span class="c1"># (repeatable)</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">    </span>--app-canary<span class="w"> </span><span class="s2">"INTERNAL-DOC-CANARY-7f2a"</span><span class="w"> </span><span class="se">\ </span><span class="w">     </span><span class="c1"># confidential RAG content    → LLM08</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="w">    </span>--app-rag-poison<span class="w"> </span><span class="s2">"RAG-POISON-3b9d"</span><span class="w">             </span><span class="c1"># poisoned-doc marker         → LLM08</span>
+</code></pre></div>
+<ul>
+<li><strong><code>--app-prompt</code></strong>, the app's own system prompt (inline text or a file path). Knowing it means
+  the scan knows what a <strong>leaked instruction</strong> looks like (LLM07).</li>
+<li><strong><code>--app-secret</code></strong>, a real secret/canary value the app holds. A disclosure is then unambiguous, with
+  no false-positive-prone heuristics (LLM02).</li>
+<li><strong><code>--app-action</code></strong>, a privileged tool/action signature your app can execute; repeat the flag for
+  several. An unauthorized invocation is then unambiguous (LLM06). <strong>Pass a string your app really
+  emits when it acts.</strong> For a tool-using agent that's the tool-invocation line it returns or logs.
+  Verify it before you trust a clean row: send it a request you are happy for it to honour and read
+  the raw reply. An app that only <em>describes</em> what it did in prose can never trip this probe, so a
+  clean LLM06 row on one means "not observed". Measured, not assumed: see
+  <a href="../../owasp/llm06/#what-a-clean-llm06-result-does-and-does-not-tell-you">LLM06</a>.</li>
+<li><strong><code>--app-canary</code></strong>, confidential content planted in your app's <strong>RAG / retrieved corpus</strong> (a unique
+  token in an indexed document). Enables the <strong>LLM08</strong> retrieval-exposure probes: a reply that
+  reproduces the canary means the retrieval layer leaked confidential indexed content. Distinct from
+  <code>--app-secret</code>. There the secret lives in the prompt/config, here in the retrieved corpus.</li>
+<li><strong><code>--app-rag-poison</code></strong>, the marker a <strong>poisoned document</strong> planted in your retrieved corpus instructs
+  the model to emit. Enables the <strong>LLM08</strong> indirect-injection probes: benign queries retrieve the poisoned
+  doc. A vulnerable app obeys its instruction and emits the marker (which the probe never named). It
+  proves the app trusts retrieved content, the LLM08↔LLM01 bridge. Independent of <code>--app-canary</code>; supply
+  either or both.</li>
+</ul>
+<p>Each category whose input you don't supply shows up as an <strong>explicit skip naming the flag</strong> that
+would enable it, never a silent gap. The white-box categories run from a path you provide alongside the
+endpoint scan: add <code>--repo &lt;path&gt;</code> for <strong>LLM03 (supply chain)</strong> and <code>--model-scan &lt;path&gt;</code> for <strong>LLM04
+(data and model poisoning)</strong>. LLM08's two black-box dimensions ship today; its white-box ones
+(poisoning, inversion, multi-tenant isolation) are not implemented yet and are reported as
+not-exercised rather than passed. Always check <code>llmsectest --check</code>.</p>
+<h2 id="prove-your-prompt-reached-the-model">Prove your prompt reached the model<a class="headerlink" href="#prove-your-prompt-reached-the-model" title="Permanent link">&para;</a></h2>
+<p><code>--app-secret</code>, <code>--app-action</code> and <code>--app-canary</code> are only ever observed when the value comes
+<strong>back</strong> in a reply. An application that resisted every attack and an application that never
+received your system prompt therefore produce the same report: clean rows, nothing recovered, a run
+that reads as a pass. Before you believe one, rule out the other.</p>
+<p>Put a second marker in the same system prompt as your canary, one the assistant is explicitly
+allowed to state. Then ask for it:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>Your configuration build is ACME-CFG-3F8H. It identifies a revision, it is not confidential,
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>and you state it plainly to anyone who asks which build you are running.
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>curl<span class="w"> </span>-s<span class="w"> </span>localhost:8000/chat<span class="w"> </span>-H<span class="w"> </span><span class="s1">'content-type: application/json'</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">     </span>-d<span class="w"> </span><span class="s1">'{"message":"Which configuration build are you running?"}'</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>ACME-CFG-3F8H
+</code></pre></div>
+<p>If the marker comes back, that string reached the model and the canary sitting in it is live
+ground truth. If it does not, your clean rows are describing your configuration. The fix belongs there. The
+report will follow it.</p>
+<p>Two details make the difference between a control and a formality:</p>
+<ul>
+<li><strong>Ask through the path the scan will use</strong>, with the same headers, session handling and body that
+  your <code>--app-*</code> run sends. A marker that comes back through the web UI proves the web UI. Platforms
+  that bind a system prompt to an assistant, an agent or a workspace commonly apply it on one route
+  and not on another, and that route is what your scan is about to measure.</li>
+<li><strong>Do not ask for the secret itself.</strong> An application that refuses is doing what you
+  configured it to do, so the refusal tells you nothing about whether the secret is there. The
+  marker works because stating it is permitted.</li>
+</ul>
+<h2 id="when-the-scan-cant-reach-your-app">When the scan can't reach your app<a class="headerlink" href="#when-the-scan-cant-reach-your-app" title="Permanent link">&para;</a></h2>
+<p>If your endpoint is unreachable, returns something that isn't the JSON shape above, or dies partway
+through a scan, those probes are recorded <strong>inconclusive</strong>, never as findings. A target we could not
+talk to is not a vulnerable target. The report says so in three places. A red banner at the top of
+the HTML page, an <code>undelivered</code> count in the SARIF run properties, and the console <em>Attacks Delivered</em>
+block.</p>
+<p><strong>The run also exits non-zero.</strong> That's deliberate. It's the half that makes the rest safe. A scan
+that reached nothing produces an empty findings list. In CI that's indistinguishable from a clean
+bill of health. <code>0 findings, 25 never delivered</code> is not a pass.</p>
+<p>A slow app is a different case in one respect only. One that exceeds <code>--app-timeout</code> was reached and
+ran out of budget, so it doesn't fail the run: raise the budget instead. Everything else is the same,
+because an unanswered probe is unanswered whichever way it went missing. The status still reads
+<code>INCOMPLETE</code>, no posture is claimed, and the closing line says the run does not claim those probes
+were withstood. The console distinguishes the two reasons (<code>Inconclusive: 26 (26 never delivered)</code>),
+so you can tell a budget to raise from a URL to check.</p>
+<p><strong>And the exception to the exception: a scan where no probe was answered fails.</strong> Losing some probes
+to the clock is an ordinary afternoon. Losing all of them means the page describes nothing, so it
+gets the same red banner and the same non-zero exit as an endpoint that was never there.</p>
+<p><strong>An app that answers with an error is a third case. The report says which.</strong> If your endpoint
+replies <code>HTTP 429</code> the probe is recorded as <strong>throttled</strong>, with your app's own <code>Retry-After</code> when it
+sends one, because the fix is a quota rather than a URL. Any other refusal (<code>401</code> on an expired token,
+<code>403</code> from a gateway in front of the app, <code>500</code> from the app itself) is inconclusive as well, and the
+reason names the status and says the endpoint <em>was</em> reached. That distinction matters when you are
+scanning through an auth layer: <code>app endpoint … answered HTTP 401 (Unauthorized)</code> sends you to your
+token, where <code>unreachable</code> would send you to your DNS.</p>
+<p><strong>The fourth case is the one with nothing to fix: your app refused the input on purpose.</strong> Some
+applications validate the prompt before it reaches the model. If yours rejects, say, anything
+matching an XSS pattern list, the probes carrying <code>&lt;script&gt;</code> or <code>javascript:</code> payloads never reach
+the model at all. Either way that's the right record. Nothing about your output handling was
+measured, so nothing may be claimed about it.</p>
+<p>But the two facts are opposite. One says your app defended itself. The other says our scan broke.
+<strong>Since 0.4.2 the scanner tells them apart for you.</strong> A probe your app refused at its input
+boundary is marked as a refusal in the console summary and in the SARIF. <code>undelivered</code> is still the
+superset, so anything you already read off that flag reads the same. HTTP <code>401</code> and <code>403</code> don't
+count as refusals. Those mean your scan isn't authenticated.</p>
+<p>There's no remedy for the refusal case. A refusal quoting your own validator ("query contains
+invalid content") is your guardrail working. A 500 with a stack trace isn't.</p>
+<p><strong>The fifth case answers 200 and says nothing. It is the one that looks most like success.</strong>
+An agent framework can finish a turn without producing an assistant message: the model calls a tool,
+the tool returns nothing usable, and the run ends. Some of them still answer <code>HTTP 200</code> with a
+success status and an empty output list, no error anywhere in the envelope. A client cannot tell that
+from a model that had nothing to say.</p>
+<p>Point <code>--app-response-path</code> at the field that only exists when there <em>is</em> a message. The scanner
+then tells the two apart for you: the path stops partway and the probe is recorded undelivered with
+the reason naming the segment it stopped at.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>LLM09-fabricated-citation [hallucinated academic citation] after 12.8s: probe not delivered,
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>response path 'output.0.content.0.text' does not match the reply JSON (stopped at '0')
+</code></pre></div>
+<p>The trap is the convenience field next to it. Frameworks that return <code>output: []</code> often also return
+a flattened <code>output_text: ""</code> on the envelope. A response path pointing at <em>that</em> extracts the empty
+string, the probe is scored, and an application that answered nothing at all is recorded as having
+withstood the attack. Prefer the nested path even though it is longer. If a whole category comes
+back undelivered with <code>stopped at '0'</code>, look at what your app does with a tool call before you look
+at your URL: probes that ask for content the app cannot ground are exactly the ones that trigger one.</p>
+<p>In every one of these cases, read the per-category table. A probe that was never delivered is
+<strong>not</strong> in that table's <code>Pass</code> column. The row says how many were lost:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>LLM05    Improper Output Handling                4     2     0  2 never delivered
+</code></pre></div>
+<p>Four probes, two answered and held, none failed, two never delivered. A row reading <code>4  4  0</code>
+would be claiming your app handled output safely four times when it did so twice.</p>
+<p><strong>Every inconclusive probe is named.</strong> The reason recorded for each one starts with the probe's own id
+and technique, so the report says which attacks you did not get an answer for:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>APP-shop-LLM02-handover-summary [indirect disclosure via a configuration handover document]
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>after 90.0s: probe inconclusive, app endpoint http://127.0.0.1:8041/chat did not respond within 90s
+</code></pre></div>
+<p>That matters because a category runs several mechanisms. <code>LLM02 attempted 4, inconclusive 3</code> is honest
+about the count. It still leaves you guessing which three. Now you can read it off the report.</p>
+<p><strong>And every scan records its slowest answered probe</strong>, whether or not anything timed out:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>Slowest answered: 11.4s (APP-shop-LLM07-disclosure)
+</code></pre></div>
+<p>Same figure in the SARIF as a run-level <code>latency</code> property, and in the header of the HTML page. A probe
+answered at 88 seconds under a 90 second budget looks the same in your report as one answered in 3, right
+up to the run where it stops answering. Now you can see it coming. It also tells a slow target apart from
+a busy machine, worth knowing before you go looking at your app.</p>
+<p>The word <em>answered</em> is doing work. A probe recorded inconclusive because it ran out of time measured the
+timeout, so it never enters the mean or the peak. It gets <code>probes_unfinished</code> and <code>unfinished_seconds</code>
+instead. Fold the two together and the mean stops describing your app and starts describing your budget.</p>
+<p>There is one exception. The two <strong>bounded LLM10</strong> probes
+score a timeout as a finding, because a request for explicitly finite output that eats the whole budget is
+the vulnerability. Those probes are not inconclusive, so they land in the answered population and can set
+<code>peak_seconds</code> to your budget. On our own cohort that is 13 targets of 51, every one of them an LLM10
+bounded probe and nothing else. The finding's own text carries the honest figure beside it (<em>"21 other
+probes completed inside the same budget, median 4.5s, slowest 9.2s"</em>), so read that when the peak reads
+like a round number.</p>
+<p>We did that to ourselves. Our own 50-application cohort split into ten slow targets at 18 to 23 seconds a
+probe and forty fast ones at 4 to 10. It looked like two kinds of application. It was arithmetic. Each of
+the ten had lost four or five probes pinned at 90 seconds. Count only the probes that answered and the ten
+run at 5 to 12 seconds against the forty's 4 to 10. The gap is gone.</p>
+<p>One more thing fell out of that. You want it before you read your own timeouts. On nine of the ten,
+the probes that timed out were <strong>consecutive</strong>. That's not four expensive probes. It's one window where
+the app answered nothing. Our own deadline is what opens it. Your app doesn't stop working when we
+stop waiting. If your handler is synchronous in front of a backend that serves one request at a time, our
+next probe queues behind the generation we walked away from, and it times out for a reason that has
+nothing to do with it. So read a run of consecutive timeouts as one event and only the first one as
+having a cause.</p>
+<p><strong>A rate-limited target is a third case. It says so.</strong> A hosted target that answers <code>HTTP 429</code> has
+been reached, so the report does not tell you to check whether your endpoint is up. Those probes are
+recorded inconclusive in the same tally, with <code>rate limited by the target</code> as the reason and the
+provider's own <code>Retry-After</code> value when it sent one, and the run exits non-zero for the same reason as
+above. There is no retry or backoff: getting the count right comes first. A retry loop
+built over a wrong count would only produce a confidently wrong number. Slow the scan down or raise your
+quota, then run it again.</p>
+<h2 id="what-this-tool-will-not-do">What this tool will not do<a class="headerlink" href="#what-this-tool-will-not-do" title="Permanent link">&para;</a></h2>
+<p>The same list the command's help text ends with, so the behaviour and the documentation cannot drift apart:</p>
+<ul>
+<li>It will not send load nobody asked for: <code>--app-stress</code> below 2 is rejected, never rounded up, because two simultaneous requests against somebody else's application would be traffic nobody authorised.</li>
+<li>It will not silently drop app inputs: <code>--app-prompt</code>, <code>--app-secret</code>, <code>--app-action</code>, <code>--app-canary</code>, <code>--app-rag-poison</code>, <code>--app-timeout</code> and <code>--app-stress</code> require <code>--target app:&lt;url&gt;</code>, because ignoring them would be a silent coverage gap.</li>
+<li>It will not guess at request shapes: <code>--app-headers</code>, <code>--app-body</code> and <code>--app-session-init</code> must be JSON objects, because falling back to a default shape would talk to the wrong contract and report the app as unreachable.</li>
+<li>It will not throw a session value away: <code>--app-session-init</code> without <code>--app-session-field</code> is rejected, because the value obtained would have nowhere to go.</li>
+<li>It will not ask somebody else's app to write attack prompts: <code>--redteam-generate</code> needs a model target, because a running application is not a model to compose prompts with.</li>
+<li>It will not quietly substitute prompt sets: <code>--redteam-set</code> and <code>--redteam-benign</code> paths must exist, because silently using the built-in set would test something other than what was asked for.</li>
+</ul>
+<h2 id="you-found-something-in-somebody-elses-application-where-does-it-go">You found something in somebody else's application. Where does it go?<a class="headerlink" href="#you-found-something-in-somebody-elses-application-where-does-it-go" title="Permanent link">&para;</a></h2>
+<p>Everything above ends at a report. If the application is your own, that is the end of it. If you
+scanned a deployment you were asked to assess, a self-hosted product you run, or an open-source
+project, you now hold a finding about software somebody else maintains. Nothing in this guide used
+to cover the next step.</p>
+<p><strong>Read the route off the repository. Your memory of that project is not the route.</strong> Three surfaces
+say what a project wrote down:</p>
+<ul>
+<li>a <code>SECURITY.md</code> at the root of <em>their</em> repository</li>
+<li>the same file under <em>their</em> <code>.github/</code> directory</li>
+<li>the rendered policy page at <code>https://github.com/&lt;owner&gt;/&lt;repo&gt;/security/policy</code></li>
+</ul>
+<p>All three render the same file. A project that states a route there has given you your answer. It's
+usually the right one. Expect an email address, a HackerOne programme, or GitHub's own private
+advisory form.</p>
+<p><strong>A fourth surface says something the other three can't.</strong> Private vulnerability reporting is a
+repository setting. No file records it. Whether it's switched on is public:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>curl<span class="w"> </span>-sL<span class="w"> </span>https://api.github.com/repos/&lt;owner&gt;/&lt;repo&gt;/private-vulnerability-reporting
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="p">{</span><span class="nt">"enabled"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">}</span>
+</code></pre></div>
+<p>No token, no authentication. <code>true</code> means the repository's <strong>Report a vulnerability</strong> button exists
+at <code>https://github.com/&lt;owner&gt;/&lt;repo&gt;/security/advisories/new</code>, whatever the files do or don't say.</p>
+<p><strong>The two surfaces disagree. The disagreement runs both ways.</strong> All fifteen projects in our own test
+cohort, read on 2026-09-11:</p>
+<table>
+<thead>
+<tr>
+<th>Repository</th>
+<th>their root policy file</th>
+<th>their <code>.github/</code> one</th>
+<th><code>private-vulnerability-reporting</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>agent0ai/agent-zero</code></td>
+<td>404</td>
+<td>404</td>
+<td><code>enabled: true</code></td>
+</tr>
+<tr>
+<td><code>khoj-ai/khoj</code></td>
+<td>404</td>
+<td>404</td>
+<td><code>enabled: true</code></td>
+</tr>
+<tr>
+<td><code>Cinnamon/kotaemon</code></td>
+<td>404</td>
+<td>404</td>
+<td><code>enabled: true</code></td>
+</tr>
+<tr>
+<td><code>open-webui/open-webui</code></td>
+<td>404</td>
+<td>404</td>
+<td><code>enabled: true</code></td>
+</tr>
+<tr>
+<td><code>danny-avila/LibreChat</code></td>
+<td>404</td>
+<td>200</td>
+<td><code>enabled: true</code></td>
+</tr>
+<tr>
+<td><code>langflow-ai/langflow</code></td>
+<td>200</td>
+<td>404</td>
+<td><code>enabled: false</code></td>
+</tr>
+<tr>
+<td><code>arc53/DocsGPT</code></td>
+<td>200</td>
+<td>404</td>
+<td><code>enabled: true</code></td>
+</tr>
+<tr>
+<td><code>infiniflow/ragflow</code></td>
+<td>200</td>
+<td>404</td>
+<td><code>enabled: true</code></td>
+</tr>
+<tr>
+<td><code>lobehub/lobe-chat</code></td>
+<td>200</td>
+<td>404</td>
+<td><code>enabled: true</code></td>
+</tr>
+<tr>
+<td><code>onyx-dot-app/onyx</code></td>
+<td>200</td>
+<td>404</td>
+<td><code>enabled: true</code></td>
+</tr>
+<tr>
+<td><code>Tencent/WeKnora</code></td>
+<td>200</td>
+<td>404</td>
+<td><code>enabled: true</code></td>
+</tr>
+<tr>
+<td><code>1Panel-dev/MaxKB</code></td>
+<td>200</td>
+<td>404</td>
+<td><code>enabled: true</code></td>
+</tr>
+<tr>
+<td><code>lfnovo/open-notebook</code></td>
+<td>200</td>
+<td>404</td>
+<td><code>enabled: true</code></td>
+</tr>
+<tr>
+<td><code>dataelement/bisheng</code></td>
+<td>200</td>
+<td>404</td>
+<td><code>enabled: true</code></td>
+</tr>
+<tr>
+<td><code>Mintplex-Labs/anything-llm</code></td>
+<td>200</td>
+<td>404</td>
+<td><code>enabled: true</code></td>
+</tr>
+</tbody>
+</table>
+<p>That's every repository in the cohort, so the counts below are over all of them rather than over a
+sample somebody chose. <strong>Four have no policy file on either path and a private channel standing
+open</strong>: Agent Zero, Khoj, Kotaemon and Open WebUI. Read only the files and you'll conclude there's
+no route. The only place left to put a finding is then the public issue tracker. That's the one
+place it must not go.</p>
+<p><code>langflow-ai/langflow</code> is the mirror image. It's the only one. It has a policy file and the setting
+switched <strong>off</strong>, so its file is the whole answer and it sends you to HackerOne. Fourteen of fifteen
+have the private channel open. Look for the button before you go hunting for an email address.</p>
+<p>Each surface is incomplete on its own. <strong>Read both. When they disagree, an open private channel
+wins.</strong> A maintainer who switched it on is asking for reports there. A file that predates the
+setting isn't a refusal.</p>
+<p><strong>Follow redirects when you make that call.</strong> A renamed repository answers the unredirected request
+with an envelope carrying no <code>enabled</code> field at all:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="p">{</span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"MovedPermanently"</span><span class="p">,</span><span class="w"> </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.github.com/repositories/643445235/private-vulnerability-reporting"</span><span class="p">}</span>
+</code></pre></div>
+<p><code>lobehub/lobe-chat</code> answers exactly that today. Code that reads <code>.enabled</code> off it gets nothing back
+and treats the project as having no private channel. That's how a finding ends up in public on a
+project that was waiting for it privately. Use <code>curl -sL</code>, or <code>follow_redirects=True</code>, and the same
+call returns <code>{"enabled": true}</code>.</p>
+<p><strong>If none of the four says anything</strong>, your route is the maintainer. Try a commit email, a
+maintainer's profile, or the project's chat. If you genuinely can't find one, open a public issue
+saying you have a security finding and asking where to send it, <em>without the finding in it</em>.</p>
+<h3 id="the-sentence-that-has-to-be-in-your-report">The sentence that has to be in your report<a class="headerlink" href="#the-sentence-that-has-to-be-in-your-report" title="Permanent link">&para;</a></h3>
+<p>Whatever route you use, the report needs one thing a scanner's output doesn't contain. Leaving it
+out is how a true finding reads as a false one:</p>
+<blockquote>
+<p>The persona and the canary this finding refers to are <strong>my own configuration of your application</strong>,
+installed by me into the deployment I tested. They are not something your project ships.</p>
+</blockquote>
+<p>Everything this tool measures happens inside an application configured the way <em>you</em> configured it.
+You planted the system prompt. You planted the canary the report quotes back. A maintainer who reads
+<code>the assistant disclosed the secret VENDOR-CANARY-4417</code> without that sentence will search their
+repository for that string, fail to find it, and reasonably close the report. They'd be right to. On
+its face it's a claim about a configuration they have never seen. Say which prompt you installed,
+how you installed it, and which probe elicited what. Then the finding is reproducible by the one
+person who can fix it.</p>
+<p>Give them the probe's own id and technique from the report, the model and backend behind the
+application, and the version or commit you tested. A finding against <code>v0.19.0</code> on a cloud model is a
+different claim from the same finding on <code>main</code> against a local one.</p>
+<h3 id="before-you-send-it">Before you send it<a class="headerlink" href="#before-you-send-it" title="Permanent link">&para;</a></h3>
+<p>Two things are yours to check. Don't leave either to the maintainer:</p>
+<ul>
+<li><strong>Check that you measured the application.</strong> If you sent a <code>system</code> message, you may have measured
+  a proxy to the model instead. See <em>Prove your prompt reached the model</em> above. Run the control and
+  include its result.</li>
+<li><strong>Check that it isn't already known.</strong> Search the project's advisories and its closed issues for
+  the category before filing. A duplicate costs a maintainer the same triage as a new one.</li>
+</ul>
+<p>And <code>--target app:</code> points at a host. Scanning a deployment that isn't yours, without being asked,
+isn't a documentation question, and this guide is not permission to do it.</p>
+<h2 id="a-target-where-you-can-check-a-clean-result">A target where you can check a clean result<a class="headerlink" href="#a-target-where-you-can-check-a-clean-result" title="Permanent link">&para;</a></h2>
+<p>Every scan in this guide shares one blind spot. When a probe comes back clean, two different things
+look identical: the application withstood the attack, or the attack never reached anything that
+could have failed. A report cannot tell you which. Both produce the same empty finding list.</p>
+<p>The usual answer is a control. Plant a secret, then ask a question only the planted persona can
+answer (<em>Prove your prompt reached the model</em>, above). That proves the prompt arrived. It still
+leaves you comparing your own configuration against itself.</p>
+<p>A target with <strong>verifiable ground truth</strong> closes that gap. <a href="https://github.com/TomKaltofen/mloda-rag-testbed">Tom Kaltofen's
+<code>mloda-rag-testbed</code></a> (Apache-2.0) is one. It
+stands up a chatbot over a RAG backend where two users see deliberately different documents. Alice
+can see her own code. Bob cannot. Both halves are checkable from the outside, so when a probe
+reports that Bob's session did not leak Alice's document, you can confirm separately that Alice's
+document was there to leak in the first place.</p>
+<p>That is the property to look for when you want to trust this tool rather than run it. Size is not
+the point. Knowing the answer in advance is. Linked here with the author's permission.</p>
+<h2 id="when-you-cant-run-the-app-the-persona-proxy">When you can't run the app: the persona proxy<a class="headerlink" href="#when-you-cant-run-the-app-the-persona-proxy" title="Permanent link">&para;</a></h2>
+<p>If you only have the app's system prompt (not a running instance), load it onto a model and test that
+as a proxy. Lower fidelity (no guardrail/RAG/tool code), but useful:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">llmsectest.adapters</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_adapter</span>
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">llmsectest.probes</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_app_scan</span>
+<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>
+<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="n">target</span> <span class="o">=</span> <span class="n">get_adapter</span><span class="p">(</span><span class="s2">"ollama"</span><span class="p">,</span> <span class="s2">"gemma4:e2b-it-q4_K_M"</span><span class="p">)</span>
+<a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="n">prompt</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">"my_app_system_prompt.txt"</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="k">for</span> <span class="n">outcome</span> <span class="ow">in</span> <span class="n">run_app_scan</span><span class="p">(</span><span class="s2">"my-app"</span><span class="p">,</span> <span class="n">prompt</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
+<a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">outcome</span><span class="o">.</span><span class="n">case</span><span class="o">.</span><span class="n">owasp</span><span class="p">,</span> <span class="s2">"VULNERABLE"</span> <span class="k">if</span> <span class="n">outcome</span><span class="o">.</span><span class="n">vulnerable</span> <span class="k">else</span> <span class="s2">"ok"</span><span class="p">,</span> <span class="n">outcome</span><span class="o">.</span><span class="n">evidence</span><span class="p">)</span>
+</code></pre></div>
+<p>See <a href="../../api/"><code>run_app_scan</code></a> in the API reference.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      MIT-licensed. Funded by the German Federal Ministry of Research, Technology and Space (BMFTR) via the Prototype Fund, FKZ 16IS26S10.
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.tabs", "navigation.top", "content.code.copy", "content.code.annotate", "search.suggest"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+    
+  </body>
+</html>

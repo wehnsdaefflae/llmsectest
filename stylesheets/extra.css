@@ -1,0 +1,41 @@
+/* Funding logos.
+ *
+ * Material sets `.md-typeset :is(img, svg) { height: auto; max-width: 100% }`, and `height: auto`
+ * beats the presentational `height="90"` attribute the funding block used to carry. The result on
+ * docs.llmsec.dev was both marks stretched to the full content column: the BMFTR logo rendered
+ * 688x459 where 90px tall was intended, and the Prototype Fund one 688x297 against 70. Reported by
+ * Mark on 2026-08-21. Sizing has to come from CSS here, because an HTML attribute cannot win.
+ *
+ * The heights mirror llmsec.dev's footer at its narrow breakpoint, which is the closest thing to
+ * this column's width and is already a considered pairing: the BMFTR file is mostly whitespace and
+ * needs more height to carry the same visual weight as the Prototype Fund banner.
+ *
+ * The white panel is not decoration. The BMFTR logo has no white/negative variant and must sit on a
+ * light field (docs/ptf-brand-resources.md), which matters the moment a reader is in dark mode.
+ */
+.md-typeset .fund-logos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2rem;
+  width: fit-content;
+  max-width: 100%;
+  background: #fff;
+  border-radius: 8px;
+  padding: 1rem 1.4rem;
+}
+
+.md-typeset .fund-logos img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+}
+
+.md-typeset .fund-logos .logo-bmftr { height: 104px; }
+.md-typeset .fund-logos .logo-ptf { height: 58px; }
+
+@media screen and (max-width: 600px) {
+  .md-typeset .fund-logos { flex-direction: column; gap: 1.2rem; }
+  .md-typeset .fund-logos .logo-bmftr { height: 84px; }
+  .md-typeset .fund-logos .logo-ptf { height: 48px; }
+}
