@@ -12,6 +12,17 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ### Added
 
+- 2026-11-19: `--vector-store` reads a persisted store for **embedding-store
+  poisoning**, the last unshipped white-box LLM08 dimension. Four instruction
+  shapes are matched in stored chunks: an override of the model's own
+  instructions, text addressed to the assistant as its operator, a planted
+  standing directive, and an exfiltration target. Each shape raises one `high`
+  finding naming the number of chunks that matched and quoting the first three.
+  An imperative sentence alone raises nothing, so a corpus of runbooks and
+  procedures produces no finding. The black-box LLM08 probes still measure
+  whether an application obeys a poisoned document its operator planted; this
+  check asks whether such a document is in the store already.
+
 - 2026-11-18: Application scans accept `--app-policy` and `--app-tool-schema`
   for private retrieved-policy and tool-schema excerpts. Each source adds two
   extraction probes. The detector checks exact excerpts in replies and response

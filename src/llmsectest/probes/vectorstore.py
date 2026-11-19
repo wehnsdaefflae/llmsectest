@@ -42,6 +42,14 @@ What it flags, per store:
   of a tenant key, never on the presence of the key: a single-tenant store that
   labels its rows is doing the right thing. This is the LLM08 dimension this module
   listed as not-exercised until 2026-09-29.
+* **embedding-store poisoning** (``high``) — an indexed chunk carries an instruction
+  addressed to the model rather than content (:data:`_POISON_PATTERNS`). The black-box
+  LLM08 probes measure whether an application obeys a poisoned document the operator
+  planted; this asks whether one is in the store already, which needs nobody's
+  permission and no planted marker. Matched on override, operator-address, planted
+  directive and exfiltration shapes only, never on an imperative sentence, because a
+  corpus of runbooks is nothing but imperatives. This was the last open half of the
+  published roadmap's phase-03 item (c) and shipped 2026-11-19.
 
 Formats read, standard library only, no network and no model load:
 
@@ -120,6 +128,47 @@ _SECRET_PATTERNS = (
     ("assigned secret", re.compile(
         r"(?i)\b(?:api[_-]?key|secret|password|passwd|token)\b\s*[:=]\s*\S{8,}")),
 )
+
+#: Instruction shapes that do not belong in a retrieved document. This is the LLM08
+#: white-box dimension the module's docstring carried as not-exercised, and the last
+#: open half of the published roadmap's phase-03 item (c): **embedding-store poisoning**.
+#:
+#: What it answers, and the question is narrower than "is this document malicious". A
+#: retrieved chunk is data. An application that treats retrieved text as authoritative
+#: will carry out an instruction somebody indexed, and the black-box probes in
+#: :data:`~llmsectest.probes.application._RAG_INJECTION_ATTACKS` measure exactly that
+#: from outside, by planting a marker and asking whether the application obeys it. They
+#: need an operator who already planted one. This check asks the complementary question
+#: nobody needs permission for: **is an instruction already sitting in this store**,
+#: whether or not we put it there.
+#:
+#: Deliberately built from the override idiom rather than from any imperative sentence.
+#: A corpus of runbooks, policies and manuals is full of imperatives ("restart the
+#: service", "escalate to the on-call") and flagging those would make the check noise on
+#: documentation, which is the single most common thing a RAG store holds. Every pattern
+#: below needs an attempt to displace the model's own instructions, address the assistant
+#: as its operator, or exfiltrate, so a legitimate procedure document does not match.
+_POISON_PATTERNS = (
+    ("instruction override", re.compile(
+        r"(?i)\b(?:ignore|disregard|forget|override)\b[^.\n]{0,40}\b"
+        r"(?:previous|prior|above|earlier|all)\b[^.\n]{0,20}\b"
+        r"(?:instruction|instructions|prompt|prompts|directive|directives|rule|rules)\b")),
+    ("addressed to the assistant", re.compile(
+        r"(?i)\b(?:you are|act as|from now on,? you|as an ai|system prompt)\b"
+        r"[^.\n]{0,60}\b(?:assistant|model|ai|language model|chatbot)\b")),
+    ("standing directive planted for retrieval", re.compile(
+        r"(?i)\b(?:standing (?:directive|instruction|order)|operating instruction|"
+        r"mandatory notice)\b[^.\n]{0,40}\b(?:must|always|never|comply|carry out)\b")),
+    ("exfiltration instruction", re.compile(
+        r"(?i)\b(?:send|post|forward|transmit|upload|exfiltrate)\b[^.\n]{0,40}\b"
+        r"(?:to )?(?:https?://|the following (?:url|address|endpoint)|"
+        r"attacker|webhook)\b")),
+)
+
+#: How many poisoned chunks to name in one finding's evidence. A store somebody has
+#: indexed a campaign into carries hundreds of matching chunks, and the remedy is the
+#: same after the third: the evidence names what was found and states the count.
+MAX_POISON_SHOWN = 3
 
 #: Embedding spaces a *published, pre-trained* inverter already covers, so an attacker
 #: holding a dump of them does not have to train anything. Read off the `vec2text`
@@ -564,6 +613,41 @@ def scan_vector_store(path: Path, root: Path | None = None) -> list[VectorStoreF
                     "Take the credential out of the corpus and re-index. Rotate it: "
                     "anything that reached an embedding store has been copied at least "
                     "once more than you intended."
+                ),
+            ))
+        # LLM08, embedding-store poisoning. Matched per CHUNK rather than over the
+        # joined sample, because the count of poisoned chunks is what tells an operator
+        # whether somebody indexed one stray document or ran a campaign, and a joined
+        # blob cannot answer that. One finding per pattern, never one per chunk: a
+        # scanner that emits 400 rows for one planted campaign is one nobody reads.
+        for label, pattern in _POISON_PATTERNS:
+            hits = [t for t in texts if pattern.search(t)]
+            if not hits:
+                continue
+            shown = "; ".join(repr(h.strip()[:120]) for h in hits[:MAX_POISON_SHOWN])
+            more = (f" and {len(hits) - MAX_POISON_SHOWN} further chunk(s)"
+                    if len(hits) > MAX_POISON_SHOWN else "")
+            findings.append(VectorStoreFinding(
+                id=f"vectorstore-poisoned-{_slug(label)}-{_slug(where)}",
+                severity="high",
+                store_file=where,
+                technique="embedding-store poisoning",
+                evidence=(
+                    f"{len(hits)} indexed chunk(s) carry an instruction addressed to "
+                    f"the model rather than content ({label}): {shown}{more}. Retrieval "
+                    f"hands these to the model as context, so an application that treats "
+                    f"retrieved text as authoritative executes what somebody indexed. "
+                    f"Nothing about the attacker's own session is needed: the payload is "
+                    f"already in the corpus and fires on whichever user's query retrieves "
+                    f"it."
+                ),
+                recommendation=(
+                    "Treat the indexing path as an input boundary: screen documents for "
+                    "instruction shapes before they are embedded, and record who "
+                    "submitted each one. In the application, mark retrieved text as data "
+                    "in the prompt and keep the model's instructions out of the "
+                    "retrieved channel, so a chunk that says 'ignore your instructions' "
+                    "is quoted rather than obeyed."
                 ),
             ))
 

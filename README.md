@@ -47,7 +47,7 @@ It also says what the tool stopped claiming.
 | LLM06 unbounded consumption *(LLM10 in 2025)* | repetition-flood and output-amplification probes with a cost figure; amplification fires either when the reply delivers more items than the prompt asked for or when its volume passes the threshold, so a reply that honours the count and still burns the tokens is caught; under load (`--app-stress`), whether a guardrail that held at one request holds at N | black-box |
 | LLM07 misinformation *(LLM09 in 2025)* | asks about entities that provably do not exist; confabulation is the finding | black-box |
 | LLM08 hidden context exposure *(LLM07 system prompt leakage in 2025)* | extraction attacks against system prompts and exact private retrieved-policy or tool-schema excerpts. **Partial:** the excerpt detector does not detect paraphrased, encoded or partial exposure | black-box |
-| LLM09 vector and embedding weaknesses *(LLM08 in 2025)* | for RAG apps: retrieval exposure + indirect injection via a poisoned retrieved document; offline, a persisted store (`--vector-store`) is read for embedding-inversion exposure and for multi-tenant namespace isolation, where one store holds several tenants' vectors | black-box + white-box |
+| LLM09 vector and embedding weaknesses *(LLM08 in 2025)* | for RAG apps: retrieval exposure + indirect injection via a poisoned retrieved document; offline, a persisted store (`--vector-store`) is read for embedding-inversion exposure, for multi-tenant namespace isolation where one store holds several tenants' vectors, and for store poisoning where an indexed chunk carries an instruction addressed to the model | black-box + white-box |
 | LLM10 improper output handling *(LLM05 in 2025)* | asks the app to emit active payloads; a raw echo is the finding | black-box |
 
 Findings come out as SARIF v2.1.0, HTML, JSON and Markdown, each carrying a CVSS v4.0 base
@@ -71,7 +71,7 @@ lockfile pins, or a row a re-score withdrew, prints at the lower severity it was
 | `--app-rag-poison <marker>` | LLM09 indirect injection | the marker a planted poisoned document tells the model to emit |
 | `--repo <path>` | LLM04 | dependency manifests, Python/npm/Go (`--osv` for known CVEs, `--sbom` for CycloneDX) |
 | `--model-scan <path>` | LLM05 | serialized model files, read as pickle opcodes and never unpickled |
-| `--vector-store <path>` | LLM09 embedding inversion + multi-tenant isolation | a persisted vector store (Chroma sqlite, JSON store, FAISS sidecar), read offline |
+| `--vector-store <path>` | LLM09 embedding inversion + multi-tenant isolation + store poisoning | a persisted vector store (Chroma sqlite, JSON store, FAISS sidecar), read offline |
 | `--app-stress <N>` | every app case, under load | one wave of N simultaneous requests per case. There is no default, because the target is somebody else's running app |
 | `--redteam-set <csv>` | LLM01 depth | the JailbreakBench 100-behaviour corpus (`--redteam-benign` adds the over-refusal rate) |
 | `--redteam-generate <N>` | LLM01 breadth | N model-composed variants of each authored case, validated before they run |

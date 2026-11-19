@@ -101,7 +101,9 @@ as a silent pass:
   inversion, alongside its two black-box dimensions, retrieval exposure and indirect injection via a
   poisoned retrieved document (see the [vector-store deep-dive](llm08.md)). The same `--vector-store` pass also
   reports **multi-tenant namespace isolation**, where the store's own per-vector metadata shows several
-  tenants sharing one store. Embedding poisoning and inversion itself remain not-exercised.
+  tenants sharing one store, and **embedding-store poisoning**, where an indexed chunk carries an
+  instruction addressed to the model rather than content. Running an inversion itself remains
+  not-exercised, because that needs a trained inverter per embedding space.
 
 Every scan prints a coverage footer accounting for **all ten** categories, so the report never overstates
 what was tested.

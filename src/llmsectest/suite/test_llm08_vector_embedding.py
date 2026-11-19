@@ -34,9 +34,15 @@ A third dimension is **white-box** and needs no application at all:
   inversion asks, from the store, where the usual answer is that the plaintext is
   filed next to the vector and no inversion is needed.
 
-The remaining white-box dimensions — embedding-store poisoning and multi-tenant
-namespace isolation — are tracked as a later increment and reported not-exercised,
-never silently passed.
+The other two white-box dimensions now ship on the same store scan, so this module no
+longer carries a not-exercised increment:
+
+* **multi-tenant namespace isolation** (shipped 2026-09-29) — one store holding several
+  tenant values, where separation rests on a metadata filter every query has to pass.
+* **embedding-store poisoning** (shipped 2026-11-19) — an indexed chunk carrying an
+  instruction addressed to the model. The black-box probes above ask whether the
+  application obeys a poisoned document the operator planted; this asks whether one is
+  in the store already.
 """
 
 import os
