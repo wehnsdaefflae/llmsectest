@@ -192,6 +192,14 @@ class TestJSONSummary:
             "overall_score": risk_scorer.weighted_factor_sum.__name__,
         }
 
+    def test_risk_assessment_states_whether_a_calibration_was_used(self, results):
+        """The report says the scores are absolute when no baseline was loaded."""
+        risk = RiskScoringEngine().calculate_risk(results, calculate_statistics(results))
+        data = json.loads(
+            JSONSummaryGenerator(TOOL, VERSION).generate(results, risk_score=risk)
+        )
+        assert data["risk_assessment"]["calibration_used"] is False
+
 
 class TestReportManager:
     """The component that drives all four formats and isolates their failures."""

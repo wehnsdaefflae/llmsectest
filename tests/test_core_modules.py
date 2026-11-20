@@ -1047,6 +1047,20 @@ class TestConsoleSummary:
         ):
             assert function.__name__ in output
 
+    def test_summary_states_whether_the_scores_are_absolute_or_relative(self, sample_results):
+        """The terminal says the scores are absolute with no baseline, relative with one."""
+        stats = calculate_statistics(sample_results)
+        absolute = RiskScoringEngine().calculate_risk(sample_results, stats)
+        output = generate_console_summary(sample_results, risk_score=absolute, show_colors=False)
+        assert "Calibration: none (scores are absolute)" in output
+        relative = RiskScoringEngine().calculate_risk(
+            sample_results,
+            stats,
+            baseline_analysis={"regressed_tests": ["test::test_fail"], "fixed_tests": []},
+        )
+        output = generate_console_summary(sample_results, risk_score=relative, show_colors=False)
+        assert "Calibration: baseline loaded" in output
+
 
 # =============================================================================
 # Risk Scoring Engine Tests
@@ -1130,6 +1144,18 @@ class TestRiskScoringEngine:
             "severity_scores": risk_scorer.weight_scaled_failure_rate.__name__,
             "overall_score": risk_scorer.weighted_factor_sum.__name__,
         }
+
+    def test_risk_score_states_whether_a_calibration_was_used(self, engine, mixed_results):
+        """A score with no baseline loaded is absolute; one with a baseline is relative to it."""
+        stats = calculate_statistics(mixed_results)
+        absolute = engine.calculate_risk(mixed_results, stats)
+        assert absolute.calibration_used is False
+        relative = engine.calculate_risk(
+            mixed_results,
+            stats,
+            baseline_analysis={"regressed_tests": ["test::test_fail0"], "fixed_tests": []},
+        )
+        assert relative.calibration_used is True
 
     def test_recommendations_generated(self, engine, mixed_results):
         """Recommendations are non-empty."""

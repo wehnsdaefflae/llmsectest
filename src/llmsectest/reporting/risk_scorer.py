@@ -53,6 +53,7 @@ class RiskScore:
     factors: dict[str, float]  # Individual factor contributions
     recommendations: list[str]
     aggregations: dict[str, str] = field(default_factory=dict)  # score name -> name of the function that computed it
+    calibration_used: bool = False  # True when a baseline was loaded, so the overall score is relative to it; False means the scores are absolute, computed from this run alone
 
 
 class RiskScoringEngine:
@@ -163,6 +164,10 @@ class RiskScoringEngine:
                 "severity_scores": weight_scaled_failure_rate.__name__,
                 "overall_score": weighted_factor_sum.__name__,
             },
+            # The plugin passes None when no baseline was loaded, and a baseline
+            # analysis dict when one was, so this is the load itself, not a
+            # threshold on the regression score: an empty baseline still counts.
+            calibration_used=baseline_analysis is not None,
         )
 
     def _calculate_failure_score(self, statistics: dict) -> float:
