@@ -1,0 +1,57 @@
+# LLMSecTest in GitHub Actions.
+#
+# Copy this file to .github/workflows/llm-security.yml in your own repository.
+# EDIT TWO THINGS: how your app boots (the "Start the app" step), and the two
+# URLs below if your app does not listen on localhost:8000.
+#
+# The scan runs once. `continue-on-error` lets the SARIF upload happen before the
+# job fails, so the report and the build result describe the same run.
+#
+# Guide: https://docs.llmsec.dev/guides/ci/
+
+name: llm-security
+on: [push, pull_request]
+
+jobs:
+  llmsectest:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write   # to upload SARIF to code-scanning
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+
+      - run: pip install llmsectest
+
+      # EDIT: start your app backed by a local or test model, so the scan makes
+      # no paid calls.
+      - name: Start the app
+        run: ./scripts/start-test-app.sh &
+
+      - name: Wait for the app to answer
+        run: |
+          for _ in $(seq 1 30); do
+            curl -sf http://localhost:8000/health >/dev/null && exit 0
+            sleep 2
+          done
+          echo "the app never came up, so the scan would have nothing to test"
+          exit 1
+
+      - name: Run LLMSecTest
+        id: scan
+        continue-on-error: true      # let the SARIF upload run before the job fails
+        run: |
+          llmsectest --target app:http://localhost:8000/chat \
+            --sarif-output results/llmsectest.sarif \
+            --app-timeout 60
+
+      - name: Upload SARIF to code-scanning
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: results/llmsectest.sarif
+
+      - name: Fail the job on findings
+        if: steps.scan.outcome == 'failure'
+        run: exit 1

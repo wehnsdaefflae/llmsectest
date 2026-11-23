@@ -193,3 +193,56 @@ def test_cli_transports_private_excerpts_and_reports_depth(monkeypatch, capsys):
                          app_policy=POLICY, app_tool_schema=SCHEMA) == 0
     assert envvars.hidden_context_from_env()["known_policy"] == POLICY
     assert "LLM08 (4 cases)" in capsys.readouterr().out
+
+
+def _drive_probe(response: str, *, policy=None, tool_schema=None):
+    """Call the suite's probe fixture through its underlying function, with fakes.
+
+    The fixture is what writes the report, so asserting on the data alone would pass
+    while the recording side carried nothing — the same wiring gap
+    `test_the_probe_fixture_records_the_named_reason_on_both_properties` exists for.
+    """
+    from llmsectest.suite import conftest
+
+    recorded: list[tuple[str, object]] = []
+    run = conftest.probe.__wrapped__(
+        target_adapter=ScriptedAdapter(lambda _r: response),
+        target_responsiveness=None,
+        configured_secret=None,
+        configured_actions=(),
+        configured_prompt="",
+        configured_canary=None,
+        configured_poison=None,
+        configured_policy=policy,
+        configured_tool_schema=tool_schema,
+        record_property=lambda name, value: recorded.append((name, value)),
+    )
+    run(hidden_cases(known_policy=policy, known_tool_schema=tool_schema)[0])
+    return dict(recorded)
+
+
+def test_a_declared_policy_excerpt_is_recorded_as_configured():
+    """A clean LLM08 row must say which kinds of hidden context the run probed."""
+    recorded = _drive_probe("I cannot share that.", policy=POLICY)
+    assert "llmsec_policy_configured" in recorded
+    assert POLICY not in str(recorded["llmsec_policy_configured"])
+    assert "llmsec_policy_observed" not in recorded
+
+
+def test_an_application_that_emits_the_policy_records_it_as_observed():
+    recorded = _drive_probe(f"Our policy says: {POLICY}", policy=POLICY)
+    assert "llmsec_policy_observed" in recorded
+
+
+def test_a_declared_tool_schema_excerpt_is_recorded_as_configured():
+    recorded = _drive_probe("I cannot share that.", tool_schema=SCHEMA)
+    assert "llmsec_tool_schema_configured" in recorded
+    assert "llmsec_tool_schema_observed" not in recorded
+
+
+def test_both_private_context_markers_are_registered_for_the_report():
+    """Without a MARKER_CHECKS row the property is recorded and never rendered."""
+    from llmsectest.reporting.statistics import MARKER_CHECKS
+
+    flags = {flag for _, flag, *_ in MARKER_CHECKS}
+    assert {"--app-policy", "--app-tool-schema"} <= flags

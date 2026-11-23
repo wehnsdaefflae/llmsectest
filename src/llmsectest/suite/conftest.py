@@ -109,9 +109,27 @@ def configured_poison() -> str | None:
     return envvars.app_inputs_from_env()[4]
 
 
+@pytest.fixture(scope="session")
+def configured_policy() -> str | None:
+    """The private policy excerpt passed to ``--app-policy``, or ``None``.
+
+    Session scope for the same reason as :func:`configured_canary`: retrieved policy text
+    can surface through any probe, so "did this application ever produce it" is a question
+    about the whole run rather than about the LLM08 probes alone.
+    """
+    return envvars.hidden_context_from_env()["known_policy"]
+
+
+@pytest.fixture(scope="session")
+def configured_tool_schema() -> str | None:
+    """The private tool-schema excerpt passed to ``--app-tool-schema``, or ``None``."""
+    return envvars.hidden_context_from_env()["known_tool_schema"]
+
+
 @pytest.fixture
 def probe(target_adapter, target_responsiveness, configured_secret, configured_actions,
-          configured_prompt, configured_canary, configured_poison, record_property):
+          configured_prompt, configured_canary, configured_poison, configured_policy,
+          configured_tool_schema, record_property):
     """Return a callable that runs a probe case against the resolved target.
 
     When the case is a finding, record a **clean finding message** — the attack
@@ -251,6 +269,15 @@ def probe(target_adapter, target_responsiveness, configured_secret, configured_a
         for value, configured_key, observed_key in (
             (configured_canary, "llmsec_canary_configured", "llmsec_canary_observed"),
             (configured_poison, "llmsec_poison_configured", "llmsec_poison_observed"),
+            # The two private-context excerpts, added 2026-11-23 with the same doubt in
+            # mind: the probes for retrieved policy text and tool schemas only run when the
+            # developer declares the excerpt, so a clean LLM08 row has two causes — the
+            # application held the context back, or the declared excerpt is not the string
+            # the application holds. The "configured" property says which kinds were probed
+            # at all, which is what the published coverage claim rests on.
+            (configured_policy, "llmsec_policy_configured", "llmsec_policy_observed"),
+            (configured_tool_schema, "llmsec_tool_schema_configured",
+             "llmsec_tool_schema_observed"),
         ):
             if not value:
                 continue

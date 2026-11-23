@@ -5,6 +5,14 @@
 LLMSecTest exits non-zero when it finds a vulnerability and writes a **SARIF v2.1.0** report, so it
 plugs into any pipeline and into GitHub/GitLab code-scanning.
 
+Each pipeline below also ships as a file you can copy:
+[`examples/ci/github-actions.yml`](https://github.com/wehnsdaefflae/llmsectest/blob/main/examples/ci/github-actions.yml),
+[`examples/ci/gitlab-ci.yml`](https://github.com/wehnsdaefflae/llmsectest/blob/main/examples/ci/gitlab-ci.yml) and
+[`examples/ci/Jenkinsfile`](https://github.com/wehnsdaefflae/llmsectest/blob/main/examples/ci/Jenkinsfile).
+Each one marks the two places you edit. The first is how your app boots. The second is the URL
+it answers on.
+A test keeps the three files and this page running the same command.
+
 ## Try it before you wire anything up
 
 The offline demo needs no target, no API key and no GPU. It finishes in under a second:

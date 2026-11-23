@@ -88,6 +88,15 @@ MARKER_CHECKS = (
      "llmsec_canary_configured", "llmsec_canary_observed"),
     (_published_id("owasp_llm08"), "--app-rag-poison",
      "llmsec_poison_configured", "llmsec_poison_observed"),
+    # Hidden Context Exposure, added 2026-11-23. The 2026 edition widened this category to
+    # retrieved policy text and exposed tool schemas, and both probes need the developer to
+    # declare the private excerpt they hunt for. Without these two entries a report could
+    # not say which kinds of hidden context a run probed, so a clean row read as a clean
+    # result for the whole category while it covered the system prompt alone.
+    (_published_id("owasp_llm07"), "--app-policy",
+     "llmsec_policy_configured", "llmsec_policy_observed"),
+    (_published_id("owasp_llm07"), "--app-tool-schema",
+     "llmsec_tool_schema_configured", "llmsec_tool_schema_observed"),
 )
 
 

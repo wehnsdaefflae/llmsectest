@@ -35,17 +35,19 @@ part a coverage table cannot carry, what a clean result does *not* tell you.
 | [LLM05 Data and Model Poisoning](llm04.md) | LLM04 | white-box, requires `--model-scan` | 7.1 High | ✅ scan |
 | [LLM06 Unbounded Consumption](llm10.md) | LLM10 | black-box | 8.7 High | ✅ probes |
 | [LLM07 Misinformation](llm09.md) | LLM09 | black-box | 5.3 Medium | ✅ probes |
-| [LLM08 Hidden Context Exposure](llm07.md) | LLM07 System Prompt Leakage | black-box | 8.7 High | ⚠️ probes cover the system-prompt subset |
+| [LLM08 Hidden Context Exposure](llm07.md) | LLM07 System Prompt Leakage | black-box; retrieved policy text and tool schemas require `--app-policy` and/or `--app-tool-schema` | 8.7 High | ✅ probes |
 | [LLM09 Vector and Embedding Weaknesses](llm08.md) | LLM08 | black-box, requires `--app-canary` and/or `--app-rag-poison` (RAG); white-box, requires `--vector-store` | 7.1 High | ✅ probes + scan |
 | [LLM10 Improper Output Handling](llm05.md) | LLM05 | black-box / white-box | 9.9 Critical | ✅ probes |
 
-!!! warning "LLM08 Hidden Context Exposure is the one category we do not fully cover"
+!!! warning "LLM08 Hidden Context Exposure needs two inputs from you"
     2025 scoped this risk to the system prompt and our probes ask the target to restate its
     instructions. 2026 scopes it to hidden context of any kind: the system prompt, developer
     instructions, retrieved policy text from a RAG store or a configuration service, and the
-    schemas of the tools the application exposes to the model. We probe the first of those. A clean
-    LLM08 result from LLMSecTest is a clean result for the system-prompt subset, not for the
-    category, and every report says so on the row rather than in a footnote.
+    schemas of the tools the application exposes to the model. We probe all of those. The last two
+    need you to declare the private excerpt with `--app-policy` and `--app-tool-schema`, because
+    only you know what your application holds privately. We never put that excerpt in the request,
+    so a hit is your application producing it unprompted. A run without those two flags covers the
+    system-prompt part alone. The report says on the row which kinds it probed.
 
 !!! warning "No silent gaps"
     All ten categories run on every invocation. Each ships a real probe or scanner; a category that

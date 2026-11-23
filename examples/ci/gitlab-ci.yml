@@ -1,0 +1,47 @@
+# LLMSecTest in GitLab CI.
+#
+# Copy this job into your own .gitlab-ci.yml, or include this file whole.
+# EDIT TWO THINGS: how your app boots, and the two URLs below if your app does
+# not listen on localhost:8000.
+#
+# `when: always` uploads the artifacts from a failed job, so the scan's own exit
+# code fails the job while the report it produced still reaches you. The job runs
+# one scan, so the report and the verdict describe the same run.
+#
+# `reports:sarif` needs GitLab Ultimate (generally available in 19.2). On any
+# other tier that key is ignored and the same files arrive under `paths:`.
+#
+# Guide: https://docs.llmsec.dev/guides/ci/
+
+stages: [test]
+
+llmsectest:
+  stage: test
+  image: python:3.11
+  script:
+    - pip install llmsectest
+
+    # EDIT: start your app backed by a local or test model, so the scan makes no
+    # paid calls.
+    - ./scripts/start-test-app.sh &
+
+    - |
+      up=0
+      for _ in $(seq 1 30); do
+        if curl -sf http://localhost:8000/health >/dev/null; then up=1; break; fi
+        sleep 2
+      done
+      [ "$up" = 1 ] || { echo "the app never came up, so the scan would have nothing to test"; exit 1; }
+
+    - |
+      llmsectest --target app:http://localhost:8000/chat \
+        --report-formats=sarif,html \
+        --report-dir results \
+        --sarif-output results/llmsectest.sarif \
+        --app-timeout 60
+  artifacts:
+    when: always
+    paths:
+      - results/
+    reports:
+      sarif: results/llmsectest.sarif

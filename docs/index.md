@@ -59,10 +59,13 @@ target, run `llmsectest --check` to see the live map.
     Eight categories changed number and LLM07 System Prompt Leakage became **LLM08 Hidden Context
     Exposure**, with a wider remit covering retrieved policy text and tool schemas.
 
-    **Our LLM08 probes cover the system-prompt subset of that category.** Retrieved policy text and
-    exposed tool schemas are in the 2026 scope and are not yet probed. So a clean LLM08 row reports
-    a clean result for the system-prompt part. It says nothing about the whole category. Every report
-    states that on the row.
+    **Our LLM08 probes cover all three kinds of hidden context.** The system-prompt probes run
+    against every target. The probes for retrieved policy text and for exposed tool schemas need
+    you to declare the private excerpt they hunt for, with `--app-policy` and `--app-tool-schema`,
+    because only you know what your application holds privately. We never put that excerpt in the
+    request, so a hit means your application produced it unprompted. A run without those two flags
+    reports a clean result for the system-prompt part alone. Every report states on the row which
+    kinds were probed.
 
     **Reports published before 20 October 2026 carry 2025 numbers** and have not been rewritten. A
     renumber of a published record would change what that record means after the fact. Both numbers

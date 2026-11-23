@@ -64,6 +64,11 @@ dev = [
     "cvss>=3.0",
     "openai>=1.0",
     "httpx>=0.27",
+    # `pyyaml` reads the two YAML templates under examples/ci/ in
+    # tests/test_ci_templates.py. Without it here those tests skip in CI, which is
+    # the exact failure the comment above describes: a shipped artefact nothing
+    # checks. The shipped package needs no YAML at runtime.
+    "pyyaml>=6.0",
 ]
 # mkdocs is pinned <2: the upstream "MkDocs 2.0" is a backward-incompatible, currently
 # unlicensed rewrite (TOML config, plugin/theme system removed, no migration path); the

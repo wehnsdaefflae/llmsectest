@@ -1,0 +1,58 @@
+// LLMSecTest in Jenkins.
+//
+// Copy this file to the root of your own repository as `Jenkinsfile`.
+// EDIT TWO THINGS: how your app boots, and the two URLs below if your app does
+// not listen on localhost:8000.
+//
+// `recordIssues` needs the Warnings Next Generation plugin, whose `sarif` parser
+// reads any SARIF 2.1.0 file and puts the findings on the build page.
+//
+// `catchError(buildResult: 'UNSTABLE')` turns a non-zero scan into an amber
+// build. Drop the wrapper and the same step fails the build outright. UNSTABLE
+// is a real result, so use it to keep a pipeline moving rather than to make a
+// category of finding disappear.
+//
+// Guide: https://docs.llmsec.dev/guides/ci/
+
+pipeline {
+  agent any
+
+  stages {
+    stage('LLM security scan') {
+      steps {
+        sh 'python3 -m venv .venv && .venv/bin/pip install llmsectest'
+
+        // EDIT: start your app backed by a local or test model, so the scan
+        // makes no paid calls.
+        sh './scripts/start-test-app.sh &'
+
+        sh '''
+          up=0
+          for _ in $(seq 1 30); do
+            if curl -sf http://localhost:8000/health >/dev/null; then up=1; break; fi
+            sleep 2
+          done
+          [ "$up" = 1 ] || { echo "the app never came up, so the scan would have nothing to test"; exit 1; }
+        '''
+
+        catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE',
+                   message: 'llmsectest exited non-zero: findings, or probes that never came back') {
+          sh '''
+            .venv/bin/llmsectest --target app:http://localhost:8000/chat \
+              --report-formats=sarif,html \
+              --report-dir results \
+              --sarif-output results/llmsectest.sarif \
+              --app-timeout 60
+          '''
+        }
+      }
+    }
+  }
+
+  post {
+    always {
+      archiveArtifacts artifacts: 'results/**', allowEmptyArchive: true
+      recordIssues tools: [sarif(pattern: 'results/llmsectest.sarif')]
+    }
+  }
+}

@@ -776,6 +776,8 @@ def test_the_probe_fixture_records_the_named_reason_on_both_properties():
         configured_prompt="",
         configured_canary=None,
         configured_poison=None,
+        configured_policy=None,
+        configured_tool_schema=None,
         record_property=lambda name, value: recorded.append((name, value)),
     )
     with pytest.warns(UserWarning):

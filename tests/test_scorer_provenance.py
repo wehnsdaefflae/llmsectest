@@ -47,6 +47,8 @@ def _finding(adapter, case, responsiveness):
         configured_prompt="",
         configured_canary=None,
         configured_poison=None,
+        configured_policy=None,
+        configured_tool_schema=None,
         record_property=properties.__setitem__,
     )
     outcome = probe(case)

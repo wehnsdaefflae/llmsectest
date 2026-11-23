@@ -12,6 +12,19 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ### Added
 
+- 2026-11-23: Reports now record which kinds of private context a run probed.
+  A report row carries the declared retrieved-policy excerpt and the declared
+  tool-schema excerpt, each with the verdict on whether the application gave it
+  back. The four earlier markers already worked this way. Those two did not, so
+  a reader of a report could not tell whether a scan had exercised the private
+  context at all. Four tests drive the real probe fixture and assert both
+  properties reach the report.
+
+- 2026-11-23: Copyable CI templates ship under `examples/ci/`. The three are a
+  GitHub Actions workflow, a GitLab CI job and a Jenkinsfile. Each marks the two
+  places a user edits. A test parses every template and holds it against the CI
+  guide, so the shipped file and the documented pipeline cannot drift apart.
+
 - 2026-11-20: **a report now says whether its risk scores are absolute or relative to a
   calibration.** The JSON summary's `risk_assessment` carries `calibration_used`, and the
   console risk assessment prints one `Calibration:` line. It is `false`, and the scores
