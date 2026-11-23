@@ -289,6 +289,13 @@ def generate_console_summary(
                 for score, name in risk_score.aggregations.items()
             )
             lines.append(f"    Aggregation: {how}")
+        # The overall score folds the baseline in at 10% when one was loaded, while
+        # the category and severity scores never do, so only the overall score can
+        # be relative; the line still names the kind for the report as a whole.
+        if risk_score.calibration_used:
+            lines.append("    Calibration: baseline loaded (overall score includes a baseline comparison)")
+        else:
+            lines.append("    Calibration: none (scores are absolute)")
         top_factors = sorted(risk_score.factors.items(), key=lambda x: x[1], reverse=True)[:3]
         if top_factors:
             for factor, value in top_factors:

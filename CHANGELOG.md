@@ -12,6 +12,16 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ### Added
 
+- 2026-11-20: **a report now says whether its risk scores are absolute or relative to a
+  calibration.** The JSON summary's `risk_assessment` carries `calibration_used`, and the
+  console risk assessment prints one `Calibration:` line. It is `false`, and the scores
+  absolute, when no baseline was loaded; when a baseline was loaded it is `true` and the
+  overall score includes the baseline comparison at its 10% weight, while the category and
+  severity scores stay absolute. Nothing is recomputed and the scores are identical before
+  and after. This is the second of the three fields issue #37 asks for; the severity
+  altitude is left for its own change. Three tests pin the flag on the score, in the JSON
+  and in the console.
+
 - 2026-11-19: `--vector-store` reads a persisted store for **embedding-store
   poisoning**, the last unshipped white-box LLM08 dimension. Four instruction
   shapes are matched in stored chunks: an override of the model's own
