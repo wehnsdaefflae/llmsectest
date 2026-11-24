@@ -203,6 +203,10 @@ def bootstrap_interval(
     every resample is identical and both bounds equal the rate. Read "0.0 to 0.0" as "no event
     in this sample", not as certainty that the rate is zero.
     """
+    if not isinstance(resamples, int) or resamples <= 0:
+        raise ValueError(f"resamples must be a positive integer, got {resamples}")
+    if not 0 < confidence < 1:
+        raise ValueError(f"confidence must be between 0 and 1 exclusively, got {confidence}")
     if not 0 <= events <= samples:
         raise ValueError(f"events must be between 0 and samples, got {events} of {samples}")
     if samples < BOOTSTRAP_MIN_SAMPLES:
