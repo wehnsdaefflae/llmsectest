@@ -303,6 +303,21 @@ def test_bootstrap_interval_rejects_counts_that_cannot_be_a_rate():
         statistics.bootstrap_interval(5, 4)
 
 
+@pytest.mark.parametrize(
+    "settings",
+    [{"resamples": 0}, {"confidence": 0}, {"confidence": 1}, {"confidence": -0.5}],
+)
+@pytest.mark.parametrize("samples", [10, 43])
+def test_bootstrap_interval_rejects_settings_that_cannot_give_an_interval(settings, samples):
+    """A bad resample count or confidence level is refused, whatever the sample size.
+
+    Zero resamples used to surface as an IndexError, and a negative confidence came back
+    as bounds in the wrong order. Both are a ValueError now, small sample or not.
+    """
+    with pytest.raises(ValueError):
+        statistics.bootstrap_interval(3, samples, **settings)
+
+
 def test_a_row_with_thirty_scored_probes_carries_its_rate_and_bounds():
     """The bounds sit beside the rate they bound, and the old fields still read the same."""
     row = _row_of(findings=12, withstood=31)
