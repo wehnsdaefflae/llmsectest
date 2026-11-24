@@ -1,5 +1,7 @@
 """Centralized statistics calculation for test results."""
 
+import math
+import random
 from collections import defaultdict
 
 from .models import TestResult
@@ -160,6 +162,74 @@ def _shipped_corpus_cases(marker: str) -> int:
     return count
 
 
+# The floor under which a rate gets no interval. Issue #36 set it at 30, the sample size at
+# which the nearest comparable tool starts printing bounds. Below it the row says the sample
+# is too small: a bound over four probes would look like knowledge and be mostly noise.
+BOOTSTRAP_MIN_SAMPLES = 30
+BOOTSTRAP_RESAMPLES = 10_000
+BOOTSTRAP_CONFIDENCE = 0.95
+# Fixed, so the same counts give the same bounds in every report and a test can pin them.
+# The value itself means nothing (it is the issue number).
+BOOTSTRAP_SEED = 36
+
+
+def bootstrap_interval(
+    events: int,
+    samples: int,
+    *,
+    resamples: int = BOOTSTRAP_RESAMPLES,
+    confidence: float = BOOTSTRAP_CONFIDENCE,
+    seed: int = BOOTSTRAP_SEED,
+) -> dict:
+    """A percentile bootstrap confidence interval for the rate ``events / samples``.
+
+    Method: the sample is ``samples`` yes/no outcomes of which ``events`` are yes. It is
+    resampled with replacement ``resamples`` times (10,000 by default), the rate of each
+    resample is recorded, and the bounds are the percentiles that cut ``(1 - confidence) / 2``
+    off each end of those rates (the 2.5th and 97.5th for the default 95%). The generator is
+    seeded, so the same counts always give the same bounds.
+
+    Takes counts rather than a tally row on purpose. The per-category rows of
+    :func:`attack_tally` are one caller; the cross-application firing rates, computed outside
+    this package from stored reports, are another, and counts keep the two independent.
+
+    Returns the fields to merge beside a rate. With at least ``BOOTSTRAP_MIN_SAMPLES`` samples
+    that is ``confidence``, ``confidence_lower`` and ``confidence_upper``. With fewer it is a
+    single ``confidence_note`` saying the sample is too small, and no bounds: refusing is the
+    honest answer for a small sample, and a consumer checking for ``confidence_lower`` finds
+    nothing rather than a guess.
+
+    A known limit of the percentile method: when ``events`` is zero or equals ``samples``,
+    every resample is identical and both bounds equal the rate. Read "0.0 to 0.0" as "no event
+    in this sample", not as certainty that the rate is zero.
+    """
+    if not 0 <= events <= samples:
+        raise ValueError(f"events must be between 0 and samples, got {events} of {samples}")
+    if samples < BOOTSTRAP_MIN_SAMPLES:
+        return {
+            "confidence_note": (
+                f"sample too small for a confidence interval: {samples} scored, "
+                f"{BOOTSTRAP_MIN_SAMPLES} needed"
+            )
+        }
+    rng = random.Random(seed)
+    rate = events / samples
+    # Drawing each outcome against the observed rate is the same as picking, with
+    # replacement, from a list of `events` ones and `samples - events` zeros.
+    rates = sorted(
+        sum(1 for _ in range(samples) if rng.random() < rate) / samples
+        for _ in range(resamples)
+    )
+    tail = (1 - confidence) / 2
+    lower = rates[math.floor(tail * resamples)]
+    upper = rates[math.ceil((1 - tail) * resamples) - 1]
+    return {
+        "confidence": confidence,
+        "confidence_lower": round(lower, 4),
+        "confidence_upper": round(upper, 4),
+    }
+
+
 def withstood_probes(results: list[TestResult]) -> list[TestResult]:
     """The results :func:`attack_tally` counts as ``withstood``, in delivery order.
 
@@ -245,6 +315,13 @@ def attack_tally(results: list[TestResult]) -> dict | None:
     ``corpus_cases`` key: an absent claim beats a misleading zero. The SARIF
     generator embeds this tally verbatim, so both fields reach the run
     properties with no generator change.
+
+    Each row also states its finding rate and how uncertain it is (issue #36).
+    ``scored`` is ``attempted - inconclusive - voided`` and ``finding_rate`` is
+    ``findings / scored``. A row with at least 30 scored probes carries
+    ``confidence``, ``confidence_lower`` and ``confidence_upper`` from
+    :func:`bootstrap_interval` (percentile bootstrap, 10,000 resamples, 95%, fixed
+    seed). A row with fewer carries ``confidence_note`` and no bounds.
     """
     # Whether *any* reply in the run carried the developer's secret, recorded by the probe
     # fixture across every category. Computed before the loop because it changes how a
@@ -292,6 +369,19 @@ def attack_tally(results: list[TestResult]) -> dict | None:
     # never carries a half counted delivered figure.
     for row in by_category.values():
         row["delivered"] = row["attempted"]
+
+    # The finding rate and how sure the sample lets us be of it (issue #36). `scored` is the
+    # denominator: probes that got a verdict the row stands behind. `inconclusive` never got
+    # one, and it already includes `undelivered` and `boundary_refused`. `voided` was scored
+    # and then rejected because the secret got out elsewhere in the run, so a bound that
+    # counted it would cover a sample the row makes no claim about. A row with nothing
+    # scored carries no rate at all: 0/0 is not zero.
+    for row in by_category.values():
+        scored = row["attempted"] - row["inconclusive"] - row["voided"]
+        row["scored"] = scored
+        if scored:
+            row["finding_rate"] = round(row["findings"] / scored, 4)
+        row.update(bootstrap_interval(row["findings"], scored))
 
     # A configured marker the whole run never saw. Annotated per category and collected
     # at run level, because it changes how the row above it reads and a consumer of the
