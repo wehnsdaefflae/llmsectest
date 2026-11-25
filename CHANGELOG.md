@@ -12,6 +12,19 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ### Added
 
+- 2026-11-25: `--target testbed` scans a target whose clean result can be checked.
+  It is short for the application scan of a locally started
+  [`mloda-rag-testbed`](https://github.com/TomKaltofen/mloda-rag-testbed), Tom
+  Kaltofen's project, as the user Bob: `--target app:http://localhost:8000/chat`
+  with `--app-body`, `--app-session-field` and the testbed's default
+  `--app-secret`, `--app-canary` and `--app-rag-poison`. A flag typed by the user
+  replaces the default, so `--app-body '{"user": "alice"}'` runs the positive
+  control. Until now a first-time user had to copy that command from the testbed's
+  docs, and one mistyped marker makes every probe read as withstood. The run
+  prints what it scans and whose project it is. *A target where you can check a
+  clean result* in `docs/guides/target-app.md` has the command, the long form and
+  what Bob and Alice should each show (issue #15).
+
 - 2026-11-24: A per-category row in the attack tally now states its finding rate
   and how uncertain that rate is. `scored` is `attempted - inconclusive - voided`
   and `finding_rate` is `findings / scored`. A row with at least 30 scored probes

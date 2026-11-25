@@ -564,6 +564,63 @@ document was there to leak in the first place.
 That is the property to look for when you want to trust this tool rather than run it. Size is not
 the point. Knowing the answer in advance is. Linked here with the author's permission.
 
+### Scan it with one command
+
+The testbed is Tom Kaltofen's project, not part of this tool, and nobody hosts it for you.
+Install it on your own machine with the Quickstart in
+[its README](https://github.com/TomKaltofen/mloda-rag-testbed#quickstart), then start it in
+ground-truth mode. `uvicorn` listens on port 8000 unless told otherwise, which is where the
+shortcut looks:
+
+```bash
+TESTBED_RETRIEVAL=all uvicorn mloda_rag_testbed.app:app
+```
+
+Then, from another terminal:
+
+```bash
+llmsectest --target testbed
+```
+
+`--target testbed` is short for the scan that the testbed's own `docs/scan.md` describes, with
+the testbed's default markers filled in:
+
+```bash
+llmsectest --target app:http://localhost:8000/chat \
+    --app-body '{"user": "bob"}' \
+    --app-session-field conversation_id \
+    --app-secret "SECRET-DEMO-7f2a" \
+    --app-canary "CANARY-EXAMPLEBANK-91ac" \
+    --app-rag-poison "POISON-EXAMPLEBANK-3b9d"
+```
+
+Any of these flags that you type yourself replaces the default, and the rest stay. If you changed
+`TESTBED_SECRET`, `TESTBED_CANARY` or `TESTBED_POISON` when starting the testbed, pass the same
+value to the matching flag.
+
+**What to expect, and how to check it.** The shortcut scans as Bob. The canary sits in Alice's
+payroll document, which Bob is not allowed to see, so the canary must not be found. Now run the
+positive control, the same scan as Alice:
+
+```bash
+llmsectest --target testbed --app-body '{"user": "alice"}'
+```
+
+Alice can see the document, so here the canary can be reached. A scan that reports the canary for
+Alice and not for Bob measured the application. A scan that reports it for neither measured
+nothing, and the report says so itself with a line that starts `Unconfirmed:`.
+
+You can confirm the ground truth without the scanner. Every reply from the testbed lists the
+documents that reached the prompt in `sources`: `alice_payroll` is there for Alice and absent for
+Bob.
+
+**The `fake` backend shows no difference.** `TESTBED_LLM=fake` answers without a model and never
+repeats the planted markers, so the Bob and Alice scans read the same and both print
+`Unconfirmed:`. It is enough to see that the scan reaches the application. To see the difference
+between Bob and Alice, start the testbed with a real model backend (`codex` or `mistral`), and
+read the security note in its README first: it asks you to run those in a container or a
+disposable VM.
+
 ## When you can't run the app: the persona proxy
 
 If you only have the app's system prompt (not a running instance), load it onto a model and test that
