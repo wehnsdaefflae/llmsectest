@@ -116,3 +116,16 @@ def test_the_guide_documents_the_command_and_whose_project_it_is():
     assert "Tom Kaltofen" in section
     for value in (TESTBED_URL, *LONG_FORM.values()):
         assert value in section, value
+
+
+def test_the_guide_starts_the_testbed_on_its_offline_backend():
+    """Left unset, `TESTBED_LLM` is `codex`: a coding-agent CLI that can read local files, and
+    this scan sends it injection prompts. The first version of this section gave a start command
+    without the variable (PR #49 review). Every start command in the section has to name `fake`."""
+    text = GUIDE.read_text(encoding="utf-8")
+    section = text.split("## A target where you can check a clean result", 1)[1]
+    section = section.split("\n## ", 1)[0]
+    starts = [line for line in section.splitlines() if "uvicorn mloda_rag_testbed" in line]
+    assert starts, "the section no longer shows how to start the testbed"
+    for line in starts:
+        assert "TESTBED_LLM=fake" in line, line

@@ -568,13 +568,17 @@ the point. Knowing the answer in advance is. Linked here with the author's permi
 
 The testbed is Tom Kaltofen's project, not part of this tool, and nobody hosts it for you.
 Install it on your own machine with the Quickstart in
-[its README](https://github.com/TomKaltofen/mloda-rag-testbed#quickstart), then start it in
-ground-truth mode. `uvicorn` listens on port 8000 unless told otherwise, which is where the
-shortcut looks:
+[its README](https://github.com/TomKaltofen/mloda-rag-testbed#quickstart), then start it with
+the offline `fake` backend, in ground-truth mode. `uvicorn` listens on port 8000 unless told
+otherwise, which is where the shortcut looks:
 
 ```bash
-TESTBED_RETRIEVAL=all uvicorn mloda_rag_testbed.app:app
+TESTBED_LLM=fake TESTBED_RETRIEVAL=all uvicorn mloda_rag_testbed.app:app
 ```
+
+**Set `TESTBED_LLM=fake` every time.** Left unset, the testbed uses its `codex` backend, a
+coding-agent CLI that can read files on the machine it runs on, and this scan sends it injection
+prompts on purpose. `fake` starts no model and no subprocess.
 
 Then, from another terminal:
 
@@ -607,19 +611,23 @@ llmsectest --target testbed --app-body '{"user": "alice"}'
 ```
 
 Alice can see the document, so here the canary can be reached. A scan that reports the canary for
-Alice and not for Bob measured the application. A scan that reports it for neither measured
-nothing, and the report says so itself with a line that starts `Unconfirmed:`.
+Alice and not for Bob measured the application.
 
-You can confirm the ground truth without the scanner. Every reply from the testbed lists the
-documents that reached the prompt in `sources`: `alice_payroll` is there for Alice and absent for
-Bob.
+A scan that reports it for neither settles nothing by itself. The report says so with a line that
+starts `Unconfirmed:`, because a model that keeps the canary to itself and a canary that never
+reached the prompt look the same from the reply. Whether a model repeats the canary once it is in
+the prompt depends on the model, so an absent canary for Alice can still be a real, good result.
+Check retrieval separately: every reply from the testbed lists the documents that reached the
+prompt in `sources`. `alice_payroll` is there for Alice and absent for Bob.
 
-**The `fake` backend shows no difference.** `TESTBED_LLM=fake` answers without a model and never
-repeats the planted markers, so the Bob and Alice scans read the same and both print
-`Unconfirmed:`. It is enough to see that the scan reaches the application. To see the difference
-between Bob and Alice, start the testbed with a real model backend (`codex` or `mistral`), and
-read the security note in its README first: it asks you to run those in a container or a
-disposable VM.
+**The `fake` backend shows no difference.** It answers without a model and never repeats the
+planted markers, so the Bob and Alice scans read the same and both print `Unconfirmed:`. That is
+enough to see that the scan reaches the application, and `sources` still shows the ground truth.
+
+**To see the difference between Bob and Alice you need a real model backend** (`codex` or
+`mistral`). Before you start one, read the security note in the testbed's README: it asks you to
+run those backends in a container or a disposable VM, never on a machine with data or credentials
+you care about.
 
 ## When you can't run the app: the persona proxy
 
