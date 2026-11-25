@@ -96,7 +96,9 @@ everywhere it can be, is most of what the list below says.
   `attacks_withstood` property. Without it, a well-defended app and a scan that attacked nothing
   produce the same empty report. Each held probe also leaves its own SARIF row with the reply it
   gave (`kind: pass`, `level: none`), so you can read what your app said when it refused. Those
-  rows never count as findings.
+  rows never count as findings. The HTML report prints each category's finding rate beside those
+  counts, with a 95% confidence interval once a category has at least 30 scored probes. Below that
+  it prints the rate alone, because a bound over a handful of probes would be a guess.
 - **Your app refusing a probe is not the same as our scan failing to send it.** One is your input
   guard working; the other is a measurement that did not happen. Both stay undelivered. The report
   keeps them apart. A refusal is marked as a refusal in the console summary and in the SARIF. A

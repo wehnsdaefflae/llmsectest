@@ -12,6 +12,15 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ### Added
 
+- 2026-11-25: The HTML report's per-category table now shows the finding rate and
+  its confidence interval. The SARIF has carried both since the previous entry,
+  and no rendered report read them, so a reader of a published page saw counts
+  with no rate beside them. The cell recomputes the rate from the rows on
+  display. A withdrawn finding changes the numerator, and a stored rate would
+  then contradict the table beside it. A row with fewer than 30 scored probes
+  prints its rate with no interval, and one sentence beneath the table says so
+  once. Seven tests pin it, including a retracted row suppressing a stored bound.
+
 - 2026-11-24: A per-category row in the attack tally now states its finding rate
   and how uncertain that rate is. `scored` is `attempted - inconclusive - voided`
   and `finding_rate` is `findings / scored`. A row with at least 30 scored probes

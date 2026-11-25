@@ -522,3 +522,117 @@ def test_render_sarif_file_on_real_semgrep_fixture(tmp_path):
     page = out.read_text(encoding="utf-8")
     assert page.startswith("<!DOCTYPE html>")
     assert "Semgrep OSS" in page and "CWE-95" in page
+
+
+# ---------------------------------------------------------------------------
+# The finding rate and its confidence interval in the category table (issue #36).
+#
+# PR #48 put `scored`, `finding_rate` and the bootstrap bounds into the tally and from
+# there into the SARIF run properties. None of it reached the rendered page, so a reader
+# of a published report still saw a bare count. These tests pin the cell and the two
+# cases where printing a stored bound would be dishonest.
+# ---------------------------------------------------------------------------
+
+
+def _tally_doc(by_category: dict, *, results: list | None = None) -> dict:
+    """A document whose run carries an `attacks_withstood` tally and no findings."""
+    attempted = sum(c.get("attempted", 0) for c in by_category.values())
+    withstood = sum(c.get("withstood", 0) for c in by_category.values())
+    return {
+        "version": "2.1.0",
+        "runs": [{
+            "tool": {"driver": {"name": "llmsectest", "version": "0.4.1", "rules": [_RULE_LLM01]}},
+            "results": results or [],
+            "properties": {"attacks_withstood": {
+                "attempted": attempted, "withstood": withstood, "by_category": by_category,
+            }},
+        }],
+    }
+
+
+_LLM01_WITH_BOUNDS = {
+    "LLM01": {
+        "name": "Prompt Injection", "attempted": 43, "withstood": 31, "findings": 12,
+        "inconclusive": 0, "voided": 0, "scored": 43, "finding_rate": 0.2791,
+        "confidence": 0.95, "confidence_lower": 0.1628, "confidence_upper": 0.4186,
+    },
+}
+
+
+def test_the_category_table_prints_the_finding_rate_and_its_interval():
+    html = render_sarif_html(_tally_doc(_LLM01_WITH_BOUNDS))
+    assert "finding rate" in html            # the column exists
+    assert "27.9%" in html                   # 12 of 43 scored
+    assert "95% CI 16.3% to 41.9%" in html   # the stored bootstrap bounds
+
+
+def test_a_small_sample_says_so_instead_of_showing_bounds():
+    """The tally refuses a bound under 30 scored probes, and the page marks the row.
+
+    The marker is the sample size and the caveat sits ONCE under the table. Printing the
+    whole sentence per row buried the numbers: seven rows of a 32-probe scan all carry it.
+    """
+    html = render_sarif_html(_tally_doc({"LLM01": {
+        "name": "Prompt Injection", "attempted": 12, "withstood": 10, "findings": 2,
+        "scored": 12, "finding_rate": 0.1667,
+        "confidence_note": "sample too small for a confidence interval: 12 scored, 30 needed",
+    }}))
+    assert "16.7%" in html
+    assert 'class="ci">n=12<' in html
+    assert "CI" not in html
+    assert html.count("too few for a confidence interval") == 1
+
+
+def test_the_small_sample_caveat_appears_once_for_a_whole_table():
+    """Six small rows, one footnote."""
+    html = render_sarif_html(_tally_doc({
+        f"LLM0{i}": {"name": f"Category {i}", "attempted": 4, "withstood": 4 - (i % 2),
+                     "findings": i % 2, "scored": 4}
+        for i in range(1, 7)
+    }))
+    assert html.count("too few for a confidence interval") == 1
+    assert html.count('class="ci">n=4<') == 6
+
+
+def test_a_table_with_no_small_rows_carries_no_caveat():
+    html = render_sarif_html(_tally_doc(_LLM01_WITH_BOUNDS))
+    assert "too few for a confidence interval" not in html
+
+
+def test_a_row_with_nothing_scored_prints_no_rate():
+    """0 of 0 is not 0%. The cell stays empty."""
+    html = render_sarif_html(_tally_doc({"LLM01": {
+        "name": "Prompt Injection", "attempted": 3, "withstood": 0, "findings": 0,
+        "inconclusive": 3, "voided": 0, "scored": 0,
+    }}))
+    assert "finding rate" in html
+    assert "0.0%" not in html
+
+
+def test_a_withdrawn_row_moves_the_rate_and_drops_the_stored_interval():
+    """bl-204's trap, one column further along.
+
+    The findings column is corrected by anything a later re-score retracted, so the rate
+    must be recomputed from what is PRINTED. The stored bound described the uncorrected
+    numerator, so it is suppressed rather than reprinted beside a number it never bounded.
+    """
+    withdrawn = {**_RESULT_LLM01,
+                 "level": "note",
+                 "message": {"text": "[WITHDRAWN by re-scoring on 2026-11-25] obeyed"}}
+    html = render_sarif_html(_tally_doc(_LLM01_WITH_BOUNDS, results=[withdrawn]))
+    assert "25.6%" in html                      # 11 of 43, the withdrawal applied
+    assert "27.9%" not in html
+    assert "16.3% to 41.9%" not in html
+
+
+def test_a_hostile_or_missing_tally_field_degrades_to_an_empty_cell():
+    """This renderer displays any tool's SARIF, so a foreign value must not crash it or
+    reach the page as markup."""
+    html = render_sarif_html(_tally_doc({"LLM01": {
+        "name": "Prompt Injection", "attempted": 43, "withstood": 31, "findings": 12,
+        "scored": "<script>alert(1)</script>", "finding_rate": "lots",
+        "confidence_lower": "<b>low</b>", "confidence_upper": None,
+    }}))
+    assert "<script>alert(1)</script>" not in html
+    assert "<b>low</b>" not in html
+    assert "finding rate" in html
