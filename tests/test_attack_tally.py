@@ -17,6 +17,9 @@ from __future__ import annotations
 
 import json
 
+import pytest
+
+from llmsectest.reporting import statistics
 from llmsectest.reporting.console_summary import generate_console_summary
 from llmsectest.reporting.models import TestResult
 from llmsectest.reporting.sarif_generator import SARIFGenerator
@@ -258,3 +261,120 @@ def test_sarif_carries_corpus_and_delivered_per_category(tmp_path):
     row = sarif["runs"][0]["properties"]["attacks_withstood"]["by_category"]["LLM02"]
     assert row["corpus_cases"] == 4
     assert row["delivered"] == 2
+
+
+def _row_of(findings, withstood, *, inconclusive=0, secret_out=False, marker="owasp_llm01"):
+    """The tally row for one category built from the given outcome counts."""
+    results = [_probe(f"finding-{i}", "failed", marker) for i in range(findings)]
+    results += [_probe(f"held-{i}", "passed", marker) for i in range(withstood)]
+    results += [
+        _probe(f"silent-{i}", "passed", marker, inconclusive="timed out")
+        for i in range(inconclusive)
+    ]
+    if secret_out:
+        results[0].properties["llmsec_secret_exposed"] = "the reply carried the value"
+    return next(iter(attack_tally(results)["by_category"].values()))
+
+
+def test_bootstrap_interval_is_pinned_for_a_fixed_seed():
+    """Issue #36: the published example, 12 of 43, with the default seed.
+
+    The numbers are pinned so a change to the method, the resample count or the seed
+    shows up as a failing test rather than as a report that quietly moved.
+    """
+    assert statistics.bootstrap_interval(12, 43) == {
+        "confidence": 0.95,
+        "confidence_lower": 0.1628,
+        "confidence_upper": 0.4186,
+    }
+
+
+def test_bootstrap_interval_refuses_a_sample_under_thirty():
+    """A small sample says so. It does not get a bound that would read as knowledge."""
+    interval = statistics.bootstrap_interval(10, 29)
+    assert interval == {
+        "confidence_note": "sample too small for a confidence interval: 29 scored, 30 needed"
+    }
+    assert "confidence_lower" in statistics.bootstrap_interval(10, 30)
+
+
+def test_bootstrap_interval_rejects_counts_that_cannot_be_a_rate():
+    with pytest.raises(ValueError):
+        statistics.bootstrap_interval(5, 4)
+
+
+@pytest.mark.parametrize(
+    "settings",
+    [{"resamples": 0}, {"confidence": 0}, {"confidence": 1}, {"confidence": -0.5}],
+)
+@pytest.mark.parametrize("samples", [10, 43])
+def test_bootstrap_interval_rejects_settings_that_cannot_give_an_interval(settings, samples):
+    """A bad resample count or confidence level is refused, whatever the sample size.
+
+    Zero resamples used to surface as an IndexError, and a negative confidence came back
+    as bounds in the wrong order. Both are a ValueError now, small sample or not.
+    """
+    with pytest.raises(ValueError):
+        statistics.bootstrap_interval(3, samples, **settings)
+
+
+def test_a_row_with_thirty_scored_probes_carries_its_rate_and_bounds():
+    """The bounds sit beside the rate they bound, and the old fields still read the same."""
+    row = _row_of(findings=12, withstood=31)
+    assert row["attempted"] == 43
+    assert row["findings"] == 12
+    assert row["scored"] == 43
+    assert row["finding_rate"] == 0.2791
+    assert row["confidence"] == 0.95
+    assert row["confidence_lower"] == 0.1628
+    assert row["confidence_upper"] == 0.4186
+    assert "confidence_note" not in row
+
+
+def test_a_row_with_a_small_sample_says_so_and_carries_no_bounds():
+    row = _row_of(findings=2, withstood=10)
+    assert row["scored"] == 12
+    assert row["finding_rate"] == 0.1667
+    assert "30 needed" in row["confidence_note"]
+    assert "confidence_lower" not in row
+    assert "confidence_upper" not in row
+
+
+def test_unanswered_probes_are_not_in_the_denominator():
+    """40 delivered, 15 never answered: 25 scored, which is under the floor."""
+    row = _row_of(findings=5, withstood=20, inconclusive=15)
+    assert row["attempted"] == 40
+    assert row["scored"] == 25
+    assert row["finding_rate"] == 0.2
+    assert "confidence_lower" not in row
+
+
+def test_voided_probes_are_not_in_the_denominator():
+    """A voided LLM02 probe was scored and then rejected, so the bound must not cover it.
+
+    35 delivered, 5 findings, and the secret got out, so the other 30 are voided. Counting
+    them as scored would give 5 of 35 and a bound. The row stands behind 5 of 5 only.
+    """
+    row = _row_of(findings=5, withstood=30, secret_out=True, marker="owasp_llm02")
+    assert row["voided"] == 30
+    assert row["scored"] == 5
+    assert row["finding_rate"] == 1.0
+    assert "confidence_lower" not in row
+
+
+def test_a_row_with_nothing_scored_carries_no_rate():
+    row = _row_of(findings=0, withstood=0, inconclusive=3)
+    assert row["scored"] == 0
+    assert "finding_rate" not in row
+    assert "confidence_note" in row
+
+
+def test_sarif_carries_the_rate_and_bounds_per_category(tmp_path):
+    """The interval travels to the SARIF run properties, not just the tally."""
+    results = [_probe(f"finding-{i}", "failed", "owasp_llm01") for i in range(12)]
+    results += [_probe(f"held-{i}", "passed", "owasp_llm01") for i in range(31)]
+    sarif = json.loads(SARIFGenerator("llmsectest", "0.1.0", tmp_path).generate(results))
+    row = sarif["runs"][0]["properties"]["attacks_withstood"]["by_category"]["LLM01"]
+    assert row["finding_rate"] == 0.2791
+    assert row["confidence_lower"] == 0.1628
+    assert row["confidence_upper"] == 0.4186

@@ -12,6 +12,19 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ### Added
 
+- 2026-11-24: A per-category row in the attack tally now states its finding rate
+  and how uncertain that rate is. `scored` is `attempted - inconclusive - voided`
+  and `finding_rate` is `findings / scored`. A row with at least 30 scored probes
+  carries `confidence`, `confidence_lower` and `confidence_upper`. A row with
+  fewer carries `confidence_note` and no bounds, because a bound over a handful
+  of probes would be a guess. The interval is a percentile bootstrap with 10,000
+  resamples at 95% and a fixed seed, so the same counts always give the same
+  bounds. `bootstrap_interval(events, samples)` is public and takes counts, so a
+  script that computes rates outside a single run can call it. Until now a rate
+  such as 12 of 43 was published as a bare point estimate. The existing fields
+  are unchanged, and the SARIF run properties carry the new ones with no
+  generator change (issue #36).
+
 - 2026-11-23: Reports now record which kinds of private context a run probed.
   A report row carries the declared retrieved-policy excerpt and the declared
   tool-schema excerpt, each with the verdict on whether the application gave it
