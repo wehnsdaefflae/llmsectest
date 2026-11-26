@@ -12,6 +12,16 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ### Added
 
+- 2026-11-26: *A target where you can check a clean result* in
+  `docs/guides/target-app.md` now ships a recorded report you can read offline,
+  `docs/guides/samples/testbed-bob.md`: a real scan, as the user Bob, of
+  [`mloda-rag-testbed`](https://github.com/TomKaltofen/mloda-rag-testbed), Tom
+  Kaltofen's project, on its offline `fake` backend. The guide quotes the rows to
+  check, says why the eight LLM01 failures come from that backend, and says what
+  the `Unconfirmed:` lines and the testbed's `sources` add. It also gives the full
+  command that recorded the report and the Alice run that is its positive control.
+  Until now the guide named the testbed and stopped there (issue #15).
+
 - 2026-11-25: The HTML report's per-category table now shows the finding rate and
   its confidence interval. The SARIF has carried both since the previous entry,
   and no rendered report read them, so a reader of a published page saw counts

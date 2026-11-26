@@ -27,8 +27,10 @@ hooks:
   - docs_hooks.py
 
 # `_release.md` is the generated banner every flag page includes, never a page of its own.
+# `guides/samples/testbed-bob.md` is a recorded report the target-app guide links to.
 not_in_nav: |
   _release.md
+  guides/samples/testbed-bob.md
 
 plugins:
   - search
