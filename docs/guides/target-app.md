@@ -579,15 +579,17 @@ anything. These are the rows to check:
 | LLM09 | Vector and Embedding Weaknesses | 6 | 6 | 0 | ✅ Pass |
 ```
 
-The report numbers categories by the 2026 edition of the OWASP list.
+The report numbers categories by the 2026 edition of the OWASP list. The console line of the
+same run reads `8 failed, 35 passed, 7 skipped`. It counts skips differently from the report's
+summary, which lists 1, so compare the Passed and Failed rows.
 
 - **LLM09, 6 passed.** This is where the scan looks for the canary (`--app-canary`) in Alice's
   payroll document and for the planted poison (`--app-rag-poison`). Bob must not see either.
 - **LLM02, 4 passed.** This is where it looks for the planted secret (`--app-secret`).
 - **LLM01, 8 failed.** All eight are the built-in red-team prompts. The `fake` backend has no
   model: it replies `Based on:` followed by the start of each document it retrieved, and the
-  refusal check reads an answer with no refusal in it as compliance. They show that the backend is not a model, not that
-  the testbed can be jailbroken.
+  refusal check reads an answer with no refusal in it as compliance. They show that the backend
+  is not a model, not that the testbed can be jailbroken.
 - **Six of ten categories exercised.** The other four rows read `⏸ Not exercised`, and the
   console output of the run names the flag that would exercise each one.
 
