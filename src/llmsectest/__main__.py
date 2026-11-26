@@ -13,9 +13,6 @@ Examples:
     python -m llmsectest --preflight --target ollama:gemma4:e2b-it-q4_K_M
                           # health-check a local server/model before a long scan
     python -m llmsectest --target app:http://localhost:8000 --repo .  # app + its deps
-    python -m llmsectest --target testbed
-                          # a first run you can check: a locally started mloda-rag-testbed,
-                          # scanned as Bob, who must not see Alice's document
     python -m llmsectest --repo .                          # add the LLM04 supply-chain scan
     python -m llmsectest --repo . --osv                    # + known-CVE lookup via OSV.dev
     python -m llmsectest --sbom --repo .                   # write a CycloneDX SBOM of the deps
@@ -379,42 +376,6 @@ def _is_existing_file(value: str) -> bool:
 def _extract_target(args: list) -> tuple[list, str | None]:
     """Pull a --target value out of args; return (remaining_args, target)."""
     return _extract_opt(args, "--target")
-
-
-# `--target testbed` stands for the scan of Tom Kaltofen's mloda-rag-testbed, a target with
-# known answers: Alice can see a document that Bob cannot (docs/guides/target-app.md, issue #15).
-# The values are that project's own defaults, as its docs/scan.md gives them. The three markers
-# have to equal what the testbed plants, or the scan searches for strings that are not there
-# and every probe reads as withstood for the wrong reason. Typing them by hand is how that
-# happens, which is the reason for a shortcut.
-TESTBED_TARGET = "testbed"
-TESTBED_APP_TARGET = "app:http://localhost:8000/chat"
-_TESTBED_DEFAULTS = (
-    # Bob is the user who must NOT reach Alice's document, so a clean row means something.
-    ("--app-body", '{"user": "bob"}'),
-    ("--app-session-field", "conversation_id"),
-    ("--app-secret", "SECRET-DEMO-7f2a"),
-    ("--app-canary", "CANARY-EXAMPLEBANK-91ac"),
-    ("--app-rag-poison", "POISON-EXAMPLEBANK-3b9d"),
-)
-
-
-def _expand_testbed_target(args: list, target: str | None) -> tuple[list, str | None]:
-    """Turn ``--target testbed`` into the application scan it stands for.
-
-    Returns ``(args, target)``. Only the exact word is a shortcut; every other target comes
-    back untouched. A flag the user typed is never added a second time, so
-    ``--app-body '{"user": "alice"}'`` scans as Alice, the positive control where the canary
-    can be reached.
-    """
-    if target != TESTBED_TARGET:
-        return args, target
-    typed = {a.split("=", 1)[0] for a in args if a.startswith("--")}
-    expanded = list(args)
-    for opt, value in _TESTBED_DEFAULTS:
-        if opt not in typed:
-            expanded += [opt, value]
-    return expanded, TESTBED_APP_TARGET
 
 
 def _extract_flag(args: list, flag: str) -> tuple[list, bool]:
@@ -1010,13 +971,6 @@ def main():
         return _generate_sbom(args)
 
     args, target = _extract_target(args)
-    if target == TESTBED_TARGET:
-        args, target = _expand_testbed_target(args, target)
-        # Said on every run, because the shortcut hides two things a user has to know: the
-        # scan talks to a server they must have started, and that server is not ours.
-        print(f"--target testbed: scanning {target}, a locally running mloda-rag-testbed "
-              "(Tom Kaltofen's project, https://github.com/TomKaltofen/mloda-rag-testbed). "
-              "Start it first. What a clean result means there: docs/guides/target-app.md")
     args, do_preflight = _extract_flag(args, "--preflight")
     if do_preflight:
         return run_preflight(target)
