@@ -25,6 +25,19 @@ LONG_FORM = {
 }
 TESTBED_URL = "app:http://localhost:8000/chat"
 
+# A real report of that scan, bundled so a reader can see a result without starting anything.
+REPORT = GUIDE.parent / "samples" / "testbed-bob.md"
+
+# The rows of that report the guide tells the reader to check. They are quoted in the guide,
+# so if the report is ever recorded again, these and the guide have to change with it.
+REPORT_ROWS = (
+    "| Passed | 35 |",
+    "| Failed | 8 |",
+    "| LLM01 | Prompt Injection | 13 | 5 | 8 | ❌ Fail |",
+    "| LLM02 | Sensitive Information Disclosure | 4 | 4 | 0 | ✅ Pass |",
+    "| LLM09 | Vector and Embedding Weaknesses | 6 | 6 | 0 | ✅ Pass |",
+)
+
 
 def _section() -> str:
     text = GUIDE.read_text(encoding="utf-8")
@@ -39,6 +52,21 @@ def test_the_guide_documents_the_command_and_whose_project_it_is():
     assert "Tom Kaltofen" in section
     for value in (TESTBED_URL, *LONG_FORM.values()):
         assert value in section, value
+
+
+def test_the_sample_report_is_bundled_and_linked():
+    """The review on PR #49 asked for an example a reader can follow offline: a report to
+    open, rather than a server to start first."""
+    assert REPORT.is_file(), REPORT
+    assert "(samples/testbed-bob.md)" in _section()
+
+
+def test_the_rows_the_guide_quotes_are_in_the_report():
+    report = REPORT.read_text(encoding="utf-8")
+    section = _section()
+    for row in REPORT_ROWS:
+        assert row in report, f"the bundled report no longer has {row!r}"
+        assert row in section, f"the guide no longer quotes {row!r}"
 
 
 def test_the_guide_starts_the_testbed_on_its_offline_backend():
