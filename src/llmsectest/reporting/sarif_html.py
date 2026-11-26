@@ -21,6 +21,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from .statistics import BOOTSTRAP_MIN_SAMPLES, bootstrap_interval
+
 # Matches a CWE id in any of the conventions a SARIF producer uses: our explicit
 # ``CWE-77``; the GitHub tag convention ``external/cwe/cwe-77`` (Bandit, CodeQL,
 # Semgrep, ...); a bare ``cwe_77``. The number is captured for canonicalisation.
@@ -577,6 +579,9 @@ main { max-width:1000px; margin:0 auto; padding:26px 22px 60px; }
 .cat-table th { color:var(--muted); font-weight:600; font-size:12px; text-transform:uppercase;
   letter-spacing:.4px; }
 .num { text-align:right; font-variant-numeric:tabular-nums; }
+.cat-table td.rate { white-space:nowrap; }
+.cat-table .ci { display:block; color:var(--muted); font-size:11.5px; font-weight:400; }
+.rate-note { margin:10px 0 0; font-size:12.5px; line-height:1.5; color:var(--muted); }
 h2.cat { font-size:16px; margin:30px 0 12px; padding-bottom:6px; border-bottom:2px solid var(--line); }
 h2.cat .cnt { color:var(--muted); font-weight:500; font-size:14px; }
 .finding { background:var(--card); border:1px solid var(--line); border-left:4px solid #94a3b8;
@@ -888,6 +893,85 @@ def _less_withdrawn(stored: object, retracted: int) -> object:
     return max(0, stored - retracted)
 
 
+def _rate_cell(counts: dict, shown_findings: object, retracted: int) -> str:
+    """The finding rate for one category row, with its interval when it still holds.
+
+    `statistics.attack_tally` stores `scored`, `finding_rate` and either the bootstrap
+    bounds or a note saying the sample was too small (issue #36). Until now none of it
+    reached this page: a reader saw 12 of 43 and nothing about how certain that was.
+
+    The rate is recomputed here from the findings column as PRINTED, because the column
+    beside it is already corrected by anything a later re-score retracted (bl-204). The
+    stored bounds are shown only when that correction was empty: a bound describes the
+    numerator the scan measured, so reprinting it next to a smaller numerator would state
+    an interval for a rate the page does not show.
+
+    Every field is type-guarded and defaulted. This renderer displays any tool's SARIF,
+    so a missing, non-numeric or hostile value degrades to an empty cell.
+    """
+    if not isinstance(shown_findings, int) or isinstance(shown_findings, bool):
+        return ""
+    scored = _scored_of(counts)
+    if scored is None or scored <= 0 or shown_findings > scored:
+        return ""
+    rate = f"{shown_findings / scored:.1%}"
+    stored = counts.get("findings")
+    unchanged = retracted == 0 and stored == shown_findings
+    lower, upper = counts.get("confidence_lower"), counts.get("confidence_upper")
+    if unchanged and _is_number(lower) and _is_number(upper):
+        level = counts.get("confidence")
+        level_bit = f"{level:.0%} CI " if _is_number(level) else ""
+        return (f'{_esc(rate)} <span class="ci">{_esc(level_bit)}'
+                f'{lower:.1%} to {upper:.1%}</span>')
+    if unchanged and isinstance(counts.get("confidence_note"), str):
+        return f'{_esc(rate)} <span class="ci">n={_esc(scored)}</span>'
+    # No usable stored interval: either the scan predates issue #36 and stored none, or a
+    # re-score moved the numerator and the stored one no longer bounds the printed rate.
+    # The method is deterministic over counts with a fixed seed, so computing it here gives
+    # the same answer the scan would have given for these numbers. Refusing instead would
+    # leave every report rendered before the feature with a column of blanks.
+    try:
+        interval = bootstrap_interval(shown_findings, scored)
+    except ValueError:
+        return _esc(rate)
+    low, high = interval.get("confidence_lower"), interval.get("confidence_upper")
+    if _is_number(low) and _is_number(high):
+        level = interval.get("confidence")
+        level_bit = f"{level:.0%} CI " if _is_number(level) else ""
+        return (f'{_esc(rate)} <span class="ci">{_esc(level_bit)}'
+                f'{low:.1%} to {high:.1%}</span>')
+    if isinstance(interval.get("confidence_note"), str):
+        return f'{_esc(rate)} <span class="ci">n={_esc(scored)}</span>'
+    return _esc(rate)
+
+
+def _is_number(value: object) -> bool:
+    """A real number we can format. `bool` is an int in Python and is not one here."""
+    return isinstance(value, int | float) and not isinstance(value, bool)
+
+
+def _scored_of(counts: dict) -> int | None:
+    """The probes a category row stands behind, or None when they cannot be known.
+
+    `attack_tally` stores `scored` since issue #36. Every report rendered from a SARIF
+    written before that carries none, so it is derived from the counts that are stored:
+    `attempted` less `inconclusive` (which already includes undelivered and
+    boundary-refused) and less `voided`. Type-guarded like every other foreign field.
+    """
+    stored = counts.get("scored")
+    if _is_number(stored):
+        return int(stored)
+    attempted = counts.get("attempted")
+    if not _is_number(attempted):
+        return None
+    out = int(attempted)
+    for key in ("inconclusive", "voided"):
+        value = counts.get(key)
+        if _is_number(value):
+            out -= int(value)
+    return max(out, 0)
+
+
 def _withstood_section(tally: object, withdrawn: list | None = None) -> str:
     """Render the run-level "attacks withstood" block, or "" if the run has none.
 
@@ -924,19 +1008,22 @@ def _withstood_section(tally: object, withdrawn: list | None = None) -> str:
             label = f"{cat} {counts.get('name', '')}".strip()
             inconclusive = counts.get("inconclusive", 0)
             voided = counts.get("voided", 0)
+            shown_findings = _less_withdrawn(counts.get("findings", 0), retracted.get(cat, 0))
             rows += (
                 f'<tr><td>{_esc(label)}</td>'
                 f'<td class="num">{_esc(counts.get("attempted", 0))}</td>'
                 f'<td class="num">{_esc(counts.get("withstood", 0))}</td>'
-                f'<td class="num">{_esc(_less_withdrawn(counts.get("findings", 0), retracted.get(cat, 0)))}</td>'
+                f'<td class="num">{_esc(shown_findings)}</td>'
                 f'<td class="num">{_esc(inconclusive) if inconclusive else ""}</td>'
-                f'<td class="num">{_esc(voided) if voided else ""}</td></tr>'
+                f'<td class="num">{_esc(voided) if voided else ""}</td>'
+                f'<td class="num rate">{_rate_cell(counts, shown_findings, retracted.get(cat, 0))}</td>'
+                "</tr>"
             )
     table = (
         '<table class="cat-table"><thead><tr><th>OWASP category</th>'
         '<th class="num">attacks</th><th class="num">withstood</th>'
         '<th class="num">findings</th><th class="num">inconclusive</th>'
-        '<th class="num">voided</th></tr></thead>'
+        '<th class="num">voided</th><th class="num">finding rate</th></tr></thead>'
         f"<tbody>{rows}</tbody></table>"
         if rows else ""
     )
@@ -945,6 +1032,13 @@ def _withstood_section(tally: object, withdrawn: list | None = None) -> str:
     reason = tally.get("voided_reason")
     note = (f'<p class="voided-note">{_esc(reason)}</p>'
             if tally.get("voided") and isinstance(reason, str) else "")
+    # The small-sample caveat, once under the table rather than once per row. Seven rows
+    # of a 32-probe scan all carry it, and repeating the sentence seven times buried the
+    # numbers it was meant to qualify.
+    if 'class="ci">n=' in rows:
+        note += ('<p class="rate-note">A rate marked <code>n=</code> comes from fewer than '
+                 f'{BOOTSTRAP_MIN_SAMPLES} scored probes, which is too few for a confidence '
+                 'interval. Read it as the count it is, not as a measured rate.</p>')
     # Escaped and defaulted like every other foreign field here: this renderer promises
     # to display any tool's SARIF, so a missing or non-numeric count must degrade, never
     # crash and never inject markup.

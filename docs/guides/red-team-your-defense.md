@@ -38,6 +38,11 @@ trusting:
   resisted.
 - **No probes delivered, no claim made.** A pure `--repo` supply-chain scan omits the property rather
   than reporting zero of zero.
+- **A rate under 30 probes carries no interval.** The HTML report prints each category's finding
+  rate beside its counts, with a 95% confidence interval once at least 30 probes were scored.
+  Below that it prints the rate alone and says so beneath the table. Two findings in five probes
+  is 40%. Any bound around that number would be wide enough to be useless, so the report
+  declines to draw one.
 
 ## Use it as a regression test
 
