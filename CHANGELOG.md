@@ -77,6 +77,10 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ### Fixed
 
+- 2026-11-26: The HTML renderer keeps findings visible when imported SARIF has
+  malformed rule identifiers or property bags. The cost summary requires both
+  token and probe counts.
+
 - 2026-11-17: SARIF findings now name the scorer that made the decision. A
   differential timeout names `differential_timeout`; a token-ceiling finding names
   `output_ceiling_reached`. Both paths previously named the configured response

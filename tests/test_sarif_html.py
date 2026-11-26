@@ -232,6 +232,31 @@ def test_malformed_sarif_shapes_render_without_crashing(name, doc):
     assert html.rstrip().endswith("</html>")            # … not a partial / traceback
 
 
+@pytest.mark.parametrize("malformed", ["descriptor", "reference", "properties", "cost"])
+def test_bad_optional_metadata_keeps_the_findings(malformed):
+    results = [{"ruleId": "r", "message": {"text": "First finding"}},
+               {"ruleId": "s", "message": {"text": "Second finding"}}]
+    rules = [{"id": "r", "name": "First rule"}, {"id": "s", "name": "Second rule"}]
+    doc = _run(results, rules=rules)
+    run = doc["runs"][0]
+    if malformed == "descriptor":
+        rules.append({"id": {"name": "r"}, "name": "Invalid rule metadata"})
+    elif malformed == "reference":
+        results[0]["ruleId"] = ["r"]
+    elif malformed == "properties":
+        results[0]["properties"] = None
+        rules[0]["properties"] = "not an object"
+    else:
+        run["properties"] = {"denial_of_wallet": {"total_output_tokens": 5}}
+
+    html = render_sarif_html(doc)
+    assert 'class="big">2</span>' in html
+    assert "First finding" in html and "Second finding" in html
+    assert "Second rule" in html
+    assert "Invalid rule metadata" not in html
+    assert "5 output tokens" not in html
+
+
 def test_third_party_results_null_renders_clean_empty_state():
     """A scanner that emits ``"results": null`` for a clean run (instead of ``[]``)
     must render the clean empty state, not crash on iterating None."""

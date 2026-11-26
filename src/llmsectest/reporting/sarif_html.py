@@ -83,7 +83,7 @@ def _severity_from_score(score: float) -> str:
 
 
 def _props(obj: dict) -> dict:
-    return obj.get("properties", {}) if isinstance(obj, dict) else {}
+    return _as_dict(_as_dict(obj).get("properties"))
 
 
 def _cwes_of(result: dict, rule: dict) -> list[str]:
@@ -338,6 +338,15 @@ def _edition_sentence(findings: list[tuple[dict, dict]]) -> str:
             "editions (" + ", ".join(editions) + "); each finding names its own.")
 
 
+def _component_rules(component: Any) -> dict[str, dict]:
+    rules: dict[str, dict] = {}
+    for rule in _as_list(_as_dict(component).get("rules")):
+        rule_id = _as_dict(rule).get("id")
+        if isinstance(rule_id, str) and rule_id:
+            rules[rule_id] = rule
+    return rules
+
+
 def _rule_index(run: dict) -> dict[str, dict]:
     """Every rule the run's tool declares, wherever the producer put it.
 
@@ -357,9 +366,7 @@ def _rule_index(run: dict) -> dict[str, dict]:
     components = [*_as_list(tool.get("extensions")), tool.get("driver")]
     index: dict[str, dict] = {}
     for component in components:
-        for rule in _as_list(_as_dict(component).get("rules")):
-            if isinstance(rule, dict) and rule.get("id"):
-                index[rule["id"]] = rule
+        index.update(_component_rules(component))
     return index
 
 
@@ -1086,13 +1093,12 @@ def render_sarif_html(doc: dict, *, source_name: str | None = None,
     for run in runs:
         run = _as_dict(run)
         rules = _rule_index(run)
-        declared = _as_dict(_as_dict(run.get("tool")).get("driver")).get("rules")
-        glossary_rules.update({r["id"]: r for r in _as_list(declared)
-                               if isinstance(r, dict) and r.get("id")})
+        glossary_rules.update(_component_rules(_as_dict(run.get("tool")).get("driver")))
         for result in _as_list(run.get("results")):
             if not isinstance(result, dict):
                 continue  # a non-object result carries no renderable finding
-            rule = rules.get(result.get("ruleId"), {})
+            rule_id = result.get("ruleId")
+            rule = rules.get(rule_id, {}) if isinstance(rule_id, str) else {}
             if rule.get("id"):
                 glossary_rules[rule["id"]] = rule
             if _props(result).get("llmsec_withstood"):
@@ -1107,10 +1113,12 @@ def render_sarif_html(doc: dict, *, source_name: str | None = None,
 
     generated = generated or datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")
     # Run-level denial-of-wallet cost (real provider output-token spend), when present.
-    dow = _props(first_run).get("denial_of_wallet")
+    dow = _as_dict(_props(first_run).get("denial_of_wallet"))
+    total_tokens = dow.get("total_output_tokens")
+    probes_with_usage = dow.get("probes_with_usage")
     cost_bit = (
-        f"{dow['total_output_tokens']} output tokens ({dow['probes_with_usage']} probes)"
-        if isinstance(dow, dict) and "total_output_tokens" in dow
+        f"{total_tokens} output tokens ({probes_with_usage} probes)"
+        if all(type(count) is int and count >= 0 for count in (total_tokens, probes_with_usage))
         else None
     )
     # Inconclusive probes (target exceeded --app-timeout) ,  surfaced so a clean-looking
