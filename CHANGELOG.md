@@ -10,6 +10,15 @@ forward-looking plan is the [roadmap](https://llmsec.dev/#roadmap).
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-27
+
+LLMSecTest reaches 1.0.0. The scanner covers all ten OWASP LLM Top 10 2026 categories against
+black-box and white-box targets. Reports state a finding rate for every category and bound it
+with a confidence interval. Copyable CI templates ship for GitHub Actions, GitLab CI and
+Jenkins. The field cohort holds 39 real third-party applications, measured by this scanner.
+This release turns the published interface into a commitment. A breaking change to the CLI, to
+the SARIF run properties or to the report schema now requires a major version.
+
 ### Added
 
 - 2026-11-25: The HTML report's per-category table now shows the finding rate and
